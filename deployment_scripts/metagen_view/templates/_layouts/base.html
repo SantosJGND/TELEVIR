@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/base.css' %}">
+<link rel="stylesheet" href="{% static 'css/breadcrumbs.css' %}" />
+
+{% endblock css %}
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="INSaFLU - Instituto Nacional de Saúde Doutor Ricardo Jorge">
+  <meta name="author" content="Joao Santos">
+  <title>INSaFLU - Instituto Nacional de Saúde Doutor Ricardo Jorge</title>
+  <!-- Bootstrap core CSS-->
+</head>
+
+
+{% block header %}
+
+<div class="header-global">
+
+  <h1>INSaFLU - TELEVIR </h1>
+  <h4>Pathogen Identification Workshop</h4>
+  <br>
+  <p>Result exploration</p>
+
+</div>
+
+{% endblock %}
+
+{% block body %}
+
+<body>
+  {% block content %}
+
+  {% endblock content %}
+</body>
+
+{% endblock %}
+
+<div class="footer-global">
+  <p>INSaFLU - Instituto Nacional de Saúde Doutor Ricardo Jorge</p>
+  <p>Pathogen Identification Workshop</p>
+  <p>Result exploration</p>
+</div>
+
+</html>

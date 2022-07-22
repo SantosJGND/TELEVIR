@@ -1,0 +1,5 @@
+zlib1g-dev
+automake
+libtool
+make
+g++

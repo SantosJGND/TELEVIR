@@ -1,0 +1,11 @@
+name: long_read_assembly_soft
+
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+
+dependencies:
+  - samtools=1.15.1
+  - raven-assembler=1.8.1
+  - miniasm

@@ -1,0 +1,1260 @@
+#!/usr/bin/python3
+
+import gzip
+import logging
+import os
+import subprocess
+from ftplib import FTP
+from threading import Thread
+
+import pandas as pd
+from numpy import int0
+
+
+def grep_sequence_identifiers(input, output):
+    """
+    grep sequence identifiers from fasta file.
+    """
+
+    os.system(
+        "zgrep -P '^>' {} | grep -v 'GENE\|gene'| sed 's/^>//; s/[ ].*$//g' > {}".format(
+            input, output
+        )
+    )
+
+
+def sed_out_after_dot(file):
+    """remove everything after the dot in the file name"""
+    os.system("sed -i 's/[:].*$//g' {}".format(file))
+
+
+def entrez_ncbi_taxid(file, outdir, outfile):
+    """get taxids from ncbi accessions in single column file. return both, using Entrez Utilities"""
+
+    os.system(
+        f"cat {file} | epost -db nuccore | esummary -db nuccore | xtract -pattern DocumentSummary -element AccessionVersion,TaxId > {outdir}{outfile}"
+    )
+
+
+class setup_dl:
+    def __init__(
+        self, INSTALL_PARAMS, organism="viral", home="", bindir="", test=False
+    ):
+
+        if not INSTALL_PARAMS["HOME"]:
+            home = os.getcwd()
+
+        else:
+            home = INSTALL_PARAMS["HOME"]
+
+        if home[-1] != "/":
+            home += "/"
+
+        if not len(bindir):
+            bindir = home + "scripts/"
+
+        self.dbdir = home + "ref_db/"
+        self.seqdir = home + "ref_fasta/"
+        self.metadir = home + "metadata/"
+
+        self.envs = INSTALL_PARAMS["ENVSDIR"]
+        self.source = self.envs["SOURCE"]
+        self.home = home
+        self.bindr = bindir
+        self.fastas = {"prot": {}, "nuc": {}}
+        self.meta = {}
+        self.test = test
+
+        self.organism = organism
+
+    def mkdirs(self):
+        if not os.path.isdir(self.home):
+            os.mkdir(self.home)
+        for dr in self.dbdir, self.seqdir, self.metadir:
+            if not os.path.isdir(dr):
+                os.mkdir(dr)
+
+    def refseq_dl(self):
+        """
+        parse and download latest refseq dbs from ncbi ftp.
+        :param org:
+        :return:
+        """
+        host = "ftp.ncbi.nlm.nih.gov"
+        source = "refseq/release/{}/".format(self.organism)
+
+        try:
+            ftp = FTP(host)
+        except:
+            logging.info("refseq ftp failed. Check internet connection.")
+            return
+
+        ftp.login()
+        ftp.cwd(source)
+        files = ftp.nlst()
+        ftp.quit()
+
+        ext_dict = [x.split(".") for x in files]
+        ext_dict = [[".".join(x), ".".join(x[-3:])] for x in ext_dict]
+        #
+        extset = set([x[1] for x in ext_dict])
+        ext_dict = {z: [x[0] for x in ext_dict if x[1] == z] for z in extset}
+
+        protf = [g for x, g in ext_dict.items() if "protein.faa" in x][0]
+        nucf = [g for x, g in ext_dict.items() if "genomic.fna" in x][0]
+
+        fprot = f"refseq_{self.organism}.protein.faa.gz"
+        fprot_suf = os.path.splitext(fprot)[0]
+        fnuc = f"refseq_{self.organism}.genome.fna.gz"
+        fnuc_suf = os.path.splitext(fnuc)[0]
+
+        if not os.path.isfile(self.seqdir + fprot):
+            if self.test:
+                logging.info(f"{fprot_suf} not found.")
+            else:
+                logging.info(f"{fprot_suf} not found. downloading...")
+                self.get_concat(protf, fprot_suf, host, source)
+                self.fastas["prot"]["refseq"] = self.seqdir + fprot
+
+        else:
+            self.fastas["prot"]["refseq"] = self.seqdir + fprot
+            logging.info(f"{fprot_suf} found.")
+
+        if not os.path.isfile(self.seqdir + fnuc):
+            if self.test:
+                logging.info(f"{fnuc_suf} not found.")
+            else:
+                logging.info(f"{fnuc_suf} not found. downloading...")
+                self.get_concat(nucf, fnuc_suf, host, source)
+                self.fastas["prot"]["refseq"] = self.seqdir + fprot
+
+        else:
+            self.fastas["nuc"]["refseq"] = self.seqdir + fnuc
+            logging.info(f"{fnuc_suf} found.")
+
+    def get_concat(self, flist, outf, host, source):
+        """
+        download files in list and concatenate into single file. gzip that file
+        :param flist: list of files
+        :param outf: concatenate output filepath.
+        :param host: ftp host
+        :param source: ftp diectory
+        :return:
+        """
+        for fl in flist:
+            if not os.path.isfile(self.seqdir + fl):
+                if self.test:
+                    logging.info(f"{fl} not found.")
+                else:
+                    logging.info(f"{fl} not found. downloading...")
+                    correctly_downloaded = 0
+                    link = "https://{}/{}{}".format(host, source, fl)
+
+                    while not correctly_downloaded:
+                        subprocess.run(["wget", link, "-P", self.seqdir])
+                        try:
+                            with gzip.open(os.path.join(self.seqdir, fl)) as fd:
+                                fd.read()
+                            correctly_downloaded = 1
+                        except EOFError:
+                            correctly_downloaded = 0
+
+        fls = [self.seqdir + fl for fl in sorted(flist)]
+        fls = [fl for fl in fls if os.path.isfile(fl)]
+
+        if len(fls) == 0:
+            logging.info("No files found.")
+            return
+
+        with open(self.seqdir + outf, "wb") as ft:
+            for fl in fls:
+                try:
+                    with gzip.open(fl, "rb") as inf:
+                        ft.write(inf.read())
+                except EOFError:
+                    if os.path.isfile(fl):
+                        os.remove(fl)
+
+        os.system("rm {}".format(fls))
+        subprocess.run(["bgzip", self.seqdir + outf])
+
+    def uniprot_dl(self, vs="90"):
+        """
+        download uniprot db.
+        :param vs: uniprot version.
+        :return:
+        """
+        fl = "https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref90/uniref{}.fasta.gz"
+        fl = fl.format(vs)
+        uniprot_file = os.path.basename(fl)
+
+        if not os.path.isfile(self.seqdir + uniprot_file):
+            if self.test:
+                logging.info("uniref{}.fasta not found.".format(vs))
+            else:
+                logging.info("uniref{}.fasta not found. downloading...".format(vs))
+                subprocess.run(["wget", fl, "-P", self.seqdir])
+        else:
+            logging.info("uniref{}.fasta found.".format(vs))
+
+        self.fastas["prot"]["uniprot"] = self.seqdir + os.path.basename(fl)
+
+        return self
+
+    def swissprot_dl(self):
+        """
+        download swissprot db from ncbi.
+        :return:
+        """
+        fl = "https://ftp.ncbi.nlm.nih.gov/blast/db/FASTA/swissprot.gz"
+
+        if not os.path.isfile(self.seqdir + os.path.basename(fl)):
+            if self.test:
+                logging.info("swissprot.gz not found.")
+            else:
+                logging.info("swissprot.gz not found. downloading...")
+                subprocess.run(["wget", "-P", self.seqdir, fl])
+        else:
+            logging.info("swissprot.gz found.")
+
+        fl = self.seqdir + os.path.basename(fl)
+
+        self.fastas["prot"]["swissprot"] = fl
+
+    def RVDB_dl(self, vs="22.0"):
+        """
+        download rvdb.
+        :param vs: rvdb version.
+        :return:
+        """
+        fl = "https://rvdb-prot.pasteur.fr/files/U-RVDBv{}-prot.fasta.xz"
+        fl = fl.format(vs)
+
+        if not os.path.isfile(self.seqdir + os.path.basename(fl).replace(".xz", ".gz")):
+            if self.test:
+                logging.info("U-RVDBv{}.fasta.xz not found.".format(vs))
+            else:
+                logging.info("U-RVDBv{}.fasta.xz not found. downloading...".format(vs))
+                subprocess.run(["wget", "-P", self.seqdir, fl])
+                fl = self.seqdir + os.path.basename(fl)
+                subprocess.run(["unxz", fl])
+                fl, _ = os.path.splitext(fl)
+                subprocess.run(["bgzip", fl])
+                fl = fl + ".gz"
+
+        else:
+            logging.info("U-RVDBv{}.fasta.xz found.".format(vs))
+            fl = self.seqdir + os.path.basename(fl).replace(".xz", ".gz")
+
+        self.fastas["prot"]["rvdb"] = fl
+        return self
+
+    def virosaurus_dl(self):
+        """
+        download virossaurus from viralzone.
+        :return:
+        """
+        fl = "https://viralzone.expasy.org/resources/Virosaurus/2020_4/virosaurus90_vertebrate%2D20200330.fas.gz"
+
+        if not os.path.isfile(self.seqdir + os.path.basename(fl).replace("%2D", "-")):
+            if self.test:
+                logging.info("virosaurus90_vertebrate%2D20200330.fas not found.")
+            else:
+                logging.info(
+                    "virosaurus90_vertebrate%2D20200330.fas not found. downloading..."
+                )
+                subprocess.run(["wget", fl, "-P", self.seqdir])
+        else:
+            logging.info("virosaurus90_vertebrate%2D20200330.fas found.")
+
+        self.fastas["nuc"]["virosaurus"] = self.seqdir + os.path.basename(fl).replace(
+            "%2D", "-"
+        )
+
+        return self
+
+    def nuc_metadata(self, outfile="acc2taxid.tsv"):
+        """
+        merge accession and taxonomy info from nuc fasta files.
+        """
+
+        if os.path.isfile(self.metadir + outfile):
+            acc2tax = pd.read_csv(self.metadir + outfile, sep="\t")
+            check = []
+            for dbs, fl in self.fastas["nuc"].items():
+                flb = os.path.basename(fl)
+                if flb not in acc2tax.file.values:
+                    check.append(flb)
+
+            if len(check) == 0:
+                logging.info("acc2taxid.tsv found for all nuc files.")
+                return
+            else:
+                if self.test:
+                    logging.info("acc2taxid.tsv not found for {}".format(check))
+                    return
+                else:
+                    logging.info(
+                        f"acc2taxid.tsv not found for nuc files: {check}. creating.."
+                    )
+                    os.system(f"rm {self.metadir + outfile}")
+        else:
+            if self.test:
+                logging.info("acc2taxid.tsv not found.")
+            else:
+                logging.info("acc2taxid.tsv not found. creating...")
+        ###
+        ###
+        tax2acc = []
+
+        for dbs, fl in self.fastas["nuc"].items():
+
+            temp_file = self.metadir + dbs + "_temp.tsv"
+
+            grep_sequence_identifiers(fl, temp_file)
+
+            if dbs == "kraken2":
+                dbacc = pd.read_csv(
+                    temp_file, sep="|", names=["suffix", "taxid", "acc"]
+                )
+                dbacc["taxid"] = dbacc["taxid"].astype(str)
+                dbacc["file"] = os.path.basename(fl)
+                dbacc["acc_in_file"] = dbacc[["suffix", "taxid", "acc"]].agg(
+                    "|".join, axis=1
+                )
+
+                dbacc = dbacc[["acc", "taxid", "file", "acc_in_file"]]
+
+                tax2acc.append(dbacc)
+                continue
+
+            sed_out_after_dot(temp_file)
+
+            entrez_ncbi_taxid(temp_file, self.metadir, "nuc_tax.tsv")
+
+            dbacc = pd.read_csv(
+                "{}nuc_tax.tsv".format(self.metadir), sep="\t", header=None
+            )
+
+            dbacc = dbacc.rename(columns={0: "acc", 1: "taxid"})
+            dbacc["file"] = os.path.basename(fl)
+
+            if dbs == "virosaurus":
+
+                def viro_acc(x):
+                    acc = x.split(".")[0]
+                    return f"{acc}:{acc};"
+
+                dbacc["acc_in_file"] = dbacc.acc.apply(viro_acc)
+
+            else:
+                dbacc["acc_in_file"] = dbacc.acc
+
+            tax2acc.append(dbacc)
+
+            os.system(f"rm {temp_file}")
+            os.system("rm {}".format("{}nuc_tax.tsv".format(self.metadir)))
+
+        tax2acc = pd.concat(tax2acc)
+
+        tax2acc.to_csv(self.metadir + outfile, sep="\t", index=False)
+
+    def prot_metadata(self):
+        """
+        get or produce accession to taxid files for each fasta in fasta.prot.
+        :return: self
+        """
+
+        dict_ids = self.temp_nucmeta()
+
+        if dict_ids:
+            acc2tax_dir = self.get_prot()
+            id_files = {i: [] for i in dict_ids}
+
+            threads = [
+                Thread(target=self.prot2taxid_parse, args=(dci, dict_ids, acc2tax_dir))
+                for dci in range(1, 11)
+            ]
+            for th in threads:
+                th.start()
+            for th in threads:
+                th.join()
+
+            for dbi in list(id_files):
+                id_files[dbi] = [
+                    pd.read_csv(self.metadir + f"{dbi}_a2p_{dci}.tsv", sep="\t")
+                    for dci in range(1, 11)
+                ]
+                fdb = pd.concat(id_files[dbi], axis=0)
+                #
+                fdb.to_csv(self.metadir + f"{dbi}_acc2taxid.tsv", sep="\t", index=False)
+                report = pd.merge(
+                    fdb, dict_ids[dbi], on="acc", how="outer", indicator=True
+                )
+                report = report._merge.value_counts()
+                report.to_csv(
+                    self.metadir + f"{dbi}_acc2taxid.merge.report",
+                    sep="\t",
+                    index=False,
+                )
+                #
+                for dci in range(1, 11):
+                    os.system("rm {}".format(self.metadir + f"{dbi}_a2p_{dci}.tsv"))
+
+                self.meta[dbi] = self.metadir + f"{dbi}_acc2taxid.tsv"
+
+        logging.info(
+            f"accession to taxid mapping done. You can now delete the directory {self.metadir}prot.accession2taxid/"
+        )
+
+    def prot2taxid_parse(
+        self, dci: int, meta_dict: dict, acc2tax_dir: str, chunksize: int0 = 8e6
+    ):
+        """
+        parse prot2taxid files. given dictionary of accession names, merge these with ncbi two column files.
+
+        :param dci: index number of ncbi file to parse. 10 files in total, named 1-10
+        :param meta_dict: dictionary of accession names per fasta (accession ids stored in single column pandas dfs, colname=acc)
+        :param acc2tax_dir: direcctory where ncbi files are stored.
+        :param id_files: dictionary of empty lists for things to be appended to. same keys as meta_dict.
+        :param chunksize: chunck siwe to use in pd.read_csv. very large files.
+        :return:
+        """
+        doc = acc2tax_dir + f"prot.accession2taxid.FULL.{dci}.gz"
+        mchunks = {i: [] for i in meta_dict}
+        processed = 0
+        reader = pd.read_csv(
+            doc, compression="gzip", sep="\t", chunksize=int(chunksize)
+        )  # , iterator=True)
+        for ix, docf in enumerate(reader):
+            docf.columns = ["acc", "taxid"]
+            for dbi, ids in meta_dict.items():
+
+                rnv = pd.merge(left=ids, right=docf, left_on="acc", right_on="acc")
+                mchunks[dbi].append(rnv)
+
+            processed += docf.shape[0]
+            #
+            print(f"dci: {dci}, {processed} lines processed")
+
+        for dbi in mchunks.keys():
+            chk = pd.concat(mchunks[dbi])
+            chk.to_csv(self.metadir + f"{dbi}_a2p_{dci}.tsv", sep="\t", index=False)
+
+    def generate_main_protacc_to_taxid(self):
+        """
+        generates concatenated file of all protein accession to species taxid tsvs.
+        """
+        final_db_path = os.path.join(self.metadir, "protein_acc2taxid.tsv")
+        to_concat = []
+        if os.path.isfile(final_db_path):
+            logging.info("protein_acc2taxid.tsv file found.")
+            return
+
+        for dbs, fl in self.fastas["prot"].items():
+            outfile = self.metadir + f"{dbs}_acc2taxid.tsv"
+            if os.path.isfile(outfile):
+                p2t = pd.read_csv(outfile, sep="\t")
+                to_concat.append(p2t)
+
+        general_db = pd.concat(to_concat, axis=0)
+        general_db.columns = ["prot_acc", "taxid"]
+        general_db.drop_duplicates(subset="prot_acc")
+        general_db.to_csv(final_db_path, header=True, index=False, sep="\t")
+
+    def temp_nucmeta(self):
+        """
+        read acc ids from fastas in self.fasta.prot.
+        :return:
+        """
+        dict_ids = {}
+
+        for dbs, fl in self.fastas["prot"].items():
+            outfile = self.metadir + f"{dbs}_acc2taxid.tsv"
+            if os.path.isfile(outfile):
+                self.meta[dbs] = outfile
+                logging.info(f"acc2taxid map file {outfile} exists, continuing.")
+                continue
+            else:
+                if self.test:
+                    logging.info(f"acc2taxid map file {outfile} not found.")
+                    continue
+                else:
+                    logging.info(f"acc2taxid map file {outfile} not found. creating")
+
+            kept = []
+            with gzip.open(fl, "rb") as fn:
+                ln = str(fn.readline(), "utf-8")
+                while ln:
+                    if ln[0] == ">":
+
+                        tp = ln.split()[0][1:]
+
+                        if dbs == "rvdb":
+                            tp = tp.split("|")[2]
+                        kept.append(tp)
+                    else:
+                        ln = str(fn.readline(), "utf-8")
+                        continue
+                    ln = str(fn.readline(), "utf-8")
+
+            dict_ids[dbs] = pd.DataFrame(kept, columns=["acc"])
+
+        return dict_ids
+
+    def get_prot(self):
+        """
+        download ncbi protein acc2taxid files.
+        :return:
+        """
+        acc2tax_dir = self.metadir + "prot.accession2taxid/"
+
+        if not os.path.isdir(acc2tax_dir):
+            os.mkdir(acc2tax_dir)
+
+            for si in range(1, 11):
+                file = f"https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.FULL.{si}.gz"
+                filename = os.path.basename(file)
+                fexist = False
+                tries = 0
+                while not fexist:
+                    try:
+                        subprocess.run(
+                            [
+                                "wget",
+                                "-P",
+                                self.metadir + "prot.accession2taxid/",
+                                f"https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.FULL.{si}.gz",
+                            ]
+                        )
+                    except subprocess.CalledProcessError as e:
+                        print(f"failed download protein taxonomy {filename}")
+                        tries += 1
+                        if tries == 10:
+                            logging.info(
+                                f"tried downloading {filename} 10 times. check connection. exiting."
+                            )
+                            raise SystemExit()
+                    else:
+                        fexist = True
+
+        return acc2tax_dir
+
+
+def untax_get(taxdump, odir, dbname, sdir="taxonomy/"):
+    """
+    download and unzip taxdump.
+    :param odir: directory to store taxdump
+    :param dbname: name of database directory to store taxdump
+    """
+    sdir = f"/{sdir}"
+    try:
+        subprocess.run(
+            [
+                f"tar",
+                "-xvzf",
+                f"{odir + dbname}{sdir}taxdump.tar.gz",
+                "-C",
+                f"{odir + dbname}{sdir}",
+            ],
+            check=True,
+        )
+
+    except subprocess.CalledProcessError:
+        logging.info("failed to extract taxdump.")
+        if taxdump:
+            logging.info(f"getting local {taxdump}")
+            os.system(f"cp {taxdump} {odir + dbname}{sdir}taxdump.tar.gz")
+        else:
+            logging.info("taxdump not provided. downloading using wget.")
+            subprocess.run(
+                [
+                    "wget",
+                    "-P",
+                    odir + dbname + {sdir},
+                    "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz",
+                ]
+            )
+
+        subprocess.run(
+            [
+                f"tar",
+                "-xvzf",
+                f"{odir + dbname}/taxonomy/taxdump.tar.gz",
+                "-C",
+                f"{odir + dbname}/taxonomy/",
+            ],
+            check=True,
+        )
+
+
+class setup_install(setup_dl):
+    def __init__(
+        self,
+        INSTALL_PARAMS,
+        home="",
+        bindir="",
+        taxdump="",
+        test=False,
+        organism="viral",
+    ):
+        super().__init__(INSTALL_PARAMS, home, bindir, test=test)
+        self.taxdump = taxdump
+
+        if not self.taxdump:
+            logging.info(
+                "taxdump not provided. will use default software \
+                    download. May encounter issues. Suggest provinding."
+            )
+
+    def install_prep(self):
+        """
+        initializes dbs dictionary to store installation directories by name, know what you have installed.
+        """
+
+        self.dbs = {}
+
+    def centrifuge_install(
+        self,
+        dbname="viral",
+        threads="3",
+        id="centrifuge",
+        dbdir="centrifuge",
+        dlp="curl",
+    ):
+        """
+        install centrifuge.
+        :param dbname: name of centrifuge db.
+        :param threads: number of threads to use.
+        :return:
+        """
+        if not dbdir:
+            dbdir = id
+
+        odir = self.dbdir + dbdir + "/"
+        bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
+        sdir = odir + dbname + "/" + dbname
+        if os.path.isfile(odir + dbname + "/index.1.cf"):
+            logging.info(f"Centrifuge db {dbname} index is installed.")
+            centrifuge_fasta = f"{sdir}/complete.fna.gz"
+            if os.path.isfile(os.path.splitext(centrifuge_fasta)[0]):
+                os.system(f"bgzip {os.path.splitext(centrifuge_fasta)[0]}")
+
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "fasta": f"{sdir}/complete.fna.gz",
+            }
+            return
+        else:
+            if self.test:
+                logging.info(f"Centrifuge db {dbname} is not installed.")
+                return
+            else:
+                logging.info(f"Centrifuge db {dbname} is not installed. Installing...")
+
+        subprocess.run(["mkdir", "-p", odir])
+        #
+        tax_command = [
+            bin + "centrifuge-download",
+            "-o",
+            odir + dbname,
+            "-P",
+            threads,
+            "taxonomy",
+        ]
+        #
+        seqmap_command = [
+            bin + "centrifuge-download",
+            "-o",
+            odir + dbname,
+            "-P",
+            threads,
+            "-m",
+            "-d",
+            dbname,
+            "refseq",
+        ]
+
+        build_command = [
+            bin + "centrifuge-build",
+            "-o",
+            odir + dbname,
+            "-p",
+            threads,
+            "--conversion-table",
+            f"{odir}{dbname}.seq2taxid.map",
+            "--taxonomy-tree",
+            f"{odir}{dbname}/nodes.dmp",
+            "--name-table",
+            f"{odir}{dbname}/names.dmp",
+            f"{sdir}/complete.fna",
+            f"{odir}{dbname}/index",
+        ]
+
+        ###
+        subprocess.run(tax_command)
+        os.system(" ".join(seqmap_command) + f" > {odir}{dbname}.seq2taxid.map")
+
+        os.system(f"cat {sdir}/*fna > {sdir}/complete.fna")
+
+        subprocess.run(build_command)
+
+        os.system(f"bgzip {sdir}/complete.fna")
+
+        self.dbs[id] = {
+            "dir": odir,
+            "dbname": dbname,
+            "fasta": f"{sdir}/complete.fna.gz",
+        }
+
+    def clark_install(
+        self,
+        dbname="viral",
+        id="clark",
+        dbdir="clark",
+    ):
+        dbname_translate = {
+            "viral": "viruses",
+            "bacteria": "bacteria",
+            "archaea": "archaea",
+            "fungi": "fungi",
+        }
+
+        dbname = dbname_translate[dbname]
+
+        odir = self.dbdir + dbdir + "/"
+        bin = self.envs["ROOT"] + self.envs[id] + "/"
+
+        if os.path.isfile(odir + dbname + f"/.{dbname}"):
+
+            logging.info(f"{id} db {dbname} is installed.")
+
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+            }
+            return
+        else:
+            if self.test:
+                logging.info(f"CLARK db {dbname} is not installed.")
+                return
+            else:
+                logging.info(f"CLARK db {dbname} is not installed. Installing...")
+
+        subprocess.run(["mkdir", "-p", odir])
+        ##
+
+        lib_command = [
+            bin + "set_targets.sh",
+            odir + dbname,
+            dbname,
+            "--species",
+        ]
+
+        spaced_command = [bin + "buildSpacedDB.sh"]
+
+        try:
+            subprocess.run(lib_command)
+
+        except subprocess.CalledProcessError as e:
+            logging.error(f"CLARK db {dbname} failed to download. {e}")
+            return
+
+        try:
+            subprocess.run(spaced_command)
+
+        except subprocess.CalledProcessError as e:
+            logging.error(f"CLARK db spaced DB failed to build. {e}")
+            return
+
+        self.dbs[id] = {
+            "dir": odir,
+            "dbname": dbname,
+            "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
+        }
+
+    def kraken2_install(
+        self,
+        dbname="viral",
+        threads="5",
+        id="kraken2",
+        dbdir="kraken2",
+        build_args="--max-db-size 18000000000 --kmer-len 31",
+        ftp=False,
+    ):
+
+        odir = self.dbdir + dbdir + "/"
+        bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
+
+        if os.path.isfile(odir + dbname + "/taxo.k2d"):
+            logging.info(f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
+            krk2_fasta = odir + dbname + "/library/" + dbname + "/library.fna.gz"
+            if os.path.isfile(os.path.splitext(krk2_fasta)[0]):
+                os.system("bgzip " + os.path.splitext(krk2_fasta)[0])
+
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
+            }
+            return
+        else:
+            if self.test:
+                logging.info(f"Kraken2 db {dbname} is not installed.")
+                return
+            else:
+                logging.info(f"Kraken2 db {dbname} is not installed. Installing...")
+
+        subprocess.run(["mkdir", "-p", odir])
+        ##
+
+        lib_command = [
+            bin + "kraken2-build",
+            "--download-library",
+            dbname,
+            "--db",
+            odir + dbname,
+            "--threads",
+            threads,
+        ]
+        tax_command = [
+            bin + "kraken2-build",
+            "--download-taxonomy",
+            "--db",
+            odir + dbname,
+            "--threads",
+            threads,
+        ]
+        build_command = [
+            bin + "kraken2-build",
+            "--build",
+            build_args,
+            "--db",
+            odir + dbname,
+            "--threads",
+            threads,
+        ]
+
+        if ftp:
+            lib_command.append("--ftp")
+            tax_command.append("--ftp")
+
+        try:
+            subprocess.run(lib_command)
+
+        except subprocess.CalledProcessError as e:
+            if not ftp:
+                logging.info(
+                    f"Kraken2 db {dbname} library download failed. Attempting to download from ftp."
+                )
+                lib_command.append("--ftp")
+                subprocess.run(lib_command)
+
+            logging.error("kraken2 library download failed command.")
+        ##
+        try:
+            subprocess.run(tax_command)
+
+        except subprocess.CalledProcessError as e:
+            if not ftp:
+                logging.info(
+                    f"Kraken2 db {dbname} taxonomy download failed. Attempting to download from ftp."
+                )
+                tax_command.append("--ftp")
+                subprocess.run(tax_command)
+            logging.error("kraken2 taxonomy download failed command.")
+
+        subprocess.call(" ".join(build_command), shell=True)
+        untax_get(self.taxdump, odir, dbname)
+        os.system("bgzip " + odir + dbname + "/library/" + dbname + "/library.fna")
+
+        self.dbs[id] = {
+            "dir": odir,
+            "dbname": dbname,
+            "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
+        }
+
+    def diamond_install(
+        self, id="diamond", dbdir="diamond", dbname="swissprot", db="swissprot.gz"
+    ):
+
+        odir = self.dbdir + dbdir + "/"
+        bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
+
+        if os.path.isfile(odir + dbname + ".dmnd"):
+            logging.info(f"diamond db {dbname}.dmnd present. Diamond prepped.")
+            return
+        else:
+            if self.test:
+                logging.info(f"diamond db {dbname} .")
+                return
+            else:
+                logging.info(f"diamond db {dbname} . Installing...")
+
+        subprocess.run(["mkdir", "-p", odir])
+        command = [bin + "diamond", "makedb", "--in", db, "--db", odir + dbname]
+
+        subprocess.call(" ".join(command), shell=True)
+
+        self.dbs[id] = {"dir": odir, "dbname": dbname}
+
+    def kuniq_install(
+        self,
+        id="kuniq",
+        dbdir="kuniq",
+        dbname="viral",
+        threads="6",
+        dl_args="--force --min-seq-len 300 --dust",
+        build_args="--jellyfish-hash-size 10M --kmer-len 31 --taxids-for-genomes --taxids-for-sequences",
+    ):
+
+        odir = self.dbdir + dbdir + "/"
+        bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
+
+        if os.path.isfile(odir + dbname + "/taxDB"):
+            logging.info(f"Krakenuniq {dbname} taxDB present. prepped.")
+            if not os.path.isfile(f"{self.metadir}/protein_acc2protid.tsv"):
+                seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
+                seqmap.columns = ["acc", "protid"]
+                seqmap.to_csv(
+                    f"{self.metadir}/protein_acc2protid.tsv",
+                    sep="\t",
+                    header=True,
+                    index=False,
+                )
+
+            return
+        else:
+            if self.test:
+                logging.info(f"Krakenuniq {dbname} taxDB not present.")
+                return
+            else:
+                logging.info(
+                    f"Krakenuniq {dbname} viral is not installed. Installing..."
+                )
+
+        subprocess.run(["mkdir", "-p", odir])
+
+        tax_command = [
+            bin + "krakenuniq-download",
+            "--db",
+            odir + dbname,
+            "--threads",
+            threads,
+            "taxonomy",
+        ]
+        lib_command = [
+            bin + "krakenuniq-download",
+            "--db",
+            odir + dbname,
+            "--threads",
+            threads,
+            dl_args,
+            f"refseq/{dbname}",
+        ]
+
+        build_command = [
+            bin + "krakenuniq-build",
+            "--db",
+            odir + dbname,
+            "--threads",
+            threads,
+            "--jellyfish-bin",
+            bin + "jellyfish",
+            build_args,
+        ]
+
+        try:
+            subprocess.run(tax_command)
+            untax_get(self.taxdump, odir, dbname)
+            #
+            subprocess.run(" ".join(lib_command), shell=True)
+
+            subprocess.call(" ".join(build_command), shell=True)
+
+        except subprocess.CalledProcessError:
+            logging.error("failed to install krakenuniq db")
+
+        seqid = pd.read_csv(f"{odir + dbname}/seqid2taxid.map.orig", sep="\t")
+        seqid.columns = ["refseq", "taxid", "merge"]
+        seqid[["GTDB", "description"]] = seqid["merge"].str.split(" ", 1, expand=True)
+        seqid = seqid.drop("merge", 1)
+        seqid.to_csv(
+            f"{odir + dbname}/seqid2taxid.map.orig", sep="\t", header=True, index=False
+        )
+
+        seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
+        seqmap.columns = ["acc", "protid"]
+        seqmap.to_csv(
+            f"{self.metadir}/protein_acc2protid.tsv", sep="\t", header=True, index=False
+        )
+
+        self.dbs[id] = {"dir": odir, "dbname": dbname}
+
+    def kaiju_viral_install(self, id="kaiju", dbdir="kaiju", dbname="viral"):
+
+        odir = self.dbdir + dbdir + "/"
+        bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
+        subdb = odir + dbname + "/"
+        db_online = "https://kaiju.binf.ku.dk/database/kaiju_db_viruses_2021-02-24.tgz"
+        file = os.path.basename(db_online)
+        if os.path.isfile(subdb + "kaiju_db_viruses.fmi"):
+            logging.info(f"Kaiju {dbname}  is installed.")
+            return
+        else:
+            logging.info(f"Kaiju {dbname} db is not installed. Installing...")
+
+        subprocess.run(["mkdir", "-p", odir])
+
+        subprocess.run(["wget", "-P", subdb, db_online, "--no-check-certificate"])
+        CWD = os.getcwd()
+        os.chdir(subdb)
+        subprocess.run(["tar", "-zxvf", file])
+        subprocess.run(["rm", file])
+        os.chdir(CWD)
+
+        self.dbs[id] = {"dir": subdb, "dbname": dbname}
+
+    def blast_install(
+        self,
+        id="blast",
+        dbdir="blast",
+        reference="",
+        dbname="viral",
+        nuc=True,
+        taxid_map="",
+        args="-parse_seqids",
+        title="viral db",
+    ):
+
+        odir = self.dbdir + dbdir + "/"
+
+        dbtype = "nucl"
+        sdir = "NUC/"
+
+        if not nuc:
+            dbtype = "prot"
+            sdir = "PROT/"
+        sdir = odir + sdir
+
+        bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
+        db = sdir + dbname
+        if os.path.isfile(db + f".{dbtype[0]}db"):
+            logging.info(f"blast index for {dbname} is installed.")
+            return
+        else:
+            logging.info(f"blast index for {reference} is not installed. Installing...")
+
+        subprocess.run(["mkdir", "-p", odir])
+
+        gzipped = False
+        if reference[-3:] == ".gz":
+            gzipped = True
+            subprocess.run(["gunzip", reference])
+            reference = os.path.splitext(reference)[0]
+
+        commands = [
+            bin + "makeblastdb",
+            "-in",
+            reference,
+            "-out",
+            db,
+            "-dbtype",
+            dbtype,
+            "-title",
+            title,
+            args,
+        ]
+
+        if taxid_map:
+            commands += ["-taxid_map", taxid_map]
+
+        try:
+            subprocess.run(commands)
+        finally:
+            if gzipped:
+                subprocess.run(["bgzip", reference])
+                reference = reference + ".gz"
+
+        self.dbs[id] = {"dir": sdir, "dbname": dbname}
+
+    def virsorter_install(
+        self, id="virsorter", dbdir="virsorter", dbname="viral", threads="4"
+    ):
+        """
+        install virsorter
+        :param id:
+        :param dbdir:
+        :param dbname:
+        :param threads:
+        :return:
+        """
+        odir = self.dbdir + dbdir + "/"
+        bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
+        if os.path.isfile(odir + "Done_all_setup"):
+            logging.info("Virsorter is installed.")
+            return
+        else:
+            if self.test:
+                logging.info("Virsorter is not installed.")
+            else:
+                logging.info("Virsorter is not installed. Installing...")
+
+        subprocess.run(["mkdir", "-p", odir])
+
+        commands = [
+            bin + "virsorter",
+            "setup",
+            "-d",
+            odir,
+            "-j",
+            threads,
+        ]
+
+        tmpsh = "virsorter_install.sh"
+
+        bash_lines = [
+            "#!/bin/bash",
+            f"source {self.source}",
+            f"conda activate {self.envs['ROOT'] + self.envs[id]}",
+            " ".join(commands),
+            "conda deactivate",
+        ]
+
+        os.system("touch " + tmpsh)
+        with open(tmpsh, "w") as f:
+            for l in bash_lines:
+                os.system('echo "{}" >> {}'.format(l, tmpsh))
+        #                f.write("/n".join(bash_lines))
+
+        subprocess.run(["chmod", "+x", tmpsh])
+        subprocess.call(f"./{tmpsh}")
+
+        os.system("rm " + tmpsh)
+
+        self.dbs[id] = {"dir": odir, "dbname": dbname}
+
+    def fve_install(
+        self,
+        id="fve",
+        dbdir="fve",
+        dbname="viral",
+        virus_list="viruslist.txt",
+        list_create=False,
+        reference="",
+    ):
+        """
+        install Fast Virome Explorer
+        :param id:
+        :param dbdir:
+        :param dbname:
+        :param threads:
+        :return:
+        """
+        odir = self.dbdir + dbdir + "/"
+        bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
+        subdir = odir + dbname + "/"
+        fidx = subdir + dbname + ".idx"
+
+        if os.path.isfile(fidx):
+            logging.info(f"FastViromeExplorer index for {reference} is installed.")
+            return
+        else:
+            if self.test:
+                logging.info(f"FastViromeExplorer {reference} index is not installed.")
+            else:
+                logging.info(
+                    f"FastViromeExplorer {reference} index is not installed. Installing..."
+                )
+
+        subprocess.run(["mkdir", "-p", subdir])
+
+        gzipped = False
+        if reference[-3:] == ".gz":
+            gzipped = True
+            subprocess.run(["gunzip", reference])
+            reference = os.path.splitext(reference)[0]
+
+        genlistbin = (
+            self.envs["ROOT"]
+            + self.envs[id]
+            + "/utility-scripts/"
+            + "generateGenomeList.sh"
+        )
+
+        comm_vlist = [
+            genlistbin,
+            reference,
+            virus_list,
+        ]
+
+        com_kallisto = [
+            self.envs["ROOT"] + self.envs["kallisto"] + "/bin/kallisto",
+            "index",
+            "-i",
+            fidx,
+            reference,
+            "--make-unique",
+        ]
+
+        try:
+            if list_create or not virus_list:
+                os.system(f"chmod +x {genlistbin}")
+                subprocess.call(" ".join(comm_vlist), shell=True)
+
+            subprocess.run(com_kallisto)
+            os.system(f"mv {virus_list} {subdir}")
+
+        finally:
+            if gzipped:
+                subprocess.run(["bgzip", reference])
+                reference = reference + ".gz"
+
+        self.dbs[id] = {"dir": subdir, "dbname": dbname}
+
+    def deSAMBA_install(
+        self, id="deSAMBA", dbdir="deSAMBA", dbname="viral", reference=""
+    ):
+        """
+        install virsorter
+        :param id:
+        :param dbdir:
+        :param dbname:
+        :param threads:
+        :return:
+        """
+        odir = self.dbdir + dbdir + "/"
+        sdir = odir + dbname
+        bin = self.envs["ROOT"] + self.envs[id]
+
+        if os.path.isfile(sdir + "/deSAMBA.bwt"):
+            logging.info(f"deSAMBA db {dbname} is installed.")
+            return
+        else:
+            if self.test:
+                logging.info(f"deSAMBA db {dbname} is not installed.")
+            else:
+                logging.info(f"deSAMBA db {dbname} is not installed. Installing...")
+
+        subprocess.run(["mkdir", "-p", odir])
+
+        gzipped = False
+        if reference[-3:] == ".gz":
+            gzipped = True
+            subprocess.run(["gunzip", reference])
+            reference = os.path.splitext(reference)[0]
+
+        build_command = [bin + "/build-index", reference, sdir]
+        try:
+            CWD = os.getcwd()
+            os.chdir(bin)
+            subprocess.call(" ".join(build_command), shell=True)
+            os.chdir(CWD)
+
+        finally:
+            if gzipped:
+                subprocess.run(["bgzip", reference])
+                reference = reference + ".gz"
+
+        self.dbs[id] = {"dir": odir, "dbname": dbname}

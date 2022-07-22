@@ -1,0 +1,5 @@
+SANDBOX/
+SANDBOX_nanopore/
+.venv/
+.cenv/
+.git/

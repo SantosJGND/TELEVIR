@@ -1,0 +1,22 @@
+name: hostdepletion
+
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=2.7.18
+  - r=4.1
+  - seqtk=1.3
+  - perl=5.32.1 
+  - blast=2.12.0
+  - minimap2=2.24
+  - krakenuniq=0.6
+  - centrifuge=1.0.4_beta
+  - diamond=2.0.15
+  - kraken2=2.1.2
+  - kaiju=1.8.2
+  - krona=2.8.1
+  - samtools=1.15.1
+  - jellyfish=1.1.12

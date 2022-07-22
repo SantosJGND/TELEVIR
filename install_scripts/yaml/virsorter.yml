@@ -1,0 +1,9 @@
+name: virsorter-env
+
+channels:
+  - bioconda
+  - conda-forge
+
+dependencies:
+  - python=3.8
+  - virsorter=2.2.3

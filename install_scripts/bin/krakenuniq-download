@@ -1,0 +1,1310 @@
+#!/usr/bin/env perl
+
+# krakenuniq-download.pl - based on centrifuge-download
+# (c) Florian Breitwieser, 2017-2019
+# licensed under GPL-3
+
+use strict;
+use warnings;
+use File::Basename;
+use File::Fetch;
+use File::Copy;
+use File::Path qw/make_path remove_tree/;
+use File::Temp qw/tempfile/;
+use IO::Uncompress::Gunzip qw/gunzip $GunzipError/;
+use autodie;
+use Term::ANSIColor;
+use Getopt::Long;
+use LWP::Simple;
+#use LWP::UserAgent;
+use List::Util qw/min/;
+use FindBin;
+use Time::HiRes qw/usleep/;
+use lib "$FindBin::RealBin";
+use File::SortedSeek qw/alphabetic/;
+
+sub download_taxonomy(@);
+sub download_contaminats(@);
+sub download_nt(@);
+sub download(@);
+sub dustmasked_file(@);
+sub dustmasked_file_exists(@);
+sub create_map_files(@);
+sub create_map_file_ac(@);
+sub download_domain(@);
+sub download_viral_neighbors(@);
+sub download_ncbi_search(@);
+sub download_ncbi_acs(@);
+sub get_sorted_maps(@);
+
+my $FTP="ftp://ftp.ncbi.nih.gov";
+my @ALL_GENOMES=qw/bacteria viral archaea fungi protozoa invertebrate plant vertebrate_mammalian vertebrate_other/;
+my %valid_domains = map { $_ => 1 } @ALL_GENOMES;
+my @ALL_DATABASES=qw/refseq genbank taxonomy contaminants/;
+my @ALL_ASSEMBLY_LEVELS=qw/Complete_Genome Chromosome Scaffold Contig/;
+my @SMALL_GENOMES=qw/mitochondrion plasmid plastid/;
+
+my $FILTER_NT_SCRIPT = "$FindBin::RealBin/krakenuniq-filter_nt";
+
+## Option parsing
+my $DATABASE="refseq";
+my $ASSEMBLY_LEVEL="Complete_Genome";
+my $REFSEQ_CATEGORY;
+my $TAXID;
+
+my $BASE_DIR;
+my $DB_DIR;
+my $N_PROC=5;
+my $MAP_DIV;
+my $CHANGE_HEADER=0;
+my $RETMODE="text";
+my $RETTYPE="fasta";
+my $NCBIDB="nuccore";
+my $WRITE_MAPS=1;
+my $DO_DUST=0;
+my $FILTER_UNPLACED=0;
+my $MIN_SEQ_LEN=0;
+my $SEARCH_TERM;
+my $VERBOSE=0;
+my $OVERWRITE_FILES=0;
+my $DOMAINS;
+my $DL_MOD_RSYNC;
+my $n_children = 0;
+my $NUC_AC;
+my $EXCLUDE_ENVIRONMENTAL_TAXIDS = 0;
+my $NT_FNA_FILE=undef;
+my %taxid_name_map;
+my @pids;
+
+
+# Taxa list modified from https://raw.githubusercontent.com/bioinformatics-centre/kaiju/master/util/taxonlist.tsv
+my %division_to_taxids = (
+  bacteria => [
+    2,    #	Bacteria
+  ],
+  archaea => [
+    2157  # Archaea
+  ], 
+  viral => [
+    10239, # Viruses
+    12884, # Viroids 
+  ],
+  fungi => [
+    4751, # Fungi
+  ],
+  protozoa => [
+    33630, # Alveolata - 'with cavities' / flattened alveoli under the membrane 
+    ## 5794, # Apicomplexa - parasitic alveolates w/ apicoplast plastid
+    ## 88547, # Syndiniales - dinoflagellates, found exclusively as endosymbionts
+    554915, # Amoebozoa - protists w/ pseudopods w/ wide range in size
+    ## 5758, # Entamoeba - internal amoebal parasites
+    554296, # Apusozoa - flagellate protists feeding on bacteria
+    1401294, # Breviatea - flagellate amoeboid protists w/o mitochondrion
+    193537, # Centroheliozoa - helizoical protists w/ stiff arms (axopodia) radiating from their pody
+    3041, # Chlorophyta - green algaea
+    28009, # Choanoflagellida - colonial flagellate protists
+    190322, # Collodictyonidae - aquatic protists w/ 2 to 4 terminal flagella
+    3027, # Cryptophyta - algae w/ plastids and two flagella
+    33682, # Euglenozoa - flagellate excavates
+    ## 5653, # Kinetoplastida - euglenzoa with a larged massed DNA organelled called kinetoplast
+    207245, # Fornicata - excavates
+    38254, # Glaucocystophyceae - freshwater algae
+    2830, # Haptophyta - algae
+    5752, # Heterolobosea - colorless non-photosynthetic excavates
+    556282, # Jakobida - excavaes
+    339960, # Katablepharidophyta - heterotrophic flagellates
+    136087, # Malawimonadidae
+    66288, # Oxymonadida - flagellated protozoa found exclusively in the intestines of termites and other wood-eating insects
+    759891, # Palpitomonas - marine biflagellate 
+    5719, # Parabasalia - group of flagellated protists in symbiotic and parasitic animal relationships
+    419944, # Picozoa - marine unicellular heterotrophic eukaryotes
+    543769, # Rhizaria - amoeboids with filose, reticulose, or microtubule-supported pseudopods
+    2763, # Rhodophyta - red algae
+    33634, # Stramenopiles -  algae, ranging from the giant multicellular kelp to the unicellular diatoms. Also including Phytophthora of Irish potato famine infamy and Pythium which causes seed rot and damping off
+    589438, # Telonemida - protist phylum with affinity to chromist lineages
+    137418, # Trimastix
+    1084709, # Tsukubamonadidae
+  ],
+  parasitic_worms => [
+    6199, # Cestoda (Tapeworms)
+    6178, # Trematoda (Flukes)
+    37945, # Monogenea 
+    10232, # Acanthocephala
+    6231, # Nematoda (Roundworms)
+  ]
+);
+
+my $available_divisions = join(", ", sort keys %division_to_taxids);
+my $TAXIDS_OR_DIVISIONS = "bacteria,archaea,viral,fungi,protozoa";
+
+my $downloaded_viral_refseq=0;
+my $FNA_FILES="genomic";
+my $vir_nbr_search_term = "viruses[organism] not cellular organisms[orgn] not wgs[prop] not gbdiv syn[prop] and (nuccore genome samespecies[filter] and (complete[title]) not unverified[title])";
+
+my $USAGE="\n".basename($0).
+" [<options>] <pattern> <pattern>*
+
+ARGUMENTS
+ <pattern> can be one of
+     'contaminants'     Contaminant sequences from UniVec and EmVec.
+     'taxonomy'         NCBI taxonomy mappings from ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/
+     'nucleotide'       Download nucleotide sequences using a query specified using --search or --ac.
+     'microbial-nt'     Download microbial sequences from nt database.
+     'nt'               Download sequences from nt database, specified via --taxa, specified via --taxa.
+     'viral-neighbors'  Download viral strain sequences from the NCBI Viral Genome Resource.
+                        (Search: \"$vir_nbr_search_term\").
+     'genbank/DOMAIN'   Download all complete genomes for DOMAIN from GenBank.
+     'refseq/DOMAIN'    Download all complete genomes for DOMAIN from RefSeq.
+     'refseq/DOMAIN/ASS_LEVEL'
+     'refseq/DOMAIN/ASS_LEVEL/COLUMN=value1(/COLUMN=value2)*' 
+        Possible values for DOMAIN: @ALL_GENOMES.
+        Possible values for ASS_LEVEL: Any, Complete_Genome, Chromosome, Scaffold and Contig. 
+        Possible values for COLUMN: Any column in the NCBI assembly_summary.txt, e.g. species_taxid or assembly_accession.
+        Example: 'refseq/vertebrate_mammalian/Any/species_taxid=9606' <- download all human assemblies
+
+COMMON OPTIONS
+ -o <directory>     Folder to which the files are downloaded. Default: '.'
+ --db <directory>   Alternative to -o: Download to <directory>/{library,taxonomy}.
+ --threads <# of threads>  Number of processes when downloading (uses xargs). Default: '$N_PROC'
+ --rsync, -R        Download using rsync.
+ --overwrite        Redownload and overwrite files with the same name.
+ --verbose          Be verbose.
+ --dust, -D         Mask low-complexity regions using dustmasker.
+ --min-seq-len X    Filter all sequences from the FASTA files that have less than X bp.
+
+WHEN USING DATABASE nucleotide OR viral-neighbors:
+ --search SEARCH_TERM  Download all sequences returned from a NCBI nucleotide search.
+                       When used with viral-neighbors, it subsets the viral genomes by the search.
+                       E.g. \"txid1570291[Organism]\" for Ebola virus sequences (taxonomy ID 1570291).
+ --ac AC1,AC2          Alternative to --search. Download specified ACs of nucleotide database.
+ --mapping-file MAP    Map accessions using the specified mapping file(s) (comma-separated).
+                       Possible values: nucl_est, nucl_gb, nucl_gss, nucl_wgs.
+                       For viral-neighbors, the default is nucl_gb. Unset by giving it an empty string.
+                       Downloaded from ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/.
+ --retmode RM          Specify return mode. Possible options: text (default), asn.1, xml.
+ --rettype RT          Specify return type for download. Note that no mapping files are generated when
+                       rettype is specified. Possible options: fasta (default), gb, gbc, native, acc, seqid, ft, 
+                       gbwithparts, fasta_cds_na, fasta_cds_aa. Note that only gb and fasta files are split, while the other formats stay in chunks.
+                       The resulting files will have the rettype as extension.
+
+WHEN USING DATABASE nt OR microbial-nt:
+ --taxa TAXLIST     Provide a list of taxa that are kept in the nt database. Comma separated, supply either 
+                    taxIDs in the format taxIDXXXX, where XXXX is the NCBI taxonomy ID, or one of the 
+                    following division names: $available_divisions.
+                    Default: \"$TAXIDS_OR_DIVISIONS\"
+ --exclude-environmental-taxa
+                    Exclude taxa that are named 'environmental samples'.
+
+WHEN USING DATABASE refseq OR genbank:
+ --fna <seq types>  Comma-separated list of sequence types, including genomic, rna, rna_from_genomic, cds_from_genomic. Default: $FNA_FILES.
+                    See the assembly project FTP site for available sequences
+ -u                 Filter unplaced sequences.
+";
+
+# arguments: $OPTFIND (current index), $OPTARG (argument for option), $OPTERR (bash-specific)
+Getopt::Long::Configure('no_auto_abbrev','pass_through');
+GetOptions(
+  "output|o=s"  =>\$BASE_DIR,
+  "db=s" => \$DB_DIR,
+  "threads|P=i" =>\$N_PROC,
+  "domain|d=s"  => \$DOMAINS,
+  "assembly-level|a=s" => \$ASSEMBLY_LEVEL,
+  "category|c=s" => \$REFSEQ_CATEGORY,
+  "taxonomy-id|t=s" => \$TAXID,
+  "fna=s" => \$FNA_FILES,
+  "rsync|R" => \$DL_MOD_RSYNC,
+  "filter-unplaced|u" => \$FILTER_UNPLACED,
+  "min-seq-len=i" => \$MIN_SEQ_LEN,
+  "search=s" => \$SEARCH_TERM,
+  "term=s" => \$SEARCH_TERM,
+  "ac=s" => \$NUC_AC,
+  "mapping-file=s" => \$MAP_DIV,
+  "taxa=s" => \$TAXIDS_OR_DIVISIONS,
+  "nt-fna=s" => \$NT_FNA_FILE,
+  "exclude-environmental-taxa" => \$EXCLUDE_ENVIRONMENTAL_TAXIDS,
+  "dust|D" => \$DO_DUST,
+  "change-header|l" => \$CHANGE_HEADER,
+  "rettype=s" => \$RETTYPE,
+  "retmode=s" => \$RETMODE,
+  "ncbidb=s" => \$NCBIDB,
+  "force" => \$OVERWRITE_FILES,
+  "verbose|v" => \$VERBOSE) or die "Error in command line arguments";
+
+if (defined $BASE_DIR && defined $DB_DIR) {
+  print "Define either --db or -o, not both!";
+  exit 1;
+}
+
+#my $ua = LWP::UserAgent->new( ssl_opts => { verify_hostname => 0 } );
+
+# Use current directory as base directory
+$BASE_DIR = "." unless defined $DB_DIR || defined $BASE_DIR;
+
+# If DB directory is defined, use that as base directory
+#  -- kept -o and --db options to allow the use of either Kraken and Centrifuge type command line
+my $add_dir = defined $DB_DIR;
+$BASE_DIR = $DB_DIR if defined $DB_DIR;
+sub get_dir {
+  my ($dir, $name) = @_;
+  my $dir1 = $add_dir && defined $name? "$dir/$name" : $dir;
+  -d "$dir1/" || make_path $dir1;
+  return $dir1;
+}
+
+my %select_taxonomy_ids;
+if (defined $TAXID) {
+  %select_taxonomy_ids = map { $_ => 1 } split(/,/, $TAXID);
+}
+
+if (!defined $ARGV[0]) {
+  print STDERR $USAGE;
+  exit 1;
+}
+
+foreach my $DATABASE (@ARGV) {
+  if ( $DATABASE eq "taxonomy" ) { 
+    download_taxonomy(get_dir($BASE_DIR,"taxonomy"));
+  } elsif ( $DATABASE eq "contaminants" ) { 
+    download_contaminats(get_dir($BASE_DIR,"library/contaminants"));
+  } elsif ( $DATABASE =~ /^refseq/ || $DATABASE =~ /^genbank/ ) {
+    my ($db, $domains, $assembly_levels, @additional_filters) = split(/\//, $DATABASE);
+    $domains = $DOMAINS unless defined $domains;
+    $assembly_levels = $ASSEMBLY_LEVEL unless defined $assembly_levels;
+
+    foreach my $domain (split(/,/, $domains)) {
+      my $lib_dir = $add_dir? "$BASE_DIR/library/$domain" : "$BASE_DIR/$domain";
+      foreach my $assembly_level (split(/,/, $assembly_levels)) {
+          download_domain($db, $lib_dir, $domain, $assembly_level, @additional_filters);
+      }
+    }
+  } elsif ($DATABASE eq 'viral-neighbors') {
+    my $nbr_lib_dir = $add_dir? "$BASE_DIR/library/viral/Neighbors" : "$BASE_DIR/viral/Neighbors";
+    my $addon_search_term = $SEARCH_TERM;
+    download_viral_neighbors($nbr_lib_dir, $addon_search_term);
+  } elsif ($DATABASE eq 'nucleotide' || $DATABASE eq 'assembly' || $DATABASE eq 'genome') {
+    my $ncbi_db = $DATABASE;
+    $ncbi_db = "nuccore" if $ncbi_db eq "nucleotide";
+    my $nbr_dir = $add_dir? "$BASE_DIR/library/$DATABASE/" : "$BASE_DIR/$DATABASE/";
+
+    if (!defined $NUC_AC && !defined $SEARCH_TERM) {
+      print STDERR "Please define a search term with --search when using database nucleotide, or provide ACs with --ac. \n".
+                   " E.g. --search 'srcdb_refseq[prop] plasmid[title] complete sequence[title] txid2[organism]'\n.";
+      exit 1;
+    }
+
+    if (defined $NUC_AC) {
+      if ($DATABASE eq 'assembly') {
+        download_ncbi_search($nbr_dir, $ncbi_db, $NUC_AC."[Assembly Accession]")
+      } else {
+        download_ncbi_search($nbr_dir, $ncbi_db, $NUC_AC."[Accession]")
+      }
+    } 
+    
+    if (defined $SEARCH_TERM) {
+      download_ncbi_search($nbr_dir, $ncbi_db, $SEARCH_TERM, get_sorted_maps($MAP_DIV));
+    }
+  } elsif ($DATABASE eq 'nt' || $DATABASE eq 'microbial-nt') {
+    download_taxonomy(get_dir($BASE_DIR,"taxonomy"));
+    download_nt($BASE_DIR, get_dir($BASE_DIR,"taxonomy"), get_dir($BASE_DIR,"library"));
+
+  } else {
+    print STDERR "Unknown database $DATABASE. \n";
+    print STDERR $USAGE;
+    exit 1;
+  }
+}
+
+
+
+
+
+#########################################################
+## Functions
+
+sub download(@) {
+  my ($url, $file, $opts) = @_;
+
+  my $res_file = $file;
+  my $do_gunzip = defined $opts && defined $opts->{'gunzip'};
+  if ($do_gunzip) {
+    ($res_file = $file) =~ s/.gz$//;
+  }
+
+  my $VERBOSE = $VERBOSE || (defined $opts  && defined $opts->{'verbose'} && $opts->{'verbose'});
+
+  if (!$OVERWRITE_FILES && -s $res_file) {
+    if ($VERBOSE) {
+      print STDERR "Not fetching $url - file $res_file exists.\n";
+      check_file($res_file);
+    }
+    return -s $res_file;
+  }
+
+  make_path(dirname($file)) unless -d dirname($file);
+
+  if (!-s $file) {
+    # download file from URL
+    $url =~ s/\[/%5B/g;
+    $url =~ s/\]/%5D/g;
+    if ( $DL_MOD_RSYNC && $url =~ /^ftp/ ) {
+      $url =~ s/^ftp/rsync/;
+      print STDERR "Fetching $url to $file ..." if $VERBOSE;
+      my $ff = File::Fetch->new(uri=>"$url");
+      my $where = $ff->fetch(to=> dirname($file));
+      if (!defined $where) {
+        print STDERR "Error downloading $url.\n";
+        print STDERR $ff->error if $VERBOSE;
+         return undef;
+      }
+      move($where, $file);
+    } else {
+      if ($VERBOSE) {
+        system_l("Downloading $file", "curl -g '$url' -o '$file'", {newline=>1}) == 0 or die "Error fetching $url. Is curl installed?\n";
+      } else {
+        system("curl -sg '$url' -o '$file'") == 0 or die "Error fetching $url. Is curl installed?\n";
+      }
+    }
+  }
+  check_file($file) if $VERBOSE;
+
+  if ($do_gunzip) {
+    # system gunzip is 5x faster than IO::Uncompress::Gunzip
+    if (defined $opts->{'dont-unlink-gz-file'}) {
+      system_v("gunzip -c $file > $res_file", $VERBOSE); 
+    } else {
+      system_v("gunzip $file", $VERBOSE); 
+    }
+    check_file($res_file) if $VERBOSE;
+  }
+
+  if (-s $res_file) {
+    print STDERR " SUCCESS\n" if $VERBOSE;
+  } else {
+    print STDERR " FAILED.\n";
+  }
+
+  return -s $res_file;
+}
+
+sub start_fork() {
+  my $pid;
+  return if $N_PROC <= 1;
+  if ($n_children == $N_PROC) {
+    $pid = wait();
+    --$n_children;
+  }
+  if (defined($pid = fork())) {
+    if ($pid) {
+      ++$n_children;
+      #print STDERR "Parent: forked child $pid\n";
+      push @pids, $pid;
+    } 
+  } else {
+    print STDERR "ERROR: Failed to fork\n";
+  }
+  return $pid;
+}
+
+sub wait_children() {
+  foreach my $pid (@pids) {
+    waitpid $pid, 0;
+  }
+  @pids = ();
+  $n_children = 0;
+}
+
+sub end_fork() {
+  exit() unless $N_PROC <= 1;
+}
+
+sub link_to_taxonomy(@) {
+  my ($db1, $id_list) = @_;
+  my $url = sprintf("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=%s&db=taxonomy&id=%s",
+                    $db1, $id_list);
+  my (undef, $temp_f) = tempfile();
+  sleep(1);
+  print STDERR "$url\n";
+  download($url, $temp_f);
+  open (my $F, "<", $temp_f) or die $!;
+  my $in_link = 0;
+  my $taxid;
+  while (<$F>) {
+    if (!$in_link) {
+      next unless /<Link>/;
+      $in_link = 1;
+    } else {
+      if (/<Id>([0-9]*)/) {
+        $taxid = $1;
+        last;
+      }
+    }
+  }
+  close($F);
+  print STDERR "$id_list: $taxid [$temp_f]\n";
+  return $taxid;
+}
+
+sub link_to_taxonomy_old(@) {
+  my ($db1, $id_list) = @_;
+  my $db2 = 'taxonomy';     # &db
+  my $linkname = 'link_to_tax';
+
+  #assemble the esearch URL
+  my $base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/';
+  my $url = $base . "esearch.fcgi?db=$db1&term=$id_list";
+
+  #post the esearch URL
+  print STDERR $url,"\n";
+  my $output = get($url);
+  print STDERR $output;
+
+  #parse WebEnv and QueryKey
+  my $web1 = $1 if ($output =~ /<WebEnv>(\S+)<\/WebEnv>/);
+  my $key1 = $1 if ($output =~ /<QueryKey>(\d+)<\/QueryKey>/);
+
+  #assemble the elink URL
+  $base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/';
+  $url = $base . "elink.fcgi?dbfrom=$db1&db=$db2&query_key=$key1";
+  $url .= "&WebEnv=$web1&linkname=$linkname&cmd=neighbor_history";
+
+  #post the elink URL
+  print STDERR $url,"\n";
+  $output = get($url);
+  print STDERR $output;
+
+
+  #parse WebEnv and QueryKey
+  my $web2 = $1 if ($output =~ /<WebEnv>(\S+)<\/WebEnv>/);
+  my $key2 = $1 if ($output =~ /<QueryKey>(\d+)<\/QueryKey>/);
+
+  ### include this code for ESearch-ELink-ESummary
+  #assemble the esummary URL
+  $url = $base . "esummary.fcgi?db=$db2&query_key=$key2&WebEnv=$web2";
+
+  #post the esummary URL
+  print STDERR $url,"\n";
+  my $docsums = get($url);
+  print "$docsums";
+
+  ### include this code for ESearch-ELink-EFetch
+  #assemble the efetch URL
+  $url = $base . "efetch.fcgi?db=$db2&query_key=$key2&WebEnv=$web2";
+  $url .= "&rettype=xml&retmode=xml";
+  print STDERR $url,"\n";
+
+  #post the efetch URL
+  my $data = get($url);
+  print "$data";
+}
+
+sub get_taxid(@) {
+  my ($ncbi_database, $nbr_ac, @sorted_map_file_handles) = @_;
+  my $taxid;
+  foreach (@sorted_map_file_handles) {
+    my $tell = alphabetic(*$_, $nbr_ac);
+    next unless defined $tell;
+    $taxid = <$_>;
+    $taxid =~ s/.*\t//;
+    chomp $taxid;
+  }
+  
+  if (!defined $taxid || !defined $taxid_name_map{$taxid}) {
+    $taxid = link_to_taxonomy($ncbi_database, $nbr_ac);
+  }
+  
+  if (!defined $taxid) {
+    print STDERR "\nNo taxid mapping for sequence $nbr_ac!\n";
+    die;
+  }
+  return $taxid;
+}
+
+sub download_ncbi_acs(@) {
+  my ($nbr_dir, $ncbi_database, $acs, @sorted_map_files) = @_;
+  my @acs = split(/,/, $acs);
+
+  my @sorted_map_file_handles;
+  foreach (@sorted_map_files) {
+    open(my $FH, "<", $_) or die $!;
+    push @sorted_map_file_handles, $FH;
+  }
+
+  initialize_name_map();
+
+  my $efetch_url="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=$ncbi_database&rettype=$RETTYPE&id=";
+  print STDERR "Downloading ".scalar(@acs)." sequences into $nbr_dir.\n";
+  foreach my $ac (@acs) {
+    my $taxid = get_taxid($ncbi_database, $ac, @sorted_map_file_handles);
+    die "TaxID for $ac??" unless defined $taxid;
+    my $name = $taxid_name_map{$taxid};
+    die "Name for $ac??" unless defined $name;
+    (my $name1 = $name) =~ s/[^a-zA-Z0-9_]/_/g;
+    $name1 =~ s/__/_/g;
+    system("mkdir -p $nbr_dir/$name1-tax$taxid");
+    my $file = "$nbr_dir/$name1-tax$taxid/$ac.$RETTYPE";
+    download($efetch_url.$ac, $file);
+    create_map_file_ac($file, $ac, $taxid);
+  }
+  foreach (@sorted_map_file_handles) {
+    close $_;
+  }
+#  $pm->wait_all_children();
+}
+
+sub download_ncbi_search(@) {
+  my ($nbr_dir, $ncbi_database, $search_term, @sorted_map_files) = @_;
+  return unless defined $search_term;
+  $search_term =~ s/ /+/g;
+
+  my @sorted_map_file_handles;
+  foreach (@sorted_map_files) {
+    open(my $FH, "<", $_) or die $!;
+    push @sorted_map_file_handles, $FH;
+  }
+
+  initialize_name_map();
+
+  my $esearch_url="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
+  my $complete_url="$esearch_url?db=$ncbi_database&usehistory=y&retmax=1&retmode=json&term=$search_term";
+  my $esearch_file = "$nbr_dir/esearch_res.json";
+  download($complete_url, $esearch_file);
+
+  my $n_res=`grep -m1 '"count":' $esearch_file | sed -e 's/.*: "//' -e 's/",.*//'`;
+  chomp $n_res;
+  print STDERR "Downloading $n_res sequences into $nbr_dir.\n";
+  return if (!defined $n_res || $n_res eq 0);
+
+  # Step 2: Download FASTAs (or other formats), 10k at a time
+  my $querykey = `grep "querykey" $esearch_file`;
+  $querykey =~ /"querykey": "(.*)"/;
+  $querykey = $1;
+
+  my $webenv = `grep "webenv" $esearch_file`;
+  $webenv =~ /"webenv": "(.*)"/;
+  $webenv = $1;
+
+  my $url_params="query_key=$querykey&webenv=$webenv";
+  die "Error getting sequences with URL $complete_url . Check $esearch_file." if (!defined $url_params || $url_params eq "");
+  print STDERR $url_params."\n";
+  my $retstart = 0;
+  my $retmax = 10000;
+  my @all_fas = ();
+  while ($retstart < $n_res) {
+
+    my $curr_retmax = min($n_res, $retstart+$retmax);
+    print STDERR "\r  Downloading sequences ".($retstart+1)." to $curr_retmax of $n_res ..." unless $VERBOSE;
+
+    #start_fork() and next;
+    my $part_file = "$nbr_dir/${ncbi_database}-results_".($retstart+1)."-to-$curr_retmax.${RETTYPE}";
+    download("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=$ncbi_database&$url_params&rettype=$RETTYPE&retmode=$RETMODE&retstart=$retstart&retmax=$curr_retmax", $part_file);
+    my $is_fasta = $RETTYPE eq 'fasta';
+    my $is_genbank = $RETTYPE eq 'gb';
+
+    if ($is_fasta || $is_genbank) {
+      my $FA_HANDLE;
+      my $fa_handle_open = 0;
+      open (my $F, "<", $part_file) or die "Couln't open downloaded file";
+      while (my $line = <$F>) {
+        next if $line eq "\n";
+        my $is_header = ($is_fasta && $line =~ /^>/ ) || ($is_genbank && $line =~ /^LOCUS/);
+        if ($is_header) {
+          my $nbr_ac = $line;
+          chomp $nbr_ac;
+          if ($is_fasta) {
+            $nbr_ac =~ s/^>//;
+          } else { #genbank
+            $nbr_ac =~ s/^LOCUS\s*//;
+          }
+          $nbr_ac =~ s/[. ].*//;
+     
+          my $taxid = get_taxid($ncbi_database, $nbr_ac, @sorted_map_file_handles);
+  
+          my $name = $taxid_name_map{$taxid};
+          if (!defined $taxid || !defined $name) {
+            print STDERR "\nNo mapping for sequence $nbr_ac - not writing it to it's own file!\n";
+            close($FA_HANDLE) if $fa_handle_open;
+            $fa_handle_open = 0;
+            next;
+          }
+          (my $name1 = $name) =~ s/[^a-zA-Z0-9_]/_/g;
+          $name1 =~ s/__/_/g;
+          system("mkdir -p $nbr_dir/$name1-tax$taxid");
+          if ($fa_handle_open) {
+            close($FA_HANDLE);
+          } else {
+            $fa_handle_open = 1;
+          }
+          my $file = "$nbr_dir/$name1-tax$taxid/$nbr_ac.$RETTYPE";
+          open($FA_HANDLE, ">", $file) or die "Couln't open file";
+          create_map_file_ac($file, $nbr_ac, $taxid);
+        }
+        print $FA_HANDLE $line if $fa_handle_open;
+      }
+      #end_fork();
+      close ($F);
+      unlink($part_file);
+      close($FA_HANDLE) if $fa_handle_open;
+    }
+    $retstart += $curr_retmax;
+    print STDERR " done \n";
+    wait_children();
+  
+  }
+  foreach (@sorted_map_file_handles) {
+    close $_;
+  }
+#  $pm->wait_all_children();
+}
+
+sub dustmask {
+  my ($fasta_file, $dustmasked_file, $args) = @_;
+  return unless $DO_DUST;
+  return if -s $dustmasked_file;
+  return unless -s $fasta_file;
+
+  my $do_unlink = $args->{'unlink'} // 1;
+  my $verbose = $args->{'verbose'} // 0;
+
+  if (!-s $dustmasked_file) {
+    my $cmd = "dustmasker -infmt fasta -in $fasta_file -level 20 -outfmt fasta | sed '/^>/! s/[^AGCT]/N/g' > $dustmasked_file.tmp && mv $dustmasked_file.tmp $dustmasked_file";
+    if ($verbose) {
+      system_l("Masking low-complexity sequences", $cmd);
+    } else {
+      system($cmd);
+    }
+  }
+  if ($do_unlink) {
+    unlink($fasta_file);
+  }
+  check_file($dustmasked_file) if $verbose;
+}
+
+sub download_maps(@) {
+  my ($dir, @maps_def) = @_;
+  my @files;
+  foreach (@maps_def) {
+    my $url = "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/$_.accession2taxid.gz";
+    download($url, "$dir/$_.accession2taxid.gz", { verbose => 1 });
+    push @files, "$dir/$_.accession2taxid.gz";
+  }
+  return @files;
+}
+
+sub get_sorted_maps(@) {
+  my ($maps_definition) = @_;
+  return unless defined $maps_definition;
+  return if $maps_definition eq "";
+  my @res;
+  my $ac_col = 1;
+  my $ac_w_version_col = 2;
+  my $taxid_col = 3;
+  my $dir = get_dir($BASE_DIR,"taxonomy");
+  foreach (split(/,/, $maps_definition)) {
+    next if $_ eq "";
+    download_maps($dir, $_);
+
+    my $sorted_map_f = "$dir/$_.accession2taxid.sorted";
+    if (!-s $sorted_map_f) {
+      my $sort_cmd = system("sort --help | grep -q parallel") == 0? "sort --parallel $N_PROC" : "sort";
+      system_l("Sorting maping file (will take some time)", "gunzip -c $dir/$_.accession2taxid.gz | cut -f $ac_col,$taxid_col > $sorted_map_f.tmp && $sort_cmd -T $dir $sorted_map_f.tmp > $sorted_map_f && rm $sorted_map_f.tmp");
+    }
+    check_file("$dir/$_.accession2taxid.sorted");
+    push @res, $sorted_map_f;
+  }
+  return @res;
+}
+
+sub human_size {
+  my $size = shift;
+  my @units = qw/B KB MB GB/;
+  my $i = 0;
+  foreach (; $i < scalar(@units); ++$i) {
+    last if $size < 1024;
+    $size /= 1024;
+  }
+  return sprintf("%.2f %s", $size, $units[$i]);
+}
+
+sub check_file {
+  my ($f) = @_;
+  printf STDERR "%-50s ", $f;
+  my $size = -s $f;
+  if ($size) {
+    print STDERR colored("check", "green"), " [", human_size($size), "]\n";
+    return 1;
+  } else {
+    print STDERR colored("N/A", "red"), "\n";
+    return 0;
+  }
+}
+
+sub elapsed_time {
+  my $t0 = shift;
+
+  my $elapsed = time - $t0;
+  my @elapsed;
+  my $m = int($elapsed / 60); $elapsed -= 60*$m;
+  my $h = int($m / 60); $m -= 60*$h;
+  my $d = int($h / 24); $h -= 24*$d;
+  my @res = "${elapsed}s";
+  push @res, "${m}m" if ($m > 0);
+  push @res, "${h}h" if ($h > 0);
+  push @res, "${d}d" if ($d > 0);
+  return join("",reverse @res);
+}
+
+sub system_l {
+  my ($msg, $cmd, $opts) = @_;
+  my $nl = (defined $opts && $opts->{'newline'})? "\n" : "";
+  print STDERR $msg if defined $msg;
+  my $t0 = time;
+  print STDERR " [",colored($cmd, "yellow"),"] ...$nl";
+  system($cmd) == 0 or die $?;
+
+
+  print STDERR " done (",(elapsed_time($t0)),")\n";
+  return 0;
+}
+
+sub system_v {
+  my ($cmd, $verbose) = @_;
+  my $t0 = time;
+  print STDERR "",colored($cmd, "yellow")," ..." if $verbose;
+  system($cmd) == 0 or die $?;
+  print STDERR " done (",(elapsed_time($t0)),")\n" if $verbose;
+  return 0;
+}
+
+sub initialize_name_map() {
+  return if %taxid_name_map;
+  print STDERR "Reading names file ...\n";
+  my $dir = get_dir($BASE_DIR,"taxonomy");
+  my $names_file = "$dir/names.dmp";
+  if (!-f $names_file) {
+    download_taxonomy($dir);
+  }
+  open (my $N, "<", $names_file);
+  while (<$N>) {
+    next unless /scientific name/;
+    my ($taxid, $name) = split /\t\|\t/;
+    $taxid_name_map{$taxid} = $name;
+  }
+  close($N);
+}
+
+sub download_viral_neighbors(@) {
+  my ($nbr_dir, $addon_search_term) = @_;
+  print STDERR "Downloading viral neighbors.\n";
+  my $search_term = $vir_nbr_search_term;
+  $search_term .= "+AND+$addon_search_term" if defined $addon_search_term;
+  my @maps = defined $MAP_DIV? get_sorted_maps($MAP_DIV) : get_sorted_maps("nucl_gb");
+  download_ncbi_search($nbr_dir, "nuccore", $search_term, @maps);
+}
+
+sub filter_short_contigs(@) {
+  my ($file, $new_file, $min_length) = @_;
+  return if -s $new_file;
+  if (! -f $file) {
+    print STDERR "ERROR: $file does not exist - should not happen!?\n";
+    return;
+  }
+  open (my $F, ">", $new_file);
+  open (my $G, "<", $file);
+  my $current_header;
+  my $current_sequence_length = 0;
+  my $current_record = "";
+  my $do_print;
+  while (<$G>) {
+    if (/^>([^ ]*)/) {
+      $current_sequence_length = 0;
+      $current_record = $_;
+      $do_print = 0;
+    } elsif ($do_print) {
+      print $F $_;
+    } else {
+      $current_sequence_length += length($_) - 1;
+      if ($current_sequence_length >= $min_length) {
+        $do_print = 1;
+        print $F $current_record;
+        print $F $_;
+        $current_record = "";
+        $current_sequence_length = 0;
+      } else {
+        $current_record .= $_;
+      }
+    }
+  }
+  close($G);
+  close($F);
+}
+
+sub create_map_files(@) {
+  my ($file, $taxid, $name) = @_;
+  return if -s "$file.map";
+  if (! -f $file) {
+    print STDERR "ERROR: $file does not exist - should not happen!?\n";
+    return;
+  }
+  print STDERR "Writing mapping file for $file [$taxid, $name]\n" if $VERBOSE;
+  $taxid = "$taxid\t$name" if defined $name;
+  #`grep '^>' "$file" | sed -e 's/.//' -e 's/\\( .*\\|\$\\)/\t$taxid/' > "$file.map"`;
+  open (my $F, ">", "$file.map");
+  open (my $G, "<", $file);
+  while (<$G>) {
+   next unless /^>([^ ]*)/;
+    my $ac = $1;
+    print $F "$ac\t$taxid\n";
+  }
+  close($G);
+  close($F);
+}
+
+
+sub create_map_file_ac(@) {
+  my ($file, $ac, $taxid, $name) = @_;
+  return if -s "$file.map";
+  print STDERR "Making map file for $file\n" if ($VERBOSE);
+  open (my $F, ">", "$file.map");
+  if (defined $name) {
+    print $F "$ac\t$taxid\t$name\n";
+  } else {
+    print $F "$ac\t$taxid\n";
+  }
+  close($F);
+}
+
+sub download_nt(@) {
+  my ($BASE_DIR, $TAX_DIR, $LIB_DIR) = @_;
+	my $nt_loc = "ftp://ftp.ncbi.nih.gov/blast/db/FASTA/nt.gz";
+  download($nt_loc, "$BASE_DIR/nt.fna.gz", { gunzip => 1, verbose => 1, 'dont-unlink-gz-file' => 1 } );
+  my $nt_file = "$BASE_DIR/nt.fna";
+  my @tax_maps = download_maps($TAX_DIR, "nucl_gb", "nucl_wgs");
+
+  my ($ac_index_for_nt, $child_map, $env_taxIDs, $division_taxIDs, $taxid_to_acs);
+  my $do_filter = 0;
+  my %selected_taxa;
+  my %all_taxa;
+
+  foreach my $taxid_or_division (split(/,/, $TAXIDS_OR_DIVISIONS)) {
+    my $microbial_nt_file = "$LIB_DIR/nt-$taxid_or_division.fna";
+    if (!-s $microbial_nt_file && !dustmasked_file_exists($microbial_nt_file)) {
+      if (!$do_filter) {
+        $ac_index_for_nt = get_nt_ac_index($nt_file);
+        $child_map = read_child_map("$TAX_DIR/nodes.dmp");
+        $env_taxIDs = get_environmental_samples_taxids("$TAX_DIR/names.dmp") if $EXCLUDE_ENVIRONMENTAL_TAXIDS;
+      }
+      $do_filter = 1;
+      my $accepted_taxa = get_accepted_taxa($taxid_or_division, $child_map, $env_taxIDs);
+      $selected_taxa{$taxid_or_division} = $accepted_taxa;
+      $all_taxa{$_} = 1 foreach (keys %$accepted_taxa);
+    }
+  }
+  #print "\nALL_TAXA:\n"; foreach ((keys %all_taxa)[0..5]) { print "$_ => $all_taxa{$_}\n"; }; 
+  #print "\nNT_INDEX\n"; foreach ((keys %$ac_index_for_nt)[0..5]) { print "$_ => $ac_index_for_nt->{$_}\n"; }; 
+  #print "\nCHILD_MAP\n"; foreach ((keys %$child_map)[0..5]) { print "$_ => @{$child_map->{$_}}\n"; }; 
+  #print "\nENV_TAXIDs\n"; foreach ((keys %$env_taxIDs)[0..5]) { print "$_ => $env_taxIDs->{$_}\n"; }; 
+  #print STDERR "Got ",scalar(keys %all_taxa)," taxa.\n";
+  if ($do_filter) {
+    $taxid_to_acs = get_tax_mappings(\@tax_maps, \%all_taxa, $ac_index_for_nt);
+  }
+  #print "\nTAXID_TO_ACS\n"; foreach ((keys %$taxid_to_acs)[0..5]) { print "$_ => $taxid_to_acs->{$_}\n"; }; 
+
+  open (my $NT, "<", $nt_file) or die $!;
+  foreach my $taxid_or_division (split(/,/, $TAXIDS_OR_DIVISIONS)) {
+    my $microbial_nt_file = "$LIB_DIR/nt-$taxid_or_division.fna";
+    if (!-s $microbial_nt_file && !dustmasked_file_exists($microbial_nt_file)) {
+      write_filtered_nt($NT, $selected_taxa{$taxid_or_division}, $taxid_to_acs, $ac_index_for_nt, $microbial_nt_file);
+
+    }
+    check_file($microbial_nt_file) if -s $microbial_nt_file;
+    dustmask($microbial_nt_file, dustmasked_file($microbial_nt_file), {unlink=>1, verbose=>1}) if $DO_DUST;
+  }
+  close $NT;
+}
+
+sub get_accepted_taxa {
+  my ($taxid_or_division, $child_map, $env_taxIDs) = @_;
+
+  my @taxIDs;
+  if ($taxid_or_division =~ /^taxID([0-9]*)$/i) {
+    @taxIDs = ($1);
+  } elsif (defined $division_to_taxids{$taxid_or_division})  {
+    @taxIDs = @{$division_to_taxids{$taxid_or_division}};
+  } else {
+    die "Don't know nt division '$taxid_or_division'. Chose one of ".(join(" ", sort keys %division_to_taxids))." or a specific taxID ('taxID12345')\n";
+  }
+  my %accepted_taxa;
+  foreach my $taxID (@taxIDs) {
+    $accepted_taxa{$_} = 1 foreach(get_descendants($child_map, $taxID, $env_taxIDs));
+  }
+  return \%accepted_taxa;
+}
+
+sub write_filtered_nt {
+  my ($NT, $accepted_taxa, $taxid_to_ac, $ac_to_pos, $new_nt) = @_;
+  open (my $NEWNT, ">", $new_nt) or die $!;
+  open (my $MAP_F, ">", "$new_nt.map") or die $!;
+
+  print STDERR "Writing $new_nt ... ";
+  my $t0 = time;
+  my $line;
+  my $n_taxa = 0;
+  my $n_acs = 0;
+  foreach my $taxid (sort {$a <=> $b} keys %$accepted_taxa) {
+    ++$n_taxa;
+    foreach my $ac (@{$taxid_to_ac->{$taxid}}) {
+      ++$n_acs;
+      seek($NT, $ac_to_pos->{$ac}, 0);
+      $line = <$NT>;
+      print $NEWNT $line;
+      print $MAP_F $ac,"\t",$taxid,"\n";
+      while ($line = <$NT>) {
+        last if ($line =~ /^>/);
+        print $NEWNT $line;
+      }
+    }
+  }
+  close $NEWNT;
+  close $MAP_F;
+  print STDERR "Done, wrote $n_acs sequences for $n_taxa taxa (took ",elapsed_time($t0),").\n";
+}
+
+sub read_child_map {
+  my $nodes_file = shift;
+  my %child_map;
+  -f $nodes_file or die "Nodes files $nodes_file is not a file";
+
+  print STDERR "Reading taxonomy tree from $nodes_file ... ";
+  my $t0 = time;
+  open(my $N, "<", $nodes_file) or die $!;
+  while (<$N>) {
+    my ($taxid, $parent_taxid) = split /\t\|\t/;
+    push @{$child_map{$parent_taxid}}, $taxid if $taxid ne $parent_taxid;
+    die "parent??" unless defined $parent_taxid;
+  }
+  close($N);
+  print STDERR "Got ",(scalar keys %child_map), " nodes (took ",elapsed_time($t0),").\n";
+  return \%child_map;
+}
+
+sub get_environmental_samples_taxids {
+  my $names_file = shift;
+  -f $names_file or die "Names files $names_file is not a file";
+  my %env_taxIDs;
+  print STDERR "Reading names from $names_file ... ";
+  my $t0 = time;
+  open(my $M, "<", $names_file) or die $!;
+  while (<$M>) {
+    next unless /scientific name\t|$/;
+    my ($taxID, $name) = split /\t\|\t/;
+    $env_taxIDs{$taxID} = 1 if $name eq "environmental samples";
+  }
+  close($M);
+  print STDERR "Done (took ",elapsed_time($t0),".\n";
+  return \%env_taxIDs;
+}
+
+sub get_nt_ac_index {
+  my ($nt_file) = @_;
+  my %ac_to_pos;
+  print STDERR "Reading headers from nt file ... ";
+  my $t0 = time;
+  open (my $NTG, "-|", "grep --byte-offset '^>' $nt_file");
+  while (my $line = <$NTG>) {
+    $line =~ /^([0-9]*):>([^ ]*)/;
+    # record the position of this AC
+    $ac_to_pos{$2} = $1;
+  }
+  print STDERR "Got ", scalar(keys %ac_to_pos), " ACs (took ",elapsed_time($t0),").\n";
+  return \%ac_to_pos;
+}
+
+sub get_descendants {
+  my ($child_map, $taxid, $env_taxIDs) = @_;
+  my @all_taxa = $taxid;
+  
+  if (defined $child_map->{$taxid}) {
+    foreach my $child_taxid (@{$child_map->{$taxid}}) {
+      next if defined $env_taxIDs && defined $env_taxIDs->{$child_taxid}; 
+      push @all_taxa, get_descendants($child_map, $child_taxid, $env_taxIDs);
+    }
+  }
+  return @all_taxa;
+}
+
+sub get_tax_mappings {
+  my ($ac_taxid_files, $accepted_taxa, $ac_to_pos) = @_;
+  my %taxid_to_acs;
+
+  foreach my $ac_taxid_file (@$ac_taxid_files) {
+    print STDERR "Reading AC to taxonomy ID mapping from $ac_taxid_file ... ";
+    my $t0 = time;
+    my $FP1;
+    if ($ac_taxid_file =~ /.gz$/) {
+      open($FP1, "-|", "gunzip -c '$ac_taxid_file'") or die $!;
+    } else {
+      open($FP1, "<", $ac_taxid_file) or die $!;
+    }
+
+    # format: accession <tab> accession.version <tab> taxid <tab> gi
+    # currently we look for a mapping with the version number
+    while ( <$FP1> ) {
+      my (undef, $ac, $taxid) = split;
+      next unless defined $taxid;
+      if (defined $accepted_taxa->{$taxid} && defined( $ac_to_pos->{ $ac } ) ) {
+        push @{ $taxid_to_acs{ $taxid } }, $ac;
+      }
+    }
+    close $FP1;
+    print STDERR "Done (took ", elapsed_time($t0),").\n";
+  }
+  print STDERR "Got mappings for ", scalar(keys %taxid_to_acs), " taxa.\n";
+  return (\%taxid_to_acs);
+}
+
+sub download_contaminats(@) {
+  my ($CONTAMINANT_DIR) = @_;
+  print STDERR "Downloading contaminant databases ... \n";
+  my $CONTAMINANT_TAXID=32630;
+  make_path $CONTAMINANT_DIR;
+
+  # download UniVec and EmVec database
+  download("ftp://ftp.ncbi.nlm.nih.gov/pub/UniVec/UniVec","$CONTAMINANT_DIR/UniVec.fna");
+  download("ftp://ftp.ebi.ac.uk/pub/databases/emvec/emvec.dat.gz","$CONTAMINANT_DIR/emvec.dat.gz", { gunzip => 1 });
+
+  open(my $E1, "<", "$CONTAMINANT_DIR/emvec.dat");
+  open(my $E2, ">", "$CONTAMINANT_DIR/EmVec.fna");
+
+  my ($ac,$de);
+  my $in_seq = 0;
+  while(<$E1>) {
+    if (/^AC\s+(.*)/) {
+      $ac = $1;
+      $ac =~ s/;$//;
+    } elsif (/^DE\s+(.*)/) {
+      $de = $1;
+   } elsif (/^SQ/) {
+      $in_seq = 1;
+      print $E2 ">$ac $de\n";
+    } elsif ($in_seq) {
+      if (/^\s+[agct]/) {
+        s/\s+[0-9]+$//;
+       s/ //g;
+       print $E2 $_;
+      } else {
+        $in_seq = 0;
+      }
+    }
+  }
+  close($E2);
+  close($E1);
+  unlink("$CONTAMINANT_DIR/emvec.dat");
+ 
+  if ( $WRITE_MAPS ) {
+    create_map_files("$CONTAMINANT_DIR/UniVec.fna", $CONTAMINANT_TAXID, "UniVec");
+    create_map_files("$CONTAMINANT_DIR/EmVec.fna", $CONTAMINANT_TAXID, "EmVec");
+  }
+}
+
+sub download_taxonomy(@) {
+  my ($dir) = @_;
+  -d $dir || make_path $dir;
+
+  if (!-s "$dir/taxdump.tar.gz") {
+    download("$FTP/pub/taxonomy/taxdump.tar.gz", "$dir/taxdump.tar.gz", { verbose => 1});
+    system_l("Storing taxonomy timestamp", "date > $dir/timestamp");
+  }
+  system_l("Extracting nodes file","tar -C $dir -zxvf $dir/taxdump.tar.gz nodes.dmp > /dev/null") unless -s "$dir/nodes.dmp";
+  check_file("$dir/nodes.dmp");
+  system_l("Extracting names file","tar -C $dir -zxvf $dir/taxdump.tar.gz names.dmp > /dev/null") unless -s "$dir/names.dmp";
+  check_file("$dir/names.dmp");
+}
+
+sub dustmasked_file(@) {
+  my ($fasta_file) = @_;
+  ( my $dustmasked_file = $fasta_file ) =~ s/.fna$/-dustmasked.fna/;
+  return $dustmasked_file;
+}
+
+sub dustmasked_file_exists(@) {
+  my $dustmasked_file = dustmasked_file(@_);
+  return $DO_DUST && -s $dustmasked_file;
+}
+
+sub download_domain(@) {
+  my ($DATABASE, $domain_dir, $domain, $_assembly_level, @additional_filters) = @_;
+  $_assembly_level =~ s/ /_/g;
+  print STDERR "Downloading assembly summary file for $domain genomes, and filtering to assembly level $_assembly_level";
+  print STDERR (@additional_filters? " and additional filters @additional_filters.\n" : ".\n");
+  die "Don't know domain $domain. Choose one of the following: ".(join(", ", @ALL_GENOMES))."\n" unless defined $valid_domains{$domain};
+
+  die unless defined $domain_dir && defined $domain;
+  if (-d $domain_dir) {
+    print STDERR "WARNING: $domain_dir already exists - potentially overwriting files.\n";
+  } else {
+    make_path $domain_dir;
+  }
+  my $ass_file = "$domain_dir/assembly_summary.txt";
+  my $ass_file_filtered = "$domain_dir/assembly_summary_filtered.txt";
+  my $n_genomes = 0;
+  download("ftp://ftp.ncbi.nlm.nih.gov/genomes/$DATABASE/$domain/assembly_summary.txt", $ass_file) or die "Could not download assembly summary file!";
+
+  my $is_viral_refseq =1 if $domain eq "viral" && $DATABASE eq "refseq";
+
+  my %cols = (
+    assembly_accession=>0,
+    bioproject=>1,
+    biosample=>2,
+    wgs_master=>3,
+    refseq_category=>4,
+    taxid=>5,
+    species_taxid=>6,
+    organism_name=>7,
+    infraspecific_name=>8,
+    isolate=>9,
+    version_status=>10,
+    assembly_level=>11,
+    release_type=>12,
+    genome_rep=>13,
+    seq_rel_date=>14,
+    asm_name=>15,
+    submitter=>16,
+    gbrs_paired_asm=>17,
+    paired_asm_comp=>18,
+    ftp_path=>19,
+    excluded_from_refseq=>20,
+    relation_to_type_material=>21
+  );
+
+  my %seen_acs;
+  my @genomes_to_dl;
+  open(my $A1, "<", $ass_file);
+  open(my $A2, ">", $ass_file_filtered);
+  while (<$A1>) {
+    next if /^#/;
+    my @fields = split /\t/;
+
+    $fields[$cols{"assembly_level"}] =~ s/ /_/g;
+    next unless $fields[$cols{"version_status"}] eq "latest";
+    next if ($_assembly_level ne "Any" && $fields[$cols{"assembly_level"}] ne $_assembly_level);
+    next if (defined $REFSEQ_CATEGORY && $fields[$cols{"refseq_category"}] ne $REFSEQ_CATEGORY);
+
+    ## Kick out duplicates
+    next if (defined $seen_acs{$fields[$cols{"assembly_accession"}]});
+    $seen_acs{$fields[$cols{"assembly_accession"}]} = 1;
+    
+    my $keep_it = 1;
+    foreach (@additional_filters) {
+        my ($k, $v) = split(/=/);
+        die "$k is not an available column filter. Available: ".(join(", ", sort keys %cols)) if (!defined $cols{$k});
+        $keep_it = 0 if $fields[$cols{$k}] ne $v; 
+    }
+    next unless $keep_it;
+
+    print $A2 $_;
+    ++ $n_genomes;
+    push @genomes_to_dl, [
+            $fields[$cols{"ftp_path"}], $fields[$cols{"taxid"}], $fields[$cols{"organism_name"}], 
+            $fields[$cols{"infraspecific_name"}], $fields[$cols{"assembly_accession"}], $fields[$cols{"assembly_level"}]];
+  }
+  close $A2;
+  close $A1;
+
+  my $downloaded_files = 0;
+  my $existing_files = 0;
+  my $download_failed = 0;
+
+  my @fasta_files;
+
+  my $i = 0;
+  foreach my $g (@genomes_to_dl) {
+    my ($ftp_path, $taxid, $organism_name, $infraspecific_name, $assembly_accession, $assembly_level) = @$g;
+    ++$i;
+    #print STDERR "\r                                                                               " unless $VERBOSE;
+    print STDERR "\r Downloading $domain genomes:  $i/$n_genomes ... " unless $VERBOSE;
+
+    if (defined $infraspecific_name) {
+        (my $i1 = $infraspecific_name) =~ s/strain=//;
+        $organism_name .= " $infraspecific_name" unless $organism_name =~ /\Q$i1\E/ || $i1 eq "";
+    }
+
+
+    my $bname = basename($ftp_path);
+    ( my $organism_name1 = $organism_name ) =~ s/[^a-zA-Z0-9_]/_/g;
+    $organism_name1 = substr($organism_name1, 0, 100);
+    $organism_name1 =~ s/__/_/g;
+    $organism_name1 =~ s/_$//;
+    my $bname1 = "${organism_name1}-tax${taxid}-${bname}";
+    
+    $assembly_level =~ s/ /_/g;
+    my $download_dir = "$domain_dir/$assembly_level";
+    my @files;
+    foreach my $ext (split(/,/, $FNA_FILES)) {
+      my $full_ftp_path = "$ftp_path/${bname}_${ext}.fna.gz";
+      my $bfname = $bname1."_".$ext;
+      my $fname = $bfname.".fna";
+      my $fullfname = "$download_dir/$fname";
+
+      if (!$OVERWRITE_FILES && (-s $fullfname || dustmasked_file_exists($fullfname) )) {
+        print STDERR "$download_dir/$fname exists - not downloading.. \n" if $VERBOSE;
+        ++$existing_files;
+      } else {
+        my $pid = start_fork();
+        unless ($pid) {
+          download($full_ftp_path, "$download_dir/$fname.gz", { gunzip => 1 });
+          ## Output sequenceID to taxonomy ID map
+          create_map_files("$download_dir/$fname", $taxid, "$assembly_accession $organism_name");
+          end_fork();
+        }
+      }
+      push @fasta_files, "$download_dir/$fname";
+    }
+  }
+
+  ## if ($FILTER_UNPLACED) { die("Not implemented"); }
+  wait_children();
+  foreach my $fasta_file (@fasta_files) {
+        if (-s $fasta_file || dustmasked_file($fasta_file)) {
+          ++$downloaded_files;
+        } else {
+          ++$download_failed;
+        }
+  }
+
+  if ($MIN_SEQ_LEN > 0) {
+  foreach my $fasta_file (@fasta_files) {
+    ( my $tmp_fa = $fasta_file ) =~ s/.fna$/.filtered$MIN_SEQ_LEN.fna/;
+      my $pid = start_fork();
+      unless ($pid) {
+        filter_short_contigs($fasta_file, $tmp_fa, $MIN_SEQ_LEN);
+        move($tmp_fa, $fasta_file);
+        end_fork();
+    }
+  }
+  wait_children();
+  }
+
+
+  if ($DO_DUST) {
+    foreach my $fasta_file (@fasta_files) {
+      my $dustmasked_file = dustmasked_file($fasta_file);
+      if (!$OVERWRITE_FILES && -s $dustmasked_file) {
+        print STDERR "$dustmasked_file exists - not dusting.. \n" if $VERBOSE;
+      } else {
+        ## TODO: Consider hard-masking only low-complexity stretches with 10 or more bps
+        my $pid = start_fork();
+        unless ($pid) {
+          dustmask($fasta_file, $dustmasked_file, {unlink=>1, verbose=>$VERBOSE});
+          end_fork();
+        }
+      }
+    }
+    wait_children();
+  }
+
+  my $msg  = "Found $downloaded_files files.";
+  $msg .= " Skipped download of $existing_files files that already existed." if $existing_files > 0;
+  $msg .= " $download_failed downloads failed - maybe try re-running krakenuniq-download." if ($download_failed > 0);
+  print STDERR "  $msg\n";
+}
+# vim: tabstop=8 expandtab tabstop=2 shiftwidth=2 :

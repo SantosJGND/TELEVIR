@@ -1,0 +1,14 @@
+django==3.2.14
+django-extensions==3.2.0
+django-braces==1.15.0
+django_tables2==2.4.1
+django-bootstrap-breadcrumbs
+django_plotly_dash==2.0.0
+dpd_static_support==0.0.5
+dash_bio==1.0.2
+pysam==0.19.1
+matplotlib==3.5.2
+BeautifulSoup4==4.11.1
+django-view-breadcrumbs==2.2.7
+dash_renderer==1.9.1
+django-dynamic-breadcrumbs0.4.2

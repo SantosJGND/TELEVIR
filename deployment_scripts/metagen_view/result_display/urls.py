@@ -1,0 +1,57 @@
+"""
+Created on Jan 7, 2018
+
+@author: joao santos
+"""
+
+from django.urls import path
+
+from result_display import ajax_views, views
+
+urlpatterns = [
+    path(
+        "igv_display",
+        views.IGV_display,
+        name="igv_browser",
+    ),  ## get values for IGV
+    path(
+        "project_<project>/all_QC",
+        views.sample_QCall,
+        name="all_project_qc",
+    ),
+    path(
+        "project_<project>/all_reports",
+        views.Project_reports,
+        name="all_project_reports",
+    ),
+    path(
+        "show_igv_<slug:sample_name>/<slug:run_name>/<slug:reference>",
+        ajax_views.show_igv,
+        name="show_igv",
+    ),  ## get values for IGV
+    path("download_file", views.download_file, name="download_file"),  ##
+    path("download_file_igv", views.download_file_igv, name="download_file_igv"),
+    path("", views.Project_page.as_view(), name="projects_main"),
+    path("<slug:project_name>", views.MainPage, name="project_samples"),
+    path(
+        "<slug:project_name>/sample_<slug:sample_name>",
+        views.Sample_main,
+        name="sample_main",
+    ),
+    path(
+        "sample_<name>/<report_source>_fastqc_report",
+        views.display_fastqc_report,
+        name="display_fastqc_report",
+    ),
+    path(
+        "<slug:project>/sample_<slug:sample>/<slug:name>",
+        views.Sample_detail,
+        name="sample_detail",
+    ),
+    path(
+        "<slug:project>/sample_<slug:sample>/<slug:run>/<slug:reference>",
+        views.Scaffold_Remap,
+        name="scaffold_remap",
+    ),
+    ##
+]

@@ -1,0 +1,12 @@
+name: fve
+
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - samtools>=1.4
+  - kallisto=0.43.1
+  - openjdk=11.0.9.1
+  - seqtk=1.3

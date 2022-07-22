@@ -1,0 +1,15 @@
+module	software	param	value
+QC	trimmomatic	TRIM_ARGS	SLIDINGWINDOW:5:20 LEADING:3 TRAILING:3 TOPHRED33: MINLEN:35
+QC	trimmomatic	TRIM_THREADS	8
+QC	trimmomatic	FQ_THREADS	8
+HD	kuniq	KUNIQ_ARGS	--threads 4 --gzip-compressed --fastq-input --hll-precision 12
+ASSEMBLY_SOFT	spades	SPADES_ARGS	--metaviral -t 8 --phred-offset 33 --only-assembler
+ASSEMBLY_SOFT	spades	ASSEMBLY_LTRIM	50
+ASSEMBLE_CLASS	diamond	DIAMOND_ARGS	-p 5 --top 5 -e 0.01 --id 65 --query-cover 50 --fast
+ASSEMBLE_CLASS	diamond	DIAMOND_DB	swissprot
+CLASSM	kraken2	KRAKEN_ARGS	--threads 4 --gzip-compressed --confidence .5
+REMAP_SOFT	snippy	SNIPPY_ARGS	--mapqual 60 --mincov 10
+REMAP_SOFT	snippy	SNIPPY_RESOURCES	--cpus 3 --ram 8
+REMAP_SOFT	snippy	REMAP_REF	refseq_viral.genomic.fna.gz
+REMAP_SOFT	snippy	MIN_COVERAGE_DEPTH	2
+REMAP_SOFT	snippy	REF_KEEP	15

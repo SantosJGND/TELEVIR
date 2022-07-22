@@ -1,0 +1,21 @@
+name: python_multi-purpose_env
+
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.7
+  - black 
+  - pylint
+  - pandas
+  - gzip
+  - blast
+  - perl
+  - perl-lwp-simple
+  - tabix
+  - samtools
+  - unzip
+  - entrez-direct
+  - curl

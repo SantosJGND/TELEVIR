@@ -1,0 +1,14 @@
+name: Kraken2
+
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+
+dependencies:
+  - perl=5.32.1
+  - blast=2.12.0
+  - kraken2=2.1.2
+  - samtools=1.15.1
+  - seqtk=1.3
+
