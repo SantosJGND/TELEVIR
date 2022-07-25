@@ -91,20 +91,22 @@ SOFTWARE = {
     "PREPROCESS": ["trimmomatic"],  # trimmomatic
     "ENRICHMENT": [
         "centrifuge",
+        # "clark",
+        # "fastviromeexplorer",
     ],  # "virmet", "dvf", "minimap2", "centrifuge", "kaiju", "kuniq", "kraken2", "fve", "virmet"],
     "ASSEMBLY": ["spades"],  # "flye", "raven"],
     "CONTIG_CLASSIFICATION": [
-        # "blast",
-        "diamond",
+        "blast",
+        # "diamond",
     ],  # ["blast", "minimap-asm", "diamond", "virsorter"],
     "READ_CLASSIFICATION": [
         # "kraken2",
         # "fastviromeexplorer",
         # "krakenuniq",
-        "clark",
-        # "kaiju",
+        # "clark",
+        "kaiju",
         # "centrifuge",
-    ],  #
+    ],
     "REMAPPING": ["snippy"],  # snippy, rematch, bowtie, minimap-rem
 }
 
@@ -207,7 +209,6 @@ ARGS_ASS = {
 
 ############################# CLASSIFICATION PARAMS
 
-
 ARGS_CLASS = {
     "clark": {
         "CLARK_ARGS": ["-m 0 --spaced", "-m 1 --spaced", "-m 3"],
@@ -215,7 +216,7 @@ ARGS_CLASS = {
         "CLARK_DB": ["clark/viruses"],
     },
     "krakenuniq": {
-        "KUNIQ_ARGS": ["--exact", "--exact hll-precision 14", "hll-precision 14"],
+        "KUNIQ_ARGS": ["--exact", "--exact --hll-precision 14", "--hll-precision 14"],
         "KUNIQ_THREADS": [8],
         "KUNIQ_DB": ["kuniq/viral"],
     },

@@ -1,6 +1,34 @@
+import os
+import zipfile
+
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+
+
+def fastqc_parse(fastqc_path: str, stdin_fastqc_name: str = "stdin_fastqc"):
+    """parse fastqc.
+    returns a dict with the first 10 lines of the fastqc_data.txt file
+
+    :param fastqc_path:
+    :return: fastqc_data
+    """
+
+    if not os.path.isfile(fastqc_path):
+        fqreads = pd.DataFrame(columns=["measure", "value"]).set_index("measure")
+        return fqreads
+
+    with zipfile.ZipFile(fastqc_path) as zf:
+
+        fqreads = zf.read(f"{stdin_fastqc_name}/fastqc_data.txt").decode("utf-8")
+        fqreads = fqreads.split("\n")[5:10]
+        fqreads = [x.split("\t") for x in fqreads]
+        fqreads = pd.DataFrame(fqreads, columns=["measure", "value"]).set_index(
+            "measure"
+        )
+        fqreads.rename({"Total Sequences": "Total_Sequences"}, axis=0, inplace=True)
+
+    return fqreads
 
 
 def scrape_description(accid: str, existing_description: str = None) -> str:
@@ -21,9 +49,9 @@ def scrape_description(accid: str, existing_description: str = None) -> str:
         "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0",
     }
 
-    req = requests.get(url, headers)
-    soup = BeautifulSoup(req.content, "html.parser")
     try:
+        req = requests.get(url, headers)
+        soup = BeautifulSoup(req.content, "html.parser")
         title = soup.find_all("div", class_="rprtheader")[0].h1.text
     except:
         title = existing_description

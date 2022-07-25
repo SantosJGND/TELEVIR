@@ -688,8 +688,8 @@ class run_minimap2_illumina(Classifier_init):
 
 
 class run_minimap2_ONT(Classifier_init):
-    method_name = "minimap2"
-    report_suffix = ".paf"
+    method_name = "minimap2_ONT"
+    report_suffix = ".sam"
     full_report_suffix = ".minimap2"
 
     def run_SE(self, threads: int = 3):
@@ -708,17 +708,16 @@ class run_minimap2_ONT(Classifier_init):
         return pd.read_csv(self.report_path, sep="\t", header=None).rename(
             columns={
                 0: "qseqid",
-                1: "acc",
-                2: "pident",
-                3: "length",
-                4: "mismatch",
-                5: "gapopen",
-                6: "qstart",
-                7: "qend",
-                8: "sstart",
-                9: "send",
-                10: "evalue",
-                11: "bitscore",
+                1: "flag",
+                2: "acc",
+                3: "tstart",
+                4: "qual",
+                5: "cigar",
+                6: "rnext",
+                7: "pnext",
+                8: "tlen",
+                9: "seq",
+                10: "qual",
             }
         )
 
@@ -731,8 +730,8 @@ class run_minimap2_ONT(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         return pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[0, 1, 3], comment="@"
-        ).rename(columns={0: "qseqid", 1: "acc", 3: "length"})
+            self.report_path, sep="\t", header=None, usecols=[0, 2], comment="@"
+        ).rename(columns={0: "qseqid", 2: "acc"})
 
 
 class run_FastViromeExplorer(Classifier_init):
@@ -899,7 +898,7 @@ class Classifier:
         "desamba": run_deSamba,
         "kraken2": run_kraken2,
         "minimap2_illumina": run_minimap2_illumina,
-        "minimap2_ONT": run_minimap2_ONT,
+        "minimap2_ont": run_minimap2_ONT,
         "diamond": run_diamond,
         "kaiju": run_kaiju,
         "krakenuniq": run_krakenuniq,

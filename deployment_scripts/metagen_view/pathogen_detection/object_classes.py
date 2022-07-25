@@ -1,12 +1,13 @@
 import logging
 import os
 import subprocess
-import zipfile
 from dataclasses import dataclass, field
 from random import randint
 from typing import Type
 
 import pandas as pd
+
+from pathogen_detection.utilities import fastqc_parse
 
 
 class RunCMD:
@@ -53,7 +54,7 @@ class RunCMD:
         if isinstance(cmd, list):
             cmd = " ".join(cmd)
 
-        # self.logger.info(f"running command: {self.bin}{cmd}")
+        print(f"running command: {self.bin}{cmd}")
 
         proc_prep = subprocess.Popen(
             f"{self.bin}{cmd}",
@@ -330,31 +331,6 @@ class Read_class:
         return self.filepath
 
 
-def fastqc_parse(fastqc_path: str, stdin_fastqc_name: str = "stdin_fastqc"):
-    """parse fastqc.
-    returns a dict with the first 10 lines of the fastqc_data.txt file
-
-    :param fastqc_path:
-    :return: fastqc_data
-    """
-
-    if not os.path.isfile(fastqc_path):
-        fqreads = pd.DataFrame(columns=["measure", "value"]).set_index("measure")
-        return fqreads
-
-    with zipfile.ZipFile(fastqc_path) as zf:
-
-        fqreads = zf.read(f"{stdin_fastqc_name}/fastqc_data.txt").decode("utf-8")
-        fqreads = fqreads.split("\n")[5:10]
-        fqreads = [x.split("\t") for x in fqreads]
-        fqreads = pd.DataFrame(fqreads, columns=["measure", "value"]).set_index(
-            "measure"
-        )
-        fqreads.rename({"Total Sequences": "Total_Sequences"}, axis=0, inplace=True)
-
-    return fqreads
-
-
 class Sample_runClass:
 
     report: str
@@ -433,8 +409,8 @@ class Software_detail:
             config: dictionary containing module configuration.
             prefix: prefix of module.
         """
-
         if module not in args_df.module.unique():
+            print(f"module {module} not found")
             self.module = "None"
             self.name = "None"
             self.args = "None"
@@ -458,7 +434,10 @@ class Software_detail:
                 db_name = method_details[
                     method_details.param.str.contains("DB")
                 ].value.values[0]
-                self.db = os.path.join(config["source"]["DBDIR_MAIN"], db_name)
+                if ".gz" in db_name:
+                    self.db = os.path.join(config["source"]["REF_FASTA"], db_name)
+                else:
+                    self.db = os.path.join(config["source"]["DBDIR_MAIN"], db_name)
 
             except IndexError:
                 self.db = ""

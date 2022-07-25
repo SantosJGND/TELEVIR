@@ -199,9 +199,11 @@ class RunDetail_main:
         print("empty drones")
         self.depletion_drone = Classifier(
             Software_detail("NONE", method_args, config, self.prefix),
+            logging_level=self.logger_level_detail,
         )
         self.enrichment_drone = Classifier(
             Software_detail("NONE", method_args, config, self.prefix),
+            logging_level=self.logger_level_detail,
         )
 
         ### directories.
@@ -214,18 +216,7 @@ class RunDetail_main:
         self.aclass_summary = pd.DataFrame()
         self.merged_targets = pd.DataFrame()
 
-        ### output
-
-        self.full_report = os.path.join(self.root, f"{self.prefix}_full_report.tsv")
-        self.assembly_classification_summary = os.path.join(
-            self.root, f"{self.prefix}_aclass_summary.tsv"
-        )
-        self.read_classification_summary = os.path.join(
-            self.root, f"{self.prefix}_rclass_summary.tsv"
-        )
-        self.merged_classification_summary = os.path.join(
-            self.root, f"{self.prefix}_mclass_summary.tsv"
-        )
+        ###
 
     def Update(self, config: dict, method_args: pd.DataFrame):
 
@@ -396,7 +387,7 @@ class RunMethods(RunDetail_main):
             prefix=self.prefix,
             threads=self.threads,
             bin=get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
-            logging_level=self.logger_level_detail,  # self.logger_level_detail,
+            logging_level=logging.INFO,  # self.logger_level_detail,  #
         )
 
         self.read_classification_drone.run()
@@ -701,14 +692,9 @@ class RunMethods(RunDetail_main):
         """
         post_processed_reads = self.sample.reads_after_processing
 
-        final_processing_reads = post_processed_reads
-
-        if self.metadata_tool.sift_report.loc[0]["input"]:
-
-            post_processed_reads = (
-                self.metadata_tool.sift_report.loc[0]["output"]
-                + self.metadata_tool.sift_report.loc[0]["removed"]
-            )
+        final_processing_reads = (
+            self.r1.current_fastq_read_number() + self.r2.current_fastq_read_number()
+        )
 
         return post_processed_reads, final_processing_reads
 
@@ -805,6 +791,17 @@ class RunMethods(RunDetail_main):
         )
 
     def export_reports(self):
+
+        self.full_report = os.path.join(self.root, f"{self.prefix}_full_report.tsv")
+        self.assembly_classification_summary = os.path.join(
+            self.root, f"{self.prefix}_aclass_summary.tsv"
+        )
+        self.read_classification_summary = os.path.join(
+            self.root, f"{self.prefix}_rclass_summary.tsv"
+        )
+        self.merged_classification_summary = os.path.join(
+            self.root, f"{self.prefix}_mclass_summary.tsv"
+        )
 
         ### main report
         self.report.to_csv(

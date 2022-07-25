@@ -286,7 +286,7 @@ class Remapping:
         self.cleanup = cleanup
 
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging_level)
+        self.logger.setLevel(logging.ERROR)
         self.logger.addHandler(logging.StreamHandler())
         self.logger.info("Starting remapping")
 
@@ -847,9 +847,10 @@ class Remapping:
         return self.output_analyser.report
 
     def plot_coverage(self):
+        if os.path.getsize(self.genome_coverage):
+            bedgraph = Bedgraph(self.genome_coverage)
+            bedgraph.plot_coverage(self.coverage_plot)
 
-        bedgraph = Bedgraph(self.genome_coverage)
-        bedgraph.plot_coverage(self.coverage_plot)
         self.coverage_plot_exists = os.path.exists(self.coverage_plot)
 
     def plot_dotplot(self):

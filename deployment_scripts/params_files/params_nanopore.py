@@ -41,6 +41,7 @@ BINARIES = {
         "minimap-rem": "hostDepletion/hostdep_env",
         "flye": "assembly/Flye",
         "clark": "classification/Clark",
+        "minimap2_ONT": "hostDepletion/hostdep_env",
     },
     "REMAPPING": {"default": "remap/remap"},
     "PREPROCESS": {"default": "preprocess/preproc"},
@@ -91,16 +92,20 @@ CONSTANTS = {
 
 SOFTWARE = {
     "PREPROCESS": ["nanofilt"],  # "nanofilt", trimmomatic
-    "ENRICHMENT": ["kaiju"],
-    "ASSEMBLY": ["raven"],  # spades, velvet,
-    "CONTIG_CLASSIFICATION": ["blast"],  # , "minimap-asm"],
-    "READ_CLASSIFICATION": [
-        "fastviromeexplorer",
-        "krakenuniq",
-        "clark",
-        "desamba",
+    "ENRICHMENT": [
         "kaiju",
-        "minimap2",
+        # "krakenuniq",
+        # "diamond"
+    ],
+    "ASSEMBLY": ["raven"],  # spades, velvet,
+    "CONTIG_CLASSIFICATION": ["blast", "diamond"],  # , "minimap-asm"],
+    "READ_CLASSIFICATION": [
+        # "fastviromeexplorer",
+        # "krakenuniq",
+        # "clark",
+        # "desamba",
+        # "kaiju",
+        "minimap2_ONT",
     ],
     "REMAPPING": ["minimap-rem"],  # snippy, rematch, bowtie, minimap-rem
 }
@@ -147,7 +152,6 @@ ARGS_ENRICH = {
     "diamond": {
         "DIAMOND_ARGS": [
             "--top 5 -e 0.01 --id 40 --query-cover 40 --fast",
-            "--top 5 -e 0.01 --id 40 --query-cover 40 --sensitive",
         ],
         "DIAMOND_DB": ["diamond/swissprot"],
         "DIAMOND_THREADS": [4],
@@ -157,8 +161,8 @@ ARGS_ENRICH = {
         "KAIJU_DB": ["kaiju/viral/kaiju_db_viruses.fmi"],
         "KAIJU_THREADS": [4],
     },
-    "minimap2": {
-        "MINIMAP_ARGS": ["map-ont"],
+    "minimap2_ONT": {
+        "MINIMAP_ARGS": [""],
         "MINIMAP_QCF": [20],  # filter for alignment score
         "MINIMAP_DB": [
             "refseq_viral.genome.fna.gz",
@@ -259,12 +263,12 @@ ARGS_CLASS = {
         "DIAMOND_THREADS": [4],
     },
     "kaiju": {
-        "KAIJU_ARGS": ['-e 3 -s 70 -X -v -a "mem"', '-e 3 -s 70 -X -v -a "mem"'],
+        "KAIJU_ARGS": ['-e 3 -s 70 -X -v -a "mem"'],
         "KAIJU_DB": ["kaiju/viral/kaiju_db_viruses.fmi"],
         "KAIJU_THREADS": [4],
     },
-    "minimap2": {
-        "MINIMAP_ARGS": ["map-ont"],
+    "minimap2_ONT": {
+        "MINIMAP_ARGS": [""],
         "MINIMAP_DB": [
             "refseq_viral.genome.fna.gz",
             "virosaurus90_vertebrate-20200330.fas.gz",

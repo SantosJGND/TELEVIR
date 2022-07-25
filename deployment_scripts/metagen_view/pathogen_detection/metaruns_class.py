@@ -331,13 +331,12 @@ class metaclass_run:
         Generate run summary dataclasses, update database.
         :return:
         """
+        self.RunMain.export_reports()
 
-        if len(self.RunMain.report):
+        # if len(self.RunMain.report):
 
-            self.RunMain.generate_output_data_classes()
-            self.RunMain.export_reports()
-
-            Update_Sample_Runs(self.RunMain)
+        self.RunMain.generate_output_data_classes()
+        Update_Sample_Runs(self.RunMain)
 
     def clean(self, delete=True, outf=""):
 
@@ -426,7 +425,7 @@ class meta_orchestra:
 
         venue = [SOFTWARE[x] for x in cols]
         venues = list(it.product(*venue))
-        #
+
         if sample > 0 and sample < len(venues):
 
             vex = np.random.choice(list(range(len(venues))), sample, replace=False)
@@ -449,7 +448,6 @@ class meta_orchestra:
         new_features = []
         nvens = []
         #
-        print(show)
         for ix, soft in enumerate(show):
             soft_module = modules[ix]
             if soft in self.modules_to_stores[soft_module].keys():
@@ -536,15 +534,14 @@ class meta_orchestra:
             vex = np.random.choice(list(range(len(suprelay))), self.down, replace=False)
             suprelay = [suprelay[x] for x in vex]
         #
-        rlow = len(suprelay)
 
-        return rlow
+        return suprelay
 
     def prep_numbers(self):
 
         hdconf, linked_dbs, paramCombs = self.generate_combinations()
         number_of_combinations = self.combination_possibilities(hdconf, paramCombs)
-
+        number_of_combinations = len(number_of_combinations)
         print("total number of combinations: {}".format(number_of_combinations))
 
     def run_proc(self, srun, sac, hdconf, paramCombs, linked_db, run_prefix=""):
@@ -611,32 +608,14 @@ class meta_orchestra:
         :return: None
         """
         modules = ["CONTIG_CLASSIFICATION", "READ_CLASSIFICATION", "REMAPPING"]
-        hdconf = self.sample_main(sample=self.down, cols=modules)
-        params2 = {**ARGS_CLASS, **ARGS_REMAP}
-        paramCombs = [
-            self.params_extract(hdconf.iloc[idx], params2, modules=modules, sample=0)
-            for idx in range(hdconf.shape[0])
-        ]
-        linked_dbs = [x[1] for x in paramCombs]
-        paramCombs = [x[0] for x in paramCombs]
 
-        possibilities = [
-            [(x, y) for y in range(paramCombs[x].shape[0])]
-            for x in range(hdconf.shape[0])
-        ]
+        hdconf, linked_dbs, paramCombs = self.generate_combinations(self.sup, modules)
 
-        suprelay = list(it.chain(*possibilities))
+        suprelay = self.combination_possibilities(hdconf, paramCombs, self.sup)
+        self.down = len(suprelay)
+        print("low run possibilities: {}".format(self.down))
 
-        print("low run possibilities: {}".format(len(suprelay)))
-        if self.down > len(suprelay):
-            logging.info("down sampling low runs to {}".format(len(suprelay)))
-            self.down = len(suprelay)
-
-        if self.down > 0 and self.down < len(suprelay):
-            vex = np.random.choice(list(range(len(suprelay))), self.down, replace=False)
-            suprelay = [suprelay[x] for x in vex]
-        #
-        rlow = len(suprelay)
+        rlow = self.down
         #
         if rlow > self.smax:
             pack = list(np.arange(0, rlow, self.smax)) + [rlow]
@@ -709,27 +688,13 @@ class meta_orchestra:
         :return: self
         """
         modules = ["PREPROCESS", "ENRICHMENT", "ASSEMBLY"]
-        conf = self.sample_main(sample=0, cols=modules)
-        params1 = {**ARGS_QC, **ARGS_ENRICH, **ARGS_ASS}
-        paramCombs = [
-            self.params_extract(conf.iloc[idx], params1, modules=modules, sample=0)
-            for idx in range(conf.shape[0])
-        ]
-        linked_dbs = [x[1] for x in paramCombs]
-        paramCombs = [x[0] for x in paramCombs]
 
-        possibilities = [
-            [(x, y) for y in range(paramCombs[x].shape[0])]
-            for x in range(conf.shape[0])
-        ]
-        suprelay = list(it.chain(*possibilities))
-        print("sup run possibilities: {}".format(len(suprelay)))
+        conf, linked_dbs, paramCombs = self.generate_combinations(self.sup, modules)
 
-        if self.sup > 0 and self.sup < len(suprelay):
-            vex = np.random.choice(list(range(len(suprelay))), self.sup, replace=False)
-            suprelay = [suprelay[x] for x in vex]
-        #
-        rsup = len(suprelay)
+        suprelay = self.combination_possibilities(conf, paramCombs, self.sup)
+
+        self.sup = len(suprelay)
+        rsup = self.sup
 
         if rsup > self.smax:
             pack = list(np.arange(0, rsup, self.smax)) + [rsup]
