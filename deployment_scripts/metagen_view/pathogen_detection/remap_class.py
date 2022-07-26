@@ -53,6 +53,21 @@ class coverage_parse:
         self.glen = Tlen
 
         self.ctgl = ctg_lens
+        self.report = pd.DataFrame(
+            [[x, 0, 0, 0, 0, 0, 0, 0, 0] for x in ctg_lens.keys()],
+            columns=[
+                "ID",
+                "Hdepth",
+                "HdepthR",
+                "coverage",
+                "nregions",
+                "Rsize",
+                "ngaps",
+                "Gdist",
+                "Gsize",
+            ],
+        )
+
         return self
 
     def read_bedfile(self):
@@ -184,20 +199,6 @@ class coverage_parse:
         bed = self.bedm
 
         if bed.shape[0] == 0:
-            self.report = pd.DataFrame(
-                columns=[
-                    "ID",
-                    "Hdepth",
-                    "HdepthR",
-                    "coverage",
-                    "nregions",
-                    "Rsize",
-                    "ngaps",
-                    "Gdist",
-                    "Gsize",
-                ]
-            )
-
             return self
         tr = self.bedstats(bed)
         regions = bed[bed.x > self.Xm]
@@ -345,7 +346,21 @@ class Remapping:
 
         self.reference_fasta_length = 0
         self.reference_fasta_string = "none"
-        self.report = pd.DataFrame(columns=["ID"])
+        self.report = pd.DataFrame(
+            [["None", 0, 0, 0, 0, 0, 0, 0, 0]],
+            columns=[
+                "ID",
+                "Hdepth",
+                "HdepthR",
+                "coverage",
+                "nregions",
+                "Rsize",
+                "ngaps",
+                "Gdist",
+                "Gsize",
+            ],
+        )
+
         self.mapped_contigs = []
         self.remapping_successful = False
 

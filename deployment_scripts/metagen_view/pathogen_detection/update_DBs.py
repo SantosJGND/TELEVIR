@@ -285,10 +285,14 @@ def Update_RunMain(run_class: Type[RunMain_class]):
             reads_proc_percent=round(reads_proc_percent, 2),
             host_depletion=host_depletion_method,
             host_depletion_performed=host_depletion,
+            host_depletion_args=run_class.depletion_drone.classifier_method.args,
+            host_depletion_db=run_class.depletion_drone.classifier_method.db,
             enrichment_performed=enrichment,
             enrichment=enrichment_method,
+            enrichment_args=run_class.enrichment_drone.classifier_method.args,
+            enrichment_db=run_class.enrichment_drone.classifier_method.db,
             assembly_max=f"{run_class.assembly_drone.contig_summary['contig_length'].max():,}",
-            remap=run_class.remapping,
+            remap=run_class.remapping_method,
             read_classification=run_class.read_classification_drone.classifier_method.name,
             contig_classification=run_class.contig_classification_drone.classifier_method.name,
             runtime=f"{run_class.exec_time / 60:.2f} m",
@@ -368,6 +372,7 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
             sample=sample,
             performed=run_class.assembly_report.performed,
             method=run_class.assembly_report.assembly_soft,
+            args=run_class.assembly_report.assembly_args,  #
             contig_number=run_class.assembly_report.assembly_number,
             contig_max=run_class.assembly_report.assembly_max,
             contig_min=run_class.assembly_report.assembly_min,
@@ -387,6 +392,8 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
             # read_classification_report=run_class.read_classification_path,
             performed=run_class.read_classification_results.performed,
             method=run_class.read_classification_results.method,
+            args=run_class.read_classification_results.args,
+            db=run_class.read_classification_results.db,
             classification_number=run_class.read_classification_results.classification_number,
             classification_minhit=run_class.read_classification_results.classification_minhit,
             success=run_class.read_classification_results.success,
@@ -405,6 +412,8 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
             # contig_classification_report=run_class.assembly_classification_path,
             performed=run_class.contig_classification_results.performed,
             method=run_class.contig_classification_results.method,
+            args=run_class.contig_classification_results.args,
+            db=run_class.contig_classification_results.db,
             classification_number=run_class.contig_classification_results.classification_number,
             classification_minhit=run_class.contig_classification_results.classification_minhit,
             success=run_class.contig_classification_results.success,
@@ -429,6 +438,9 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
         remap_main.save()
 
     for i, row in run_class.report.iterrows():
+        if row["ID"] == "None":
+            continue
+
         try:
             report_row = FinalReport.objects.get(
                 run=runmain,

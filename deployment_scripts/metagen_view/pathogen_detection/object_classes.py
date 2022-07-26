@@ -503,6 +503,8 @@ class Run_detail_report:
 class Contig_classification_results:
     performed: bool
     method: str
+    args: str
+    db: str
     classification_number: int
     classification_minhit: int
     success: bool
@@ -512,6 +514,8 @@ class Contig_classification_results:
 class Read_classification_results:
     performed: bool
     method: str
+    args: str
+    db: str
     classification_number: int
     classification_minhit: int
     success: bool
@@ -531,6 +535,7 @@ class Remap_main:
 class Assembly_results:
     performed: bool
     assembly_soft: str
+    assembly_args: str
     assembly_number: int
     assembly_min: int
     assembly_mean: int

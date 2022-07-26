@@ -188,12 +188,26 @@ class RunMain(models.Model):
 
     params_file_path = models.CharField(max_length=100, blank=True, null=True)
 
+    processed_reads_r1 = models.CharField(
+        max_length=200, blank=True, null=True
+    )  # processed reads
+    processed_reads_r2 = models.CharField(
+        max_length=200, blank=True, null=True
+    )  # processed reads
+
     enrichment = models.CharField(
         max_length=10, blank=True, null=True
     )  # enrichment method if any
     enrichment_performed = models.BooleanField(
         blank=True, null=True
     )  # enrichment performed
+    enrichment_args = models.CharField(
+        max_length=10, blank=True, null=True
+    )  # enrichment args
+
+    enrichment_db = models.CharField(
+        max_length=10, blank=True, null=True
+    )  # enrichment db if any
 
     host_depletion = models.CharField(
         max_length=10, blank=True, null=True
@@ -202,12 +216,13 @@ class RunMain(models.Model):
         blank=True, null=True
     )  # host depletion performed
 
-    processed_reads_r1 = models.CharField(
-        max_length=200, blank=True, null=True
-    )  # processed reads
-    processed_reads_r2 = models.CharField(
-        max_length=200, blank=True, null=True
-    )  # processed reads
+    host_depletion_args = models.CharField(
+        max_length=10, blank=True, null=True
+    )  # enrichment args
+
+    host_depletion_db = models.CharField(
+        max_length=10, blank=True, null=True
+    )  # enrichment db if any
 
     reads_after_processing = models.CharField(
         max_length=100, blank=True, null=True
@@ -215,24 +230,32 @@ class RunMain(models.Model):
     reads_proc_percent = models.CharField(
         max_length=100, blank=True, null=True
     )  # percent of reads after processing
+
     assembly_performed = models.CharField(
         max_length=10, blank=True, null=True
     )  # assembly method if any
     assembly_method = models.CharField(
         max_length=10, blank=True, null=True
     )  # assembly method if any
+
     assembly_max = models.CharField(
         max_length=100, blank=True, null=True
     )  # max length of contig.
     read_classification = models.CharField(
         max_length=10, blank=True, null=True
     )  # read classification method if any
+    read_classification_performed = models.BooleanField(
+        blank=True, null=True
+    )  # read classification performed
 
     contig_classification = models.CharField(max_length=15, blank=True, null=True)
+    contig_classification_performed = models.BooleanField(blank=True, null=True)
 
     remap = models.CharField(
         max_length=10, blank=True, null=True
     )  # remap method if any
+    remap_performed = models.BooleanField(blank=True, null=True)
+    remap_args = models.CharField(max_length=10, blank=True, null=True)
 
     finished = models.CharField(max_length=10, blank=True, null=True)  # SE or PE
     runtime = models.CharField(max_length=100, blank=True, null=True)
@@ -301,6 +324,8 @@ class RunAssembly(models.Model):
         max_length=10, blank=True, null=True
     )  # assembly method if any
 
+    args = models.CharField(max_length=10, blank=True, null=True)  # assembly args
+
     contig_number = models.IntegerField(blank=True, null=True)
 
     contig_max = models.CharField(
@@ -337,6 +362,13 @@ class ReadClassification(models.Model):
         max_length=10, blank=True, null=True
     )  # read classification method if any
 
+    args = models.CharField(
+        max_length=10, blank=True, null=True
+    )  # read classification args
+    db = models.CharField(
+        max_length=10, blank=True, null=True
+    )  # read classification db if any
+
     read_classification_report = models.CharField(
         max_length=200, blank=True, null=True
     )  # read classification report
@@ -365,6 +397,13 @@ class ContigClassification(models.Model):
     method = models.CharField(
         max_length=10, blank=True, null=True
     )  # contig classification method if any
+
+    args = models.CharField(
+        max_length=10, blank=True, null=True
+    )  # read classification args
+    db = models.CharField(
+        max_length=10, blank=True, null=True
+    )  # read classification db if any
 
     contig_classification_report = models.CharField(
         max_length=200, blank=True, null=True

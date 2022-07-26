@@ -462,7 +462,7 @@ class RunMethods(RunDetail_main):
 
     def deploy_REMAPPING(self):
 
-        for remap_target in self.remap_targets:
+        for remap_target in self.remap_targets[:2]:
 
             target_remap_drone = self.reference_map(remap_target)
 
@@ -578,7 +578,7 @@ class RunMethods(RunDetail_main):
                 self.logger.info(
                     f"No mapping output found for reference {instance['reference'].target.name}"
                 )
-                continue
+                # continue
 
             ###
 
@@ -648,6 +648,7 @@ class RunMethods(RunDetail_main):
                 ntax["mapped_scaffolds_path"] = ""
                 ntax["mapped_scaffolds_index_path"] = ""
 
+            print(ntax)
             ntax = ntax.sort_values(["taxid", "Hdepth"])
 
             full_report.append(ntax)
@@ -657,7 +658,7 @@ class RunMethods(RunDetail_main):
             self.report = pd.concat(full_report, axis=0)
             self.clean_final_report()
         else:
-            self.report = pd.DataFrame()
+            self.report = pd.DataFrame(columns=ntax_cols)
 
     def clean_final_report(self):
 
@@ -758,6 +759,8 @@ class RunMethods(RunDetail_main):
         self.contig_classification_results = Contig_classification_results(
             True,
             self.contig_classification_drone.classifier_method.name,
+            self.contig_classification_drone.classifier_method.args,
+            self.contig_classification_drone.classifier_method.db,
             self.aclass_summary.shape[0],
             minhit_assembly,
             self.aclass_summary.shape[0] > 0,
@@ -766,6 +769,8 @@ class RunMethods(RunDetail_main):
         self.read_classification_results = Read_classification_results(
             True,
             self.read_classification_drone.classifier_method.name,
+            self.read_classification_drone.classifier_method.args,
+            self.read_classification_drone.classifier_method.db,
             self.rclass_summary.shape[0],
             minhit_reads,
             self.rclass_summary.shape[0] > 0,
@@ -774,6 +779,7 @@ class RunMethods(RunDetail_main):
         self.assembly_report = Assembly_results(
             True,
             self.assembly_drone.assembly_method.name,
+            self.assembly_drone.assembly_method.args,
             assembly_number,
             f"{assembly_min:,}",
             f"{int(assembly_mean):,}",
