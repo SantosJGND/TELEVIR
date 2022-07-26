@@ -905,7 +905,7 @@ class run_CLARK(Classifier_init):
 
         print(report.head())
         report = report.dropna().reset_index(drop=True)
-        report["taxid"] = report["taxid"].astype(int)
+        report["taxid"] = report["taxid"].astype(float).astype(int)
         return report
 
     def get_report(self) -> pd.DataFrame:

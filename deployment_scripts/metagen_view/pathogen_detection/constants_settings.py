@@ -6,4 +6,4 @@ Ceated on 06/05/2022
 
 class ConstantsSettings:
 
-    project_directory = "/mnt/sdb/TELEVIR/projects/"
+    project_directory = "/mnt/sdc/TELEVIR/projects/"

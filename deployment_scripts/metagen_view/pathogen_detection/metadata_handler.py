@@ -254,12 +254,6 @@ class Metadata_handler:
         if df2[column_two].dtype != str:
             df2[column_two] = df2[column_two].astype(str)
 
-        print("############################################################")
-        print(df1.head())
-        print(df2.head())
-        print(column)
-        print(column_two)
-
         return pd.merge(df1, df2, left_on=column, right_on=column_two)
 
     @staticmethod

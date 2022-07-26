@@ -296,7 +296,7 @@ class RunDetail_main:
         self.exec_time = self.exec_time + time.perf_counter() - self.start_time
 
 
-class RunMethods(RunDetail_main):
+class Run_Deployment_Methods(RunDetail_main):
     def __init__(self, config_json: os.PathLike, method_args: pd.DataFrame):
         super().__init__(config_json, method_args)
         self.mapped_instances = []
@@ -547,6 +547,11 @@ class RunMethods(RunDetail_main):
             os.rename(tempfq + "_1P.fastq.gz", self.r1.current)
             os.rename(tempfq + "_2P.fastq.gz", self.r2.current)
 
+    # class Run_Summary_Methods(Run_Deployment_Methods):
+    #    def __init__(self, config_json: os.PathLike, method_args: pd.DataFrame):
+    #        super().__init__(config_json, method_args)
+    #        self.mapped_instances = []
+    #
     def Summarize(self):
 
         self.logger.info(f"prefix: {self.prefix}")
@@ -574,12 +579,6 @@ class RunMethods(RunDetail_main):
         for instance in self.mapped_instances:
             success = "none"
             apres = False
-            if not instance["reference"].remapping_successful:
-                self.logger.info(
-                    f"No mapping output found for reference {instance['reference'].target.name}"
-                )
-                # continue
-
             ###
 
             mapped = instance["reference"].number_of_reads_mapped
@@ -882,7 +881,7 @@ class RunMethods(RunDetail_main):
         )
 
 
-class RunMain_class(RunMethods):
+class RunMain_class(Run_Deployment_Methods):
     def __init__(self, config_json: os.PathLike, method_args: pd.DataFrame):
         super().__init__(config_json, method_args)
 
