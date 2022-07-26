@@ -888,8 +888,18 @@ class run_CLARK(Classifier_init):
                 "Object_ID": "qseqid",
                 "Length": "length",
                 "Assignment": "taxid",
+                "1st_assignment": "taxid",
             }
         )
+        if "2nd_assignment" in report.columns:
+            report["taxid"] = (
+                report["taxid"].astype(str) + "," + report["2nd_assignment"].astype(str)
+            )
+
+            report = report.drop(columns=["2nd_assignment"])
+            report["taxid"] = report["taxid"].apply(lambda x: x.split(","))
+            report = report.explode("taxid")
+
         report = report.dropna().reset_index(drop=True)
         report["taxid"] = report["taxid"].astype(int)
         return report

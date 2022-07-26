@@ -717,7 +717,7 @@ class RunMethods(RunDetail_main):
 
         return post_processed_reads, final_processing_reads
 
-    def final_report_summary(self):
+    def final_report_summary_statistics(self):
         if self.report.shape[0] > 0:
             max_gaps = self.report.ngaps.max()
             if np.isnan(max_gaps):
@@ -772,7 +772,7 @@ class RunMethods(RunDetail_main):
             max_mapped,
             max_depth,
             max_depthR,
-        ) = self.final_report_summary()
+        ) = self.final_report_summary_statistics()
 
         files = list(set([t["reference"].target.file for t in self.mapped_instances]))
 

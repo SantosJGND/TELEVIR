@@ -225,7 +225,7 @@ ARGS_ASS = {
 
 ARGS_CLASS = {
     "clark": {
-        "CLARK_ARGS": ["-m 0 --spaced", "-m 1 --spaced", "-m 3"],
+        "CLARK_ARGS": ["-m 0", "-m 1", "-m 3"],
         "CLARK_THREADS": [8],
         "CLARK_DB": ["clark/viruses"],
     },
