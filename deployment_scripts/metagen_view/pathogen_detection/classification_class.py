@@ -47,7 +47,7 @@ class Classifier_init:
     def filter_samfile_read_names(self, same=True, output_sam="", sep=",", idx=0):
 
         if not output_sam:
-            output_sam = os.path.join(self.rdir, f"temp{randint(1,1999)}.sam")
+            output_sam = os.path.join(self.out_path, f"temp{randint(1,1999)}.sam")
 
         read_name_filter_regex = re.compile("^[A-Za-z0-9_-]*$")  # (r"@|=&$\t")
 
