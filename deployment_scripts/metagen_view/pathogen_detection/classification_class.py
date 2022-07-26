@@ -898,8 +898,12 @@ class run_CLARK(Classifier_init):
 
             report = report.drop(columns=["2nd_assignment"])
             report["taxid"] = report["taxid"].apply(lambda x: x.split(","))
-            report = report.explode("taxid")
+            report = report.explode("taxid").drop_duplicates(
+                subset=["qseqid", "taxid"], keep="first"
+            )
+            report = report[report.taxid != "nan"]
 
+        print(report.head())
         report = report.dropna().reset_index(drop=True)
         report["taxid"] = report["taxid"].astype(int)
         return report
