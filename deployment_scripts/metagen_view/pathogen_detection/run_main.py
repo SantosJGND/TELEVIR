@@ -658,7 +658,25 @@ class RunMethods(RunDetail_main):
             self.report = pd.concat(full_report, axis=0)
             self.clean_final_report()
         else:
-            self.report = pd.DataFrame(columns=ntax_cols)
+            self.report = pd.DataFrame(
+                columns=[
+                    "suffix",
+                    "taxid",
+                    "refseq",
+                    "description",
+                    "rclass",
+                    "aclass",
+                    "ID",
+                    "Hdepth",
+                    "HdepthR",
+                    "coverage",
+                    "nregions",
+                    "Rsize",
+                    "ngaps",
+                    "Gdist",
+                    "Gsize",
+                ],
+            )
 
     def clean_final_report(self):
 
@@ -699,6 +717,31 @@ class RunMethods(RunDetail_main):
 
         return post_processed_reads, final_processing_reads
 
+    def final_report_summary(self):
+        if self.report.shape[0] > 0:
+            max_gaps = self.report.ngaps.max()
+            if np.isnan(max_gaps):
+                max_gaps = 0
+
+            max_prop = self.report.ref_prop.max()
+            if np.isnan(max_prop):
+                max_prop = 0
+
+            max_mapped = self.report.mapped.max()
+            if np.isnan(max_mapped):
+                max_mapped = 0
+
+            max_depth = self.report.Hdepth.max()
+            max_depthR = self.report.HdepthR.max()
+        else:
+            max_gaps = 0
+            max_prop = 0
+            max_mapped = 0
+            max_depth = 0
+            max_depthR = 0
+
+        return max_gaps, max_prop, max_mapped, max_depth, max_depthR
+
     def generate_output_data_classes(self):
         ###
         processed_reads = (
@@ -723,23 +766,19 @@ class RunMethods(RunDetail_main):
             minhit_reads = 0
 
         ###
-        max_gaps = self.report.ngaps.max()
-        if np.isnan(max_gaps):
-            max_gaps = 0
-
-        max_prop = self.report.ref_prop.max()
-        if np.isnan(max_prop):
-            max_prop = 0
-
-        max_mapped = self.report.mapped.max()
-        if np.isnan(max_mapped):
-            max_mapped = 0
+        (
+            max_gaps,
+            max_prop,
+            max_mapped,
+            max_depth,
+            max_depthR,
+        ) = self.final_report_summary()
 
         files = list(set([t["reference"].target.file for t in self.mapped_instances]))
 
         self.run_detail_report = Run_detail_report(
-            self.report.Hdepth.max(),
-            self.report.HdepthR.max(),
+            max_depth,
+            max_depthR,
             max_gaps,
             max_prop,
             max_mapped,
