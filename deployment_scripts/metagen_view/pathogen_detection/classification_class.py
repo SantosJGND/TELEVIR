@@ -1,5 +1,7 @@
 import logging
 import os
+import re
+from random import randint
 from typing import Type
 
 import pandas as pd
@@ -41,6 +43,28 @@ class Classifier_init:
         self.full_report_path = os.path.join(
             self.out_path, self.prefix + self.full_report_suffix
         )
+
+    def filter_samfile_read_names(self, same=True, output_sam="", sep=",", idx=0):
+
+        if not output_sam:
+            output_sam = os.path.join(self.rdir, f"temp{randint(1,1999)}.sam")
+
+        read_name_filter_regex = re.compile("^[A-Za-z0-9_-]*$")  # (r"@|=&$\t")
+
+        with open(self.report_path, "r") as f:
+            with open(output_sam, "w") as f2:
+                for line in f:
+                    if line.startswith(tuple(["@HD", "@SQ", "@PG", "@RG", "@CO"])):
+                        f2.write(line)
+
+                    elif read_name_filter_regex.search(
+                        line.split(sep)[idx].replace(":", "_")
+                    ):
+                        f2.write(line)
+
+        if same:
+            os.remove(self.report_path)
+            os.rename(output_sam, self.report_path)
 
 
 class run_blast(Classifier_init):
@@ -856,6 +880,7 @@ class run_CLARK(Classifier_init):
         self.cmd.run(cmd)
 
     def read_report(self):
+        self.filter_samfile_read_names(sep=",")
         report = pd.read_csv(self.report_path, sep=",")
         report.columns = report.columns.str.strip()
         report = report.rename(
