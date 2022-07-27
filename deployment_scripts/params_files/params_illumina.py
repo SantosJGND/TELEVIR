@@ -91,13 +91,13 @@ SOFTWARE = {
     "PREPROCESS": ["trimmomatic"],  # trimmomatic
     "ENRICHMENT": [
         "centrifuge",
-        # "clark",
-        # "fastviromeexplorer",
+        "kraken2",
+        "fastviromeexplorer",
     ],  # "virmet", "dvf", "minimap2", "centrifuge", "kaiju", "kuniq", "kraken2", "fve", "virmet"],
     "ASSEMBLY": ["spades"],  # "flye", "raven"],
     "CONTIG_CLASSIFICATION": [
         "blast",
-        # "diamond",
+        "diamond",
     ],  # ["blast", "minimap-asm", "diamond", "virsorter"],
     "READ_CLASSIFICATION": [
         "kraken2",

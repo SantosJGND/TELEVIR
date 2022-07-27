@@ -462,7 +462,7 @@ class Run_Deployment_Methods(RunDetail_main):
 
     def deploy_REMAPPING(self):
 
-        for remap_target in self.remap_targets[:2]:
+        for remap_target in self.remap_targets:
 
             target_remap_drone = self.reference_map(remap_target)
 

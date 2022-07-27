@@ -92,20 +92,17 @@ CONSTANTS = {
 
 SOFTWARE = {
     "PREPROCESS": ["nanofilt"],  # "nanofilt", trimmomatic
-    "ENRICHMENT": [
-        "kaiju",
-        # "krakenuniq",
-        # "diamond"
-    ],
-    "ASSEMBLY": ["raven"],  # spades, velvet,
+    "ENRICHMENT": ["kaiju", "krakenuniq", "diamond"],
+    "ASSEMBLY": ["raven", "flye"],  # spades, velvet,
     "CONTIG_CLASSIFICATION": ["blast", "diamond"],  # , "minimap-asm"],
     "READ_CLASSIFICATION": [
-        # "fastviromeexplorer",
-        # "krakenuniq",
-        # "clark",
-        # "desamba",
-        # "kaiju",
+        "fastviromeexplorer",
+        "krakenuniq",
+        "clark",
+        "desamba",
+        "kaiju",
         "minimap2_ONT",
+        "centrifuge",
     ],
     "REMAPPING": ["minimap-rem"],  # snippy, rematch, bowtie, minimap-rem
 }
