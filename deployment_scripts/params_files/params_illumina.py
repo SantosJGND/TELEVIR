@@ -100,12 +100,12 @@ SOFTWARE = {
         # "diamond",
     ],  # ["blast", "minimap-asm", "diamond", "virsorter"],
     "READ_CLASSIFICATION": [
-        # "kraken2",
-        # "fastviromeexplorer",
-        # "krakenuniq",
-        # "clark",
+        "kraken2",
+        "fastviromeexplorer",
+        "krakenuniq",
+        "clark",
         "kaiju",
-        # "centrifuge",
+        "centrifuge",
     ],
     "REMAPPING": ["snippy"],  # snippy, rematch, bowtie, minimap-rem
 }
@@ -154,7 +154,7 @@ ARGS_ENRICH = {
         "DIAMOND_THREADS": [4],
     },
     "kaiju": {
-        "KAIJU_ARGS": ['-e 5 -s 50 -x -v -a "greedy"'],
+        "KAIJU_ARGS": ["-e 5 -s 50 -x -v"],
         "KAIJU_DB": ["kaiju/viral/kaiju_db_viruses.fmi"],
         "KAIJU_THREADS": [4],
     },

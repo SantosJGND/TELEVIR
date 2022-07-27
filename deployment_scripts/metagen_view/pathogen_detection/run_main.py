@@ -473,7 +473,7 @@ class Run_Deployment_Methods(RunDetail_main):
 
             self.mapped_instances.append(mapped_instance)
 
-    def select_targets(self):
+    def select_targets(self):  ## go to metadata
 
         self.metadata_tool.get_metadata()
 
@@ -541,16 +541,12 @@ class Run_Deployment_Methods(RunDetail_main):
 
         self.cmd.run(cmd_trimsort)
 
-        if tempfq + ".fastq.gz" in os.listdir(tempdir):
+        if tempfq + "_1P.fastq.gz" in os.listdir(tempdir):
             os.remove(self.r1.current)
             os.remove(self.r2.current)
             os.rename(tempfq + "_1P.fastq.gz", self.r1.current)
             os.rename(tempfq + "_2P.fastq.gz", self.r2.current)
 
-    # class Run_Summary_Methods(Run_Deployment_Methods):
-    #    def __init__(self, config_json: os.PathLike, method_args: pd.DataFrame):
-    #        super().__init__(config_json, method_args)
-    #        self.mapped_instances = []
     #
     def Summarize(self):
 
@@ -585,7 +581,6 @@ class Run_Deployment_Methods(RunDetail_main):
 
             if instance["assembly"]:
                 apres = True
-
             if mapped and apres:
                 success = "reads and contigs"
             elif mapped:
@@ -701,21 +696,6 @@ class Run_Deployment_Methods(RunDetail_main):
 
         return assembly_min, assembly_max, assembly_mean
 
-    def get_classification_input(self):
-        """
-        Get the classification read number input for classification.
-        if sift was performed, then final processing is grabbed from the output ofsift.
-        otherwise, final_processed_reads == post_processed_reads.
-
-        """
-        post_processed_reads = self.sample.reads_after_processing
-
-        final_processing_reads = (
-            self.r1.current_fastq_read_number() + self.r2.current_fastq_read_number()
-        )
-
-        return post_processed_reads, final_processing_reads
-
     def final_report_summary_statistics(self):
         if self.report.shape[0] > 0:
             max_gaps = self.report.ngaps.max()
@@ -742,20 +722,23 @@ class Run_Deployment_Methods(RunDetail_main):
         return max_gaps, max_prop, max_mapped, max_depth, max_depthR
 
     def generate_output_data_classes(self):
-        ###
+        ### transfer to sample class
         processed_reads = (
             self.sample.r1.read_number_clean + self.sample.r2.read_number_clean
         )
 
-        post_processed_reads, final_processing_reads = self.get_classification_input()
+        post_processed_reads = self.sample.reads_after_processing
+        final_processing_reads = (
+            self.r1.current_fastq_read_number() + self.r2.current_fastq_read_number()
+        )
 
         post_percent = (int(post_processed_reads) / processed_reads) * 100
         final_processing_percent = (final_processing_reads / processed_reads) * 100
 
+        ### transfer to assembly class / drone.
         assembly_number = self.assembly_drone.contig_summary.shape[0]
         assembly_min, assembly_max, assembly_mean = self.get_assembly_stats()
 
-        ###
         minhit_assembly = self.aclass_summary["counts"].min()
         if not minhit_assembly or not self.aclass_summary.shape[0]:
             minhit_assembly = 0

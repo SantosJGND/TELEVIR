@@ -609,9 +609,9 @@ class meta_orchestra:
         """
         modules = ["CONTIG_CLASSIFICATION", "READ_CLASSIFICATION", "REMAPPING"]
 
-        hdconf, linked_dbs, paramCombs = self.generate_combinations(self.sup, modules)
+        hdconf, linked_dbs, paramCombs = self.generate_combinations(self.down, modules)
 
-        suprelay = self.combination_possibilities(hdconf, paramCombs, self.sup)
+        suprelay = self.combination_possibilities(hdconf, paramCombs, self.down)
         self.down = len(suprelay)
         print("low run possibilities: {}".format(self.down))
 

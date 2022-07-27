@@ -891,6 +891,7 @@ class run_CLARK(Classifier_init):
                 "1st_assignment": "taxid",
             }
         )
+
         if "2nd_assignment" in report.columns:
             report["taxid"] = (
                 report["taxid"].astype(str) + "," + report["2nd_assignment"].astype(str)
@@ -903,7 +904,6 @@ class run_CLARK(Classifier_init):
             )
             report = report[report.taxid != "nan"]
 
-        print(report.head())
         report = report.dropna().reset_index(drop=True)
         report["taxid"] = report["taxid"].astype(float).astype(int)
         return report
