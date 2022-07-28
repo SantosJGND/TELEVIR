@@ -395,7 +395,7 @@ class ContigClassification(models.Model):
     performed = models.BooleanField(default=False)
 
     method = models.CharField(
-        max_length=20, blank=True, null=True
+        max_length=50, blank=True, null=True
     )  # contig classification method if any
 
     args = models.CharField(
@@ -406,7 +406,7 @@ class ContigClassification(models.Model):
     )  # read classification db if any
 
     contig_classification_report = models.CharField(
-        max_length=200, blank=True, null=True
+        max_length=300, blank=True, null=True
     )  # contig classification report
 
     classification_number = models.IntegerField(blank=True, null=True)

@@ -304,6 +304,17 @@ def Update_RunMain(run_class: Type[RunMain_class]):
         runmain.save()
 
 
+def Sample_update_combinations(run_class: Type[RunMain_class]):
+    sample = Sample.objects.get(
+        project__name=run_class.sample.project_name,
+        name_extended=run_class.sample.sample_name,
+    )
+
+    sample.combinations = sample.combinations + 1
+
+    sample.save()
+
+
 def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
     """
     Update ALL run TABLES for one run_class.:
@@ -320,6 +331,7 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
     :param run_class:
     :return: run_data
     """
+    Sample_update_combinations(run_class)
 
     sample = Sample.objects.get(
         project__name=run_class.sample.project_name,
@@ -400,11 +412,19 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
             success=run_class.read_classification_results.success,
         )
         read_classification.save()
+    print(run_class.contig_classification_results.performed)
+    print(run_class.contig_classification_results.method)
+    print(run_class.contig_classification_results.args)
+    print(run_class.contig_classification_results.db)
+    print(run_class.contig_classification_results.classification_number)
+    print(run_class.contig_classification_results.classification_minhit)
+    print(run_class.contig_classification_results.success)
 
     try:
         contig_classification = ContigClassification.objects.get(
             run=runmain, sample=sample
         )
+
     except ContigClassification.DoesNotExist:
 
         contig_classification = ContigClassification(
@@ -417,12 +437,13 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
             db=run_class.contig_classification_results.db,
             classification_number=run_class.contig_classification_results.classification_number,
             classification_minhit=run_class.contig_classification_results.classification_minhit,
-            success=run_class.contig_classification_results.success,
+            # success=run_class.contig_classification_results.success,
         )
         contig_classification.save()
 
     try:
         remap_main = RunRemapMain.objects.get(run=runmain, sample=sample)
+
     except RunRemapMain.DoesNotExist:
         remap_main = RunRemapMain(
             run=runmain,
@@ -437,12 +458,6 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
             success=run_class.remap_main.success,
         )
         remap_main.save()
-
-    print("####")
-    print(run_class.report)
-
-    sample.combinations = sample.combinations + 1
-    sample.save()
 
     for i, row in run_class.report.iterrows():
         if row["ID"] == "None":
