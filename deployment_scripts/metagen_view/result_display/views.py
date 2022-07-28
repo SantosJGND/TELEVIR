@@ -9,17 +9,27 @@ from django.http.response import HttpResponse
 from django.shortcuts import render
 from django.utils.safestring import mark_safe
 from django.views.generic import ListView
+
 # Create your views here.
 from metagen_view.settings import STATICFILES_DIRS
 
 from result_display import igv_app
-from result_display.models import (QC_REPORT, ContigClassification,
-                                   FinalReport, Projects, ReadClassification,
-                                   ReferenceContigs, ReferenceMap_Main,
-                                   RunAssembly, RunDetail, RunMain,
-                                   RunRemapMain, Sample, SampleQC)
-from result_display.tables import (ContigTable, RunMainTable, SampleQCTable,
-                                   SampleTable)
+from result_display.models import (
+    QC_REPORT,
+    ContigClassification,
+    FinalReport,
+    Projects,
+    ReadClassification,
+    ReferenceContigs,
+    ReferenceMap_Main,
+    RunAssembly,
+    RunDetail,
+    RunMain,
+    RunRemapMain,
+    Sample,
+    SampleQC,
+)
+from result_display.tables import ContigTable, RunMainTable, SampleQCTable, SampleTable
 
 # from result_display.forms import IGVform
 
@@ -196,7 +206,7 @@ def Sample_detail(requesdst, project="", sample="", name=""):
         sample=sample_main, run=run_main
     )
     #
-    )
+
     #
     run_remap = RunRemapMain.objects.get(sample=sample_main, run=run_main)
     #
