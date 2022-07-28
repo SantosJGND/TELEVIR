@@ -1130,6 +1130,9 @@ class Mapping_Manager(Deep_Remap):
 
             ntax = pd.DataFrame(ntax, columns=ntax_cols)
 
+            if len(instance["reference"].report) == 0:
+                continue
+
             ntax = pd.concat((ntax, instance["reference"].report), axis=1)
             ntax["mapped"] = mapped
             ntax["mapped_prop"] = 100 * (mapped / self.reads_after_processing)
