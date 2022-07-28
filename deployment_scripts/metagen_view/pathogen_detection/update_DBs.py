@@ -441,6 +441,12 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
         )
         contig_classification.save()
 
+    print(run_class.remap_main.performed)
+    print(run_class.remap_main.method)
+    print(run_class.remap_main.coverage_max)
+    print(run_class.remap_main.coverage_min)
+    print(run_class.remap_main.success)
+
     try:
         remap_main = RunRemapMain.objects.get(run=runmain, sample=sample)
 
@@ -455,7 +461,7 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
             found_total=run_class.remap_main.found_total,
             coverage_maximum=run_class.remap_main.coverage_max,
             coverage_minimum=run_class.remap_main.coverage_min,
-            success=run_class.remap_main.success,
+            # success=run_class.remap_main.success,
         )
         remap_main.save()
 
