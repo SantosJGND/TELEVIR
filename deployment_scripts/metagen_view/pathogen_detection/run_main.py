@@ -23,7 +23,7 @@ from pathogen_detection.object_classes import (
     Software_detail,
 )
 from pathogen_detection.preprocess_class import Preprocess
-from pathogen_detection.remap_class import Remapping
+from pathogen_detection.remap_class import Mapping_Manager, Remapping
 
 
 def get_bindir_from_binaries(binaries, key, value: str = ""):
@@ -80,6 +80,7 @@ class RunDetail_main:
     assembly_classification_method: Software_detail
     read_classification_method: Software_detail
     remapping_method: Software_detail
+    remap_manager = Mapping_Manager
 
     ## directories.
     root: str
@@ -126,12 +127,14 @@ class RunDetail_main:
             bin=get_bindir_from_binaries(config["bin"], "PREPROCESS"),
         )
 
+        ###
+
         self.min_scaffold_length = config["assembly_contig_min_length"]
         self.minimum_coverage = config["minimum_coverage_threshold"]
         self.maximum_coverage = 100000
         ### metadata
         self.metadata_tool = Metadata_handler(
-            self.config["metadata"], sift_query=config["sift_query"]
+            self.config, sift_query=config["sift_query"], prefix=self.prefix
         )
 
         self.max_remap = config["max_output_number"]
@@ -387,127 +390,31 @@ class Run_Deployment_Methods(RunDetail_main):
             prefix=self.prefix,
             threads=self.threads,
             bin=get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
-            logging_level=logging.INFO,  # self.logger_level_detail,  #
+            logging_level=self.logger_level_detail,  #
         )
 
         self.read_classification_drone.run()
 
-    def reference_map(self, remap_target: Type[Remap_Target]):
-        rdir = os.path.join(
-            self.remapping_method.dir,
-            remap_target.name,
-            "reference",
-        )
-
-        target_remap_drone = Remapping(
-            self.r1.current,
-            remap_target,
-            self.remapping_method,
-            self.assembly_drone.assembly_file_fasta_gz,
-            self.type,
-            self.prefix,
-            rdir,
-            self.threads,
-            r2=self.r2.current,
-            minimum_coverage=self.minimum_coverage,
-            bin=get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
-            logging_level=self.logger_level_detail,
-            cleanup=self.house_cleaning,
-        )
-
-        target_remap_drone.run_remap()
-
-        return target_remap_drone
-
-    def assembly_map(self, reference_remap: Type[Remapping]):
-
-        if len(reference_remap.mapped_contigs) == 0:
-            return None
-
-        output_directory = os.path.join(
-            self.remapping_method.dir,
-            reference_remap.target.name,
-            "assembly",
-        )
-
-        assembly_target = Remap_Target(
-            "none",
-            "assembly",
-            "none",
-            self.assembly_drone.assembly_file_fasta_gz,
-            self.prefix,
-            "description",
-            reference_remap.mapped_contigs,
-        )
-
-        assembly_remap_drone = Remapping(
-            reference_remap.mapped_subset_r1,
-            assembly_target,
-            self.remapping_method,
-            self.assembly_drone.assembly_file_fasta_gz,
-            self.type,
-            self.prefix,
-            output_directory,
-            self.threads,
-            r2=reference_remap.mapped_subset_r2,
-            minimum_coverage=self.minimum_coverage,
-            bin=get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
-            logging_level=self.logger_level_detail,
-            cleanup=self.house_cleaning,
-        )
-
-        assembly_remap_drone.run_remap()
-
-        return assembly_remap_drone
-
     def deploy_REMAPPING(self):
 
-        for remap_target in self.remap_targets:
-
-            target_remap_drone = self.reference_map(remap_target)
-
-            mapped_instance = {
-                "reference": target_remap_drone,
-                "assembly": self.assembly_map(target_remap_drone),
-            }
-
-            self.mapped_instances.append(mapped_instance)
-
-    def select_targets(self):  ## go to metadata
-
-        self.metadata_tool.get_metadata()
-
-        print(self.read_classification_drone.classification_report)
-
-        rdata = self.metadata_tool.results_process(
-            self.read_classification_drone.classification_report
-        )
-        cdata = self.metadata_tool.results_process(
-            self.contig_classification_drone.classification_report
+        self.remap_manager = Mapping_Manager(
+            self.metadata_tool.remap_targets,
+            self.r1,
+            self.r2,
+            self.remapping_method,
+            self.assembly_drone.assembly_file_fasta_gz,
+            self.type,
+            self.prefix,
+            self.threads,
+            self.minimum_coverage,
+            get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
+            self.logger_level_detail,
+            self.house_cleaning,
         )
 
-        merged_targets = self.metadata_tool.merge_reports(
-            cdata,
-            rdata,
-            max_remap=self.max_remap,
-        )
-
-        self.aclass_summary = cdata
-        self.rclass_summary = rdata
-        self.merged_targets = merged_targets
-
-        #######
-        #######
-
-        remap_targets, remap_absent = self.metadata_tool.generate_mapping_targets(
-            merged_targets,
-            prefix=self.prefix,
-            taxid_limit=self.taxid_limit,
-            fasta_main_dir=self.config["source"]["REF_FASTA"],
-        )
-
-        self.remap_targets = remap_targets
-        self.remap_absent_taxid_list = remap_absent
+        self.remap_manager.run_mappings()
+        self.remap_manager.merge_mapping_reports()
+        self.remap_manager.collect_final_report_summary_statistics()
 
     def clean_unique(self):
         if self.type == "SE":
@@ -547,7 +454,64 @@ class Run_Deployment_Methods(RunDetail_main):
             os.rename(tempfq + "_1P.fastq.gz", self.r1.current)
             os.rename(tempfq + "_2P.fastq.gz", self.r2.current)
 
-    #
+
+class RunMain_class(Run_Deployment_Methods):
+    def __init__(self, config_json: os.PathLike, method_args: pd.DataFrame):
+        super().__init__(config_json, method_args)
+
+    def Run(self):
+        print("quality control: ", self.quality_control)
+        print("enrichment: ", self.enrichment)
+        print("depletion: ", self.depletion)
+        print("remapping: ", self.remapping)
+        print("assembly: ", self.assembly)
+        print("classification: ", self.classification)
+        print("sift: ", self.sift)
+
+        if self.quality_control:
+            self.deploy_QC()
+
+            self.r1.is_clean()
+            self.r2.is_clean()
+
+        if self.enrichment:
+            self.deploy_EN()
+
+            self.r1.enrich(self.enrichment_drone.classified_reads_list)
+            self.r2.enrich(self.enrichment_drone.classified_reads_list)
+
+        if self.depletion:
+            self.deploy_HD()
+
+            self.r1.deplete(self.depletion_drone.classified_reads_list)
+            self.r2.deplete(self.depletion_drone.classified_reads_list)
+
+        if self.enrichment or self.depletion:
+            self.clean_unique()
+            self.trimmomatic_sort()
+
+        if self.assembly:
+            self.deploy_ASSEMBLY()
+
+        if self.classification:
+            self.deploy_READ_CLASSIFICATION()
+            self.deploy_CONTIG_CLASSIFICATION()
+            self.metadata_tool.match_and_select_targets(
+                self.read_classification_drone.classification_report,
+                self.contig_classification_drone.classification_report,
+                self.max_remap,
+                self.taxid_limit,
+            )
+            self.aclass_summary = self.metadata_tool.aclass
+            self.rclass_summary = self.metadata_tool.rclass
+            self.merged_targets = self.metadata_tool.merged_targets
+
+        if self.remapping:
+            self.deploy_REMAPPING()
+            self.report = self.remap_manager.report
+
+        self.Update_exec_time()
+
     def Summarize(self):
 
         self.logger.info(f"prefix: {self.prefix}")
@@ -559,167 +523,6 @@ class Run_Deployment_Methods(RunDetail_main):
         with open(os.path.join(self.log_dir, "reads_latest.stats"), "w") as f:
             f.write(f"CLEAN\t{self.r1.read_number_clean}\n")
             f.write(f"ENRICHED\t{self.r1.read_number_enriched}\n")
-
-    def merge_mapping_reports(self):
-
-        full_report = []
-        ntax_cols = [
-            "suffix",
-            "taxid",
-            "refseq",
-            "description",
-            "rclass",
-            "aclass",
-        ]
-
-        for instance in self.mapped_instances:
-            success = "none"
-            apres = False
-            ###
-
-            mapped = instance["reference"].number_of_reads_mapped
-
-            if instance["assembly"]:
-                apres = True
-            if mapped and apres:
-                success = "reads and contigs"
-            elif mapped:
-                success = "reads"
-            elif apres:
-                success = "contigs"
-
-            ntax = [
-                [
-                    self.prefix,
-                    instance["reference"].target.taxid,
-                    instance["reference"].target.accid,
-                    instance["reference"].target.description,
-                    True,
-                    apres,
-                ]
-            ]
-
-            def simplify_taxid(x):
-                return (
-                    x.replace(";", "_")
-                    .replace(":", "_")
-                    .replace(".", "_")
-                    .replace("|", "_")
-                )
-
-            ntax = pd.DataFrame(ntax, columns=ntax_cols)
-
-            ntax = pd.concat((ntax, instance["reference"].report), axis=1)
-            ntax["mapped"] = mapped
-            ntax["mapped_prop"] = 100 * (mapped / self.sample.reads_after_processing)
-            ntax["ref_prop"] = 100 * (mapped / self.sample.reads_before_processing)
-            ntax["refdb"] = instance["reference"].target.file
-            ntax["ID"] = instance["reference"].target.accid
-            ntax["simple_id"] = ntax["ID"].apply(simplify_taxid)
-            ntax["unique_id"] = ntax["ID"].apply(simplify_taxid)
-            ntax["contig_length"] = instance["reference"].reference_fasta_length
-            ntax["contig_string"] = instance["reference"].reference_fasta_string
-            ntax["success"] = success
-
-            ntax["refa_dotplot_exists"] = instance["reference"].dotplot_exists
-            ntax["covplot_exists"] = instance["reference"].coverage_plot_exists
-            ntax["refa_dotplot_path"] = instance["reference"].dotplot
-            ntax["covplot_path"] = instance["reference"].coverage_plot
-            ntax["bam_path"] = instance["reference"].read_map_sorted_bam
-            ntax["bam_index_path"] = instance["reference"].read_map_sorted_bam_index
-            ntax["reference_path"] = instance["reference"].reference_file
-            ntax["reference_index_path"] = instance["reference"].reference_fasta_index
-            ntax["reference_assembly_paf"] = instance["reference"].assembly_map_paf
-
-            if apres:
-                ntax["mapped_scaffolds_path"] = instance[
-                    "assembly"
-                ].reference_fasta_index
-                ntax["mapped_scaffolds_index_path"] = instance[
-                    "assembly"
-                ].assembly_map_paf
-            else:
-                ntax["mapped_scaffolds_path"] = ""
-                ntax["mapped_scaffolds_index_path"] = ""
-
-            print(ntax)
-            ntax = ntax.sort_values(["taxid", "Hdepth"])
-
-            full_report.append(ntax)
-
-        if len(full_report) > 0:
-
-            self.report = pd.concat(full_report, axis=0)
-            self.clean_final_report()
-        else:
-            self.report = pd.DataFrame(
-                columns=[
-                    "suffix",
-                    "taxid",
-                    "refseq",
-                    "description",
-                    "rclass",
-                    "aclass",
-                    "ID",
-                    "Hdepth",
-                    "HdepthR",
-                    "coverage",
-                    "nregions",
-                    "Rsize",
-                    "ngaps",
-                    "Gdist",
-                    "Gsize",
-                ],
-            )
-
-    def clean_final_report(self):
-
-        self.report.ngaps = self.report.ngaps.fillna(0)
-
-    def get_assembly_stats(self):
-        """Assembly contig summary_stats"""
-
-        if self.assembly_drone.contig_summary.shape[0] > 0:
-            assembly_min = (
-                self.assembly_drone.contig_summary["contig_length"].fillna(0).min()
-            )
-            assembly_max = (
-                self.assembly_drone.contig_summary["contig_length"].fillna(0).max()
-            )
-            assembly_mean = (
-                self.assembly_drone.contig_summary["contig_length"].fillna(0).mean()
-            )
-        else:
-            assembly_min = 0
-            assembly_max = 0
-            assembly_mean = 0
-
-        return assembly_min, assembly_max, assembly_mean
-
-    def final_report_summary_statistics(self):
-        if self.report.shape[0] > 0:
-            max_gaps = self.report.ngaps.max()
-            if np.isnan(max_gaps):
-                max_gaps = 0
-
-            max_prop = self.report.ref_prop.max()
-            if np.isnan(max_prop):
-                max_prop = 0
-
-            max_mapped = self.report.mapped.max()
-            if np.isnan(max_mapped):
-                max_mapped = 0
-
-            max_depth = self.report.Hdepth.max()
-            max_depthR = self.report.HdepthR.max()
-        else:
-            max_gaps = 0
-            max_prop = 0
-            max_mapped = 0
-            max_depth = 0
-            max_depthR = 0
-
-        return max_gaps, max_prop, max_mapped, max_depth, max_depthR
 
     def generate_output_data_classes(self):
         ### transfer to sample class
@@ -736,8 +539,6 @@ class Run_Deployment_Methods(RunDetail_main):
         final_processing_percent = (final_processing_reads / processed_reads) * 100
 
         ### transfer to assembly class / drone.
-        assembly_number = self.assembly_drone.contig_summary.shape[0]
-        assembly_min, assembly_max, assembly_mean = self.get_assembly_stats()
 
         minhit_assembly = self.aclass_summary["counts"].min()
         if not minhit_assembly or not self.aclass_summary.shape[0]:
@@ -747,23 +548,14 @@ class Run_Deployment_Methods(RunDetail_main):
         if np.isnan(minhit_reads):
             minhit_reads = 0
 
-        ###
-        (
-            max_gaps,
-            max_prop,
-            max_mapped,
-            max_depth,
-            max_depthR,
-        ) = self.final_report_summary_statistics()
-
         files = list(set([t["reference"].target.file for t in self.mapped_instances]))
 
         self.run_detail_report = Run_detail_report(
-            max_depth,
-            max_depthR,
-            max_gaps,
-            max_prop,
-            max_mapped,
+            self.remap_manager.max_depth,
+            self.remap_manager.max_depthR,
+            self.remap_manager.max_gaps,
+            self.remap_manager.max_prop,
+            self.remap_manager.max_mapped,
             f"{processed_reads:,}",
             f"{post_processed_reads:,}",
             f"{post_percent:.2f}",
@@ -781,7 +573,7 @@ class Run_Deployment_Methods(RunDetail_main):
             True,
             self.contig_classification_drone.classifier_method.name,
             self.contig_classification_drone.classifier_method.args,
-            self.contig_classification_drone.classifier_method.db,
+            self.contig_classification_drone.classifier_method.db_name,
             self.aclass_summary.shape[0],
             minhit_assembly,
             self.aclass_summary.shape[0] > 0,
@@ -791,7 +583,7 @@ class Run_Deployment_Methods(RunDetail_main):
             True,
             self.read_classification_drone.classifier_method.name,
             self.read_classification_drone.classifier_method.args,
-            self.read_classification_drone.classifier_method.db,
+            self.read_classification_drone.classifier_method.db_name,
             self.rclass_summary.shape[0],
             minhit_reads,
             self.rclass_summary.shape[0] > 0,
@@ -801,10 +593,10 @@ class Run_Deployment_Methods(RunDetail_main):
             True,
             self.assembly_drone.assembly_method.name,
             self.assembly_drone.assembly_method.args,
-            assembly_number,
-            f"{assembly_min:,}",
-            f"{int(assembly_mean):,}",
-            f"{assembly_max:,}",
+            self.assembly_drone.assembly_number,
+            f"{self.assembly_drone.assembly_min:,}",
+            f"{int(self.assembly_drone.assembly_mean):,}",
+            f"{self.assembly_drone.assembly_max:,}",
             f"{int(self.min_scaffold_length):,}",
         )
 
@@ -862,52 +654,3 @@ class Run_Deployment_Methods(RunDetail_main):
             sep="\t",
             header=True,
         )
-
-
-class RunMain_class(Run_Deployment_Methods):
-    def __init__(self, config_json: os.PathLike, method_args: pd.DataFrame):
-        super().__init__(config_json, method_args)
-
-    def Run(self):
-        print("quality control: ", self.quality_control)
-        print("enrichment: ", self.enrichment)
-        print("depletion: ", self.depletion)
-        print("remapping: ", self.remapping)
-        print("assembly: ", self.assembly)
-        print("classification: ", self.classification)
-        print("sift: ", self.sift)
-
-        if self.quality_control:
-            self.deploy_QC()
-
-            self.r1.is_clean()
-            self.r2.is_clean()
-
-        if self.enrichment:
-            self.deploy_EN()
-
-            self.r1.enrich(self.enrichment_drone.classified_reads_list)
-            self.r2.enrich(self.enrichment_drone.classified_reads_list)
-
-        if self.depletion:
-            self.deploy_HD()
-
-            self.r1.deplete(self.depletion_drone.classified_reads_list)
-            self.r2.deplete(self.depletion_drone.classified_reads_list)
-
-        if self.enrichment or self.depletion:
-            self.clean_unique()
-            self.trimmomatic_sort()
-
-        if self.assembly:
-            self.deploy_ASSEMBLY()
-
-        if self.classification:
-            self.deploy_READ_CLASSIFICATION()
-            self.deploy_CONTIG_CLASSIFICATION()
-
-        if self.remapping:
-            self.select_targets()
-            self.deploy_REMAPPING()
-
-        self.Update_exec_time()

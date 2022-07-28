@@ -398,6 +398,44 @@ class Sample_runClass:
 
         self.qcdata = self.QC_summary(reads_dir)
 
+    def clean_unique(self):
+        if self.type == "SE":
+            return
+
+        WHERETO = os.path.dirname(self.r1.current)
+        common_reads = os.path.join(WHERETO, "common_reads.lst")
+
+        cmd_find_common = [
+            f"seqkit common -n -i {self.r1.current} {self.r1.current} | paste - - - - | cut -f1 | uniq | sed 's/^@//g' > {common_reads}"
+        ]
+
+        self.cmd.run(cmd_find_common)
+        if os.path.getsize(common_reads) == 0:
+            self.logger.info("No common reads found")
+            return
+
+        self.r1.read_filter_inplace(self.r1.current, common_reads)
+        self.r2.read_filter_inplace(self.r2.current, common_reads)
+
+    def trimmomatic_sort(self):
+        if self.type == "SE":
+            return
+
+        tempdir = os.path.dirname(self.r1.current)
+        tempfq = os.path.join(tempdir, f"temp{randint(1,1999)}")
+
+        cmd_trimsort = [
+            f"trimmomatic PE -phred33 -threads {self.threads} {self.r1.current} {self.r2.current} -baseout {tempfq}.fastq.gz MINLEN:20"
+        ]
+
+        self.cmd.run(cmd_trimsort)
+
+        if tempfq + "_1P.fastq.gz" in os.listdir(tempdir):
+            os.remove(self.r1.current)
+            os.remove(self.r2.current)
+            os.rename(tempfq + "_1P.fastq.gz", self.r1.current)
+            os.rename(tempfq + "_2P.fastq.gz", self.r2.current)
+
 
 class Software_detail:
     def __init__(self, module, args_df: pd.DataFrame, config: dict, prefix: str):
@@ -415,6 +453,7 @@ class Software_detail:
             self.name = "None"
             self.args = "None"
             self.db = "None"
+            self.db_name = "None"
             self.bin = "None"
             self.dir = "None"
             self.output_dir = "None"
@@ -436,8 +475,10 @@ class Software_detail:
                 ].value.values[0]
                 if ".gz" in db_name:
                     self.db = os.path.join(config["source"]["REF_FASTA"], db_name)
+                    self.db_name = db_name
                 else:
                     self.db = os.path.join(config["source"]["DBDIR_MAIN"], db_name)
+                    self.db_name = db_name
 
             except IndexError:
                 self.db = ""

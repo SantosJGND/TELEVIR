@@ -252,6 +252,11 @@ class Assembly_class:
             [[0, 0]], columns=["contig_name", "contig_length"]
         )
 
+        self.assembly_min = 0
+        self.assembly_max = 0
+        self.assembly_mean = 0
+        self.assembly_number = 0
+
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging_level)
         self.logger.addHandler(logging.StreamHandler())
@@ -276,6 +281,7 @@ class Assembly_class:
 
         self.assembly_process()
         self.get_contig_summary()
+        self.get_assembly_stats()
 
     def assembly_configure(self):
         """
@@ -439,3 +445,12 @@ class Assembly_class:
         )
 
         self.contig_names = self.contig_summary.contig_name.tolist()
+
+    def get_assembly_stats(self):
+        """Assembly contig summary_stats"""
+
+        if self.contig_summary.shape[0] > 0:
+            self.assembly_min = self.contig_summary["contig_length"].fillna(0).min()
+            self.assembly_max = self.contig_summary["contig_length"].fillna(0).max()
+            self.assembly_mean = self.contig_summary["contig_length"].fillna(0).mean()
+            self.assembly_number = self.contig_summary.shape[0]

@@ -324,18 +324,19 @@ class metaclass_run:
 
         self.RunMain.Run()
         self.RunMain.Summarize()
-        self.RunMain.merge_mapping_reports()
+        # self.RunMain.merge_mapping_reports()
 
     def report_run_status_save(self):
         """
         Generate run summary dataclasses, update database.
         :return:
         """
+        self.RunMain.generate_output_data_classes()
         self.RunMain.export_reports()
 
         # if len(self.RunMain.report):
 
-        self.RunMain.generate_output_data_classes()
+        # self.RunMain.create_full_report()
         Update_Sample_Runs(self.RunMain)
 
     def clean(self, delete=True, outf=""):
@@ -781,7 +782,7 @@ class meta_orchestra:
             self.project_name,
             DATA_TYPE,
             qcrun.RunMain.type,
-            self.sup * self.down,
+            0,
             ",".join([os.path.basename(qcrun.r1), os.path.basename(qcrun.r2)]),
             qcrun.RunMain.preprocess_drone.preprocess_method.name,
             qcrun.RunMain.preprocess_drone.input_qc_report,

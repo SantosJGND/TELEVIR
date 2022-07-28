@@ -97,14 +97,14 @@ SOFTWARE = {
     "ASSEMBLY": ["spades"],  # "flye", "raven"],
     "CONTIG_CLASSIFICATION": [
         "blast",
-        "diamond",
+        # "diamond",
     ],  # ["blast", "minimap-asm", "diamond", "virsorter"],
     "READ_CLASSIFICATION": [
-        "kraken2",
-        "fastviromeexplorer",
-        "krakenuniq",
-        "clark",
-        "kaiju",
+        # "kraken2",
+        # "fastviromeexplorer",
+        # "krakenuniq",
+        # "clark",
+        # "kaiju",
         "centrifuge",
     ],
     "REMAPPING": ["snippy"],  # snippy, rematch, bowtie, minimap-rem

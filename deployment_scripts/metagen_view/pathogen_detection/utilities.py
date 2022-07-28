@@ -123,3 +123,85 @@ def plotly_dotplot(df: pd.DataFrame):
     )
 
     return plot_div
+
+
+def process_class(r2, maxt=6):
+    """
+    Process classification results.
+    """
+    r2 = r2.drop_duplicates(subset=["taxid"], keep="first")
+    r2 = r2.reset_index(drop=True)
+    r2 = r2.sort_values("counts", ascending=False)
+
+    taxids_tokeep = []
+    nr2 = []
+
+    if "length" in r2.columns:
+        r2["length"] = r2["length"].astype(int)
+        r2c = r2.copy().sort_values("length", ascending=False)
+
+        for i in range(r2.shape[0]):
+            if i < maxt:
+                taxids_tokeep.append(r2c.taxid[i])
+                nr2.append(r2c.loc[i])
+                if r2.taxid.tolist()[i] not in taxids_tokeep:
+                    taxids_tokeep.remove(r2.taxid[i])
+                    nr2.append(r2.loc[i])
+            else:
+
+                break
+    else:
+
+        r2 = r2.head(maxt)
+
+    if len(nr2):
+        r2 = pd.concat(nr2, axis=1).T
+
+    return r2
+
+
+def merge_classes(r1, r2, maxt=6, exclude="phage"):
+    """
+    merge tables of taxids to columns.
+    """
+    if "description" in r1.columns:
+        r1 = (
+            r1[~r1.description.str.contains(exclude)]
+            .drop_duplicates(subset=["taxid"], keep="first")
+            .sort_values("counts", ascending=False)
+        )
+
+    r1 = r1[["taxid", "counts"]]
+
+    r2pres = 1
+
+    if len(r2):
+        r2pres = 2
+        if "description" in r2.columns:
+            r2 = r2[~r2.description.str.contains(exclude)]
+
+        r1.taxid = r1.taxid.astype(str)
+        r2.taxid = r2.taxid.astype(str)
+
+        shared = pd.merge(r1, r2, on=["taxid"], how="inner").sort_values(
+            "counts_x", ascending=False
+        )
+        maxt = maxt - shared.shape[0]
+
+        if maxt < 0:
+            r1 = shared
+        else:
+            r2 = (
+                pd.merge(r2, shared, indicator=True, how="outer")
+                .query('_merge=="left_only"')
+                .drop("_merge", axis=1)
+            )
+            r2 = process_class(r2, maxt=maxt)
+
+            r1 = (
+                pd.concat([shared, r2, r1.head(maxt)], axis=0)
+                .drop_duplicates(subset=["taxid"], keep="first")
+                .reset_index(drop=True)
+            )
+
+    return r1.head(maxt * r2pres)

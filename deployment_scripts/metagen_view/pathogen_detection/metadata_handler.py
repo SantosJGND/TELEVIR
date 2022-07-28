@@ -1,122 +1,15 @@
 import logging
 import os
+from typing import List
 
 import pandas as pd
 
 from pathogen_detection.object_classes import Remap_Target
-from pathogen_detection.utilities import scrape_description
-
-
-def process_class(r2, maxt=6):
-    """
-    Process classification results.
-    """
-    r2 = r2.drop_duplicates(subset=["taxid"], keep="first")
-    r2 = r2.reset_index(drop=True)
-    r2 = r2.sort_values("counts", ascending=False)
-
-    taxids_tokeep = []
-    nr2 = []
-
-    if "length" in r2.columns:
-        r2["length"] = r2["length"].astype(int)
-        r2c = r2.copy().sort_values("length", ascending=False)
-
-        for i in range(r2.shape[0]):
-            if i < maxt:
-                taxids_tokeep.append(r2c.taxid[i])
-                nr2.append(r2c.loc[i])
-                if r2.taxid.tolist()[i] not in taxids_tokeep:
-                    taxids_tokeep.remove(r2.taxid[i])
-                    nr2.append(r2.loc[i])
-            else:
-
-                break
-    else:
-
-        r2 = r2.head(maxt)
-
-    if len(nr2):
-        r2 = pd.concat(nr2, axis=1).T
-
-    return r2
-
-
-def merge_classes(r1, r2, maxt=6, exclude="phage"):
-    """
-    merge tables of taxids to columns.
-    """
-    if "description" in r1.columns:
-        r1 = (
-            r1[~r1.description.str.contains(exclude)]
-            .drop_duplicates(subset=["taxid"], keep="first")
-            .sort_values("counts", ascending=False)
-        )
-
-    r1 = r1[["taxid", "counts"]]
-
-    r2pres = 1
-
-    if len(r2):
-        r2pres = 2
-        if "description" in r2.columns:
-            r2 = r2[~r2.description.str.contains(exclude)]
-
-        r1.taxid = r1.taxid.astype(str)
-        r2.taxid = r2.taxid.astype(str)
-
-        shared = pd.merge(r1, r2, on=["taxid"], how="inner").sort_values(
-            "counts_x", ascending=False
-        )
-        maxt = maxt - shared.shape[0]
-
-        if maxt < 0:
-            r1 = shared
-        else:
-            r2 = (
-                pd.merge(r2, shared, indicator=True, how="outer")
-                .query('_merge=="left_only"')
-                .drop("_merge", axis=1)
-            )
-            r2 = process_class(r2, maxt=maxt)
-
-            r1 = (
-                pd.concat([shared, r2, r1.head(maxt)], axis=0)
-                .drop_duplicates(subset=["taxid"], keep="first")
-                .reset_index(drop=True)
-            )
-
-    return r1.head(maxt * r2pres)
-
-
-def filter_files_to_map(nset) -> list:
-    """return at most two files, give priority to refseq and virosaurus.
-
-    args: pandas data frame of taxid, acc, files.
-    """
-
-    ref1 = "refseq_viral.genome.fna.gz"
-    ref2 = "virosaurus90_vertebrate-20200330.fas.gz"
-
-    files_to_map = []
-    files_count = nset.file.value_counts()
-
-    if ref1 in nset.file.unique():
-        files_to_map.append(ref1)
-    if ref2 in nset.file.unique():
-        files_to_map.append(ref2)
-
-    if len(files_to_map) == 0:
-        files_to_map.append(files_count.index[0])
-    if len(files_to_map) == 1 and files_count.shape[0] > 1:
-        files_count = files_count[files_count.index != files_to_map[0]]
-        files_to_map.append(files_count.index[0])
-
-    return files_to_map
+from pathogen_detection.utilities import merge_classes, scrape_description
 
 
 class Metadata_handler:
-    def __init__(self, metadata_paths, sift_query: str = "phage"):
+    def __init__(self, config, sift_query: str = "phage", prefix: str = ""):
         """
         Initialize metadata handler.
 
@@ -125,22 +18,24 @@ class Metadata_handler:
             sift_query: string to filter sift report.
 
         """
-        self.metadata_paths = metadata_paths
+        self.prefix = prefix
+        self.config = config
+        self.metadata_paths = config["metadata"]
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
         self.logger.addHandler(logging.StreamHandler())
 
-        self.input_taxonomy_to_descriptor_path = metadata_paths[
+        self.input_taxonomy_to_descriptor_path = self.metadata_paths[
             "input_taxonomy_to_descriptor_path"
         ]
-        self.input_accession_to_taxid_path = metadata_paths[
+        self.input_accession_to_taxid_path = self.metadata_paths[
             "input_accession_to_taxid_path"
         ]
-        self.input_protein_accession_equivalent_path = metadata_paths[
+        self.input_protein_accession_equivalent_path = self.metadata_paths[
             "input_protein_accession_to_protid_path"
         ]
 
-        self.input_protein_accession_to_taxid_path = metadata_paths[
+        self.input_protein_accession_to_taxid_path = self.metadata_paths[
             "input_protein_accession_to_taxid_path"
         ]
 
@@ -148,10 +43,49 @@ class Metadata_handler:
         self.taxonomy_to_description: pd.DataFrame
         self.protein_to_accession: pd.DataFrame
         self.protein_accession_to_csv: pd.DataFrame
+
+        self.rclass: pd.DataFrame
+        self.aclass: pd.DataFrame
+        self.merged_targets: pd.DataFrame
+        self.remap_targets: List[Remap_Target]
+        self.remap_absent_taxid_list: List[str]
         self.sift_query = sift_query
         self.sift_report = pd.DataFrame(
             [[0, 0, 0]], columns=["input", "output", "removed"]
         )
+
+    def match_and_select_targets(
+        self,
+        report_1: pd.DataFrame,
+        report_2: pd.DataFrame,
+        max_remap: int = 15,
+        taxid_limit: int = 12,
+    ):
+
+        print(report_1)
+
+        self.get_metadata()
+
+        self.process_reports(
+            report_1,
+            report_2,
+        )
+        self.merge_reports_clean(
+            max_remap=max_remap,
+        )
+
+        #######
+        #######
+
+        remap_targets, remap_absent = self.generate_mapping_targets(
+            self.merged_targets,
+            prefix=self.prefix,
+            taxid_limit=taxid_limit,
+            fasta_main_dir=self.config["source"]["REF_FASTA"],
+        )
+
+        self.remap_targets = remap_targets
+        self.remap_absent_taxid_list = remap_absent
 
     def results_process(self, df: pd.DataFrame, sift: bool = True) -> pd.DataFrame:
         """
@@ -269,6 +203,32 @@ class Metadata_handler:
 
         return ntab
 
+    @staticmethod
+    def filter_files_to_map(nset) -> list:
+        """return at most two files, give priority to refseq and virosaurus.
+
+        args: pandas data frame of taxid, acc, files.
+        """
+
+        ref1 = "refseq_viral.genome.fna.gz"
+        ref2 = "virosaurus90_vertebrate-20200330.fas.gz"
+
+        files_to_map = []
+        files_count = nset.file.value_counts()
+
+        if ref1 in nset.file.unique():
+            files_to_map.append(ref1)
+        if ref2 in nset.file.unique():
+            files_to_map.append(ref2)
+
+        if len(files_to_map) == 0:
+            files_to_map.append(files_count.index[0])
+        if len(files_to_map) == 1 and files_count.shape[0] > 1:
+            files_count = files_count[files_count.index != files_to_map[0]]
+            files_to_map.append(files_count.index[0])
+
+        return files_to_map
+
     def sift_summary(self, merged_report: pd.DataFrame, filtered_reads: pd.DataFrame):
         """
         generate report of the difference in sequence ids between merged_report and filtered_reads.
@@ -311,19 +271,25 @@ class Metadata_handler:
 
         return new_table
 
-    def merge_reports(
+    def process_reports(
         self,
-        rclass: pd.DataFrame,
-        aclass: pd.DataFrame,
+        report_1: pd.DataFrame,
+        report_2: pd.DataFrame,
+    ):
+        self.rclass = self.results_process(report_1)
+        self.aclass = self.results_process(report_2)
+
+    def merge_reports_clean(
+        self,
         max_remap: int = 15,
     ):
         """merge the reports and filter them."""
 
-        targets = merge_classes(rclass, aclass, maxt=max_remap)
+        targets = merge_classes(self.rclass, self.aclass, maxt=max_remap)
         targets.dropna(subset=["taxid"], inplace=True)
         targets["taxid"] = targets["taxid"].astype(int)
 
-        return targets
+        self.merged_targets = targets
 
     def generate_mapping_targets(
         self,
@@ -357,7 +323,7 @@ class Metadata_handler:
                 .drop_duplicates(subset=["acc"], keep="first")
             )
             ###
-            files_to_map = filter_files_to_map(nset)
+            files_to_map = self.filter_files_to_map(nset)
 
             ####
 

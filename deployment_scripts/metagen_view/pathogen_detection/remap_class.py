@@ -3,7 +3,7 @@ import os
 import re
 import shutil
 from random import randint
-from typing import Type
+from typing import List, Type
 
 import numpy as np
 import pandas as pd
@@ -11,7 +11,12 @@ from Bio.SeqIO.FastaIO import SimpleFastaParser
 from result_display.plot_coverage import Bedgraph, plot_dotplot
 from scipy.stats import kstest
 
-from pathogen_detection.object_classes import Remap_Target, RunCMD, Software_detail
+from pathogen_detection.object_classes import (
+    Read_class,
+    Remap_Target,
+    RunCMD,
+    Software_detail,
+)
 from pathogen_detection.utilities import read_sam_coordinates
 
 pd.options.mode.chained_assignment = None
@@ -896,8 +901,44 @@ class Deep_Remap:
     In a second step, if contigs mapped, maps mapped contigs to those.
     """
 
-    def __init__(self):
-        pass
+    def __init__(
+        self,
+        r1,
+        r2,
+        remapping_method: Type[Software_detail],
+        assembly_file: str,
+        type: str,
+        prefix,
+        threads: int,
+        minimum_coverage: int,
+        bin: str,
+        logging_level: int,
+        cleanup: bool,
+    ):
+
+        self.remapping_method = remapping_method
+        self.assembly_file = assembly_file
+        self.type = type
+        self.prefix = prefix
+        self.threads = threads
+        self.minimum_coverage = minimum_coverage
+        self.bin = bin
+        self.logging_level = logging_level
+        self.cleanup = cleanup
+        self.mapping_instances = []
+        self.r1 = r1.current
+        self.r2 = r2.current
+
+    def reciprocal_map(self, remap_target):
+
+        target_remap_drone = self.reference_map(remap_target)
+
+        mapped_instance = {
+            "reference": target_remap_drone,
+            "assembly": self.assembly_map(target_remap_drone),
+        }
+
+        return mapped_instance
 
     def reference_map(self, remap_target: Type[Remap_Target]):
         rdir = os.path.join(
@@ -910,16 +951,16 @@ class Deep_Remap:
             self.r1,
             remap_target,
             self.remapping_method,
-            self.assembly_drone.assembly_file_fasta_gz,
+            self.assembly_file,
             self.type,
             self.prefix,
             rdir,
             self.threads,
             r2=self.r2,
             minimum_coverage=self.minimum_coverage,
-            bin=get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
-            logging_level=self.logger_level_detail,
-            cleanup=self.house_cleaning,
+            bin=self.bin,
+            logging_level=self.logging_level,
+            cleanup=self.cleanup,
         )
 
         target_remap_drone.run_remap()
@@ -941,7 +982,7 @@ class Deep_Remap:
             "none",
             "assembly",
             "none",
-            self.assembly_drone.assembly_file_fasta_gz,
+            self.assembly_file,
             self.prefix,
             "description",
             reference_remap.mapped_contigs,
@@ -951,44 +992,94 @@ class Deep_Remap:
             reference_remap.mapped_subset_r1,
             assembly_target,
             self.remapping_method,
-            self.assembly_drone.assembly_file_fasta_gz,
+            self.assembly_file,
             self.type,
             self.prefix,
             output_directory,
             self.threads,
             r2=reference_remap.mapped_subset_r2,
             minimum_coverage=self.minimum_coverage,
-            bin=get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
-            logging_level=self.logger_level_detail,
-            cleanup=self.house_cleaning,
+            bin=self.bin,
+            logging_level=self.logging_level,
+            cleanup=self.cleanup,
         )
 
         assembly_remap_drone.run_remap()
 
         return assembly_remap_drone
 
-    def deploy_REMAPPING(self):
 
-        for remap_target in self.remap_targets[:2]:
-
-            target_remap_drone = self.reference_map(remap_target)
-
-            mapped_instance = {
-                "reference": target_remap_drone,
-                "assembly": self.assembly_map(target_remap_drone),
-            }
-
-            self.mapped_instances.append(mapped_instance)
-
-
-class Manage_Mappings:
+class Mapping_Manager(Deep_Remap):
     """
     Deploy DeepRemap for a series of targets,
     generate mapping report.
     """
 
-    def __init__():
-        pass
+    def __init__(
+        self,
+        remap_targets: List[Remap_Target],
+        r1: Type[Read_class],
+        r2: Type[Read_class],
+        remapping_method: Type[Software_detail],
+        assembly_file: str,
+        type: str,
+        prefix,
+        threads: int,
+        minimum_coverage: int,
+        bin: str,
+        logging_level: int,
+        cleanup: bool,
+    ):
+
+        super().__init__(
+            r1,
+            r2,
+            remapping_method,
+            assembly_file,
+            type,
+            prefix,
+            threads,
+            minimum_coverage,
+            bin,
+            logging_level,
+            cleanup,
+        )
+
+        self.mapped_instances = []
+        self.remap_targets = remap_targets
+        self.reads_before_processing = r1.read_number_raw + r2.read_number_raw
+        self.reads_after_processing = (
+            r1.get_current_fastq_read_number() + r2.get_current_fastq_read_number()
+        )
+        self.max_gaps = 0
+        self.max_prop = 0
+        self.max_mapped = 0
+        self.max_depth = 0
+        self.max_depthR = 0
+        self.report = pd.DataFrame(
+            columns=[
+                "suffix",
+                "taxid",
+                "refseq",
+                "description",
+                "rclass",
+                "aclass",
+                "ID",
+                "Hdepth",
+                "HdepthR",
+                "coverage",
+                "nregions",
+                "Rsize",
+                "ngaps",
+                "Gdist",
+                "Gsize",
+            ],
+        )
+
+    def run_mappings(self):
+        for target in self.remap_targets:
+            mapped_instance = self.reciprocal_map(target)
+            self.mapped_instances.append(mapped_instance)
 
     def merge_mapping_reports(self):
 
@@ -1041,8 +1132,8 @@ class Manage_Mappings:
 
             ntax = pd.concat((ntax, instance["reference"].report), axis=1)
             ntax["mapped"] = mapped
-            ntax["mapped_prop"] = 100 * (mapped / self.sample.reads_after_processing)
-            ntax["ref_prop"] = 100 * (mapped / self.sample.reads_before_processing)
+            ntax["mapped_prop"] = 100 * (mapped / self.reads_after_processing)
+            ntax["ref_prop"] = 100 * (mapped / self.reads_before_processing)
             ntax["refdb"] = instance["reference"].target.file
             ntax["ID"] = instance["reference"].target.accid
             ntax["simple_id"] = ntax["ID"].apply(simplify_taxid)
@@ -1072,61 +1163,31 @@ class Manage_Mappings:
                 ntax["mapped_scaffolds_path"] = ""
                 ntax["mapped_scaffolds_index_path"] = ""
 
-            print(ntax)
-            ntax = ntax.sort_values(["taxid", "Hdepth"])
-
             full_report.append(ntax)
 
         if len(full_report) > 0:
 
             self.report = pd.concat(full_report, axis=0)
             self.clean_final_report()
-        else:
-            self.report = pd.DataFrame(
-                columns=[
-                    "suffix",
-                    "taxid",
-                    "refseq",
-                    "description",
-                    "rclass",
-                    "aclass",
-                    "ID",
-                    "Hdepth",
-                    "HdepthR",
-                    "coverage",
-                    "nregions",
-                    "Rsize",
-                    "ngaps",
-                    "Gdist",
-                    "Gsize",
-                ],
-            )
-
-    def final_report_summary_statistics(self):
-        if self.report.shape[0] > 0:
-            max_gaps = self.report.ngaps.max()
-            if np.isnan(max_gaps):
-                max_gaps = 0
-
-            max_prop = self.report.ref_prop.max()
-            if np.isnan(max_prop):
-                max_prop = 0
-
-            max_mapped = self.report.mapped.max()
-            if np.isnan(max_mapped):
-                max_mapped = 0
-
-            max_depth = self.report.Hdepth.max()
-            max_depthR = self.report.HdepthR.max()
-        else:
-            max_gaps = 0
-            max_prop = 0
-            max_mapped = 0
-            max_depth = 0
-            max_depthR = 0
-
-        return max_gaps, max_prop, max_mapped, max_depth, max_depthR
+            self.report = self.report.sort_values(["taxid", "Hdepth"])
 
     def clean_final_report(self):
 
         self.report.ngaps = self.report.ngaps.fillna(0)
+
+    def collect_final_report_summary_statistics(self):
+        if self.report.shape[0] > 0:
+            self.max_gaps = self.report.ngaps.max()
+            if np.isnan(self.max_gaps):
+                self.max_gaps = 0
+
+            self.max_prop = self.report.ref_prop.max()
+            if np.isnan(self.max_prop):
+                self.max_prop = 0
+
+            self.max_mapped = self.report.mapped.max()
+            if np.isnan(self.max_mapped):
+                self.max_mapped = 0
+
+            self.max_depth = self.report.Hdepth.max()
+            self.max_depthR = self.report.HdepthR.max()

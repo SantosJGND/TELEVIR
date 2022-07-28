@@ -1,7 +1,9 @@
 #!/bin/bash
 
+sudo apt update
 sudo apt install default-jre
 sudo apt-get install -y bioperl
+sudo apt install python3-pip python3-dev libpq-dev postgresql postgresql-contrib
 
 python3 -m venv .venv
 
@@ -10,6 +12,7 @@ source .venv/bin/activate
 python -m pip install --upgrade pip
 
 ## software requirements
+
 python -m pip install -r requirements.txt
 
 ## install kallisto version
