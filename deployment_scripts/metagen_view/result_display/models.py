@@ -431,18 +431,18 @@ class RunRemapMain(models.Model):
     performed = models.BooleanField(default=False)
 
     method = models.CharField(
-        max_length=20, blank=True, null=True
+        max_length=50, blank=True, null=True
     )  # remap method if any
 
-    merged_log = models.CharField(max_length=200, blank=True, null=True)
-    remap_plan = models.CharField(max_length=200, blank=True, null=True)
+    # merged_log = models.CharField(max_length=200, blank=True, null=True)
+    # remap_plan = models.CharField(max_length=200, blank=True, null=True)
 
     found_total = models.IntegerField(blank=True, null=True)
 
     coverage_minimum = models.IntegerField(blank=True, null=True)
     coverage_maximum = models.IntegerField(blank=True, null=True)
 
-    success = models.IntegerField(blank=True, null=True)
+    success = models.BooleanField(default=False)  # if remap was successful or not.
 
     class Meta:
         ordering = [

@@ -52,12 +52,21 @@ class Classifier_init:
         read_name_filter_regex = re.compile("^[A-Za-z0-9_-]*$")  # (r"@|=&$\t")
 
         with open(self.report_path, "r") as f:
+            column_number = column_number
             with open(output_sam, "w") as f2:
+
                 for line in f:
                     if line.startswith(tuple(["@HD", "@SQ", "@PG", "@RG", "@CO"])):
                         f2.write(line)
+                    line_columns = len(line.split(sep))
 
-                    elif read_name_filter_regex.search(
+                    if column_number == 0:
+                        column_number = line_columns
+
+                    if line_columns > column_number:
+                        continue
+
+                    if read_name_filter_regex.search(
                         line.split(sep)[idx].replace(":", "_")
                     ):
                         f2.write(line)
