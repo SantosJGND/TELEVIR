@@ -199,6 +199,8 @@ def Sample_detail(requesdst, project="", sample="", name=""):
     run_assembly = RunAssembly.objects.get(sample=sample_main, run=run_main)
     #
     print(run_assembly)
+    run_remap = RunRemapMain.objects.get(sample=sample_main, run=run_main)
+    #
     read_classification = ReadClassification.objects.get(
         sample=sample_main, run=run_main
     )
@@ -209,8 +211,7 @@ def Sample_detail(requesdst, project="", sample="", name=""):
         sample=sample_main, run=run_main
     )
     #
-    run_remap = RunRemapMain.objects.get(sample=sample_main, run=run_main)
-    #
+
     reference_remap_main = ReferenceMap_Main.objects.filter(
         sample=sample_main, run=run_main
     )

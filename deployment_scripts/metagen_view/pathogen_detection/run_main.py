@@ -512,6 +512,8 @@ class RunMain_class(Run_Deployment_Methods):
 
         self.Update_exec_time()
 
+    #### SUMMARY FUNCTIONS ####
+
     def Summarize(self):
 
         self.logger.info(f"prefix: {self.prefix}")
