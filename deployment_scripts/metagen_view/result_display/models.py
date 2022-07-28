@@ -146,7 +146,7 @@ class QC_REPORT(models.Model):
 
     report_source = models.CharField(max_length=100, blank=True, null=True)  # qc type
 
-    QC_report = models.CharField(max_length=100, blank=True, null=True)  # qc type
+    QC_report = models.CharField(max_length=250, blank=True, null=True)  # qc type
 
     class Meta:
         ordering = [
