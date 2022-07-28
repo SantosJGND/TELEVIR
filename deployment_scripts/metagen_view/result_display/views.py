@@ -203,15 +203,15 @@ def Sample_detail(requesdst, project="", sample="", name=""):
         sample=sample_main, run=run_main
     )
     #
-    run_remap = RunRemapMain.objects.get(sample=sample_main, run=run_main)
-    #
-    reference_remap_main = ReferenceMap_Main.objects.filter(
-        sample=sample_main, run=run_main
-    )
-    #
     final_report = FinalReport.objects.filter(sample=sample_main, run=run_main)
     #
     contig_classification = ContigClassification.objects.get(
+        sample=sample_main, run=run_main
+    )
+    #
+    run_remap = RunRemapMain.objects.get(sample=sample_main, run=run_main)
+    #
+    reference_remap_main = ReferenceMap_Main.objects.filter(
         sample=sample_main, run=run_main
     )
     #
