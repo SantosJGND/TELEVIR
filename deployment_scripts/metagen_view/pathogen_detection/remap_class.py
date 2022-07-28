@@ -1169,7 +1169,7 @@ class Mapping_Manager(Deep_Remap):
 
             self.report = pd.concat(full_report, axis=0)
             self.clean_final_report()
-            self.report = self.report.sort_values(["taxid", "Hdepth"])
+            self.report = self.report.sort_values(["coverage", "Hdepth"])
 
     def clean_final_report(self):
 

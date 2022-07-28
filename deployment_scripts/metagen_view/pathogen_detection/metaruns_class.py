@@ -220,7 +220,7 @@ class metaclass_run:
             "actions": {},
             "bin": {},
             "metadata": {},
-            "threads": 3,
+            "threads": 5,
             "prefix": self.id,
             "type": ["SE", "PE"][int(os.path.isfile(self.r2))],
             "r1": self.r1,
@@ -359,7 +359,7 @@ class metaclass_run:
 
 
 class meta_orchestra:
-    def __init__(self, fofn, sup=1, down=1, smax=3, odir="", estimate_only=False):
+    def __init__(self, fofn, sup=1, down=1, smax=6, odir="", estimate_only=False):
         self.sup = sup
         self.down = down
         self.processes = {}
