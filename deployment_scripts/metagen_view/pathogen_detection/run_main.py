@@ -436,7 +436,7 @@ class Run_Deployment_Methods(RunDetail_main):
             "'{print $1}'",
             "|",
             "sed",
-            "'s/^@//'",
+            "'s/^@//g'",
             "|",
             "sort",
             "|",
