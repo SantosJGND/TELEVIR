@@ -421,9 +421,20 @@ class Run_Deployment_Methods(RunDetail_main):
         WHERETO = os.path.dirname(self.r1.current)
         unique_reads = os.path.join(WHERETO, "unique_reads.lst")
 
-        cmd = "zgrep '^@' {} | awk '{print $1}' | sort | uniq > {}".format(
-            self.r1.current, unique_reads
-        )
+        cmd = [
+            "zgrep",
+            "'^@'",
+            self.r1.current,
+            "|",
+            "awk",
+            "'{print $1}'",
+            "|",
+            "sort",
+            "|",
+            "uniq",
+            ">",
+            unique_reads,
+        ]
 
         self.cmd.run_bash(cmd)
         if not os.path.exists(unique_reads) or os.path.getsize(unique_reads) == 0:
@@ -431,6 +442,7 @@ class Run_Deployment_Methods(RunDetail_main):
                 f"No unique reads found in {self.r1.current}, skipping unique read cleaning"
             )
             return
+
         self.r1.read_filter_inplace(self.r1.current, unique_reads)
 
     def clean_unique(self):
