@@ -52,7 +52,7 @@ class Classifier_init:
         read_name_filter_regex = re.compile("^[A-Za-z0-9_-]*$")  # (r"@|=&$\t")
 
         with open(self.report_path, "r") as f:
-            column_number = column_number
+            column_number = 0
             with open(output_sam, "w") as f2:
 
                 for line in f:

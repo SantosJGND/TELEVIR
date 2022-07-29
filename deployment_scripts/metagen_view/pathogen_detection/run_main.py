@@ -417,9 +417,29 @@ class Run_Deployment_Methods(RunDetail_main):
         self.remap_manager.merge_mapping_reports()
         self.remap_manager.collect_final_report_summary_statistics()
 
+    def clean_unique_SE(self):
+        WHERETO = os.path.dirname(self.r1.current)
+        unique_reads = os.path.join(WHERETO, "unique_reads.lst")
+
+        cmd = "zgrep '^@' {} | awk '{print $1}' | sort | uniq > {}".format(
+            self.r1.current, unique_reads
+        )
+
+        self.cmd.run_bash(cmd)
+        if not os.path.exists(unique_reads) or os.path.getsize(unique_reads) == 0:
+            self.logger.error(
+                f"No unique reads found in {self.r1.current}, skipping unique read cleaning"
+            )
+            return
+        self.r1.read_filter_inplace(self.r1.current, unique_reads)
+
     def clean_unique(self):
         if self.type == "SE":
-            return
+            self.clean_unique_SE()
+        else:
+            self.clean_unique_PE()
+
+    def clean_unique_PE(self):
 
         WHERETO = os.path.dirname(self.r1.current)
         common_reads = os.path.join(WHERETO, "common_reads.lst")
@@ -487,7 +507,7 @@ class RunMain_class(Run_Deployment_Methods):
             self.r1.deplete(self.depletion_drone.classified_reads_list)
             self.r2.deplete(self.depletion_drone.classified_reads_list)
 
-        if self.enrichment or self.depletion:
+        if self.enrichment or self.depletion or self.assembly:
             self.clean_unique()
             self.trimmomatic_sort()
 
