@@ -417,6 +417,12 @@ class Run_Deployment_Methods(RunDetail_main):
         self.remap_manager.merge_mapping_reports()
         self.remap_manager.collect_final_report_summary_statistics()
 
+    def clean_unique(self):
+        if self.type == "SE":
+            self.clean_unique_SE()
+        else:
+            self.clean_unique_PE()
+
     def clean_unique_SE(self):
         WHERETO = os.path.dirname(self.r1.current)
         unique_reads = os.path.join(WHERETO, "unique_reads.lst")
@@ -447,13 +453,6 @@ class Run_Deployment_Methods(RunDetail_main):
             return
 
         self.r1.read_filter_inplace(self.r1.current, unique_reads)
-
-    def clean_unique(self):
-        if self.type == "SE":
-            return
-            self.clean_unique_SE()
-        else:
-            self.clean_unique_PE()
 
     def clean_unique_PE(self):
 
