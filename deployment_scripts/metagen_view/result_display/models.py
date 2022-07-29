@@ -395,14 +395,14 @@ class ContigClassification(models.Model):
     performed = models.BooleanField(default=False)
 
     method = models.CharField(
-        max_length=50, blank=True, null=True
+        max_length=250, blank=True, null=True
     )  # contig classification method if any
 
     args = models.CharField(
-        max_length=50, blank=True, null=True
+        max_length=250, blank=True, null=True
     )  # read classification args
     db = models.CharField(
-        max_length=50, blank=True, null=True
+        max_length=250, blank=True, null=True
     )  # read classification db if any
 
     contig_classification_report = models.CharField(
@@ -431,7 +431,7 @@ class RunRemapMain(models.Model):
     performed = models.BooleanField(default=False)
 
     method = models.CharField(
-        max_length=50, blank=True, null=True
+        max_length=250, blank=True, null=True
     )  # remap method if any
 
     found_total = models.IntegerField(blank=True, null=True)
@@ -439,7 +439,7 @@ class RunRemapMain(models.Model):
     coverage_minimum = models.IntegerField(blank=True, null=True)
     coverage_maximum = models.IntegerField(blank=True, null=True)
 
-    success = models.BooleanField(default=True)  # if remap was successful or not.
+    success = models.IntegerField(blank=True, null=True)
 
     class Meta:
         ordering = [

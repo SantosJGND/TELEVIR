@@ -100,6 +100,7 @@ class RunDetail_main:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(self.logger_level_main)
         self.logger.addHandler(logging.StreamHandler())
+        self.logger.propagate = False
         self.runtime = 0
         self.start_time = time.perf_counter()
         self.exec_time = 0
@@ -130,7 +131,7 @@ class RunDetail_main:
         ###
 
         self.min_scaffold_length = config["assembly_contig_min_length"]
-        self.minimum_coverage = config["minimum_coverage_threshold"]
+        self.minimum_coverage = int(config["minimum_coverage_threshold"])
         self.maximum_coverage = 100000
         ### metadata
         self.metadata_tool = Metadata_handler(
@@ -604,7 +605,7 @@ class RunMain_class(Run_Deployment_Methods):
 
         self.remap_main = Remap_main(
             True,
-            self.report.shape[0] > 0,
+            self.report.shape[0],
             self.remapping_method.name,
             len(self.mapped_instances),
             self.minimum_coverage,

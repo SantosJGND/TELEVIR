@@ -27,7 +27,7 @@ class RunCMD:
         self.logs = []
 
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging.ERROR)
         self.logger.addHandler(logging.StreamHandler())
 
     @staticmethod
@@ -53,8 +53,6 @@ class RunCMD:
 
         if isinstance(cmd, list):
             cmd = " ".join(cmd)
-
-        print(f"running command: {self.bin}{cmd}")
 
         proc_prep = subprocess.Popen(
             f"{self.bin}{cmd}",
@@ -565,7 +563,7 @@ class Read_classification_results:
 @dataclass(frozen=True)
 class Remap_main:
     performed: bool
-    success: bool
+    success: int
     method: str
     found_total: int
     coverage_min: int
