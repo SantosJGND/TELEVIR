@@ -1135,8 +1135,12 @@ class Mapping_Manager(Deep_Remap):
 
             ntax = pd.concat((ntax, instance["reference"].report), axis=1)
             ntax["mapped"] = mapped
-            ntax["mapped_prop"] = 100 * (mapped / self.reads_after_processing)
-            ntax["ref_prop"] = 100 * (mapped / self.reads_before_processing)
+            if self.reads_after_processing > 0:
+                ntax["mapped_prop"] = 100 * (mapped / self.reads_after_processing)
+                ntax["ref_prop"] = 100 * (mapped / self.reads_before_processing)
+            else:
+                ntax["mapped_prop"] = 0
+                ntax["ref_prop"] = 0
             ntax["refdb"] = instance["reference"].target.file
             ntax["ID"] = instance["reference"].target.accid
             ntax["simple_id"] = ntax["ID"].apply(simplify_taxid)

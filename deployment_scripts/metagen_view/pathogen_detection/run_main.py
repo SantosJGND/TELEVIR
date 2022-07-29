@@ -429,6 +429,9 @@ class Run_Deployment_Methods(RunDetail_main):
             "awk",
             "'{print $1}'",
             "|",
+            "sed",
+            "'s/^@//'",
+            "|",
             "sort",
             "|",
             "uniq",
@@ -447,6 +450,7 @@ class Run_Deployment_Methods(RunDetail_main):
 
     def clean_unique(self):
         if self.type == "SE":
+            return
             self.clean_unique_SE()
         else:
             self.clean_unique_PE()
