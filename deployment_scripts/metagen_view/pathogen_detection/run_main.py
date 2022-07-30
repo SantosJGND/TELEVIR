@@ -473,6 +473,33 @@ class Run_Deployment_Methods(RunDetail_main):
 
     def trimmomatic_sort(self):
         if self.type == "SE":
+            self.trimmomatic_sort_SE()
+        else:
+            self.trimmomatic_sort_PE()
+
+    def trimmomatic_sort_SE(self):
+
+        tempdir = os.path.dirname(self.r1.current)
+        tempfq = os.path.join(tempdir, f"temp{randint(1,1999)}")
+
+        cmd_trimsort = [
+            "trimmomatic",
+            "SE",
+            "-threads",
+            f"{self.threads}",
+            self.r1.current,
+            tempfq,
+            "MINLEN:20",
+        ]
+
+        self.cmd.run(cmd_trimsort)
+
+        if tempfq in os.listdir(tempdir):
+            os.remove(self.r1.current)
+            os.rename(tempfq, self.r1.current)
+
+    def trimmomatic_sort_PE(self):
+        if self.type == "SE":
             return
 
         tempdir = os.path.dirname(self.r1.current)

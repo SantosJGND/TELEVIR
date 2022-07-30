@@ -367,6 +367,7 @@ class Remapping:
         )
 
         self.mapped_contigs = []
+        self.number_of_contigs_mapped = 0
         self.remapping_successful = False
 
     def cleanup_files(self):
@@ -548,6 +549,8 @@ class Remapping:
             usecols=[5],
             names=["contig_name"],
         ).contig_name.unique()
+
+        self.number_of_contigs_mapped = self.mapped_contigs.shape[0]
 
     def extract_reference_sequences(self):
         """
@@ -931,11 +934,11 @@ class Deep_Remap:
 
     def reciprocal_map(self, remap_target):
 
-        target_remap_drone = self.reference_map(remap_target)
+        reference_remap_drone = self.reference_map(remap_target)
 
         mapped_instance = {
-            "reference": target_remap_drone,
-            "assembly": self.assembly_map(target_remap_drone),
+            "reference": reference_remap_drone,
+            "assembly": self.assembly_map(reference_remap_drone),
         }
 
         return mapped_instance
@@ -1095,16 +1098,17 @@ class Mapping_Manager(Deep_Remap):
 
         for instance in self.mapped_instances:
             success = "none"
-            apres = False
+            apres = instance["reference"].number_of_contigs_mapped > 0
+            rpres = instance["reference"].number_of_reads_mapped > 0
+            if apres:
+                success = "success"
             ###
 
             mapped = instance["reference"].number_of_reads_mapped
 
-            if instance["assembly"]:
-                apres = True
-            if mapped and apres:
+            if rpres and apres:
                 success = "reads and contigs"
-            elif mapped:
+            elif rpres:
                 success = "reads"
             elif apres:
                 success = "contigs"
@@ -1176,7 +1180,9 @@ class Mapping_Manager(Deep_Remap):
 
             self.report = pd.concat(full_report, axis=0)
             self.clean_final_report()
-            self.report = self.report.sort_values(["coverage", "Hdepth"])
+            self.report = self.report.sort_values(
+                ["coverage", "Hdepth"], ascending=False
+            )
 
     def clean_final_report(self):
 

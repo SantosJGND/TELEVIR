@@ -99,7 +99,7 @@ SOFTWARE = {
         "blast",
         "diamond",
     ],  # ["blast", "minimap-asm", "diamond", "virsorter"],
-    "REACLASSIFICATION": [
+    "READ_CLASSIFICATION": [
         "kraken2",
         "fastviromeexplorer",
         "krakenuniq",

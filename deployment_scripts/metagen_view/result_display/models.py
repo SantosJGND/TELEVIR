@@ -9,7 +9,7 @@ from django.utils.safestring import mark_safe
 
 
 class Projects(models.Model):
-    name = models.CharField(max_length=29, blank=True, db_index=True, null=True)
+    name = models.CharField(max_length=100, blank=True, db_index=True, null=True)
     full_path = models.CharField(max_length=200, blank=True, db_index=True, null=True)
 
     class Meta:
@@ -144,7 +144,7 @@ class QC_REPORT(models.Model):
         Sample, blank=True, null=True, on_delete=models.CASCADE
     )  ## sample
 
-    report_source = models.CharField(max_length=100, blank=True, null=True)  # qc type
+    report_source = models.CharField(max_length=200, blank=True, null=True)  # qc type
 
     QC_report = models.CharField(max_length=250, blank=True, null=True)  # qc type
 

@@ -54,6 +54,8 @@ class RunCMD:
         if isinstance(cmd, list):
             cmd = " ".join(cmd)
 
+        print(f"running: {self.bin}{cmd}")
+
         proc_prep = subprocess.Popen(
             f"{self.bin}{cmd}",
             shell=True,
@@ -77,7 +79,7 @@ class RunCMD:
         if isinstance(cmd, list):
             cmd = " ".join(cmd)
 
-        # self.logger.info(f"running command: python {self.bin}{cmd}")
+        print(f"running command: python {self.bin}{cmd}")
         proc_prep = subprocess.Popen(
             f"python {self.bin}{cmd}",
             shell=True,
