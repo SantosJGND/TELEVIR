@@ -475,7 +475,7 @@ class Remapping:
                 "Mapping output not found or unsuccesful after deploying: "
             )
             self.logger.error(
-                f"for target: {self.target.accid}, file: {self.r1}, reference: {self.target.file}"
+                f"for target: {self.target.accid_in_file}, file: {self.r1}, reference: {self.target.file}"
             )
             return
 

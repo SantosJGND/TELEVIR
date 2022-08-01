@@ -36,6 +36,7 @@ from pathogen_detection.update_DBs import (
     Update_QC_report,
     Update_Sample,
     Update_Sample_Runs,
+    retrieve_number_of_runs,
 )
 
 
@@ -334,9 +335,6 @@ class metaclass_run:
         self.RunMain.generate_output_data_classes()
         self.RunMain.export_reports()
 
-        # if len(self.RunMain.report):
-
-        # self.RunMain.create_full_report()
         Update_Sample_Runs(self.RunMain)
 
     def clean(self, delete=True, outf=""):
@@ -405,6 +403,7 @@ class meta_orchestra:
 
         print("updating project")
         Update_project(self.odir)
+        self.total_runs = retrieve_number_of_runs(self.project_name, self.sample_name)
 
     def clean(self, delete: bool = True):
         for sid, sac in self.projects.items():
@@ -475,8 +474,8 @@ class meta_orchestra:
         :return: None
         """
         for sd, tb in self.processes.items():
-            params = tb["params"]
-            params.to_csv(sd + ".args.tsv", sep="\t", header=True, index=False)
+            # params = tb["params"]
+            # params.to_csv(sd + ".args.tsv", sep="\t", header=True, index=False)
             with open(sd + ".runtime", "w") as f:
                 f.write(str(tb["runtime"]))
 
@@ -589,18 +588,29 @@ class meta_orchestra:
             sink=child.dir + "main_{}.sh".format(child.id),
         )
 
+        child_params = pd.concat([sac.params, child.params], axis=0)
+        child_params.to_csv(
+            child.dir + child.id + ".args.tsv", sep="\t", header=True, index=False
+        )
+
         child.continue_main_run()
         child.update_runtime()
         child.report_run_status_save()
 
+        with open(child.dir + child.id + ".runtime", "w") as f:
+            f.write(str(child.exec_time))
+
         #
         ### gather report / output, mix parent and child params.
-        child_params = pd.concat([sac.params, child.params], axis=0)
-
         self.processes[child.dir + child.id] = {
             "params": child_params,
             "runtime": child.exec_time,
         }
+
+    def get_run_index_name(self):
+        new_name = f"run_{self.total_runs}"
+        self.total_runs += 1
+        return new_name
 
     def low_run(self, prj):
         """
@@ -622,7 +632,8 @@ class meta_orchestra:
             pack = list(np.arange(0, rlow, self.smax)) + [rlow]
             lset = [list(range(pack[x], pack[x + 1])) for x in range(len(pack) - 1)]
             #
-            for a_args in lset:
+            for ix, a_args in enumerate(lset):
+
                 threads = [
                     Thread(
                         target=self.run_proc,
@@ -632,9 +643,7 @@ class meta_orchestra:
                             hdconf.copy(),
                             paramCombs.copy(),
                             linked_dbs.copy(),
-                            RunIndex_Update_Retrieve_Key(
-                                self.project_name, self.sample_name
-                            ),
+                            self.get_run_index_name(),
                         ),
                     )
                     for x in a_args
@@ -655,9 +664,7 @@ class meta_orchestra:
                         hdconf.copy(),
                         paramCombs.copy(),
                         linked_dbs.copy(),
-                        RunIndex_Update_Retrieve_Key(
-                            self.project_name, self.sample_name
-                        ),
+                        self.get_run_index_name(),
                     ),
                 )
                 for x in a_args
