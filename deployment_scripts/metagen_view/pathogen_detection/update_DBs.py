@@ -407,7 +407,7 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
         read_classification = ReadClassification(
             run=runmain,
             sample=sample,
-            # read_classification_report=run_class.read_classification_path,
+            read_classification_report=run_class.read_classification_summary,
             performed=run_class.read_classification_results.performed,
             method=run_class.read_classification_results.method,
             args=run_class.read_classification_results.args,
@@ -436,7 +436,7 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
         contig_classification = ContigClassification(
             run=runmain,
             sample=sample,
-            # contig_classification_report=run_class.assembly_classification_path,
+            contig_classification_report=run_class.assembly_classification_summary,
             performed=run_class.contig_classification_results.performed,
             method=run_class.contig_classification_results.method,
             args=run_class.contig_classification_results.args,
@@ -460,7 +460,7 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
         remap_main = RunRemapMain(
             run=runmain,
             sample=sample,
-            # merged_log=run_class.merged_log_path,
+            merged_log=run_class.merged_classification_summary,
             # remap_plan=run_class.remap_plan_path,
             performed=run_class.remap_main.performed,
             method=run_class.remap_main.method,

@@ -427,7 +427,7 @@ class RunRemapMain(models.Model):
 
     run = models.ForeignKey(RunMain, blank=True, null=True, on_delete=models.CASCADE)
     sample = models.ForeignKey(Sample, blank=True, null=True, on_delete=models.CASCADE)
-
+    merged_log = models.CharField(max_length=200, blank=True, null=True)
     performed = models.BooleanField(default=False)
 
     method = models.CharField(

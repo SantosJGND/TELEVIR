@@ -6,6 +6,7 @@ from typing import Type
 
 import numpy as np
 import pandas as pd
+from metagen_view.settings import STATICFILES_DIRS
 
 from pathogen_detection.assembly_class import Assembly_class
 from pathogen_detection.classification_class import Classifier
@@ -113,6 +114,11 @@ class RunDetail_main:
         self.type = config["type"]
         self.suprun = self.prefix
 
+        # directories
+        self.static_dir = config["static_dir"]
+        self.static_dir_classification = f"{self.static_dir}/classification_reports"
+        os.makedirs(self.static_dir_classification, exist_ok=True)
+        # input
         self.r1 = Read_class(
             config["r1"],
             config["directories"]["PREPROCESS"],
@@ -128,11 +134,11 @@ class RunDetail_main:
             bin=get_bindir_from_binaries(config["bin"], "PREPROCESS"),
         )
 
-        ###
-
+        ### mapping parameters
         self.min_scaffold_length = config["assembly_contig_min_length"]
         self.minimum_coverage = int(config["minimum_coverage_threshold"])
         self.maximum_coverage = 100000
+
         ### metadata
         self.metadata_tool = Metadata_handler(
             self.config, sift_query=config["sift_query"], prefix=self.prefix
@@ -215,12 +221,29 @@ class RunDetail_main:
         self.filtered_reads_dir = config["directories"]["PREPROCESS"]
         self.log_dir = config["directories"]["log_dir"]
 
+        ### output content
+
         self.report = pd.DataFrame()
         self.rclass_summary = pd.DataFrame()
         self.aclass_summary = pd.DataFrame()
         self.merged_targets = pd.DataFrame()
 
-        ###
+        ### output files
+        self.full_report = os.path.join(
+            self.static_dir_classification, f"{self.prefix}_full_report.tsv"
+        )
+        self.assembly_classification_summary = os.path.join(
+            self.static_dir_classification,
+            f"{self.prefix}_aclass_summary.tsv",
+        )
+        self.read_classification_summary = os.path.join(
+            self.static_dir_classification,
+            f"{self.prefix}_rclass_summary.tsv",
+        )
+        self.merged_classification_summary = os.path.join(
+            self.static_dir_classification,
+            f"{self.prefix}_mclass_summary.tsv",
+        )
 
     def Update(self, config: dict, method_args: pd.DataFrame):
 
@@ -675,17 +698,6 @@ class RunMain_class(Run_Deployment_Methods):
         )
 
     def export_reports(self):
-
-        self.full_report = os.path.join(self.root, f"{self.prefix}_full_report.tsv")
-        self.assembly_classification_summary = os.path.join(
-            self.root, f"{self.prefix}_aclass_summary.tsv"
-        )
-        self.read_classification_summary = os.path.join(
-            self.root, f"{self.prefix}_rclass_summary.tsv"
-        )
-        self.merged_classification_summary = os.path.join(
-            self.root, f"{self.prefix}_mclass_summary.tsv"
-        )
 
         ### main report
         self.report.to_csv(

@@ -12,6 +12,7 @@ from typing import Type
 
 import numpy as np
 import pandas as pd
+from metagen_view.settings import STATICFILES_DIRS
 
 from pathogen_detection.object_classes import Sample_runClass
 from pathogen_detection.params import (
@@ -47,7 +48,7 @@ class metaclass_run:
 
     qcrun: Type[RunMain_class]
 
-    def __init__(self, id="1", rdir="", child=""):
+    def __init__(self, id="1", rdir="", child="", static_dir: "" = ""):
 
         if len(rdir):
             self.parse_config(rdir, child=child)
@@ -71,6 +72,7 @@ class metaclass_run:
             self.reference = ""
             self.begin_time = time.perf_counter()
             self.exec_time = 0
+            self.static_dir = static_dir
 
     def update_runtime(self):
         """
@@ -218,6 +220,7 @@ class metaclass_run:
         """
         config = {
             "directories": {},
+            "static_dir": self.static_dir,
             "actions": {},
             "bin": {},
             "metadata": {},
@@ -383,6 +386,9 @@ class meta_orchestra:
         ### create directories
         self.sample_name = os.path.basename(fofn)
         self.rdir = self.odir + self.sample_name + "/"
+        project_directory_path = os.path.dirname(self.odir)
+        self.project_name = os.path.basename(project_directory_path)
+
         os.makedirs(self.rdir, exist_ok=True)
 
         with open(self.rdir + "parameter_combinations.txt", "w") as f:
@@ -395,12 +401,15 @@ class meta_orchestra:
         self.outd = self.rdir + "output/"
         os.makedirs(self.outd, exist_ok=True)
 
+        self.staticdir = os.path.join(
+            STATICFILES_DIRS[0],
+            self.project_name,
+            self.sample_name,
+        )
+        os.makedirs(self.staticdir, exist_ok=True)
+
         ### create meta_classifier instances
         self.projects = {}
-
-        project_directory_path = os.path.dirname(self.odir)
-        self.project_name = os.path.basename(project_directory_path)
-
         print("updating project")
         Update_project(self.odir)
         self.total_runs = retrieve_number_of_runs(self.project_name, self.sample_name)
@@ -762,7 +771,7 @@ class meta_orchestra:
         softdb = params[1]
         params = params[0]
 
-        qcrun = metaclass_run(id="sampleQC")
+        qcrun = metaclass_run(id="sampleQC", static_dir=self.staticdir)
         qcrun.actions = {x: False for x in qcrun.actions.keys()}
         qcrun.actions["QCONTROL"] = ACTIONS["QCONTROL"]
 
@@ -823,7 +832,9 @@ class meta_orchestra:
         :param conf: software combination df. one line.
         :return: self
         """
-        nrun = metaclass_run(id="run_" + "-".join(np.array(idx, dtype=str)))
+        nrun = metaclass_run(
+            id="run_" + "-".join(np.array(idx, dtype=str)), static_dir=self.staticdir
+        )
         nrun.reference = self.reference
         nrun.qcrun = self.qcrun.RunMain
 
