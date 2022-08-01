@@ -36,7 +36,7 @@ def plot_dotplot(df: pd.DataFrame, out_file: str, title: str, inv_color: str = "
     ax.set_xlabel("Reference")
     ax.set_ylabel("Contigs")
 
-    plt.savefig(out_file, bbox_inches="tight")
+    fig.savefig(out_file, bbox_inches="tight")
 
 
 class Bedgraph:

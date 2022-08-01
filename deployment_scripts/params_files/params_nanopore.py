@@ -99,10 +99,10 @@ SOFTWARE = {
         # "diamond"
     ],
     "ASSEMBLY": ["flye"],  # spades, velvet,
-    "CONTIG_CLASSIFICATION": ["blast", "diamond"],  # , "minimap-asm"],
+    "CONTIG_CLASSIFICATION": ["blast"],  # , "minimap-asm"],
     "READ_CLASSIFICATION": [
         "fastviromeexplorer",
-        # "krakenuniq",
+        "krakenuniq",
         # "clark",
         # "desamba",
         # "kaiju",
