@@ -208,11 +208,16 @@ def retrieve_number_of_runs(project_name, sample_name):
     :return: number of runs
     """
 
-    project = Projects.objects.get(name=project_name)
-    sample = Sample.objects.get(
-        name_extended=sample_name,
-        project__name=project_name,
-    )
+    try:
+        project = Projects.objects.get(name=project_name)
+    except Projects.DoesNotExist:
+        print(f"project {project_name} does not exist")
+        return 0
+
+    try:
+        sample = Sample.objects.get(name_extended=sample_name, project=project)
+    except Sample.DoesNotExist:
+        return 0
 
     return RunMain.objects.filter(project=project, sample=sample).count()
 
