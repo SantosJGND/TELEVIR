@@ -214,7 +214,7 @@ def retrieve_number_of_runs(project_name, sample_name):
         project__name=project_name,
     )
 
-    return RunIndex.objects.filter(project=project, sample=sample).count()
+    return RunMain.objects.filter(project=project, sample=sample).count()
 
 
 def RunIndex_Update_Retrieve_Key(project_name, sample_name):
