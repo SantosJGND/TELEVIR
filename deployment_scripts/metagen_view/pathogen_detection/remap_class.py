@@ -909,13 +909,14 @@ class Remapping:
         self.coverage_plot_exists = os.path.exists(
             os.path.join(STATICFILES_DIRS[0], main_static, self.coverage_plot)
         )
+
         if self.coverage_plot_exists:
-            self.coverage_plot = new_coverage_plot
 
             os.rename(
                 self.coverage_plot,
                 os.path.join(STATICFILES_DIRS[0], main_static, new_coverage_plot),
             )
+            self.coverage_plot = new_coverage_plot
 
     def move_dotplot(self, main_static, static_dir):
         """
@@ -928,12 +929,12 @@ class Remapping:
         )
 
         if self.dotplot_exists:
-            self.dotplot = new_coverage_plot
 
             os.rename(
                 self.dotplot,
                 os.path.join(STATICFILES_DIRS[0], main_static, new_coverage_plot),
             )
+            self.dotplot = new_coverage_plot
 
 
 class Deep_Remap:
