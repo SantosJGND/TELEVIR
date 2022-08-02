@@ -515,6 +515,8 @@ class Remap_Target:
     run_prefix: str
     description: str = ""
     accid_in_file: list = field(default_factory=lambda: [])
+    reads: bool = False
+    contigs: bool = False
 
     def __post_init__(self):
         self.name = f"{self.run_prefix}_{self.acc_simple}_{self.taxid}_{os.path.splitext(os.path.basename(self.file))[0]}"

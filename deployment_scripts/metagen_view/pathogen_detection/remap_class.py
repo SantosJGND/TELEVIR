@@ -41,6 +41,7 @@ class coverage_parse:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging_level)
         self.logger.addHandler(logging.StreamHandler())
+        self.logger.propagate = False
 
     def fasta_segmentlength_extract(self):
         """
@@ -295,6 +296,7 @@ class Remapping:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.ERROR)
         self.logger.addHandler(logging.StreamHandler())
+        self.logger.propagate = False
         self.logger.info("Starting remapping")
 
         self.target = target
@@ -1136,9 +1138,21 @@ class Mapping_Manager(Deep_Remap):
         ]
 
         for instance in self.mapped_instances:
+            print("Merging instance")
+            print(instance["reference"].target.taxid)
+            print(instance["reference"].target.reads)
+            print(instance["reference"].target.contigs)
             success = "none"
-            apres = instance["reference"].number_of_contigs_mapped > 0
-            rpres = instance["reference"].number_of_reads_mapped > 0
+            apres = (
+                instance["reference"].number_of_contigs_mapped > 0
+                or instance["reference"].target.contigs
+            )
+            rpres = (
+                instance["reference"].number_of_reads_mapped > 0
+                or instance["reference"].target.reads
+            )
+            print(apres)
+            print(rpres)
             if apres:
                 success = "success"
             ###
@@ -1147,10 +1161,14 @@ class Mapping_Manager(Deep_Remap):
 
             if rpres and apres:
                 success = "reads and contigs"
-            elif rpres:
+            print(success)
+
+            if rpres and not apres:
                 success = "reads"
-            elif apres:
+            if apres and not rpres:
                 success = "contigs"
+
+            print(success)
 
             ntax = [
                 [
@@ -1158,7 +1176,7 @@ class Mapping_Manager(Deep_Remap):
                     instance["reference"].target.taxid,
                     instance["reference"].target.accid,
                     instance["reference"].target.description,
-                    True,
+                    rpres,
                     apres,
                 ]
             ]
@@ -1202,7 +1220,7 @@ class Mapping_Manager(Deep_Remap):
             ntax["reference_index_path"] = instance["reference"].reference_fasta_index
             ntax["reference_assembly_paf"] = instance["reference"].assembly_map_paf
 
-            if apres:
+            if instance["reference"].number_of_contigs_mapped > 0:
                 ntax["mapped_scaffolds_path"] = instance[
                     "assembly"
                 ].reference_fasta_index

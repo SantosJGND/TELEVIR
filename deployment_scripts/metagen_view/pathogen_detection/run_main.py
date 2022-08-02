@@ -224,7 +224,6 @@ class RunDetail_main:
         )
 
         ### drones
-        print("empty drones")
         self.depletion_drone = Classifier(
             Software_detail("NONE", method_args, config, self.prefix),
             logging_level=self.logger_level_detail,
@@ -247,6 +246,12 @@ class RunDetail_main:
             self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_params.csv",
+        )
+        self.remap_plan_path = os.path.join(
+            STATICFILES_DIRS[0],
+            self.static_dir,
+            self.static_dir_classification,
+            f"{self.prefix}_remap_plan.csv",
         )
         self.full_report = os.path.join(
             STATICFILES_DIRS[0],
@@ -342,6 +347,45 @@ class RunDetail_main:
             method_args,
             config,
             self.prefix,
+        )
+
+        ### output files
+        self.params_file_path = os.path.join(
+            STATICFILES_DIRS[0],
+            self.static_dir,
+            self.static_dir_classification,
+            f"{self.prefix}_params.csv",
+        )
+        self.remap_plan_path = os.path.join(
+            STATICFILES_DIRS[0],
+            self.static_dir,
+            self.static_dir_classification,
+            f"{self.prefix}_remap_plan.csv",
+        )
+
+        self.full_report = os.path.join(
+            STATICFILES_DIRS[0],
+            self.static_dir,
+            self.static_dir_classification,
+            f"{self.prefix}_full_report.tsv",
+        )
+        self.assembly_classification_summary = os.path.join(
+            STATICFILES_DIRS[0],
+            self.static_dir,
+            self.static_dir_classification,
+            f"{self.prefix}_aclass_summary.tsv",
+        )
+        self.read_classification_summary = os.path.join(
+            STATICFILES_DIRS[0],
+            self.static_dir,
+            self.static_dir_classification,
+            f"{self.prefix}_rclass_summary.tsv",
+        )
+        self.merged_classification_summary = os.path.join(
+            STATICFILES_DIRS[0],
+            self.static_dir,
+            self.static_dir_classification,
+            f"{self.prefix}_mclass_summary.tsv",
         )
 
     def Update_exec_time(self):
@@ -611,6 +655,7 @@ class RunMain_class(Run_Deployment_Methods):
         if self.classification:
             self.deploy_READ_CLASSIFICATION()
             self.deploy_CONTIG_CLASSIFICATION()
+
             self.metadata_tool.match_and_select_targets(
                 self.read_classification_drone.classification_report,
                 self.contig_classification_drone.classification_report,
@@ -620,6 +665,7 @@ class RunMain_class(Run_Deployment_Methods):
             self.aclass_summary = self.metadata_tool.aclass
             self.rclass_summary = self.metadata_tool.rclass
             self.merged_targets = self.metadata_tool.merged_targets
+            self.remap_plan = self.metadata_tool.remap_plan
 
         if self.remapping:
             self.deploy_REMAPPING()
@@ -732,6 +778,9 @@ class RunMain_class(Run_Deployment_Methods):
         self.method_args.to_csv(
             self.params_file_path, index=False, sep="\t", header=True
         )
+
+        ### remap plan
+        self.remap_plan.to_csv(self.remap_plan_path, index=False, sep="\t", header=True)
 
         ### main report
         self.report.to_csv(

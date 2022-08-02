@@ -49,6 +49,7 @@ class Metadata_handler:
         self.merged_targets: pd.DataFrame
         self.remap_targets: List[Remap_Target]
         self.remap_absent_taxid_list: List[str]
+        self.remap_plan = pd.DataFrame
         self.sift_query = sift_query
         self.sift_report = pd.DataFrame(
             [[0, 0, 0]], columns=["input", "output", "removed"]
@@ -61,9 +62,6 @@ class Metadata_handler:
         max_remap: int = 15,
         taxid_limit: int = 12,
     ):
-
-        print(report_1)
-
         self.get_metadata()
 
         self.process_reports(
@@ -308,6 +306,7 @@ class Metadata_handler:
         remap_targets = []
         remap_absent = []
         taxf = self.accession_to_taxid
+        remap_plan = []
 
         for taxid in targets.taxid.unique():
 
@@ -315,6 +314,7 @@ class Metadata_handler:
                 remap_absent.append(taxid)
 
                 nset = pd.DataFrame(columns=["taxid"])
+                remap_plan.append([taxid, "none", "none"])
                 continue
 
             nset = (
@@ -359,7 +359,6 @@ class Metadata_handler:
                     self.taxonomy_to_description.taxid = (
                         self.taxonomy_to_description.taxid.astype(int)
                     )
-                    print(self.taxonomy_to_description.head())
                     description = self.taxonomy_to_description[
                         self.taxonomy_to_description.taxid == int(taxid)
                     ].description.unique()
@@ -369,7 +368,6 @@ class Metadata_handler:
 
                     if len(description) > 1:
                         description = sorted(description, key=len)
-                    print("pref: ", pref)
 
                     description = description[-1]
                     description = scrape_description(pref, description)
@@ -383,7 +381,12 @@ class Metadata_handler:
                             prefix,
                             description,
                             [nsnew.acc_in_file[0]],
+                            str(taxid) in self.rclass.taxid.unique(),
+                            str(taxid) in self.aclass.taxid.unique(),
                         )
                     )
+                    remap_plan.append([taxid, pref, fileset])
+
+        self.remap_plan = pd.DataFrame(remap_plan, columns=["taxid", "acc", "file"])
 
         return remap_targets, remap_absent

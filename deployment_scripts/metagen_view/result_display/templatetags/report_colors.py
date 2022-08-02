@@ -52,12 +52,13 @@ def depth_color(depth_value, max_value):
 
 
 @register.simple_tag
-def success_count_color(covplot_exists, refa_dotplot_exists):
-    counts = 0
-    if covplot_exists:
-        counts += 1
-    if refa_dotplot_exists:
-        counts += 1
+def success_count_color(success):
+    counts_dict = {
+        "none": 0,
+        "reads": 1,
+        "contigs": 1,
+        "reads and contigs": 2,
+    }
 
-    ncol = f"background-color: rgba({cell_color}, {50 * counts}%);"
+    ncol = f"background-color: rgba({cell_color}, {counts_dict[success] * 50}%);"
     return ncol

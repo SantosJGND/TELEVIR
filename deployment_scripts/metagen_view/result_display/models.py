@@ -442,6 +442,7 @@ class RunRemapMain(models.Model):
     coverage_maximum = models.IntegerField(blank=True, null=True)
 
     success = models.IntegerField(blank=True, null=True)
+    remap_plan = models.CharField(max_length=200, blank=True, null=True)
 
     class Meta:
         ordering = [

@@ -254,6 +254,8 @@ def IGV_display(requestdst):
 
             data = {"is_ok": False}
             print(project_name)
+            print(reference)
+
             print(Sample.objects.filter(name=sample_name, project__name=project_name))
             sample = Sample.objects.get(project__name=project_name, name=sample_name)
             run = RunMain.objects.get(name=run_name, sample=sample)

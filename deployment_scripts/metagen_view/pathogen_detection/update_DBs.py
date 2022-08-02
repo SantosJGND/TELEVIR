@@ -397,7 +397,7 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
             contig_min=run_class.assembly_report.assembly_min,
             contig_mean=run_class.assembly_report.assembly_mean,
             contig_trim=run_class.assembly_report.assembly_trim,
-            # assembly_contigs=run_class.assembly_drone.contig_names,
+            assembly_contigs=run_class.assembly_drone.assembly_file_fasta_gz,
         )
         run_assembly.save()
 
@@ -418,14 +418,6 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
             success=run_class.read_classification_results.success,
         )
         read_classification.save()
-
-    print(run_class.contig_classification_results.performed)
-    print(run_class.contig_classification_results.method)
-    print(run_class.contig_classification_results.args)
-    print(run_class.contig_classification_results.db)
-    print(run_class.contig_classification_results.classification_number)
-    print(run_class.contig_classification_results.classification_minhit)
-    print(run_class.contig_classification_results.success)
 
     try:
         contig_classification = ContigClassification.objects.get(
@@ -448,12 +440,6 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
         )
         contig_classification.save()
 
-    print(run_class.remap_main.performed)
-    print(run_class.remap_main.method)
-    print(run_class.remap_main.coverage_max)
-    print(run_class.remap_main.coverage_min)
-    print(run_class.remap_main.success)
-
     try:
         remap_main = RunRemapMain.objects.get(run=runmain, sample=sample)
 
@@ -462,7 +448,7 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
             run=runmain,
             sample=sample,
             merged_log=run_class.merged_classification_summary,
-            # remap_plan=run_class.remap_plan_path,
+            remap_plan=run_class.remap_plan_path,
             performed=run_class.remap_main.performed,
             method=run_class.remap_main.method,
             found_total=run_class.remap_main.found_total,
@@ -525,6 +511,7 @@ def Update_RefMap_DB(run_class: Type[RunMain_class]):
     :param run_class:
     :return: run_data
     """
+    print("refmap_dbs")
 
     for ref_map in run_class.mapped_instances:
 
@@ -557,16 +544,20 @@ def Update_ReferenceMap(
         name=name,
         sample=sample,
     )
+    print("trying to updating remap main")
+    print(ref_map["reference"].acc_simple)
 
     try:
+        print("updating remap main")
+        print(ref_map["reference"].acc_simple)
         map_db = ReferenceMap_Main.objects.get(
-            reference=ref_map["reference"].reference_fasta_string,
+            reference=ref_map["reference"].acc_simple,
             sample=sample,
             run=run,
         )
     except ReferenceMap_Main.DoesNotExist:
         map_db = ReferenceMap_Main(
-            reference=ref_map["reference"].reference_fasta_string,
+            reference=ref_map["reference"].acc_simple,
             sample=sample,
             run=run,
             taxid=ref_map["reference"].target.taxid,

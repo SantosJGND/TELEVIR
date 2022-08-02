@@ -6,6 +6,7 @@ from typing import Type
 
 import pandas as pd
 from Bio import SeqIO
+from metagen_view.settings import STATICFILES_DIRS
 
 from pathogen_detection.object_classes import RunCMD
 
