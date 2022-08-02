@@ -82,7 +82,7 @@ CONSTANTS = {
     "max_output_number": 15,
     "taxid_limit": 12,
     "sift_query": "phage",
-    "assembly_contig_min_length": 50,
+    "assembly_contig_min_length": 300,
 }
 
 ################################## SOFTWARE
