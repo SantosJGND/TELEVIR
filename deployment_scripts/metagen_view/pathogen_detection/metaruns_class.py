@@ -402,11 +402,10 @@ class meta_orchestra:
         os.makedirs(self.outd, exist_ok=True)
 
         self.staticdir = os.path.join(
-            STATICFILES_DIRS[0],
             self.project_name,
             self.sample_name,
         )
-        os.makedirs(self.staticdir, exist_ok=True)
+        os.makedirs(os.path.join(STATICFILES_DIRS[0], self.staticdir), exist_ok=True)
 
         ### create meta_classifier instances
         self.projects = {}

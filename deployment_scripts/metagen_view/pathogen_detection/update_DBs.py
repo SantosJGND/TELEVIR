@@ -281,7 +281,7 @@ def Update_RunMain(run_class: Type[RunMain_class]):
             project=project,
             sample=sample,
             name=run_class.prefix,
-            # params_file_path=run_class.params_file_path,
+            params_file_path=run_class.params_file_path,
             processed_reads_r1=os.path.basename(run_class.sample.r1.current),
             processed_reads_r2=os.path.basename(run_class.sample.r2.current),
             assembly_performed=run_class.assembly_drone.assembly_exists,
@@ -304,6 +304,7 @@ def Update_RunMain(run_class: Type[RunMain_class]):
             runtime=f"{run_class.exec_time / 60:.2f} m",
             # finished=str(run_class.finished),
             report="report",
+            static_dir=run_class.static_dir,
         )
 
         runmain.save()

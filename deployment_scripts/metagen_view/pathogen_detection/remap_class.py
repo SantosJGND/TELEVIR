@@ -8,6 +8,7 @@ from typing import List, Type
 import numpy as np
 import pandas as pd
 from Bio.SeqIO.FastaIO import SimpleFastaParser
+from metagen_view.settings import STATICFILES_DIRS
 from result_display.plot_coverage import Bedgraph, plot_dotplot
 from scipy.stats import kstest
 
@@ -548,7 +549,7 @@ class Remapping:
             names=["contig_name"],
         ).contig_name.unique()
 
-        self.number_of_contigs_mapped = self.mapped_contigs.shape[0]
+        self.number_of_contigs_mapped = len(self.mapped_contigs)
 
     def extract_reference_sequences(self):
         """
@@ -894,6 +895,37 @@ class Remapping:
         plot_dotplot(df, self.dotplot, "dotplot")
         self.dotplot_exists = os.path.exists(self.dotplot)
 
+    def move_coverage_plot(self, main_static, static_dir):
+        """
+        Move coverage plot to static directory."""
+        new_coverage_plot = os.path.join(
+            static_dir, os.path.basename(self.coverage_plot)
+        )
+        os.rename(
+            self.coverage_plot,
+            os.path.join(STATICFILES_DIRS[0], main_static, new_coverage_plot),
+        )
+
+        self.coverage_plot = new_coverage_plot
+        self.coverage_plot_exists = os.path.exists(
+            os.path.join(STATICFILES_DIRS[0], main_static, self.coverage_plot)
+        )
+
+    def move_dotplot(self, main_static, static_dir):
+        """
+        Move dotplot to static directory."""
+
+        new_coverage_plot = os.path.join(static_dir, os.path.basename(self.dotplot))
+        os.rename(
+            self.dotplot,
+            os.path.join(STATICFILES_DIRS[0], main_static, new_coverage_plot),
+        )
+        # shutil.move(self.dotplot, static_dir)
+        self.dotplot = new_coverage_plot
+        self.dotplot_exists = os.path.exists(
+            os.path.join(STATICFILES_DIRS[0], main_static, self.dotplot)
+        )
+
 
 class Deep_Remap:
     """
@@ -1081,6 +1113,15 @@ class Mapping_Manager(Deep_Remap):
         for target in self.remap_targets:
             mapped_instance = self.reciprocal_map(target)
             self.mapped_instances.append(mapped_instance)
+
+    def move_plots_to_static(self, main_static, static_dir):
+        for instance in self.mapped_instances:
+            apres = instance["reference"].number_of_contigs_mapped > 0
+            rpres = instance["reference"].number_of_reads_mapped > 0
+            if rpres:
+                instance["reference"].move_coverage_plot(main_static, static_dir)
+            if apres:
+                instance["reference"].move_dotplot(main_static, static_dir)
 
     def merge_mapping_reports(self):
 

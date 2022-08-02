@@ -186,7 +186,7 @@ class RunMain(models.Model):
 
     sample = models.ForeignKey(Sample, blank=True, null=True, on_delete=models.CASCADE)
 
-    params_file_path = models.CharField(max_length=100, blank=True, null=True)
+    params_file_path = models.CharField(max_length=250, blank=True, null=True)
 
     processed_reads_r1 = models.CharField(
         max_length=200, blank=True, null=True
@@ -260,7 +260,9 @@ class RunMain(models.Model):
     finished = models.CharField(max_length=10, blank=True, null=True)  # SE or PE
     runtime = models.CharField(max_length=100, blank=True, null=True)
 
-    report = models.CharField(max_length=100, blank=True, null=True)
+    report = models.CharField(max_length=200, blank=True, null=True)
+
+    static_dir = models.CharField(max_length=250, blank=True, null=True)
 
     class Meta:
 

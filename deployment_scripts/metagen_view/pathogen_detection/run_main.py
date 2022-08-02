@@ -6,7 +6,7 @@ from typing import Type
 
 import numpy as np
 import pandas as pd
-from metagen_view.settings import STATICFILES_DIRS
+from metagen_view.settings import STATIC_URL, STATICFILES_DIRS
 
 from pathogen_detection.assembly_class import Assembly_class
 from pathogen_detection.classification_class import Classifier
@@ -115,9 +115,26 @@ class RunDetail_main:
         self.suprun = self.prefix
 
         # directories
+        self.root = config["directories"]["root"]
+        self.filtered_reads_dir = config["directories"]["PREPROCESS"]
+        self.log_dir = config["directories"]["log_dir"]
+
         self.static_dir = config["static_dir"]
-        self.static_dir_classification = f"{self.static_dir}/classification_reports"
-        os.makedirs(self.static_dir_classification, exist_ok=True)
+        self.full_static_dir = os.path.join(STATICFILES_DIRS[0], self.static_dir)
+        self.static_dir_classification = f"classification_reports"
+        os.makedirs(
+            os.path.join(
+                STATICFILES_DIRS[0], self.static_dir, self.static_dir_classification
+            ),
+            exist_ok=True,
+        )
+
+        self.static_dir_plots = f"plots"
+        os.makedirs(
+            os.path.join(STATICFILES_DIRS[0], self.static_dir, self.static_dir_plots),
+            exist_ok=True,
+        )
+
         # input
         self.r1 = Read_class(
             config["r1"],
@@ -126,6 +143,7 @@ class RunDetail_main:
             config["directories"]["reads_depleted_dir"],
             bin=get_bindir_from_binaries(config["bin"], "PREPROCESS"),
         )
+
         self.r2 = Read_class(
             config["r2"],
             config["directories"]["PREPROCESS"],
@@ -216,11 +234,6 @@ class RunDetail_main:
             logging_level=self.logger_level_detail,
         )
 
-        ### directories.
-        self.root = config["directories"]["root"]
-        self.filtered_reads_dir = config["directories"]["PREPROCESS"]
-        self.log_dir = config["directories"]["log_dir"]
-
         ### output content
 
         self.report = pd.DataFrame()
@@ -229,25 +242,40 @@ class RunDetail_main:
         self.merged_targets = pd.DataFrame()
 
         ### output files
+        self.params_file_path = os.path.join(
+            STATICFILES_DIRS[0],
+            self.static_dir,
+            self.static_dir_classification,
+            f"{self.prefix}_params.csv",
+        )
         self.full_report = os.path.join(
-            self.static_dir_classification, f"{self.prefix}_full_report.tsv"
+            STATICFILES_DIRS[0],
+            self.static_dir,
+            self.static_dir_classification,
+            f"{self.prefix}_full_report.tsv",
         )
         self.assembly_classification_summary = os.path.join(
+            STATICFILES_DIRS[0],
+            self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_aclass_summary.tsv",
         )
         self.read_classification_summary = os.path.join(
+            STATICFILES_DIRS[0],
+            self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_rclass_summary.tsv",
         )
         self.merged_classification_summary = os.path.join(
+            STATICFILES_DIRS[0],
+            self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_mclass_summary.tsv",
         )
 
     def Update(self, config: dict, method_args: pd.DataFrame):
 
-        self.method_args = method_args
+        self.method_args = pd.concat((self.method_args, method_args))
         # with open(config_json) as json_file:
         #    config = json.load(json_file)
 
@@ -437,6 +465,7 @@ class Run_Deployment_Methods(RunDetail_main):
         )
 
         self.remap_manager.run_mappings()
+        self.remap_manager.move_plots_to_static(self.static_dir, self.static_dir_plots)
         self.remap_manager.merge_mapping_reports()
         self.remap_manager.collect_final_report_summary_statistics()
 
@@ -699,6 +728,11 @@ class RunMain_class(Run_Deployment_Methods):
 
     def export_reports(self):
 
+        ### params
+        self.method_args.to_csv(
+            self.params_file_path, index=False, sep="\t", header=True
+        )
+
         ### main report
         self.report.to_csv(
             self.full_report,
@@ -731,3 +765,5 @@ class RunMain_class(Run_Deployment_Methods):
             sep="\t",
             header=True,
         )
+
+        ###
