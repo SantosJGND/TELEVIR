@@ -324,9 +324,11 @@ class Remapping:
         self.assembly_map_paf = f"{self.rdir}/{self.prefix}.paf"
         self.mapped_subset_r1 = f"{self.rdir}/{self.prefix}.R1.kept.fastq.gz"
         self.mapped_subset_r2 = f"{self.rdir}/{self.prefix}.R2.kept.fastq.gz"
-        self.coverage_plot = f"{self.rdir}/{self.prefix}.coverage.png"
-        self.dotplot = f"{self.rdir}/{self.prefix}.dotplot.png"
         self.read_map_sam_rmdup = f"{self.rdir}/{self.prefix}.rmdup.sam"
+        self.coverage_plot = (
+            f"{self.rdir}/{self.prefix}.{target.acc_simple}.coverage.png"
+        )
+        self.dotplot = f"{self.rdir}/{self.prefix}.{target.acc_simple}.dotplot.png"
 
         self.read_map_sorted_bam_exists = os.path.isfile(self.read_map_sorted_bam)
         self.assembly_map_paf_exists = os.path.isfile(self.assembly_map_paf)
