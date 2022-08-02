@@ -360,6 +360,18 @@
                     </td>
                     <td colspan="1" align="center">
 
+                        <div id="cov_div_igv" style="position:relative height=100%">
+
+                            <form id="igv_display_{{value.accid}}" action="{% url 'igv_browser' %}" method="POST">
+                                {% csrf_token %}
+                                <input type=submit value="IGV" name="btn">
+                                <input type="hidden" name="project_name" value="{{project}}">
+                                <input type="hidden" name="sample_name" value="{{sample}}">
+                                <input type="hidden" name="run_name" value="{{run_name}}">
+                                <input type="hidden" name="reference" value="{{value.simple_id}}">
+                                <input type="hidden" name="unique_id" value="{{value.unique_id}}">
+                            </form>
+                        </div>
                         <div id="cov_div" style="position:relative height=100%">
                             <br>
                             <form id="download_bam_{{value.accid}}" action="{% url 'download_file_igv' %}"

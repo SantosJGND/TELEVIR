@@ -475,7 +475,7 @@ class Remapping:
 
         if not self.check_mapping_output_exists():
             self.logger.error(
-                "Mapping output not found or unsuccesful after deploying on \
+                f"Mapping output not found or unsuccesful after deploying on \
                     target(s): {self.target.accid_in_file}, file: {self.r1}, reference: {self.target.file}"
             )
             return
@@ -903,30 +903,35 @@ class Remapping:
         new_coverage_plot = os.path.join(
             static_dir, os.path.basename(self.coverage_plot)
         )
-        os.rename(
-            self.coverage_plot,
-            os.path.join(STATICFILES_DIRS[0], main_static, new_coverage_plot),
-        )
 
-        self.coverage_plot = new_coverage_plot
         self.coverage_plot_exists = os.path.exists(
             os.path.join(STATICFILES_DIRS[0], main_static, self.coverage_plot)
         )
+        if self.coverage_plot_exists:
+            self.coverage_plot = new_coverage_plot
+
+            os.rename(
+                self.coverage_plot,
+                os.path.join(STATICFILES_DIRS[0], main_static, new_coverage_plot),
+            )
 
     def move_dotplot(self, main_static, static_dir):
         """
         Move dotplot to static directory."""
 
         new_coverage_plot = os.path.join(static_dir, os.path.basename(self.dotplot))
-        os.rename(
-            self.dotplot,
-            os.path.join(STATICFILES_DIRS[0], main_static, new_coverage_plot),
-        )
-        # shutil.move(self.dotplot, static_dir)
-        self.dotplot = new_coverage_plot
+
         self.dotplot_exists = os.path.exists(
             os.path.join(STATICFILES_DIRS[0], main_static, self.dotplot)
         )
+
+        if self.dotplot_exists:
+            self.dotplot = new_coverage_plot
+
+            os.rename(
+                self.dotplot,
+                os.path.join(STATICFILES_DIRS[0], main_static, new_coverage_plot),
+            )
 
 
 class Deep_Remap:
