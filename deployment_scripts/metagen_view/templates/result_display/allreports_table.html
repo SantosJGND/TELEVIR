@@ -117,9 +117,8 @@
                         {{value.mapped_proportion|round_to_int}}</td>
                     <td data-title="Gaps">
                         {{value.ngaps}}</td>
-                    <td data-title="success"
-                        style="{% success_count_color value.covplot_exists value.refa_dotplot_exists %}">
-                        {% success_count value.covplot_exists value.refa_dotplot_exists %}</td>
+                    <td data-title="success" style="{% success_count_color value.success %}">
+                        {{value.success}}</td>
                 </tr>
                 {% endif %}
                 {% endfor %}
