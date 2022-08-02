@@ -242,6 +242,7 @@ ARGS_CLASS = {
     },
     "diamond": {
         "DIAMOND_ARGS": [
+            "--top 5 -e 0.01 --id 40 --query-cover 40 --fast",
             "--top 3 -e 0.01 --id 50 --query-cover 50 --sensitive",
             "--top 3 -e 0.01 --id 70 --query-cover 60 --ultra-sensitive",
         ],
