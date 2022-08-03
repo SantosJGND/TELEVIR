@@ -507,6 +507,9 @@ class Run_Deployment_Methods(RunDetail_main):
             self.logger_level_detail,
             self.house_cleaning,
         )
+        print(
+            f"{self.prefix} remapping # targets: {len(self.metadata_tool.remap_targets)}"
+        )
 
         self.remap_manager.run_mappings()
         self.remap_manager.move_plots_to_static(self.static_dir, self.static_dir_plots)
@@ -671,6 +674,7 @@ class RunMain_class(Run_Deployment_Methods):
         if self.remapping:
             self.deploy_REMAPPING()
             self.report = self.remap_manager.report
+            print(f"{self.prefix} remapping report: {self.report}")
             self.export_final_reports()
 
         self.Update_exec_time()

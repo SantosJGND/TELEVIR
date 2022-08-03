@@ -119,10 +119,11 @@ class env_install:
         os.chdir(self.envsdir)
 
         idir = os.path.join(sdir, git.split("/")[-1].strip(".git"))
-        exists = os.path.isdir(sdir)
+        exists = os.path.isdir(idir)
         command = ["git", "clone", git]
 
         if not exists or force_install:
+            os.makedirs(sdir)
             subprocess.run(command)
             os.chdir(idir)
             subprocess.run(["make"])

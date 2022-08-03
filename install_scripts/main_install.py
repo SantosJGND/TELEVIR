@@ -154,7 +154,7 @@ class main_setup:
         envprep = self.env_install_class()
         envprep.prep_dir(ENVS_PARAMS)
         envprep.conda_install()
-        envprep.rabbitqc_install()
+        # envprep.rabbitqc_install()
         envprep.flye_install()
         envprep.clark_install()
         envprep.fve_install()

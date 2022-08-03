@@ -270,7 +270,7 @@ class Remapping:
         r2: str = "",
         minimum_coverage: int = 1,
         bin: str = "",
-        logging_level: int = logging.ERROR,
+        logging_level: int = logging.CRITICAL,
         cleanup: bool = False,
     ):
         """
@@ -294,7 +294,7 @@ class Remapping:
         self.cleanup = cleanup
 
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.ERROR)
+        self.logger.setLevel(logging_level)
         self.logger.addHandler(logging.StreamHandler())
         self.logger.propagate = False
         self.logger.info("Starting remapping")
@@ -619,9 +619,7 @@ class Remapping:
             self.r1,
             "--force",
         ]
-        # self.logger.info(cmd)
         self.cmd.run(cmd)
-        self.logger.info("Finished remapping")
 
     def remap_snippy_PE(self):
         """
@@ -643,7 +641,6 @@ class Remapping:
             self.r2,
             "--force",
         ]
-        # self.logger.info(cmd)
         self.cmd.run(cmd)
 
     def remap_minimap2(self):
@@ -937,12 +934,149 @@ class Remapping:
             self.dotplot = new_coverage_plot
 
 
-class Deep_Remap:
+class Mapping_Instance:
+    prefix: str
+    reference: Type[Remapping] = None
+    assembly: Type[Remapping] = None
+    apres: bool
+    rpres: bool
+    success: str = "none"
+    mapped: int = 0
+    mapped_reads: int = 0
+    original_reads: int = 0
+
+    def __init__(
+        self,
+        reference: Type[Remapping],
+        assembly: Type[Remapping],
+        prefix,
+        mapped_reads: int = 0,
+        original_reads: int = 0,
+    ):
+        self.prefix = prefix
+        self.reference = reference
+        self.assembly = assembly
+        self.mapped = self.reference.number_of_reads_mapped
+        self.mapped_reads = mapped_reads
+        self.original_reads = original_reads
+
+        self.mapping_main_info = pd.DataFrame(
+            [
+                [
+                    self.prefix,
+                    self.reference.target.taxid,
+                    self.reference.target.accid,
+                    self.reference.target.description,
+                    self.rpres,
+                    self.apres,
+                    self.success,
+                ]
+            ],
+            columns=[
+                "suffix",
+                "taxid",
+                "refseq",
+                "description",
+                "rclass",
+                "aclass",
+            ],
+        )
+
+    def assert_reads_mapped(self):
+        self.rpres = (
+            self.reference.number_of_reads_mapped > 0 or self.reference.target.reads
+        )
+
+    def assert_contigs_mapped(self):
+        self.apres = (
+            self.reference.number_of_contigs_mapped > 0 or self.reference.target.contigs
+        )
+
+    def assert_mapping_success(self):
+        print(self.reference.target.taxid)
+        print(self.reference.target.reads)
+        print(self.reference.target.contigs)
+
+        self.rpres = self.assert_reads_mapped()
+        self.apres = self.assert_contigs_mapped()
+
+        print(self.apres)
+        print(self.rpres)
+        ###
+        if self.rpres and self.apres:
+            self.success = "reads and contigs"
+        if self.rpres and not self.apres:
+            self.success = "reads"
+        if self.apres and not self.rpres:
+            self.success = "contigs"
+
+        print(self.success)
+
+    def generate_full_mapping_report_entry(self, instance: dict):
+
+        ntax = pd.concat((self.mapping_main_info, instance["reference"].report), axis=1)
+
+        def simplify_taxid(x):
+            return (
+                x.replace(";", "_")
+                .replace(":", "_")
+                .replace(".", "_")
+                .replace("|", "_")
+            )
+
+        if len(instance["reference"].report) == 0:
+            continue
+
+        ntax["mapped"] = self.mapped
+        if self.mapped_reads > 0:
+            ntax["mapped_prop"] = 100 * (self.mapped / self.mapped_reads)
+
+        else:
+            self.mapped_reads = self.mapped
+            ntax["mapped_prop"] = 1
+
+        if self.original_reads > 0:
+            ntax["ref_prop"] = 100 * (self.mapped / self.original_reads)
+
+        else:
+            ntax["ref_prop"] = 0
+
+        ntax["refdb"] = self.reference.target.file
+        ntax["ID"] = self.reference.target.accid
+        ntax["simple_id"] = ntax["ID"].apply(simplify_taxid)
+        ntax["unique_id"] = ntax["ID"].apply(simplify_taxid)
+
+        ntax["contig_length"] = self.reference.reference_fasta_length
+        ntax["contig_string"] = self.reference.reference_fasta_string
+
+        ntax["refa_dotplot_exists"] = self.reference.dotplot_exists
+        ntax["covplot_exists"] = self.reference.coverage_plot_exists
+        ntax["refa_dotplot_path"] = self.reference.dotplot
+        ntax["covplot_path"] = self.reference.coverage_plot
+        ntax["bam_path"] = self.reference.read_map_sorted_bam
+        ntax["bam_index_path"] = self.reference.read_map_sorted_bam_index
+        ntax["reference_path"] = self.reference.reference_file
+        ntax["reference_index_path"] = self.reference.reference_fasta_index
+        ntax["reference_assembly_paf"] = self.reference.assembly_map_paf
+
+        if self.reference.number_of_contigs_mapped > 0:
+            ntax["mapped_scaffolds_path"] = self.assembly.reference_fasta_index
+            ntax["mapped_scaffolds_index_path"] = self.assembly.assembly_map_paf
+        else:
+            ntax["mapped_scaffolds_path"] = ""
+            ntax["mapped_scaffolds_index_path"] = ""
+
+        return ntax
+
+
+class Tandem_Remap:
     """
     Deep Remap class.
     deploys remap onto reference of reads and contigs.
     In a second step, if contigs mapped, maps mapped contigs to those.
     """
+
+    reads_before_processing: int = 0
 
     def __init__(
         self,
@@ -959,6 +1093,12 @@ class Deep_Remap:
         cleanup: bool,
     ):
 
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.ERROR)
+        self.logger.addHandler(logging.StreamHandler())
+        self.logger.propagate = False
+        self.logger.info("Reciprocal Remap started")
+
         self.remapping_method = remapping_method
         self.assembly_file = assembly_file
         self.type = type
@@ -968,18 +1108,20 @@ class Deep_Remap:
         self.bin = bin
         self.logging_level = logging_level
         self.cleanup = cleanup
-        self.mapping_instances = []
         self.r1 = r1.current
         self.r2 = r2.current
 
     def reciprocal_map(self, remap_target):
 
         reference_remap_drone = self.reference_map(remap_target)
+        assembly_map = self.assembly_map(reference_remap_drone)
 
-        mapped_instance = {
-            "reference": reference_remap_drone,
-            "assembly": self.assembly_map(reference_remap_drone),
-        }
+        mapped_instance = Mapping_Instance(
+            reference_remap_drone,
+            assembly_map,
+            self.prefix,
+            original_reads=self.reads_before_processing,
+        )
 
         return mapped_instance
 
@@ -1052,11 +1194,13 @@ class Deep_Remap:
         return assembly_remap_drone
 
 
-class Mapping_Manager(Deep_Remap):
+class Mapping_Manager(Tandem_Remap):
     """
     Deploy DeepRemap for a series of targets,
     generate mapping report.
     """
+
+    mapped_instances: List[Mapping_Instance]
 
     def __init__(
         self,
@@ -1087,6 +1231,12 @@ class Mapping_Manager(Deep_Remap):
             logging_level,
             cleanup,
         )
+
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+        self.logger.addHandler(logging.StreamHandler())
+        self.logger.propagate = False
+        self.logger.info("Mapping Manager started")
 
         self.mapped_instances = []
         self.remap_targets = remap_targets
@@ -1121,125 +1271,38 @@ class Mapping_Manager(Deep_Remap):
 
     def run_mappings(self):
         for target in self.remap_targets:
-            mapped_instance = self.reciprocal_map(target)
+            try:
+                mapped_instance = self.reciprocal_map(target)
+                mapped_instance.assert_mapping_success()
+
+            except Exception as e:
+                self.logger.error(e)
+                continue
             self.mapped_instances.append(mapped_instance)
 
     def move_plots_to_static(self, main_static, static_dir):
         for instance in self.mapped_instances:
-            apres = instance["reference"].number_of_contigs_mapped > 0
-            rpres = instance["reference"].number_of_reads_mapped > 0
+            apres = instance.reference.number_of_contigs_mapped > 0
+            rpres = instance.reference.number_of_reads_mapped > 0
             if rpres:
-                instance["reference"].move_coverage_plot(main_static, static_dir)
+                instance.reference.move_coverage_plot(main_static, static_dir)
             if apres:
-                instance["reference"].move_dotplot(main_static, static_dir)
+                instance.reference.move_dotplot(main_static, static_dir)
 
     def merge_mapping_reports(self):
 
         full_report = []
-        ntax_cols = [
-            "suffix",
-            "taxid",
-            "refseq",
-            "description",
-            "rclass",
-            "aclass",
-        ]
+
+        print(self.prefix)
 
         for instance in self.mapped_instances:
-            print("Merging instance")
-            print(instance["reference"].target.taxid)
-            print(instance["reference"].target.reads)
-            print(instance["reference"].target.contigs)
-            success = "none"
-            apres = (
-                instance["reference"].number_of_contigs_mapped > 0
-                or instance["reference"].target.contigs
-            )
-            rpres = (
-                instance["reference"].number_of_reads_mapped > 0
-                or instance["reference"].target.reads
-            )
-            print(apres)
-            print(rpres)
-            if apres:
-                success = "success"
-            ###
 
-            mapped = instance["reference"].number_of_reads_mapped
-
-            if rpres and apres:
-                success = "reads and contigs"
-            print(success)
-
-            if rpres and not apres:
-                success = "reads"
-            if apres and not rpres:
-                success = "contigs"
-
-            print(success)
-
-            ntax = [
-                [
-                    self.prefix,
-                    instance["reference"].target.taxid,
-                    instance["reference"].target.accid,
-                    instance["reference"].target.description,
-                    rpres,
-                    apres,
-                ]
-            ]
-
-            def simplify_taxid(x):
-                return (
-                    x.replace(";", "_")
-                    .replace(":", "_")
-                    .replace(".", "_")
-                    .replace("|", "_")
-                )
-
-            ntax = pd.DataFrame(ntax, columns=ntax_cols)
-
-            if len(instance["reference"].report) == 0:
+            try:
+                ntax = instance.generate_full_mapping_report_entry(instance)
+                full_report.append(ntax)
+            except Exception as e:
+                self.logger.error(e)
                 continue
-
-            ntax = pd.concat((ntax, instance["reference"].report), axis=1)
-            ntax["mapped"] = mapped
-            if self.reads_after_processing > 0:
-                ntax["mapped_prop"] = 100 * (mapped / self.reads_after_processing)
-                ntax["ref_prop"] = 100 * (mapped / self.reads_before_processing)
-            else:
-                ntax["mapped_prop"] = 0
-                ntax["ref_prop"] = 0
-            ntax["refdb"] = instance["reference"].target.file
-            ntax["ID"] = instance["reference"].target.accid
-            ntax["simple_id"] = ntax["ID"].apply(simplify_taxid)
-            ntax["unique_id"] = ntax["ID"].apply(simplify_taxid)
-            ntax["contig_length"] = instance["reference"].reference_fasta_length
-            ntax["contig_string"] = instance["reference"].reference_fasta_string
-            ntax["success"] = success
-
-            ntax["refa_dotplot_exists"] = instance["reference"].dotplot_exists
-            ntax["covplot_exists"] = instance["reference"].coverage_plot_exists
-            ntax["refa_dotplot_path"] = instance["reference"].dotplot
-            ntax["covplot_path"] = instance["reference"].coverage_plot
-            ntax["bam_path"] = instance["reference"].read_map_sorted_bam
-            ntax["bam_index_path"] = instance["reference"].read_map_sorted_bam_index
-            ntax["reference_path"] = instance["reference"].reference_file
-            ntax["reference_index_path"] = instance["reference"].reference_fasta_index
-            ntax["reference_assembly_paf"] = instance["reference"].assembly_map_paf
-
-            if instance["reference"].number_of_contigs_mapped > 0:
-                ntax["mapped_scaffolds_path"] = instance[
-                    "assembly"
-                ].reference_fasta_index
-                ntax["mapped_scaffolds_index_path"] = instance[
-                    "assembly"
-                ].assembly_map_paf
-            else:
-                ntax["mapped_scaffolds_path"] = ""
-                ntax["mapped_scaffolds_index_path"] = ""
-
-            full_report.append(ntax)
 
         if len(full_report) > 0:
 
