@@ -666,14 +666,63 @@ class RunMain_class(Run_Deployment_Methods):
             self.rclass_summary = self.metadata_tool.rclass
             self.merged_targets = self.metadata_tool.merged_targets
             self.remap_plan = self.metadata_tool.remap_plan
+            self.export_intermediate_reports()
 
         if self.remapping:
             self.deploy_REMAPPING()
             self.report = self.remap_manager.report
+            self.export_final_reports()
 
         self.Update_exec_time()
 
     #### SUMMARY FUNCTIONS ####
+
+    def export_final_reports(self):
+
+        ### main report
+        self.report.to_csv(
+            self.full_report,
+            index=False,
+            sep="\t",
+            header=True,
+        )
+
+    def export_intermediate_reports(self):
+
+        ### params
+        self.method_args.to_csv(
+            self.params_file_path, index=False, sep="\t", header=True
+        )
+
+        ### remap plan
+        self.remap_plan.to_csv(self.remap_plan_path, index=False, sep="\t", header=True)
+
+        ### contig classification report
+        self.aclass_summary.to_csv(
+            self.assembly_classification_summary,
+            index=False,
+            sep="\t",
+            header=True,
+        )
+
+        ### read classification report
+        self.rclass_summary.to_csv(
+            self.read_classification_summary,
+            index=False,
+            sep="\t",
+            header=True,
+        )
+
+        ### merged classification report
+
+        self.merged_targets.to_csv(
+            self.merged_classification_summary,
+            index=False,
+            sep="\t",
+            header=True,
+        )
+
+        ###
 
     def Summarize(self):
 
@@ -771,48 +820,3 @@ class RunMain_class(Run_Deployment_Methods):
             self.minimum_coverage,
             self.maximum_coverage,
         )
-
-    def export_reports(self):
-
-        ### params
-        self.method_args.to_csv(
-            self.params_file_path, index=False, sep="\t", header=True
-        )
-
-        ### remap plan
-        self.remap_plan.to_csv(self.remap_plan_path, index=False, sep="\t", header=True)
-
-        ### main report
-        self.report.to_csv(
-            self.full_report,
-            index=False,
-            sep="\t",
-            header=True,
-        )
-
-        ### contig classification report
-        self.aclass_summary.to_csv(
-            self.assembly_classification_summary,
-            index=False,
-            sep="\t",
-            header=True,
-        )
-
-        ### read classification report
-        self.rclass_summary.to_csv(
-            self.read_classification_summary,
-            index=False,
-            sep="\t",
-            header=True,
-        )
-
-        ### merged classification report
-
-        self.merged_targets.to_csv(
-            self.merged_classification_summary,
-            index=False,
-            sep="\t",
-            header=True,
-        )
-
-        ###

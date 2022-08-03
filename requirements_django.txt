@@ -11,5 +11,5 @@ matplotlib==3.5.2
 BeautifulSoup4==4.11.1
 django-view-breadcrumbs==2.2.7
 dash_renderer==1.9.1
-django-dynamic-breadcrumbs0.4.2
+django-dynamic-breadcrumbs==0.4.2
 psycopg2

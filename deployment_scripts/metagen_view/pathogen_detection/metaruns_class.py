@@ -336,7 +336,6 @@ class metaclass_run:
         :return:
         """
         self.RunMain.generate_output_data_classes()
-        self.RunMain.export_reports()
 
         Update_Sample_Runs(self.RunMain)
 
@@ -602,6 +601,7 @@ class meta_orchestra:
         )
 
         child.continue_main_run()
+        print(f"child run {child.id} finished.")
         child.update_runtime()
         child.report_run_status_save()
 
@@ -711,6 +711,7 @@ class meta_orchestra:
 
         self.sup = len(suprelay)
         rsup = self.sup
+        print("sup run possibilities: {}".format(self.sup))
 
         if rsup > self.smax:
             pack = list(np.arange(0, rsup, self.smax)) + [rsup]

@@ -27,8 +27,9 @@ class RunCMD:
         self.logs = []
 
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.ERROR)
+        self.logger.setLevel(logging.CRITICAL)
         self.logger.addHandler(logging.StreamHandler())
+        self.logger.propagate = False
 
     @staticmethod
     def flag_error(subprocess_errorlog):
@@ -54,7 +55,7 @@ class RunCMD:
         if isinstance(cmd, list):
             cmd = " ".join(cmd)
 
-        print(f"running: {self.bin}{cmd}")
+        self.logger.info(f"running: {self.bin}{cmd}")
 
         proc_prep = subprocess.Popen(
             f"{self.bin}{cmd}",
@@ -79,7 +80,7 @@ class RunCMD:
         if isinstance(cmd, list):
             cmd = " ".join(cmd)
 
-        print(f"running command: python {self.bin}{cmd}")
+        self.logger.info(f"running command: python {self.bin}{cmd}")
         proc_prep = subprocess.Popen(
             f"python {self.bin}{cmd}",
             shell=True,

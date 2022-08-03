@@ -511,7 +511,7 @@ def Update_RefMap_DB(run_class: Type[RunMain_class]):
     :param run_class:
     :return: run_data
     """
-    print("refmap_dbs")
+    print(f"updating refmap_dbs run {run_class.prefix}")
 
     for ref_map in run_class.mapped_instances:
 
