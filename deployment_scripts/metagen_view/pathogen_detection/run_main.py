@@ -308,8 +308,8 @@ class RunDetail_main:
         self.config = config
         self.prefix = config["prefix"]
         self.type = config["type"]
-        print("prefix:", self.prefix)
-        print("type:", self.type)
+        self.logger.info(f"prefix: {self.prefix}")
+        self.logger.info(f"type: {self.type}")
         self.start_time = time.perf_counter()
 
         ### actions
@@ -435,8 +435,8 @@ class Run_Deployment_Methods(RunDetail_main):
             logging_level=self.logger_level_detail,
         )
 
-        print("r1 reads: ", self.r1.get_current_fastq_read_number())
-        print("r2 reads: ", self.r2.get_current_fastq_read_number())
+        self.logger.info(f"r1 reads: {self.r1.get_current_fastq_read_number()}")
+        self.logger.info(f"r2 reads: {self.r2.get_current_fastq_read_number()}")
 
         self.preprocess_drone.run()
 
@@ -528,7 +528,8 @@ class Run_Deployment_Methods(RunDetail_main):
             self.logger_level_detail,
             self.house_cleaning,
         )
-        print(
+
+        self.logger_level_detail(
             f"{self.prefix} remapping # targets: {len(self.metadata_tool.remap_targets)}"
         )
 
@@ -543,13 +544,15 @@ class RunMain_class(Run_Deployment_Methods):
         super().__init__(config_json, method_args)
 
     def Run(self):
-        print("quality control: ", self.quality_control)
-        print("enrichment: ", self.enrichment)
-        print("depletion: ", self.depletion)
-        print("remapping: ", self.remapping)
-        print("assembly: ", self.assembly)
-        print("classification: ", self.classification)
-        print("sift: ", self.sift)
+        print(self.quality_control)
+
+        self.logger.info(f"quality control: {self.quality_control}")
+        self.logger.info(f"enrichment: {self.enrichment}")
+        self.logger.info(f"depletion: {self.depletion}")
+        self.logger.info(f"remapping: {self.remapping}")
+        self.logger.info(f"assembly: {self.assembly}")
+        self.logger.info(f"classification: {self.classification}")
+        self.logger.info(f"sift: {self.sift}")
 
         if self.quality_control:
             self.deploy_QC()
@@ -601,7 +604,7 @@ class RunMain_class(Run_Deployment_Methods):
         if self.remapping:
             self.deploy_REMAPPING()
             self.report = self.remap_manager.report
-            print(f"{self.prefix} remapping report: {self.report}")
+            self.logger_level_detail(f"{self.prefix} remapping report: {self.report}")
             self.export_final_reports()
 
         self.Update_exec_time()

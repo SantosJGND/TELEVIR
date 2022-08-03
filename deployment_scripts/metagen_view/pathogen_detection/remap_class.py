@@ -997,12 +997,6 @@ class Mapping_Instance:
         )
 
     def assert_mapping_success(self):
-        print(self.reference.target.taxid)
-        print(self.reference.target.reads)
-        print(self.reference.target.contigs)
-
-        print(self.apres)
-        print(self.rpres)
         ###
         if self.rpres and self.apres:
             self.success = "reads and contigs"
@@ -1026,7 +1020,6 @@ class Mapping_Instance:
             )
 
         if len(self.reference.report) == 0:
-            print("No report")
             return pd.DataFrame()
 
         ntax["mapped"] = self.mapped
@@ -1124,8 +1117,6 @@ class Tandem_Remap:
             self.prefix,
             original_reads=self.reads_before_processing,
         )
-        print("hI")
-        print(mapped_instance)
 
         return mapped_instance
 
@@ -1277,19 +1268,11 @@ class Mapping_Manager(Tandem_Remap):
     def run_mappings(self):
         for target in self.remap_targets:
 
-            # try:
             mapped_instance = self.reciprocal_map(target)
-
-            # except Exception as e:
-            #    self.logger.error(e)
-            #    continue
-            print(mapped_instance)
 
             self.mapped_instances.append(mapped_instance)
 
     def move_plots_to_static(self, main_static, static_dir):
-        print("plots")
-        print(self.mapped_instances)
         for instance in self.mapped_instances:
             apres = instance.reference.number_of_contigs_mapped > 0
             rpres = instance.reference.number_of_reads_mapped > 0
@@ -1302,17 +1285,11 @@ class Mapping_Manager(Tandem_Remap):
 
         full_report = []
 
-        print("##")
-        print(self.prefix)
-        print(self.mapped_instances)
-
         for instance in self.mapped_instances:
-            print(instance.reference.target.accid)
 
             ntax = instance.generate_full_mapping_report_entry()
             if len(ntax):
                 full_report.append(ntax)
-            print(ntax)
 
         if len(full_report) > 0:
 
