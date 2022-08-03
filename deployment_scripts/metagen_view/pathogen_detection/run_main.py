@@ -112,7 +112,7 @@ class RunDetail_main:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(self.logger_level_main)
         logFormatter = logging.Formatter(
-            fmt=" %(name)s :: %(levelname)s :: %(message)s"
+            fmt="{} %(levelname)s :%(message)s".format(self.prefix)
         )
 
         consoleHandler = logging.StreamHandler()
@@ -550,7 +550,6 @@ class RunMain_class(Run_Deployment_Methods):
         super().__init__(config_json, method_args)
 
     def Run(self):
-        print(self.quality_control)
 
         self.logger.info(f"quality control: {self.quality_control}")
         self.logger.info(f"enrichment: {self.enrichment}")
@@ -610,7 +609,6 @@ class RunMain_class(Run_Deployment_Methods):
         if self.remapping:
             self.deploy_REMAPPING()
             self.report = self.remap_manager.report
-            self.logger.info(f"{self.prefix} remapping report: {self.report}")
             self.export_final_reports()
 
         self.Update_exec_time()
