@@ -111,7 +111,13 @@ class RunDetail_main:
         self.logger_level_detail = logging.CRITICAL
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(self.logger_level_main)
-        self.logger.addHandler(logging.StreamHandler())
+        logFormatter = logging.Formatter(
+            fmt=" %(name)s :: %(levelname)s :: %(message)s"
+        )
+
+        consoleHandler = logging.StreamHandler()
+        consoleHandler.setFormatter(logFormatter)
+        self.logger.addHandler(consoleHandler)
         self.logger.propagate = False
         self.runtime = 0
         self.start_time = time.perf_counter()
@@ -529,7 +535,7 @@ class Run_Deployment_Methods(RunDetail_main):
             self.house_cleaning,
         )
 
-        self.logger_level_detail(
+        self.logger.info(
             f"{self.prefix} remapping # targets: {len(self.metadata_tool.remap_targets)}"
         )
 
@@ -549,8 +555,8 @@ class RunMain_class(Run_Deployment_Methods):
         self.logger.info(f"quality control: {self.quality_control}")
         self.logger.info(f"enrichment: {self.enrichment}")
         self.logger.info(f"depletion: {self.depletion}")
-        self.logger.info(f"remapping: {self.remapping}")
         self.logger.info(f"assembly: {self.assembly}")
+        self.logger.info(f"remapping: {self.remapping}")
         self.logger.info(f"classification: {self.classification}")
         self.logger.info(f"sift: {self.sift}")
 
@@ -604,7 +610,7 @@ class RunMain_class(Run_Deployment_Methods):
         if self.remapping:
             self.deploy_REMAPPING()
             self.report = self.remap_manager.report
-            self.logger_level_detail(f"{self.prefix} remapping report: {self.report}")
+            self.logger.info(f"{self.prefix} remapping report: {self.report}")
             self.export_final_reports()
 
         self.Update_exec_time()

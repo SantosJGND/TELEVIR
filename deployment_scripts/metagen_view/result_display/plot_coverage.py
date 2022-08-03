@@ -52,7 +52,6 @@ class Bedgraph:
 
     def __init__(self, bedgraph_file):
         self.bedgraph = self.read_bedgraph(bedgraph_file)
-        print(self.bedgraph.head())
         self.coverage = self.get_coverage_array(self.bedgraph)
         self.bins = self.get_bins(self.bedgraph)
 

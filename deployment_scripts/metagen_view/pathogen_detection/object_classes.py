@@ -513,7 +513,6 @@ class Software_detail:
             prefix: prefix of module.
         """
         if module not in args_df.module.unique():
-            print(f"module {module} not found")
             self.module = "None"
             self.name = "None"
             self.args = "None"
