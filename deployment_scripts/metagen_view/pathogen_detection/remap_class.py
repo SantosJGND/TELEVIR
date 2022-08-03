@@ -1267,8 +1267,11 @@ class Mapping_Manager(Tandem_Remap):
 
     def run_mappings(self):
         for target in self.remap_targets:
-
-            mapped_instance = self.reciprocal_map(target)
+            try:
+                mapped_instance = self.reciprocal_map(target)
+            except Exception as e:
+                self.logger.error(e)
+                continue
 
             self.mapped_instances.append(mapped_instance)
 

@@ -314,6 +314,13 @@ class RunDetail_main:
         self.config = config
         self.prefix = config["prefix"]
         self.type = config["type"]
+        logFormatter = logging.Formatter(
+            fmt="{} %(levelname)s :%(message)s".format(self.prefix)
+        )
+
+        consoleHandler = logging.StreamHandler()
+        consoleHandler.setFormatter(logFormatter)
+        self.logger.addHandler(consoleHandler)
         self.logger.info(f"prefix: {self.prefix}")
         self.logger.info(f"type: {self.type}")
         self.start_time = time.perf_counter()
