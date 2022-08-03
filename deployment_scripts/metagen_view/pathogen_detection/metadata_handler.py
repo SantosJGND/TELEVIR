@@ -54,6 +54,7 @@ class Metadata_handler:
         self.sift_report = pd.DataFrame(
             [[0, 0, 0]], columns=["input", "output", "removed"]
         )
+        self.get_metadata()
 
     def match_and_select_targets(
         self,
@@ -62,7 +63,6 @@ class Metadata_handler:
         max_remap: int = 15,
         taxid_limit: int = 12,
     ):
-        self.get_metadata()
 
         self.process_reports(
             report_1,

@@ -339,6 +339,10 @@ class Sample_runClass:
     reads_before_processing: int = 0
     reads_after_processing: int = 0
     sample_dir: str = ""
+    qc_soft: str = ""
+    input_fastqc_report: os.PathLike
+    processed_fastqc_report: os.PathLike
+    threads: int = 1
 
     def __init__(
         self,
@@ -350,10 +354,10 @@ class Sample_runClass:
         type: str,
         combinations: str,
         input: str,
-        qc_soft: str,
-        input_fastqc_report: os.PathLike,
-        processed_fastqc_report: os.PathLike,
+        bin: str,
+        threads: int = 1,
     ) -> None:
+        self.cmd = RunCMD(bin)
         self.r1 = r1
         self.r2 = r2
         self.sample_name = sample_name
@@ -362,9 +366,7 @@ class Sample_runClass:
         self.type = type
         self.combinations = combinations
         self.input = input
-        self.qc_soft = qc_soft
-        self.input_fastqc_report = input_fastqc_report
-        self.processed_fastqc_report = processed_fastqc_report
+        self.threads = threads
 
         QCdir = os.path.dirname(self.r1.clean)
 
@@ -401,7 +403,42 @@ class Sample_runClass:
 
     def clean_unique(self):
         if self.type == "SE":
+            self.clean_unique_SE()
+        else:
+            self.clean_unique_PE()
+
+    def clean_unique_SE(self):
+        WHERETO = os.path.dirname(self.r1.current)
+        unique_reads = os.path.join(WHERETO, "unique_reads.lst")
+
+        cmd = [
+            "zgrep",
+            "'^@'",
+            self.r1.current,
+            "|",
+            "awk",
+            "'{print $1}'",
+            "|",
+            "sed",
+            "'s/^@//g'",
+            "|",
+            "sort",
+            "|",
+            "uniq",
+            ">",
+            unique_reads,
+        ]
+
+        self.cmd.run_bash(cmd)
+        if not os.path.exists(unique_reads) or os.path.getsize(unique_reads) == 0:
+            self.logger.error(
+                f"No unique reads found in {self.r1.current}, skipping unique read cleaning"
+            )
             return
+
+        self.r1.read_filter_inplace(self.r1.current, unique_reads)
+
+    def clean_unique_PE(self):
 
         WHERETO = os.path.dirname(self.r1.current)
         common_reads = os.path.join(WHERETO, "common_reads.lst")
@@ -419,6 +456,33 @@ class Sample_runClass:
         self.r2.read_filter_inplace(self.r2.current, common_reads)
 
     def trimmomatic_sort(self):
+        if self.type == "SE":
+            self.trimmomatic_sort_SE()
+        else:
+            self.trimmomatic_sort_PE()
+
+    def trimmomatic_sort_SE(self):
+
+        tempdir = os.path.dirname(self.r1.current)
+        tempfq = os.path.join(tempdir, f"temp{randint(1,1999)}")
+
+        cmd_trimsort = [
+            "trimmomatic",
+            "SE",
+            "-threads",
+            f"{self.threads}",
+            self.r1.current,
+            tempfq,
+            "MINLEN:20",
+        ]
+
+        self.cmd.run(cmd_trimsort)
+
+        if tempfq in os.listdir(tempdir):
+            os.remove(self.r1.current)
+            os.rename(tempfq, self.r1.current)
+
+    def trimmomatic_sort_PE(self):
         if self.type == "SE":
             return
 

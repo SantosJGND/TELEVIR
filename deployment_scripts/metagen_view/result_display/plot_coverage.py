@@ -51,8 +51,8 @@ class Bedgraph:
     """
 
     def __init__(self, bedgraph_file):
-        print("Reading {}".format(bedgraph_file))
         self.bedgraph = self.read_bedgraph(bedgraph_file)
+        print(self.bedgraph.head())
         self.coverage = self.get_coverage_array(self.bedgraph)
         self.bins = self.get_bins(self.bedgraph)
 
@@ -98,7 +98,6 @@ class Bedgraph:
         # np.histogram(coverage.coverage, bins=[coverage.start, coverage.end])
         # coverage.plot(x="start", y="coverage", kind="scatter")
         if len(self.coverage) <= 1:
-            print("No coverage")
             return
 
         ax.bar(
@@ -113,7 +112,7 @@ class Bedgraph:
         ax.set_xlabel("Reference")
         ax.set_ylabel("Coverage")
 
-        plt.savefig(output_file, bbox_inches="tight")
+        fig.savefig(output_file, bbox_inches="tight")
 
 
 def get_args():

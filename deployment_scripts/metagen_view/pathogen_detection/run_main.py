@@ -47,8 +47,9 @@ class RunDetail_main:
     threads: int
     config: dict
     prefix: str
+    project_name: str
     ## input
-
+    sample_name: str
     type: str
     r1_suffix: str
     r2_suffix: str
@@ -57,6 +58,7 @@ class RunDetail_main:
     r2: Type[Read_class]
 
     sample: Type[Sample_runClass]
+
     ##  metadata
     metadata_tool: Type[Metadata_handler]
     sift_query: str
@@ -96,6 +98,15 @@ class RunDetail_main:
 
     def __init__(self, config: dict, method_args: pd.DataFrame):
 
+        self.project_name = config["project_name"]
+        self.prefix = config["prefix"]
+        self.suprun = self.prefix
+
+        self.method_args = method_args
+        self.config = config
+        self.cmd = RunCMD(get_bindir_from_binaries(config["bin"], "PREPROCESS"))
+        self.threads = config["threads"]
+
         self.logger_level_main = logging.INFO
         self.logger_level_detail = logging.CRITICAL
         self.logger = logging.getLogger(__name__)
@@ -105,14 +116,6 @@ class RunDetail_main:
         self.runtime = 0
         self.start_time = time.perf_counter()
         self.exec_time = 0
-
-        self.method_args = method_args
-        self.config = config
-        self.cmd = RunCMD(get_bindir_from_binaries(config["bin"], "PREPROCESS"))
-        self.threads = config["threads"]
-        self.prefix = config["prefix"]
-        self.type = config["type"]
-        self.suprun = self.prefix
 
         # directories
         self.root = config["directories"]["root"]
@@ -136,6 +139,9 @@ class RunDetail_main:
         )
 
         # input
+        self.sample_name = config["sample_name"]
+        self.type = config["type"]
+
         self.r1 = Read_class(
             config["r1"],
             config["directories"]["PREPROCESS"],
@@ -150,6 +156,21 @@ class RunDetail_main:
             config["directories"]["reads_enriched_dir"],
             config["directories"]["reads_depleted_dir"],
             bin=get_bindir_from_binaries(config["bin"], "PREPROCESS"),
+        )
+
+        self.sample = Sample_runClass(
+            self.r1,
+            self.r2,
+            self.sample_name,
+            self.project_name,
+            self.config["technology"],
+            self.type,
+            0,
+            ",".join(
+                [os.path.basename(self.r1.current), os.path.basename(self.r2.current)]
+            ),
+            bin=get_bindir_from_binaries(config["bin"], "PREPROCESS"),
+            threads=self.threads,
         )
 
         ### mapping parameters
@@ -516,106 +537,6 @@ class Run_Deployment_Methods(RunDetail_main):
         self.remap_manager.merge_mapping_reports()
         self.remap_manager.collect_final_report_summary_statistics()
 
-    def clean_unique(self):
-        if self.type == "SE":
-            self.clean_unique_SE()
-        else:
-            self.clean_unique_PE()
-
-    def clean_unique_SE(self):
-        WHERETO = os.path.dirname(self.r1.current)
-        unique_reads = os.path.join(WHERETO, "unique_reads.lst")
-
-        cmd = [
-            "zgrep",
-            "'^@'",
-            self.r1.current,
-            "|",
-            "awk",
-            "'{print $1}'",
-            "|",
-            "sed",
-            "'s/^@//g'",
-            "|",
-            "sort",
-            "|",
-            "uniq",
-            ">",
-            unique_reads,
-        ]
-
-        self.cmd.run_bash(cmd)
-        if not os.path.exists(unique_reads) or os.path.getsize(unique_reads) == 0:
-            self.logger.error(
-                f"No unique reads found in {self.r1.current}, skipping unique read cleaning"
-            )
-            return
-
-        self.r1.read_filter_inplace(self.r1.current, unique_reads)
-
-    def clean_unique_PE(self):
-
-        WHERETO = os.path.dirname(self.r1.current)
-        common_reads = os.path.join(WHERETO, "common_reads.lst")
-
-        cmd_find_common = [
-            f"seqkit common -n -i {self.r1.current} {self.r1.current} | paste - - - - | cut -f1 | uniq | sed 's/^@//g' > {common_reads}"
-        ]
-
-        self.cmd.run(cmd_find_common)
-        if os.path.getsize(common_reads) == 0:
-            self.logger.info("No common reads found")
-            return
-
-        self.r1.read_filter_inplace(self.r1.current, common_reads)
-        self.r2.read_filter_inplace(self.r2.current, common_reads)
-
-    def trimmomatic_sort(self):
-        if self.type == "SE":
-            self.trimmomatic_sort_SE()
-        else:
-            self.trimmomatic_sort_PE()
-
-    def trimmomatic_sort_SE(self):
-
-        tempdir = os.path.dirname(self.r1.current)
-        tempfq = os.path.join(tempdir, f"temp{randint(1,1999)}")
-
-        cmd_trimsort = [
-            "trimmomatic",
-            "SE",
-            "-threads",
-            f"{self.threads}",
-            self.r1.current,
-            tempfq,
-            "MINLEN:20",
-        ]
-
-        self.cmd.run(cmd_trimsort)
-
-        if tempfq in os.listdir(tempdir):
-            os.remove(self.r1.current)
-            os.rename(tempfq, self.r1.current)
-
-    def trimmomatic_sort_PE(self):
-        if self.type == "SE":
-            return
-
-        tempdir = os.path.dirname(self.r1.current)
-        tempfq = os.path.join(tempdir, f"temp{randint(1,1999)}")
-
-        cmd_trimsort = [
-            f"trimmomatic PE -phred33 -threads {self.threads} {self.r1.current} {self.r2.current} -baseout {tempfq}.fastq.gz MINLEN:20"
-        ]
-
-        self.cmd.run(cmd_trimsort)
-
-        if tempfq + "_1P.fastq.gz" in os.listdir(tempdir):
-            os.remove(self.r1.current)
-            os.remove(self.r2.current)
-            os.rename(tempfq + "_1P.fastq.gz", self.r1.current)
-            os.rename(tempfq + "_2P.fastq.gz", self.r2.current)
-
 
 class RunMain_class(Run_Deployment_Methods):
     def __init__(self, config_json: os.PathLike, method_args: pd.DataFrame):
@@ -636,6 +557,12 @@ class RunMain_class(Run_Deployment_Methods):
             self.r1.is_clean()
             self.r2.is_clean()
 
+            self.sample.qc_soft = self.preprocess_drone.preprocess_method.name
+            self.sample.input_fastqc_report = self.preprocess_drone.input_qc_report
+            self.sample.processed_fastqc_report = (
+                self.preprocess_drone.processed_qc_report
+            )
+
         if self.enrichment:
             self.deploy_EN()
 
@@ -649,8 +576,8 @@ class RunMain_class(Run_Deployment_Methods):
             self.r2.deplete(self.depletion_drone.classified_reads_list)
 
         if self.enrichment or self.depletion or self.assembly:
-            self.clean_unique()
-            self.trimmomatic_sort()
+            self.sample.clean_unique()
+            self.sample.trimmomatic_sort()
 
         if self.assembly:
             self.deploy_ASSEMBLY()

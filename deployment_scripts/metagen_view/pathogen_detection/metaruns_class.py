@@ -48,31 +48,38 @@ class metaclass_run:
 
     qcrun: Type[RunMain_class]
 
-    def __init__(self, id="1", rdir="", child="", static_dir: "" = ""):
+    def __init__(
+        self,
+        project_name: str,
+        sample_name: str,
+        id="1",
+        rdir="",
+        child="",
+        static_dir: str = "",
+    ):
 
-        if len(rdir):
-            self.parse_config(rdir, child=child)
+        self.id = id
+        self.actions = {
+            "CLEANING": ACTIONS["CLEANING"],
+            "SIFT": ACTIONS["PHAGE_DEPL"],
+            "VIRSORT": ACTIONS["VIRSORT"],
+            "QCONTROL": False,
+            "ASSEMBLY": ACTIONS["ASSEMBLE"],
+            "DEPLETE": ACTIONS["DEPLETE"],
+            "ENRICH": ACTIONS["ENRICH"],
+            "CLASSIFY": False,
+            "REMAPPING": False,
+        }
+        self.sample_name = sample_name
+        self.project_name = project_name
 
-        else:
-            self.id = id
-            self.actions = {
-                "CLEANING": ACTIONS["CLEANING"],
-                "SIFT": ACTIONS["PHAGE_DEPL"],
-                "VIRSORT": ACTIONS["VIRSORT"],
-                "QCONTROL": False,
-                "ASSEMBLY": ACTIONS["ASSEMBLE"],
-                "DEPLETE": ACTIONS["DEPLETE"],
-                "ENRICH": ACTIONS["ENRICH"],
-                "CLASSIFY": False,
-                "REMAPPING": False,
-            }
-            self.r1 = ""
-            self.r2 = ""
-            self.paired = False
-            self.reference = ""
-            self.begin_time = time.perf_counter()
-            self.exec_time = 0
-            self.static_dir = static_dir
+        self.r1 = ""
+        self.r2 = ""
+        self.paired = False
+        self.reference = ""
+        self.begin_time = time.perf_counter()
+        self.exec_time = 0
+        self.static_dir = static_dir
 
     def update_runtime(self):
         """
@@ -219,16 +226,26 @@ class metaclass_run:
         :return: config dictionary.
         """
         config = {
-            "directories": {},
+            "project": os.getcwd(),
+            "source": SOURCE,
+            "directories": {
+                "root": self.dir,
+            },
             "static_dir": self.static_dir,
             "actions": {},
             "bin": {},
-            "metadata": {},
             "threads": 5,
             "prefix": self.id,
             "type": ["SE", "PE"][int(os.path.isfile(self.r2))],
+            "sample_name": self.sample_name,
+            "project_name": self.project_name,
+            "metadata": {
+                x: os.path.join(METADATA["ROOT"], g) for x, g in METADATA.items()
+            },
             "r1": self.r1,
             "r2": self.r2,
+            "technology": DATA_TYPE,
+            "bin": BINARIES,
         }
 
         for dr, g in self.actions.items():
@@ -237,18 +254,7 @@ class metaclass_run:
         for dr, g in DIRS.items():
             config["directories"][dr] = self.dir + g
 
-        config["directories"]["root"] = self.dir
-        config["source"] = SOURCE
-
-        config["bin"] = BINARIES
-        config["metadata"] = {
-            x: os.path.join(METADATA["ROOT"], g) for x, g in METADATA.items()
-        }
-
         config.update(CONSTANTS)
-
-        config["project"] = os.getcwd()
-        config["technology"] = DATA_TYPE
 
         self.config_dict = config
 
@@ -596,6 +602,7 @@ class meta_orchestra:
         )
 
         child_params = pd.concat([sac.params, child.params], axis=0)
+
         child_params.to_csv(
             child.dir + child.id + ".args.tsv", sep="\t", header=True, index=False
         )
@@ -771,7 +778,12 @@ class meta_orchestra:
         softdb = params[1]
         params = params[0]
 
-        qcrun = metaclass_run(id="sampleQC", static_dir=self.staticdir)
+        qcrun = metaclass_run(
+            self.project_name,
+            self.sample_name,
+            id="sampleQC",
+            static_dir=self.staticdir,
+        )
         qcrun.actions = {x: False for x in qcrun.actions.keys()}
         qcrun.actions["QCONTROL"] = ACTIONS["QCONTROL"]
 
@@ -791,25 +803,11 @@ class meta_orchestra:
 
         self.qcrun = qcrun
 
-        sample_object = Sample_runClass(
-            qcrun.RunMain.r1,
-            qcrun.RunMain.r2,
-            self.sample_name,
-            self.project_name,
-            DATA_TYPE,
-            qcrun.RunMain.type,
-            0,
-            ",".join([os.path.basename(qcrun.r1), os.path.basename(qcrun.r2)]),
-            qcrun.RunMain.preprocess_drone.preprocess_method.name,
-            qcrun.RunMain.preprocess_drone.input_qc_report,
-            qcrun.RunMain.preprocess_drone.processed_qc_report,
-        )
+        Update_Sample(self.qcrun.RunMain.sample)
 
-        Update_Sample(sample_object)
+        Update_QC_report(self.qcrun.RunMain.sample)
 
-        Update_QC_report(sample_object)
-
-        qcrun.RunMain.sample = sample_object
+        # qcrun.RunMain.sample = self.qcrun.sample
 
         dirlist = [
             "remap/",
@@ -833,7 +831,10 @@ class meta_orchestra:
         :return: self
         """
         nrun = metaclass_run(
-            id="run_" + "-".join(np.array(idx, dtype=str)), static_dir=self.staticdir
+            self.project_name,
+            self.sample_name,
+            id="run_" + "-".join(np.array(idx, dtype=str)),
+            static_dir=self.staticdir,
         )
         nrun.reference = self.reference
         nrun.qcrun = self.qcrun.RunMain
