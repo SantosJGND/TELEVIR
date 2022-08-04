@@ -58,7 +58,6 @@ DIRS = {
     "REMAPPING": "remap/",
     "log_dir": "logs/",
     "OUTD": "output/",
-    # "fasta_main": "$FDIR",
 }
 
 ################################## MODULES

@@ -336,17 +336,7 @@ class Metadata_handler:
                         subset=["taxid"], keep="first"
                     ).reset_index()
 
-                    # with open(logd + "taxid_map.log", "a") as f:
-                    #    f.write(
-                    #        f"{taxid} found in db {fileset} with over 100 accs, using : {nsu.acc[0]}\n"
-                    #    )
-
                 for pref in nsu.acc.unique():
-
-                    # with open(logd + "taxid_map.log", "a") as f:
-                    #    f.write(
-                    #        f"{taxid} with acc {pref} found, mapping to db: {', '.join(files_to_map)}\n"
-                    #    )
 
                     nsnew = nsu[nsu.acc == pref].reset_index(drop=True)
                     pref_simple = (
@@ -372,6 +362,19 @@ class Metadata_handler:
                     description = description[-1]
                     description = scrape_description(pref, description)
 
+                    def determine_acc_in_file(acc, df: pd.DataFrame):
+                        """
+                        determine if an accession is in a dataframe.
+                        """
+                        if "acc" in df.columns:
+                            return acc in df.acc.unique()
+                        elif "acc_x" in df.columns and "acc_y" in df.columns:
+                            return (acc in df.acc_x.unique()) or (
+                                acc in df.acc_y.unique()
+                            )
+                        else:
+                            return False
+
                     remap_targets.append(
                         Remap_Target(
                             pref,
@@ -381,8 +384,8 @@ class Metadata_handler:
                             prefix,
                             description,
                             [nsnew.acc_in_file[0]],
-                            str(taxid) in self.rclass.taxid.unique(),
-                            str(taxid) in self.aclass.taxid.unique(),
+                            determine_acc_in_file(pref, self.rclass),
+                            determine_acc_in_file(pref, self.aclass),
                         )
                     )
                     remap_plan.append([taxid, pref, fileset])

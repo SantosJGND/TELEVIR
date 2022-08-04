@@ -133,6 +133,7 @@ class Command(BaseCommand):
                     down=options["nlow"],
                     odir=options["odir"],
                 )
+
                 event.reference = options["ref"]
                 event.data_qc()
                 event.sup_deploy(fofn)

@@ -121,11 +121,7 @@ class main_deploy_prep:
         self.mainsh = self.pdir + f"main/main_{self.tech}.sh"
         new_params = self.dir + "params.py"
 
-        # os.makedirs(f"{self.dir}scripts/", exist_ok=True)
-        # copy_tree("deployment_scripts/scripts/", f"{self.dir}scripts/")
-        # os.system(f"cp {self.module} {self.dir}")
         os.system(f"cp {self.paramf} {new_params}")
-        # os.system(f"cp {self.mainsh} {self.dir}main.sh")
         os.system(f"cp {self.mainpy} {self.dir}")
 
         mods_dict = {

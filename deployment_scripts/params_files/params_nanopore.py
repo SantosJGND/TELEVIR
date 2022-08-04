@@ -61,7 +61,6 @@ DIRS = {
     "REMAPPING": "remap/",
     "log_dir": "logs/",
     "OUTD": "output/",
-    "fasta_main": "/home/bioinf/Desktop/METAGEN/db_third_test/ref_fasta/",
 }
 
 ################################## MODULES

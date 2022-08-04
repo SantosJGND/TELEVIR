@@ -1002,8 +1002,6 @@ class Mapping_Instance:
 
     def assert_mapping_success(self):
         ###
-        print("hello")
-        print(self.apres, self.rpres)
         if self.rpres and self.apres:
             success = "reads and contigs"
         elif self.rpres and not self.apres:
@@ -1097,7 +1095,7 @@ class Tandem_Remap:
     ):
 
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.ERROR)
+        self.logger.setLevel(logging_level)
         self.logger.addHandler(logging.StreamHandler())
         self.logger.propagate = False
         self.logger.info("Reciprocal Remap started")
@@ -1236,7 +1234,7 @@ class Mapping_Manager(Tandem_Remap):
         )
 
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging_level)
         self.logger.addHandler(logging.StreamHandler())
         self.logger.propagate = False
         self.logger.info("Mapping Manager started")
