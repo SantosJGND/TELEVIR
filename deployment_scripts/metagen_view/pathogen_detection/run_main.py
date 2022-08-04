@@ -109,7 +109,7 @@ class RunDetail_main:
 
         self.logger_level_main = logging.INFO
         self.logger_level_detail = logging.CRITICAL
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("main {}".format(self.prefix))
         self.logger.setLevel(self.logger_level_main)
         logFormatter = logging.Formatter(
             fmt="{} %(levelname)s :%(message)s".format(self.prefix)
@@ -314,10 +314,11 @@ class RunDetail_main:
         self.config = config
         self.prefix = config["prefix"]
         self.type = config["type"]
+        self.logger = logging.getLogger("{}".format(self.prefix))
+        self.logger.setLevel(self.logger_level_main)
         logFormatter = logging.Formatter(
             fmt="{} %(levelname)s :%(message)s".format(self.prefix)
         )
-
         consoleHandler = logging.StreamHandler()
         consoleHandler.setFormatter(logFormatter)
         self.logger.addHandler(consoleHandler)

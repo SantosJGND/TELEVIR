@@ -566,8 +566,11 @@ class meta_orchestra:
         :param srun: row index in parameter df.
         :return: None
         """
+        import pickle
 
-        child = copy.deepcopy(sac)
+        copy_child = lambda obj: pickle.loads(pickle.dumps(obj))
+
+        child = copy_child(sac)
 
         if not run_prefix:
             run_prefix = RunIndex_Update_Retrieve_Key(

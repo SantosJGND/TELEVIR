@@ -95,7 +95,7 @@ SOFTWARE = {
         # "",
         "kaiju",
         "krakenuniq",
-        "diamond",
+        "centrifuge",
     ],
     "ASSEMBLY": ["flye", "raven"],  # spades, velvet,
     "CONTIG_CLASSIFICATION": ["blast", "diamond"],  # , "minimap-asm"],
