@@ -329,7 +329,7 @@ class metaclass_run:
         self.prep_config_dict()
 
         self.RunMain.Update(self.config_dict, self.params)
-        self.RunMain.sample = self.qcrun.sample
+        # self.RunMain.sample = self.qcrun.sample
 
         self.RunMain.Run()
         self.RunMain.Summarize()

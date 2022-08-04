@@ -688,6 +688,15 @@ class RunMain_class(Run_Deployment_Methods):
             self.sample.r1.read_number_filtered + self.sample.r2.read_number_filtered
         )
 
+        print(filtered_reads)
+        print(self.sample.r1.read_number_filtered)
+        print(self.sample.r2.read_number_filtered)
+        print(self.sample.r1.read_number_filtered + self.sample.r2.read_number_filtered)
+        print(self.sample.r1.current_status)
+        print(self.sample.r2.current_status)
+        print(self.sample.r1.current)
+        print(self.sample.r2.current)
+
         final_processing_reads = (
             self.sample.r1.current_fastq_read_number()
             + self.sample.r2.current_fastq_read_number()

@@ -91,7 +91,7 @@
             <p> Viral enrichment was performed using <strong>{{ run_main.enrichment }}</strong>. </p>
             <p> {{ run_detail.input }} input reads. {{ run_detail.processed }} ({{run_detail.processed_percent}} %)
                 remained. </p>
-            {% if run_detail_processed == 0 %}
+            {% if run_detail_processed.processed == 0 %}
             <p> Run continued using input reads </p>
             {% endif %}
             {% elif run_main.host_depletion_performed %}
