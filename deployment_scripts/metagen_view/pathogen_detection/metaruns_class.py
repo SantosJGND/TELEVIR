@@ -735,14 +735,14 @@ class meta_orchestra:
         if rsup > self.smax:
             pack = list(np.arange(0, rsup, self.smax)) + [rsup]
             lset = [list(range(pack[x], pack[x + 1])) for x in range(len(pack) - 1)]
-
+            run_names = [find_run_name(x) for x in range(len(suprelay))]
             for a_args in lset:
                 threads = [
                     Thread(
                         target=self.sup_run,
                         args=(
                             suprelay[x],
-                            x,
+                            run_names[x],
                             conf.copy(),
                             paramCombs.copy(),
                             linked_dbs.copy(),
