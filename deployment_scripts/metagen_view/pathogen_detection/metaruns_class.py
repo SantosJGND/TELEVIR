@@ -269,7 +269,6 @@ class metaclass_run:
             rdir = os.getcwd()
 
         self.dir = rdir + "{}/".format(self.id)
-        os.system("mkdir -p " + self.dir)
 
         for dir in DIRS.values():
             os.system("mkdir -p " + self.dir + dir)
@@ -733,7 +732,7 @@ class meta_orchestra:
                         target=self.sup_run,
                         args=(
                             suprelay[x],
-                            fofn,
+                            x,
                             conf.copy(),
                             paramCombs.copy(),
                             linked_dbs.copy(),
@@ -753,7 +752,7 @@ class meta_orchestra:
                     target=self.sup_run,
                     args=(
                         suprelay[x],
-                        fofn,
+                        x,
                         conf.copy(),
                         paramCombs.copy(),
                         linked_dbs.copy(),
@@ -826,17 +825,28 @@ class meta_orchestra:
             if os.path.isdir(qcrun.dir + dirl):
                 shutil.rmtree(qcrun.dir + dirl)
 
-    def sup_run(self, idx, fofn, conf, paramcomb, linked_db):
+    def sup_run(self, idx, run_number, conf, paramcomb, linked_db):
         """
         prepare metaclass_run for deployment. create directories, config and main files, set up software and modules.
         :param idx: row index in software db.
         :param conf: software combination df. one line.
         :return: self
         """
+
+        def find_run_name(run_number):
+            run_idx = run_number
+            new_name = "suprun_{}".format(run_idx)
+
+            while os.path.isdir(self.rdir + new_name):
+                run_idx += 1
+                new_name = "suprun_{}".format(run_idx)
+                os.makedirs(self.rdir + new_name, exist_ok=True)
+            return new_name
+
         nrun = metaclass_run(
             self.project_name,
             self.sample_name,
-            id="run_" + "-".join(np.array(idx, dtype=str)),
+            id=find_run_name(run_number),
             static_dir=self.staticdir,
         )
         nrun.reference = self.reference
