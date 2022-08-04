@@ -722,6 +722,16 @@ class meta_orchestra:
         rsup = self.sup
         print("sup run possibilities: {}".format(self.sup))
 
+        def find_run_name(run_number):
+            run_idx = run_number
+            new_name = "suprun_{}".format(run_idx)
+
+            while os.path.isdir(self.rdir + new_name):
+                run_idx += 1
+                new_name = "suprun_{}".format(run_idx)
+            os.makedirs(self.rdir + new_name, exist_ok=True)
+            return new_name
+
         if rsup > self.smax:
             pack = list(np.arange(0, rsup, self.smax)) + [rsup]
             lset = [list(range(pack[x], pack[x + 1])) for x in range(len(pack) - 1)]
@@ -747,12 +757,13 @@ class meta_orchestra:
 
         else:
             a_args = list(range(rsup))
+            run_names = [find_run_name(x) for x in a_args]
             threads = [
                 Thread(
                     target=self.sup_run,
                     args=(
                         suprelay[x],
-                        x,
+                        run_names[x],
                         conf.copy(),
                         paramCombs.copy(),
                         linked_dbs.copy(),
@@ -825,7 +836,7 @@ class meta_orchestra:
             if os.path.isdir(qcrun.dir + dirl):
                 shutil.rmtree(qcrun.dir + dirl)
 
-    def sup_run(self, idx, run_number, conf, paramcomb, linked_db):
+    def sup_run(self, idx, run_id, conf, paramcomb, linked_db):
         """
         prepare metaclass_run for deployment. create directories, config and main files, set up software and modules.
         :param idx: row index in software db.
@@ -833,20 +844,10 @@ class meta_orchestra:
         :return: self
         """
 
-        def find_run_name(run_number):
-            run_idx = run_number
-            new_name = "suprun_{}".format(run_idx)
-
-            while os.path.isdir(self.rdir + new_name):
-                run_idx += 1
-                new_name = "suprun_{}".format(run_idx)
-                os.makedirs(self.rdir + new_name, exist_ok=True)
-            return new_name
-
         nrun = metaclass_run(
             self.project_name,
             self.sample_name,
-            id=find_run_name(run_number),
+            id=run_id,
             static_dir=self.staticdir,
         )
         nrun.reference = self.reference
