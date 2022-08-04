@@ -435,29 +435,29 @@ class Run_Deployment_Methods(RunDetail_main):
 
     def deploy_QC(self):
         self.preprocess_drone = Preprocess(
-            self.r1.current,
-            self.r2.current,
+            self.sample.r1.current,
+            self.sample.r2.current,
             self.filtered_reads_dir,
             self.type,
             self.preprocess_method,
-            self.r1.clean,
-            self.r2.clean,
+            self.sample.r1.clean,
+            self.sample.r2.clean,
             self.threads,
             self.subsample,
             logging_level=self.logger_level_detail,
         )
 
-        self.logger.info(f"r1 reads: {self.r1.get_current_fastq_read_number()}")
-        self.logger.info(f"r2 reads: {self.r2.get_current_fastq_read_number()}")
+        self.logger.info(f"r1 reads: {self.sample.r1.get_current_fastq_read_number()}")
+        self.logger.info(f"r2 reads: {self.sample.r2.get_current_fastq_read_number()}")
 
         self.preprocess_drone.run()
 
     def deploy_HD(self):
         self.depletion_drone = Classifier(
             self.depletion_method,
-            self.r1.current,
+            self.sample.r1.current,
             type=self.type,
-            r2=self.r2.current,
+            r2=self.sample.r2.current,
             prefix=self.prefix,
             threads=self.threads,
             bin=get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
@@ -469,9 +469,9 @@ class Run_Deployment_Methods(RunDetail_main):
     def deploy_EN(self):
         self.enrichment_drone = Classifier(
             self.enrichment_method,
-            self.r1.current,
+            self.sample.r1.current,
             type=self.type,
-            r2=self.r2.current,
+            r2=self.sample.r2.current,
             prefix=self.prefix,
             threads=self.threads,
             bin=get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
@@ -482,11 +482,11 @@ class Run_Deployment_Methods(RunDetail_main):
 
     def deploy_ASSEMBLY(self):
         self.assembly_drone = Assembly_class(
-            self.r1.current,
+            self.sample.r1.current,
             self.assembly_method,
             self.type,
             min_scaffold_length=self.min_scaffold_length,
-            r2=self.r2.current,
+            r2=self.sample.r2.current,
             prefix=self.prefix,
             threads=self.threads,
             bin=get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
@@ -513,9 +513,9 @@ class Run_Deployment_Methods(RunDetail_main):
 
         self.read_classification_drone = Classifier(
             self.read_classification_method,
-            self.r1.current,
+            self.sample.r1.current,
             type=self.type,
-            r2=self.r2.current,
+            r2=self.sample.r2.current,
             prefix=self.prefix,
             threads=self.threads,
             bin=get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
@@ -528,8 +528,8 @@ class Run_Deployment_Methods(RunDetail_main):
 
         self.remap_manager = Mapping_Manager(
             self.metadata_tool.remap_targets,
-            self.r1,
-            self.r2,
+            self.sample.r1,
+            self.sample.r2,
             self.remapping_method,
             self.assembly_drone.assembly_file_fasta_gz,
             self.type,
@@ -568,8 +568,8 @@ class RunMain_class(Run_Deployment_Methods):
         if self.quality_control:
             self.deploy_QC()
 
-            self.r1.is_clean()
-            self.r2.is_clean()
+            self.sample.r1.is_clean()
+            self.sample.r2.is_clean()
 
             self.sample.qc_soft = self.preprocess_drone.preprocess_method.name
             self.sample.input_fastqc_report = self.preprocess_drone.input_qc_report
@@ -580,14 +580,14 @@ class RunMain_class(Run_Deployment_Methods):
         if self.enrichment:
             self.deploy_EN()
 
-            self.r1.enrich(self.enrichment_drone.classified_reads_list)
-            self.r2.enrich(self.enrichment_drone.classified_reads_list)
+            self.sample.r1.enrich(self.enrichment_drone.classified_reads_list)
+            self.sample.r2.enrich(self.enrichment_drone.classified_reads_list)
 
         if self.depletion:
             self.deploy_HD()
 
-            self.r1.deplete(self.depletion_drone.classified_reads_list)
-            self.r2.deplete(self.depletion_drone.classified_reads_list)
+            self.sample.r1.deplete(self.depletion_drone.classified_reads_list)
+            self.sample.r2.deplete(self.depletion_drone.classified_reads_list)
 
         if self.enrichment or self.depletion or self.assembly:
             self.sample.clean_unique()
@@ -672,26 +672,28 @@ class RunMain_class(Run_Deployment_Methods):
 
         self.logger.info(f"prefix: {self.prefix}")
         with open(os.path.join(self.log_dir, self.prefix + "_latest.fofn"), "w") as f:
-            f.write(self.r1.current + "\n")
+            f.write(self.sample.r1.current + "\n")
             if self.type == "PE":
-                f.write(self.r2.current + "\n")
+                f.write(self.sample.r2.current + "\n")
 
         with open(os.path.join(self.log_dir, "reads_latest.stats"), "w") as f:
-            f.write(f"CLEAN\t{self.r1.read_number_clean}\n")
-            f.write(f"ENRICHED\t{self.r1.read_number_enriched}\n")
+            f.write(f"CLEAN\t{self.sample.r1.read_number_clean}\n")
+            f.write(f"ENRICHED\t{self.sample.r1.read_number_enriched}\n")
 
     def generate_output_data_classes(self):
         ### transfer to sample class
-        processed_reads = (
-            self.sample.r1.read_number_clean + self.sample.r2.read_number_clean
+        processed_reads = self.sample.reads_after_processing
+
+        filtered_reads = (
+            self.sample.r1.read_number_filtered + self.sample.r2.read_number_filtered
         )
 
-        post_processed_reads = self.sample.reads_after_processing
         final_processing_reads = (
-            self.r1.current_fastq_read_number() + self.r2.current_fastq_read_number()
+            self.sample.r1.current_fastq_read_number()
+            + self.sample.r2.current_fastq_read_number()
         )
 
-        post_percent = (int(post_processed_reads) / processed_reads) * 100
+        filtered_reads_perc = (int(filtered_reads) / processed_reads) * 100
         final_processing_percent = (final_processing_reads / processed_reads) * 100
 
         ### transfer to assembly class / drone.
@@ -713,8 +715,8 @@ class RunMain_class(Run_Deployment_Methods):
             self.remap_manager.max_prop,
             self.remap_manager.max_mapped,
             f"{processed_reads:,}",
-            f"{post_processed_reads:,}",
-            f"{post_percent:.2f}",
+            f"{filtered_reads:,}",
+            f"{filtered_reads_perc:.2f}",
             False,
             self.sift,
             f"{self.metadata_tool.sift_report.loc[0]['removed']:,}",

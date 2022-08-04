@@ -89,21 +89,25 @@
             <h3> Pre-Processing </h3>
             {% if run_main.enrichment_performed %}
             <p> Viral enrichment was performed using <strong>{{ run_main.enrichment }}</strong>. </p>
-            <p> {{ run_detail.input }} input reads.
-                {% elif run_main.host_depletion_performed %}
-                <br>
-                <p> The following table shows the results of the pre-processing. </p>
-                <p> The pre-processing is done in the following order: </p>
-                <br>
-                {% else %}
-                <p> No pre-processing step was performed </p>
-                {% endif %}
-                {% if run_detail.sift_preproc %}
-                <p> SIFT was performed on the pre-processed reads, {{run_detail.sift_removed_pprc}} reads were removed.
-                </p>
-                {% endif %}
-                <p> A total of {{run_detail.processing_final}} ({{run_detail.processing_final_percent}} %) reads
-                    remained. </p>
+            <p> {{ run_detail.input }} input reads. {{ run_detail.processed }} ({{run_detail.processed_percent}} %)
+                remained. </p>
+            {% if run_detail_processed == 0 %}
+            <p> Run continued using input reads </p>
+            {% endif %}
+            {% elif run_main.host_depletion_performed %}
+            <br>
+            <p> The following table shows the results of the pre-processing. </p>
+            <p> The pre-processing is done in the following order: </p>
+            <br>
+            {% else %}
+            <p> No pre-processing step was performed </p>
+            {% endif %}
+            {% if run_detail.sift_preproc %}
+            <p> SIFT was performed on the pre-processed reads, {{run_detail.sift_removed_pprc}} reads were removed.
+            </p>
+            {% endif %}
+            <p> A total of {{run_detail.processing_final}} ({{run_detail.processing_final_percent}} %) reads
+                remained. </p>
         </div>
         <div class="column right">
             {% if run_main.enrichment_performed %}

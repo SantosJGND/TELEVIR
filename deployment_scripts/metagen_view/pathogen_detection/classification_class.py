@@ -327,10 +327,10 @@ class run_centrifuge(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         report = pd.read_csv(
-            self.full_report_path, sep="\t", header=None, usecols=[0, 4, 6]
-        ).rename(columns={0: "qseqid", 4: "qual", 6: "acc"})
+            self.full_report_path, sep="\t", header=None, usecols=[0, 6]
+        ).rename(columns={0: "qseqid", 6: "acc"})
 
-        report = report[report.acc != "unclassified"][["qseqid", "acc", "qual"]]
+        report = report[report.acc != "unclassified"][["qseqid", "acc"]]
         return pd.DataFrame(report)
 
 

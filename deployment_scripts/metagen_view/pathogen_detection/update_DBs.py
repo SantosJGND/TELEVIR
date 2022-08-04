@@ -219,7 +219,7 @@ def retrieve_number_of_runs(project_name, sample_name):
     except Sample.DoesNotExist:
         return 0
 
-    return RunMain.objects.filter(project=project, sample=sample).count()
+    return RunMain.objects.filter(project=project, sample=sample).count() + 1
 
 
 def RunIndex_Update_Retrieve_Key(project_name, sample_name):

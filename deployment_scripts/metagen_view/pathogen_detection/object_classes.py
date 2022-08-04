@@ -195,6 +195,7 @@ class Read_class:
         self.read_number_clean = 0
         self.read_number_enriched = 0
         self.read_number_depleted = 0
+        self.read_number_filtered = 0
 
     def determine_read_name(self, filepath):
 
@@ -261,18 +262,18 @@ class Read_class:
         """
         filter reads and set current status to enriched.
         """
-        self.read_filter_move(self.filepath, read_list, self.enriched)
 
-        if os.path.isfile(self.enriched) and os.path.getsize(self.enriched):
+        if len(read_list) > 0:
+            self.read_filter_move(self.filepath, read_list, self.enriched)
             self.is_enriched()
 
     def deplete(self, read_list):
         """
         filter reads and aset current status to depleted.
         """
-        self.read_filter_move(self.filepath, read_list, self.depleted)
 
-        if os.path.isfile(self.depleted) and os.path.getsize(self.depleted):
+        if len(read_list) > 0:
+            self.read_filter_move(self.filepath, read_list, self.depleted)
             self.is_depleted()
 
     def is_clean(self):
@@ -292,6 +293,9 @@ class Read_class:
         self.read_number_enriched = self.get_current_fastq_read_number()
         self.current_status = "enriched"
         self.filepath = os.path.dirname(self.current)
+        print("enriched")
+        print(self.read_number_enriched)
+        self.read_number_filtered = self.read_number_enriched
 
     def is_depleted(self):
         """
@@ -301,6 +305,9 @@ class Read_class:
         self.read_number_depleted = self.get_current_fastq_read_number()
         self.current_status = "depleted"
         self.filepath = os.path.dirname(self.current)
+        print("depleted")
+        print(self.read_number_depleted)
+        self.read_number_filtered = self.read_number_depleted
 
     def get_current_fastq_read_number(self):
         """
@@ -334,6 +341,8 @@ class Read_class:
 
 class Sample_runClass:
 
+    r1: Type[Read_class]
+    r2: Type[Read_class]
     report: str
     qcdata: dict
     reads_before_processing: int = 0
@@ -431,7 +440,7 @@ class Sample_runClass:
 
         self.cmd.run_bash(cmd)
         if not os.path.exists(unique_reads) or os.path.getsize(unique_reads) == 0:
-            self.logger.error(
+            print(
                 f"No unique reads found in {self.r1.current}, skipping unique read cleaning"
             )
             return
