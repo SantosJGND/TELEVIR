@@ -98,7 +98,7 @@ SOFTWARE = {
         # "krakenuniq",
         # "diamond"
     ],
-    "ASSEMBLY": ["flye"],  # spades, velvet,
+    "ASSEMBLY": ["raven"],  # spades, velvet,
     "CONTIG_CLASSIFICATION": ["blast"],  # , "minimap-asm"],
     "READ_CLASSIFICATION": [
         "fastviromeexplorer",

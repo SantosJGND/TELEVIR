@@ -938,8 +938,8 @@ class Mapping_Instance:
     prefix: str
     reference: Type[Remapping] = None
     assembly: Type[Remapping] = None
-    apres: bool
-    rpres: bool
+    apres: bool = False
+    rpres: bool = False
     success: str = "none"
     mapped: int = 0
     mapped_reads: int = 0
@@ -962,6 +962,12 @@ class Mapping_Instance:
         self.rpres = self.assert_reads_mapped()
         self.apres = self.assert_contigs_mapped()
         self.success = self.assert_mapping_success()
+        print("###")
+        print(self.reference.target.accid)
+        print(self.reference.number_of_reads_mapped)
+        print(self.rpres)
+        print(self.apres)
+        print(self.success)
 
         self.mapping_main_info = pd.DataFrame(
             [
@@ -987,25 +993,27 @@ class Mapping_Instance:
         )
 
     def assert_reads_mapped(self):
-        self.rpres = (
-            self.reference.number_of_reads_mapped > 0 or self.reference.target.reads
-        )
+        return self.reference.number_of_reads_mapped > 0 or self.reference.target.reads
 
     def assert_contigs_mapped(self):
-        self.apres = (
+        return (
             self.reference.number_of_contigs_mapped > 0 or self.reference.target.contigs
         )
 
     def assert_mapping_success(self):
         ###
+        print("hello")
+        print(self.apres, self.rpres)
         if self.rpres and self.apres:
-            self.success = "reads and contigs"
-        if self.rpres and not self.apres:
-            self.success = "reads"
-        if self.apres and not self.rpres:
-            self.success = "contigs"
+            success = "reads and contigs"
+        elif self.rpres and not self.apres:
+            success = "reads"
+        elif self.apres and not self.rpres:
+            success = "contigs"
+        else:
+            success = "none"
 
-        return self.success
+        return success
 
     def generate_full_mapping_report_entry(self):
 
@@ -1267,11 +1275,7 @@ class Mapping_Manager(Tandem_Remap):
 
     def run_mappings(self):
         for target in self.remap_targets:
-            try:
-                mapped_instance = self.reciprocal_map(target)
-            except Exception as e:
-                self.logger.error(e)
-                continue
+            mapped_instance = self.reciprocal_map(target)
 
             self.mapped_instances.append(mapped_instance)
 
