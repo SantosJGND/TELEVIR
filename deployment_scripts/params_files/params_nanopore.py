@@ -92,21 +92,21 @@ CONSTANTS = {
 SOFTWARE = {
     "PREPROCESS": ["nanofilt"],  # "nanofilt", trimmomatic
     "ENRICHMENT": [
-        "",
-        # "kaiju",
-        # "krakenuniq",
-        # "diamond"
+        # "",
+        "kaiju",
+        "krakenuniq",
+        "diamond",
     ],
-    "ASSEMBLY": ["raven"],  # spades, velvet,
-    "CONTIG_CLASSIFICATION": ["blast"],  # , "minimap-asm"],
+    "ASSEMBLY": ["flye", "raven"],  # spades, velvet,
+    "CONTIG_CLASSIFICATION": ["blast", "diamond"],  # , "minimap-asm"],
     "READ_CLASSIFICATION": [
         "fastviromeexplorer",
         "krakenuniq",
-        # "clark",
-        # "desamba",
-        # "kaiju",
-        # "minimap2_ONT",
-        # "centrifuge",
+        "clark",
+        "desamba",
+        "kaiju",
+        "minimap2_ONT",
+        "centrifuge",
     ],
     "REMAPPING": ["minimap-rem"],  # snippy, rematch, bowtie, minimap-rem
 }
@@ -258,7 +258,7 @@ ARGS_CLASS = {
     "diamond": {
         "DIAMOND_ARGS": [
             "--top 3 -e 0.01 --id 50 --query-cover 50 --sensitive",
-            "--top 3 -e 0.01 --id 70 --query-cover 60 --ultra-sensitive",
+            "--top 3 -e 0.01 --id 70 --query-cover 60 --fast",
         ],
         "DIAMOND_DB": ["diamond/rvdb"],
         "DIAMOND_THREADS": [4],

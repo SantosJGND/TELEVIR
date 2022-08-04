@@ -962,12 +962,6 @@ class Mapping_Instance:
         self.rpres = self.assert_reads_mapped()
         self.apres = self.assert_contigs_mapped()
         self.success = self.assert_mapping_success()
-        print("###")
-        print(self.reference.target.accid)
-        print(self.reference.number_of_reads_mapped)
-        print(self.rpres)
-        print(self.apres)
-        print(self.success)
 
         self.mapping_main_info = pd.DataFrame(
             [
