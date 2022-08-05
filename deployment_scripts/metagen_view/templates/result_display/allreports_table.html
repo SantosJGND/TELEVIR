@@ -83,8 +83,8 @@
                     <th>Mapped reads</th>
                     <th>ref_prop (%)</th>
                     <th>mapped_prop (%)</th>
-                    <th>Gaps</th>
-                    <th>success</th>
+                    <th>mapping success</th>
+                    <th>class. success</th>
 
                 </tr>
             </thead>
@@ -117,8 +117,10 @@
                         {{value.mapped_proportion|round_to_int}}</td>
                     <td data-title="Gaps">
                         {{value.ngaps}}</td>
-                    <td data-title="success" style="{% success_count_color value.success %}">
-                        {{value.success}}</td>
+                    <td data-title="mappin success" style="{% success_count_color value.mapping_success %}">
+                        {{value.mapping_success}}</td>
+                    <td data-title="class. success" style="{% success_count_color value.classification_success %}">
+                        {{value.classification_success}}</td>
                 </tr>
                 {% endif %}
                 {% endfor %}
