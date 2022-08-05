@@ -1109,7 +1109,6 @@ class Mapping_Instance:
         ntax["mapped"] = self.mapped
         if self.mapped_reads > 0:
             ntax["mapped_prop"] = 100 * (self.mapped / self.mapped_reads)
-
         else:
             self.mapped_reads = self.mapped
             ntax["mapped_prop"] = 1
@@ -1156,6 +1155,7 @@ class Tandem_Remap:
     """
 
     reads_before_processing: int = 0
+    reads_after_processing: int = 0
 
     def __init__(
         self,
@@ -1199,6 +1199,7 @@ class Tandem_Remap:
             reference_remap_drone,
             assembly_map,
             self.prefix,
+            mapped_reads=self.reads_after_processing,
             original_reads=self.reads_before_processing,
         )
 
