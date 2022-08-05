@@ -115,6 +115,13 @@ def Update_sample_qc(sample_class: Type[Sample_runClass]):
     input_report = open(sample_class.input_fastqc_report, "r")
     processed_report = open(sample_class.processed_fastqc_report, "r")
 
+    print(sample_class.qc_soft)
+    print(sample_class.technology)
+    print(sample_class.reads_before_processing)
+    print(sample_class.reads_after_processing)
+    print(percent_passed)
+    print(sample_class.qcdata)
+
     try:
         sampleqc = SampleQC(
             sample=sample,
@@ -128,10 +135,11 @@ def Update_sample_qc(sample_class: Type[Sample_runClass]):
             ],
             percent_gc=sample_class.qcdata["processed"].loc["%GC"]["value"],
             input_fastqc_report=File(
-                input_report, name=os.path.basename(input_report.name)
+                input_report, name=os.path.basename(sample_class.input_fastqc_report)
             ),
             processed_fastqc_report=File(
-                processed_report, name=os.path.basename(processed_report.name)
+                processed_report,
+                name=os.path.basename(sample_class.processed_fastqc_report),
             ),
         )
 
