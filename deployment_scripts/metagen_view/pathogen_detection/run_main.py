@@ -617,6 +617,7 @@ class RunMain_class(Run_Deployment_Methods):
             )
 
             self.sample.reads_after_processing = self.sample.current_total_read_number()
+            self.sample.get_qc_data()
             print(self.sample.reads_after_processing)
         if self.enrichment:
             self.deploy_EN()
