@@ -266,10 +266,16 @@ def IGV_display(requestdst):
                 sample=sample, run=run, unique_id=unique_id
             )
 
-            path_name_bam = ref_map.bam_file_path
-            path_name_bai = ref_map.bai_file_path
-            path_name_reference = ref_map.fasta_file_path
-            path_name_reference_index = ref_map.fai_file_path
+            def remove_pre_static(path, pattern):
+                path = path.split(pattern)[1]
+                path = f"/{pattern}{path}"
+                print(path)
+                return path
+
+            path_name_bam = remove_pre_static(ref_map.bam_file_path, "igv")
+            path_name_bai = remove_pre_static(ref_map.bai_file_path, "igv")
+            path_name_reference = remove_pre_static(ref_map.fasta_file_path, "igv")
+            path_name_reference_index = remove_pre_static(ref_map.fai_file_path, "igv")
             reference_name = final_report.reference_contig_str
 
             data["is_ok"] = True
@@ -311,6 +317,9 @@ def IGV_display(requestdst):
                     os.path.basename(path_name_reference_index),
                 )
             )
+
+            data["static_dir"] = run.static_dir
+            print(run.static_dir)
 
             return render(
                 requestdst,

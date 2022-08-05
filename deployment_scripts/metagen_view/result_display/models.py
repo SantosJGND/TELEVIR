@@ -290,18 +290,18 @@ class RunDetail(models.Model):
     max_prop = models.FloatField(blank=True, null=True)
     max_mapped = models.IntegerField(blank=True, null=True)
 
-    input = models.CharField(max_length=100, blank=True, null=True)
-    processed = models.CharField(max_length=100, blank=True, null=True)
+    input = models.CharField(max_length=200, blank=True, null=True)
+    processed = models.CharField(max_length=200, blank=True, null=True)
     processed_percent = models.FloatField(blank=True, null=True)
 
     sift_preproc = models.BooleanField(blank=True, null=True)
     sift_remap = models.BooleanField(blank=True, null=True)
-    sift_removed_pprc = models.CharField(max_length=100, blank=True, null=True)
-    processing_final = models.CharField(max_length=100, blank=True, null=True)
+    sift_removed_pprc = models.CharField(max_length=200, blank=True, null=True)
+    processing_final = models.CharField(max_length=200, blank=True, null=True)
     processing_final_percent = models.FloatField(blank=True, null=True)
     merged = models.BooleanField(blank=True, null=True)
     merged_number = models.IntegerField(blank=True, null=True)
-    merged_files = models.CharField(max_length=100, blank=True, null=True)
+    merged_files = models.CharField(max_length=200, blank=True, null=True)
 
     class Meta:
 
@@ -462,17 +462,17 @@ class ReferenceMap_Main(models.Model):
     run = models.ForeignKey(RunMain, blank=True, null=True, on_delete=models.CASCADE)
 
     sample = models.ForeignKey(Sample, blank=True, null=True, on_delete=models.CASCADE)
-    taxid = models.CharField(max_length=100, blank=True, null=True)
+    taxid = models.CharField(max_length=20, blank=True, null=True)
     reference_contig_str = models.CharField(max_length=100, blank=True, null=True)
 
-    report = models.CharField(max_length=100, blank=True, null=True)
+    report = models.CharField(max_length=200, blank=True, null=True)
 
     plotly_dotplot = models.TextField(blank=True, null=True)
 
-    bam_file_path = models.CharField(max_length=100, blank=True, null=True)
-    bai_file_path = models.CharField(max_length=100, blank=True, null=True)
-    fasta_file_path = models.CharField(max_length=100, blank=True, null=True)
-    fai_file_path = models.CharField(max_length=100, blank=True, null=True)
+    bam_file_path = models.CharField(max_length=250, blank=True, null=True)
+    bai_file_path = models.CharField(max_length=250, blank=True, null=True)
+    fasta_file_path = models.CharField(max_length=250, blank=True, null=True)
+    fai_file_path = models.CharField(max_length=250, blank=True, null=True)
 
     class Meta:
 
@@ -511,7 +511,8 @@ class FinalReport(models.Model):
     ref_proportion = models.FloatField(blank=True, null=True)
     mapped_proportion = models.FloatField(blank=True, null=True)
     ngaps = models.IntegerField(blank=True, null=True)
-    success = models.CharField(max_length=20, blank=True, null=True)
+    mapping_success = models.CharField(max_length=20, blank=True, null=True)
+    classification_success = models.CharField(max_length=20, blank=True, null=True)
 
     refa_dotplot = models.TextField(blank=True, null=True)
     refa_dotplot_exists = models.BooleanField(default=False)

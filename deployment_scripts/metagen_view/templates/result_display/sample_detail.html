@@ -288,7 +288,8 @@
                     <th>ref_prop (%)</th>
                     <th>mapped_prop (%)</th>
                     <th>Gaps</th>
-                    <th>success</th>
+                    <th>mapping success</th>
+                    <th>class. success</th>
 
                 </tr>
             </thead>
@@ -314,8 +315,10 @@
                         {{value.mapped_proportion|round_to_int}}</td>
                     <td data-title="Gaps" style="{% depth_color value.ngaps run_detail.max_gaps %}">
                         {{value.ngaps}}</td>
-                    <td data-title="success" style="{% success_count_color value.success %}">
-                        {{value.success}}</td>
+                    <td data-title="mappin success" style="{% success_count_color value.mapping_success %}">
+                        {{value.mapping_success}}</td>
+                    <td data-title="class. success" style="{% success_count_color value.classification_success %}">
+                        {{value.classification_success}}</td>
                 </tr>
                 <tr class="detail">
                     <td colspan="2" align="center">
@@ -404,7 +407,7 @@
                     </td>
 
                     <td colspan="9" align="center">
-                        <img src="{% static 'refa_dotplots/' %}{{ value.refa_dotplot }}"="200"="250" alt="">
+                        <img src="{% static run_main.static_dir %}/{{ value.refa_dotplot }}"="200"="250" alt="">
                     </td>
                     <td colspan="1" align="center" style="position:relative">
                         <div>

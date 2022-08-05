@@ -6,10 +6,11 @@ from typing import Type
 
 import numpy as np
 import pandas as pd
-from metagen_view.settings import STATIC_URL, STATICFILES_DIRS
+from matplotlib.cbook import contiguous_regions
 
 from pathogen_detection.assembly_class import Assembly_class
 from pathogen_detection.classification_class import Classifier
+from pathogen_detection.constants_settings import ConstantsSettings
 from pathogen_detection.metadata_handler import Metadata_handler
 from pathogen_detection.object_classes import (
     Assembly_results,
@@ -129,18 +130,36 @@ class RunDetail_main:
         self.log_dir = config["directories"]["log_dir"]
 
         self.static_dir = config["static_dir"]
-        self.full_static_dir = os.path.join(STATICFILES_DIRS[0], self.static_dir)
+        self.full_static_dir = os.path.join(
+            ConstantsSettings.static_directory, self.static_dir
+        )
         self.static_dir_classification = f"classification_reports"
         os.makedirs(
             os.path.join(
-                STATICFILES_DIRS[0], self.static_dir, self.static_dir_classification
+                ConstantsSettings.static_directory,
+                self.static_dir,
+                self.static_dir_classification,
             ),
             exist_ok=True,
         )
 
         self.static_dir_plots = f"plots"
         os.makedirs(
-            os.path.join(STATICFILES_DIRS[0], self.static_dir, self.static_dir_plots),
+            os.path.join(
+                ConstantsSettings.static_directory,
+                self.static_dir,
+                self.static_dir_plots,
+            ),
+            exist_ok=True,
+        )
+
+        self.static_dir_igv = f"igv"
+        os.makedirs(
+            os.path.join(
+                ConstantsSettings.static_directory,
+                self.static_dir,
+                self.static_dir_igv,
+            ),
             exist_ok=True,
         )
 
@@ -269,37 +288,37 @@ class RunDetail_main:
 
         ### output files
         self.params_file_path = os.path.join(
-            STATICFILES_DIRS[0],
+            ConstantsSettings.static_directory,
             self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_params.csv",
         )
         self.remap_plan_path = os.path.join(
-            STATICFILES_DIRS[0],
+            ConstantsSettings.static_directory,
             self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_remap_plan.csv",
         )
         self.full_report = os.path.join(
-            STATICFILES_DIRS[0],
+            ConstantsSettings.static_directory,
             self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_full_report.tsv",
         )
         self.assembly_classification_summary = os.path.join(
-            STATICFILES_DIRS[0],
+            ConstantsSettings.static_directory,
             self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_aclass_summary.tsv",
         )
         self.read_classification_summary = os.path.join(
-            STATICFILES_DIRS[0],
+            ConstantsSettings.static_directory,
             self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_rclass_summary.tsv",
         )
         self.merged_classification_summary = os.path.join(
-            STATICFILES_DIRS[0],
+            ConstantsSettings.static_directory,
             self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_mclass_summary.tsv",
@@ -324,6 +343,23 @@ class RunDetail_main:
         self.logger.info(f"type: {self.type}")
         self.start_time = time.perf_counter()
 
+        # directories
+        self.root = config["directories"]["root"]
+        self.filtered_reads_dir = config["directories"]["PREPROCESS"]
+        self.log_dir = config["directories"]["log_dir"]
+
+        self.sample.r1.update(
+            config["directories"]["PREPROCESS"],
+            config["directories"]["reads_enriched_dir"],
+            config["directories"]["reads_depleted_dir"],
+        )
+
+        self.sample.r2.update(
+            config["directories"]["PREPROCESS"],
+            config["directories"]["reads_enriched_dir"],
+            config["directories"]["reads_depleted_dir"],
+        )
+
         ### actions
         self.subsample = False
         self.quality_control = config["actions"]["QCONTROL"]
@@ -334,6 +370,8 @@ class RunDetail_main:
         self.classification = config["actions"]["CLASSIFY"]
         self.remapping = config["actions"]["REMAPPING"]
         self.house_cleaning = config["actions"]["CLEANING"]
+
+        ### methods
 
         self.preprocess_method = Software_detail(
             "PREPROCESS",
@@ -384,38 +422,38 @@ class RunDetail_main:
 
         ### output files
         self.params_file_path = os.path.join(
-            STATICFILES_DIRS[0],
+            ConstantsSettings.static_directory,
             self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_params.csv",
         )
         self.remap_plan_path = os.path.join(
-            STATICFILES_DIRS[0],
+            ConstantsSettings.static_directory,
             self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_remap_plan.csv",
         )
 
         self.full_report = os.path.join(
-            STATICFILES_DIRS[0],
+            ConstantsSettings.static_directory,
             self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_full_report.tsv",
         )
         self.assembly_classification_summary = os.path.join(
-            STATICFILES_DIRS[0],
+            ConstantsSettings.static_directory,
             self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_aclass_summary.tsv",
         )
         self.read_classification_summary = os.path.join(
-            STATICFILES_DIRS[0],
+            ConstantsSettings.static_directory,
             self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_rclass_summary.tsv",
         )
         self.merged_classification_summary = os.path.join(
-            STATICFILES_DIRS[0],
+            ConstantsSettings.static_directory,
             self.static_dir,
             self.static_dir_classification,
             f"{self.prefix}_mclass_summary.tsv",
@@ -547,6 +585,7 @@ class Run_Deployment_Methods(RunDetail_main):
 
         self.remap_manager.run_mappings()
         self.remap_manager.move_plots_to_static(self.static_dir, self.static_dir_plots)
+        self.remap_manager.move_igv_to_static(self.static_dir, self.static_dir_igv)
         self.remap_manager.merge_mapping_reports()
         self.remap_manager.collect_final_report_summary_statistics()
 
@@ -577,6 +616,8 @@ class RunMain_class(Run_Deployment_Methods):
                 self.preprocess_drone.processed_qc_report
             )
 
+            self.sample.reads_after_processing = self.sample.current_total_read_number()
+            print(self.sample.reads_after_processing)
         if self.enrichment:
             self.deploy_EN()
 
@@ -715,7 +756,9 @@ class RunMain_class(Run_Deployment_Methods):
         if np.isnan(minhit_reads):
             minhit_reads = 0
 
-        files = list(set([t["reference"].target.file for t in self.mapped_instances]))
+        files = list(
+            set([t.reference.target.file for t in self.remap_manager.mapped_instances])
+        )
 
         self.run_detail_report = Run_detail_report(
             self.remap_manager.max_depth,

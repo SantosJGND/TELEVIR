@@ -2,6 +2,7 @@ import copy
 import itertools as it
 import logging
 import os
+import pickle
 import shutil
 import subprocess
 import sys
@@ -14,6 +15,7 @@ import numpy as np
 import pandas as pd
 from metagen_view.settings import STATICFILES_DIRS
 
+from pathogen_detection.constants_settings import ConstantsSettings
 from pathogen_detection.object_classes import Sample_runClass
 from pathogen_detection.params import (
     ACTIONS,
@@ -327,13 +329,10 @@ class metaclass_run:
         :return:
         """
         self.prep_config_dict()
-
         self.RunMain.Update(self.config_dict, self.params)
-        # self.RunMain.sample = self.qcrun.sample
 
         self.RunMain.Run()
         self.RunMain.Summarize()
-        # self.RunMain.merge_mapping_reports()
 
     def report_run_status_save(self):
         """
@@ -409,7 +408,10 @@ class meta_orchestra:
             self.project_name,
             self.sample_name,
         )
-        os.makedirs(os.path.join(STATICFILES_DIRS[0], self.staticdir), exist_ok=True)
+        os.makedirs(
+            os.path.join(ConstantsSettings.static_directory, self.staticdir),
+            exist_ok=True,
+        )
 
         ### create meta_classifier instances
         self.projects = {}
@@ -565,7 +567,6 @@ class meta_orchestra:
         :param srun: row index in parameter df.
         :return: None
         """
-        import pickle
 
         copy_child = lambda obj: pickle.loads(pickle.dumps(obj))
 
@@ -873,7 +874,10 @@ class meta_orchestra:
         )
 
         supstart = time.perf_counter()
-        nrun.run_main()
+        copy_child = lambda obj: pickle.loads(pickle.dumps(obj))
+
+        nrun.RunMain = copy_child(self.qcrun.RunMain)
+        nrun.continue_main_run()
         supend = time.perf_counter()
         nrun.exect = supend - supstart
 

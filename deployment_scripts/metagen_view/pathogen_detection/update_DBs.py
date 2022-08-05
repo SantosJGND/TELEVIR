@@ -18,9 +18,9 @@ from result_display.models import (
     Sample,
     SampleQC,
 )
-from result_display.samples import Reference_Map, RunMetaData, SampleMetaData
 
 from pathogen_detection.object_classes import Sample_runClass
+from pathogen_detection.remap_class import Mapping_Instance
 from pathogen_detection.run_main import RunMain_class
 
 
@@ -487,7 +487,8 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
                 mapped_reads=row["mapped"],
                 ref_proportion=row["ref_prop"],
                 mapped_proportion=row["mapped_prop"],
-                success=row["success"],
+                mapping_success=row["mapping_success"],
+                classification_success=row["classification_success"],
                 refa_dotplot_exists=row["refa_dotplot_exists"],
                 covplot_exists=row["covplot_exists"],
                 refa_dotplot=row["refa_dotplot_path"],
@@ -513,21 +514,17 @@ def Update_RefMap_DB(run_class: Type[RunMain_class]):
     """
     print(f"updating refmap_dbs run {run_class.prefix}")
 
-    for ref_map in run_class.mapped_instances:
+    for ref_map in run_class.remap_manager.mapped_instances:
 
         Update_ReferenceMap(
             ref_map,
             run_class,
-            sample_name=run_class.sample.sample_name,
-            name=run_class.prefix,
         )
 
 
 def Update_ReferenceMap(
-    ref_map: dict,
+    ref_map: Type[Mapping_Instance],
     run_class: Type[RunMain_class],
-    sample_name="",
-    name="",
 ):
     """
     Updates the reference map data to TABLES.
@@ -535,43 +532,40 @@ def Update_ReferenceMap(
     - ReferenceContigs
     """
     sample = Sample.objects.get(
-        name_extended=sample_name, project__name=run_class.sample.project_name
+        name_extended=run_class.sample.sample_name,
+        project__name=run_class.sample.project_name,
     )
 
     run = RunMain.objects.get(
         project__name=run_class.sample.project_name,
         suprun=run_class.suprun,
-        name=name,
+        name=run_class.prefix,
         sample=sample,
     )
-    print("trying to updating remap main")
-    print(ref_map["reference"].acc_simple)
 
     try:
-        print("updating remap main")
-        print(ref_map["reference"].acc_simple)
         map_db = ReferenceMap_Main.objects.get(
-            reference=ref_map["reference"].acc_simple,
+            reference=ref_map.reference.target.acc_simple,
             sample=sample,
             run=run,
         )
     except ReferenceMap_Main.DoesNotExist:
         map_db = ReferenceMap_Main(
-            reference=ref_map["reference"].acc_simple,
+            reference=ref_map.reference.target.acc_simple,
             sample=sample,
             run=run,
-            taxid=ref_map["reference"].target.taxid,
+            taxid=ref_map.reference.target.taxid,
             # report=ref_map.report,
-            bam_file_path=ref_map["reference"].read_map_sorted_bam,
-            bai_file_path=ref_map["reference"].read_map_sorted_bam_index,
-            fasta_file_path=ref_map["reference"].reference_file,
-            fai_file_path=ref_map["reference"].reference_fasta_index,
+            bam_file_path=ref_map.reference.read_map_sorted_bam,
+            bai_file_path=ref_map.reference.read_map_sorted_bam_index,
+            fasta_file_path=ref_map.reference.reference_file,
+            fai_file_path=ref_map.reference.reference_fasta_index,
         )
         map_db.save()
 
-    if ref_map["assembly"] is not None:
+    if ref_map.assembly is not None:
 
-        remap_stats = ref_map["assembly"].report.set_index("ID")
+        remap_stats = ref_map.assembly.report.set_index("ID")
 
         for seqid, row in remap_stats.iterrows():
             try:

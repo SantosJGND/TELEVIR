@@ -197,6 +197,11 @@ class Read_class:
         self.read_number_depleted = 0
         self.read_number_filtered = 0
 
+    def update(self, clean_dir: str, enriched_dir: str, depleted_dir: str):
+        self.clean = os.path.join(clean_dir, self.prefix + ".clean.fastq.gz")
+        self.enriched = os.path.join(enriched_dir, self.prefix + ".enriched.fastq.gz")
+        self.depleted = os.path.join(depleted_dir, self.prefix + ".depleted.fastq.gz")
+
     def determine_read_name(self, filepath):
 
         if not self.exists:
@@ -219,14 +224,14 @@ class Read_class:
             return
 
         temp_reads_keep = os.path.join(
-            os.path.dirname(input), f"temp_{randint(1,1999)}.fq.gz"
+            os.path.dirname(output), f"keep_temp_{randint(1,1999)}.lst"
         )
         with open(temp_reads_keep, "w") as f:
             f.write("\n".join(read_list))
 
         self.read_filter(input, output, temp_reads_keep)
 
-        os.remove(temp_reads_keep)
+        # os.remove(temp_reads_keep)
 
     def read_filter_inplace(self, input: str, read_list: str):
 
@@ -264,7 +269,9 @@ class Read_class:
         """
 
         if len(read_list) > 0:
-            self.read_filter_move(self.filepath, read_list, self.enriched)
+            print(f"enriching {self.current}")
+            print(len(read_list))
+            self.read_filter_move(self.current, read_list, self.enriched)
             self.is_enriched()
 
     def deplete(self, read_list):
@@ -273,7 +280,7 @@ class Read_class:
         """
 
         if len(read_list) > 0:
-            self.read_filter_move(self.filepath, read_list, self.depleted)
+            self.read_filter_move(self.current, read_list, self.depleted)
             self.is_depleted()
 
     def is_clean(self):
@@ -382,7 +389,12 @@ class Sample_runClass:
         self.get_qc_data(QCdir)
 
         self.reads_before_processing = self.r1.read_number_raw + self.r2.read_number_raw
-        self.reads_after_processing = (
+
+    def current_total_read_number(self):
+        print("current total")
+        print(self.r1.get_current_fastq_read_number())
+        print(self.r2.get_current_fastq_read_number())
+        return (
             self.r1.get_current_fastq_read_number()
             + self.r2.get_current_fastq_read_number()
         )
@@ -453,12 +465,12 @@ class Sample_runClass:
         common_reads = os.path.join(WHERETO, "common_reads.lst")
 
         cmd_find_common = [
-            f"seqkit common -n -i {self.r1.current} {self.r1.current} | paste - - - - | cut -f1 | uniq | sed 's/^@//g' > {common_reads}"
+            f"seqkit common -n -i {self.r1.current} {self.r1.current} | paste - - - - | cut -f1 | sort | uniq | sed 's/^@//g' > {common_reads}"
         ]
 
         self.cmd.run(cmd_find_common)
+
         if os.path.getsize(common_reads) == 0:
-            self.logger.info("No common reads found")
             return
 
         self.r1.read_filter_inplace(self.r1.current, common_reads)

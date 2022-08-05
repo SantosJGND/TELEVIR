@@ -8,10 +8,10 @@ from typing import List, Type
 import numpy as np
 import pandas as pd
 from Bio.SeqIO.FastaIO import SimpleFastaParser
-from metagen_view.settings import STATICFILES_DIRS
 from result_display.plot_coverage import Bedgraph, plot_dotplot
 from scipy.stats import kstest
 
+from pathogen_detection.constants_settings import ConstantsSettings
 from pathogen_detection.object_classes import (
     Read_class,
     Remap_Target,
@@ -312,12 +312,18 @@ class Remapping:
 
         os.makedirs(self.rdir, exist_ok=True)
 
-        self.reference_file = f"{self.rdir}/{self.prefix}_ref.fa"
-        self.reference_fasta_index = f"{self.rdir}/{self.prefix}_ref.fa.fai"
+        self.reference_file = f"{self.rdir}/{self.prefix}_{target.acc_simple}_ref.fa"
+        self.reference_fasta_index = (
+            f"{self.rdir}/{self.prefix}_{target.acc_simple}_ref.fa.fai"
+        )
         self.read_map_sam = f"{self.rdir}/{self.prefix}.sam"
         self.read_map_bam = f"{self.rdir}/{self.prefix}.bam"
-        self.read_map_sorted_bam = f"{self.rdir}/{self.prefix}.sorted.bam"
-        self.read_map_sorted_bam_index = f"{self.rdir}/{self.prefix}.sorted.bam.bai"
+        self.read_map_sorted_bam = (
+            f"{self.rdir}/{self.prefix}.{target.acc_simple}.sorted.bam"
+        )
+        self.read_map_sorted_bam_index = (
+            f"{self.rdir}/{self.prefix}.{target.acc_simple}.sorted.bam.bai"
+        )
 
         self.genome_coverage = f"{self.rdir}/{self.prefix}.sorted.bedgraph"
         self.mapped_reads = f"{self.rdir}/{self.prefix}_reads_map.tsv"
@@ -432,6 +438,7 @@ class Remapping:
         self.get_reference_fasta_length()
         self.reference_fasta_string = self.get_reference_contig_name()
         self.plot_coverage()
+        self.plot_dotplot_from_paf()
         self.remapping_successful = True
 
         if self.cleanup:
@@ -531,8 +538,11 @@ class Remapping:
             return True
 
     def assembly_to_reference_map(self):
+
         if self.check_assembly_exists():
             self.minimap2_assembly_map()
+        else:
+            open(self.assembly_map_paf, "w").close()
 
         self.assembly_map_paf_exists = (
             os.path.isfile(self.assembly_map_paf)
@@ -689,8 +699,21 @@ class Remapping:
         """
         Map assembly to reference using minimap2.
         """
-        cmd = f"minimap2 -t {self.threads} -cx asm5 {self.assembly_path} {self.reference_file} > {self.assembly_map_paf}"
+        WHERETO = os.path.dirname(self.reference_file)
+        tempfile = os.path.join(WHERETO, f"temp{randint(1,2000)}.fa")
+        unzip_cmd = [
+            "gunzip",
+            "-c",
+            self.assembly_path,
+            ">",
+            tempfile,
+        ]
+        self.cmd.run_bash(unzip_cmd)
+
+        cmd = f"minimap2 -t {self.threads} -cx asm5 {tempfile} {self.reference_file} > {self.assembly_map_paf}"
         self.cmd.run(cmd)
+
+        os.remove(tempfile)
 
     def remap_deploy(self):
         """
@@ -890,11 +913,12 @@ class Remapping:
 
         self.coverage_plot_exists = os.path.exists(self.coverage_plot)
 
-    def plot_dotplot(self):
+    def plot_dotplot_from_paf(self):
+        if os.path.getsize(self.assembly_map_paf):
 
-        df = read_sam_coordinates(self.assembly_map_paf)
-        plot_dotplot(df, self.dotplot, "dotplot")
-        self.dotplot_exists = os.path.exists(self.dotplot)
+            df = read_sam_coordinates(self.assembly_map_paf)
+            plot_dotplot(df, self.dotplot, "dotplot")
+            self.dotplot_exists = os.path.exists(self.dotplot)
 
     def move_coverage_plot(self, main_static, static_dir):
         """
@@ -904,14 +928,18 @@ class Remapping:
         )
 
         self.coverage_plot_exists = os.path.exists(
-            os.path.join(STATICFILES_DIRS[0], main_static, self.coverage_plot)
+            os.path.join(
+                ConstantsSettings.static_directory, main_static, self.coverage_plot
+            )
         )
 
         if self.coverage_plot_exists:
 
             os.rename(
                 self.coverage_plot,
-                os.path.join(STATICFILES_DIRS[0], main_static, new_coverage_plot),
+                os.path.join(
+                    ConstantsSettings.static_directory, main_static, new_coverage_plot
+                ),
             )
             self.coverage_plot = new_coverage_plot
 
@@ -922,16 +950,58 @@ class Remapping:
         new_coverage_plot = os.path.join(static_dir, os.path.basename(self.dotplot))
 
         self.dotplot_exists = os.path.exists(
-            os.path.join(STATICFILES_DIRS[0], main_static, self.dotplot)
+            os.path.join(ConstantsSettings.static_directory, main_static, self.dotplot)
         )
 
         if self.dotplot_exists:
 
             os.rename(
                 self.dotplot,
-                os.path.join(STATICFILES_DIRS[0], main_static, new_coverage_plot),
+                os.path.join(
+                    ConstantsSettings.static_directory, main_static, new_coverage_plot
+                ),
             )
             self.dotplot = new_coverage_plot
+
+    def move_igv_files(self, main_static, static_dir):
+        """
+        Move igv files to static directory."""
+        new_bam = os.path.join(
+            ConstantsSettings.static_directory,
+            main_static,
+            static_dir,
+            os.path.basename(self.read_map_sorted_bam),
+        )
+        shutil.move(self.read_map_sorted_bam, new_bam)
+        self.read_map_sorted_bam = new_bam
+
+        new_bai = os.path.join(
+            ConstantsSettings.static_directory,
+            main_static,
+            static_dir,
+            os.path.basename(self.read_map_sorted_bam + ".bai"),
+        )
+        shutil.move(self.read_map_sorted_bam_index, new_bai)
+        self.read_map_sorted_bam_index = new_bai
+
+        new_reference_file = os.path.join(
+            ConstantsSettings.static_directory,
+            main_static,
+            static_dir,
+            os.path.basename(self.reference_file),
+        )
+        shutil.move(self.reference_file, new_reference_file)
+        self.reference_file = new_reference_file
+
+        new_reference_fasta_index = os.path.join(
+            ConstantsSettings.static_directory,
+            main_static,
+            static_dir,
+            os.path.basename(self.reference_fasta_index),
+        )
+
+        shutil.move(self.reference_fasta_index, new_reference_fasta_index)
+        self.reference_fasta_index = new_reference_fasta_index
 
 
 class Mapping_Instance:
@@ -961,7 +1031,8 @@ class Mapping_Instance:
         self.original_reads = original_reads
         self.rpres = self.assert_reads_mapped()
         self.apres = self.assert_contigs_mapped()
-        self.success = self.assert_mapping_success()
+        self.mapping_success = self.assert_mapping_success()
+        self.classification_success = self.assert_classification_success()
 
         self.mapping_main_info = pd.DataFrame(
             [
@@ -972,7 +1043,8 @@ class Mapping_Instance:
                     self.reference.target.description,
                     self.rpres,
                     self.apres,
-                    self.success,
+                    self.mapping_success,
+                    self.classification_success,
                 ]
             ],
             columns=[
@@ -982,17 +1054,16 @@ class Mapping_Instance:
                 "description",
                 "rclass",
                 "aclass",
-                "success",
+                "mapping_success",
+                "classification_success",
             ],
         )
 
     def assert_reads_mapped(self):
-        return self.reference.number_of_reads_mapped > 0 or self.reference.target.reads
+        return self.reference.number_of_reads_mapped > 0
 
     def assert_contigs_mapped(self):
-        return (
-            self.reference.number_of_contigs_mapped > 0 or self.reference.target.contigs
-        )
+        return self.reference.number_of_contigs_mapped > 0
 
     def assert_mapping_success(self):
         ###
@@ -1001,6 +1072,19 @@ class Mapping_Instance:
         elif self.rpres and not self.apres:
             success = "reads"
         elif self.apres and not self.rpres:
+            success = "contigs"
+        else:
+            success = "none"
+
+        return success
+
+    def assert_classification_success(self):
+        ###
+        if self.reference.target.reads and self.reference.target.contigs:
+            success = "reads and contigs"
+        elif self.reference.target.reads and not self.reference.target.contigs:
+            success = "reads"
+        elif self.reference.target.contigs and not self.reference.target.reads:
             success = "contigs"
         else:
             success = "none"
@@ -1279,6 +1363,12 @@ class Mapping_Manager(Tandem_Remap):
                 instance.reference.move_coverage_plot(main_static, static_dir)
             if apres:
                 instance.reference.move_dotplot(main_static, static_dir)
+
+    def move_igv_to_static(self, main_static, static_dir):
+        for instance in self.mapped_instances:
+
+            if instance.reference.number_of_reads_mapped > 0:
+                instance.reference.move_igv_files(main_static, static_dir)
 
     def merge_mapping_reports(self):
 

@@ -1124,4 +1124,6 @@ class Classifier:
         if self.check_classifier_output() and self.check_classifier_output_size():
             self.classification_report = self.get_report_simple()
 
-        self.classified_reads_list = self.classification_report.qseqid.tolist()
+        self.classified_reads_list = list(
+            set(self.classification_report.qseqid.to_list())
+        )
