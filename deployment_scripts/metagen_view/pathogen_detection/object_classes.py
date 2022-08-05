@@ -384,9 +384,7 @@ class Sample_runClass:
         self.input = input
         self.threads = threads
 
-        QCdir = os.path.dirname(self.r1.clean)
-
-        self.get_qc_data(QCdir)
+        self.QCdir = os.path.dirname(self.r1.clean)
 
         self.reads_before_processing = self.r1.read_number_raw + self.r2.read_number_raw
 
@@ -399,7 +397,7 @@ class Sample_runClass:
             + self.r2.get_current_fastq_read_number()
         )
 
-    def QC_summary(self, QCdir: str):
+    def QC_summary(self):
         """get QC summary
         runs fastqc parse on zip files in QCdir
 
@@ -407,8 +405,8 @@ class Sample_runClass:
         :return: qc_summary
         """
         qc_summary = {
-            "input": fastqc_parse(os.path.join(QCdir, "input_data.zip")),
-            "processed": fastqc_parse(os.path.join(QCdir, "processed_data.zip")),
+            "input": fastqc_parse(os.path.join(self.QCdir, "input_data.zip")),
+            "processed": fastqc_parse(os.path.join(self.QCdir, "processed_data.zip")),
         }
 
         return qc_summary
