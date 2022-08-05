@@ -418,7 +418,7 @@ class Sample_runClass:
         :return: None
         """
 
-        self.qcdata = self.QC_summary(reads_dir)
+        self.qcdata = self.QC_summary()
 
     def clean_unique(self):
         if self.type == "SE":
