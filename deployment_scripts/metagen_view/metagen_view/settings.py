@@ -91,7 +91,7 @@ WSGI_APPLICATION = "metagen_view.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "televir",
+        "NAME": "televir_test",
         "USER": "bioinf",
         "PASSWORD": "artic",
         "HOST": "localhost",

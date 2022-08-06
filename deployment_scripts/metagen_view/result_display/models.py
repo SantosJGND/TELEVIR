@@ -290,18 +290,18 @@ class RunDetail(models.Model):
     max_prop = models.FloatField(blank=True, null=True)
     max_mapped = models.IntegerField(blank=True, null=True)
 
-    input = models.CharField(max_length=200, blank=True, null=True)
-    processed = models.CharField(max_length=200, blank=True, null=True)
+    input = models.CharField(max_length=300, blank=True, null=True)
+    processed = models.CharField(max_length=300, blank=True, null=True)
     processed_percent = models.FloatField(blank=True, null=True)
 
     sift_preproc = models.BooleanField(blank=True, null=True)
     sift_remap = models.BooleanField(blank=True, null=True)
-    sift_removed_pprc = models.CharField(max_length=200, blank=True, null=True)
-    processing_final = models.CharField(max_length=200, blank=True, null=True)
+    sift_removed_pprc = models.CharField(max_length=300, blank=True, null=True)
+    processing_final = models.CharField(max_length=300, blank=True, null=True)
     processing_final_percent = models.FloatField(blank=True, null=True)
     merged = models.BooleanField(blank=True, null=True)
     merged_number = models.IntegerField(blank=True, null=True)
-    merged_files = models.CharField(max_length=200, blank=True, null=True)
+    merged_files = models.CharField(max_length=300, blank=True, null=True)
 
     class Meta:
 
