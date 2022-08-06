@@ -1326,6 +1326,7 @@ class Mapping_Manager(Tandem_Remap):
         self.logger.addHandler(logging.StreamHandler())
         self.logger.propagate = False
         self.logger.info("Mapping Manager started")
+        self.logdir = logdir
 
         self.mapped_instances = []
         self.remap_targets = remap_targets
