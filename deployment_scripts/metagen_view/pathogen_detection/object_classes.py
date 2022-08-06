@@ -16,7 +16,7 @@ class RunCMD:
     Run command line commands.
     """
 
-    def __init__(self, bin, logdir=""):
+    def __init__(self, bin, logdir: str = ""):
         """
         Initialize.
         """

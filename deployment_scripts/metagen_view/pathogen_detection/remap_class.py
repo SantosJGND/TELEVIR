@@ -1183,7 +1183,6 @@ class Tandem_Remap:
         self.logger.addHandler(logging.StreamHandler())
         self.logger.propagate = False
         self.logger.info("Reciprocal Remap started")
-        self.logdir = logdir
 
         self.remapping_method = remapping_method
         self.assembly_file = assembly_file
