@@ -37,6 +37,9 @@ def plot_dotplot(df: pd.DataFrame, out_file: str, title: str, inv_color: str = "
     ax.set_ylabel("Contigs")
 
     fig.savefig(out_file, bbox_inches="tight")
+    ax.cla()
+    fig.clf()
+    plt.close("all")
 
 
 class Bedgraph:
@@ -50,10 +53,13 @@ class Bedgraph:
     plot_coverage: barplot of coverage by window in bdgraph.
     """
 
-    def __init__(self, bedgraph_file):
+    def __init__(self, bedgraph_file, max_bars=2000):
+        self.max_bars = max_bars
         self.bedgraph = self.read_bedgraph(bedgraph_file)
         self.coverage = self.get_coverage_array(self.bedgraph)
-        self.bins = self.get_bins(self.bedgraph)
+        self.reduce_number_bars()
+        self.merge_bedgraph_rows()
+        self.get_bar_coordinates()
 
     def read_bedgraph(self, coverage_file) -> pd.DataFrame:
         coverage = pd.read_csv(coverage_file, sep="\t", header=None).rename(
@@ -62,17 +68,13 @@ class Bedgraph:
 
         return coverage
 
-    def get_bins(self, bedgraph: pd.DataFrame) -> np.ndarray:
+    def get_bins(self) -> np.ndarray:
         """
         Get the bins.
 
         :param coverage_file: The coverage file.
         """
-        bins = bedgraph.start.to_list() + bedgraph.end.to_list()
-        bins = list(set(bins))
-        bins = np.array(sorted(bins))
-
-        return bins
+        self.bedgraph["width"] = self.bedgraph.end - self.bedgraph.start
 
     def get_coverage_array(self, coverage: pd.DataFrame) -> np.ndarray:
         """
@@ -83,6 +85,35 @@ class Bedgraph:
         coverage_values = np.array(coverage.coverage.to_list())
 
         return coverage_values
+
+    def get_bar_coordinates(self):
+        """
+        Get the bar coordinates.
+        """
+        self.bedgraph["width"] = self.bedgraph.end - self.bedgraph.start
+
+        self.bedgraph["x"] = self.bedgraph.start + self.bedgraph.end / 2
+        self.bedgraph["y"] = self.bedgraph.coverage
+
+        return self.bedgraph
+
+    def reduce_number_bars(self):
+        """
+        Reduce the number of bars.
+        """
+
+        if self.bedgraph.shape > (self.max_bars,):
+            self.bedgraph = self.bedgraph[self.bedgraph.coverage > 0]
+            self.bedgraph = self.bedgraph.sample(self.max_bars)
+
+    def merge_bedgraph_rows(self):
+        """
+        Merge the rows of the bedgraph.
+        """
+
+        for ix in range(1, self.bedgraph.shape[0]):
+            if self.bedgraph.iloc[ix - 1].end < (self.bedgraph.iloc[ix].start - 1):
+                self.bedgraph.iloc[ix].end = self.bedgraph.iloc[ix].start - 1
 
     def plot_coverage(self, output_file):
         """
@@ -96,13 +127,15 @@ class Bedgraph:
 
         # np.histogram(coverage.coverage, bins=[coverage.start, coverage.end])
         # coverage.plot(x="start", y="coverage", kind="scatter")
+
         if len(self.coverage) <= 1:
             return
 
+        print(self.bedgraph.shape)
         ax.bar(
-            x=self.bins[:-1],
-            height=self.coverage,
-            width=np.diff(self.bins),
+            x=self.bedgraph.x.to_list(),
+            height=self.bedgraph.y.to_list(),
+            width=self.bedgraph.width.to_list(),
             align="edge",
             fc="skyblue",
             ec="none",
@@ -112,6 +145,9 @@ class Bedgraph:
         ax.set_ylabel("Coverage")
 
         fig.savefig(output_file, bbox_inches="tight")
+        ax.cla()
+        fig.clf()
+        plt.close("all")
 
 
 def get_args():

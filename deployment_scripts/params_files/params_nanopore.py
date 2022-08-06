@@ -265,7 +265,7 @@ ARGS_CLASS = {
     "diamond": {
         "DIAMOND_ARGS": [
             # "--top 3 -e 0.01 --id 50 --query-cover 50 --sensitive -M 4",
-            "--top 3 -e 0.01 --id 70 --query-cover 60 --fast -M 4 --long-reads",
+            "--top 3 -e 0.01 --id 70 --query-cover 60 --fast -M 5 --long-reads",
         ],
         "DIAMOND_DB": ["diamond/rvdb"],
         "DIAMOND_THREADS": [4],

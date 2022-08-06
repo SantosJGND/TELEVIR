@@ -236,7 +236,7 @@ class metaclass_run:
             "static_dir": self.static_dir,
             "actions": {},
             "bin": {},
-            "threads": 4,
+            "threads": 6,
             "prefix": self.id,
             "type": ["SE", "PE"][int(os.path.isfile(self.r2))],
             "sample_name": self.sample_name,
@@ -624,6 +624,8 @@ class meta_orchestra:
             "params": child_params,
             "runtime": child.exec_time,
         }
+
+        child.RunMain = {}
 
     def get_run_index_name(self):
         new_name = f"run_{self.total_runs}"

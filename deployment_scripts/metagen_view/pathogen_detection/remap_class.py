@@ -272,6 +272,7 @@ class Remapping:
         bin: str = "",
         logging_level: int = logging.CRITICAL,
         cleanup: bool = False,
+        logdir="",
     ):
         """
         Args:
@@ -308,7 +309,7 @@ class Remapping:
         self.r2 = r2
         self.minimum_coverage = minimum_coverage
 
-        self.cmd = RunCMD(bin)
+        self.cmd = RunCMD(bin, logdir)
 
         os.makedirs(self.rdir, exist_ok=True)
 
@@ -619,6 +620,8 @@ class Remapping:
             self.args,
             "--cpus",
             self.threads,
+            "--ram",
+            "4",
             "--ref",
             self.reference_file,
             "--outdir",
@@ -639,6 +642,8 @@ class Remapping:
             self.args,
             "--cpus",
             self.threads,
+            "--ram",
+            "4",
             "--ref",
             self.reference_file,
             "--outdir",
@@ -1156,6 +1161,7 @@ class Tandem_Remap:
 
     reads_before_processing: int = 0
     reads_after_processing: int = 0
+    logdir: str
 
     def __init__(
         self,
@@ -1177,6 +1183,7 @@ class Tandem_Remap:
         self.logger.addHandler(logging.StreamHandler())
         self.logger.propagate = False
         self.logger.info("Reciprocal Remap started")
+        self.logdir = logdir
 
         self.remapping_method = remapping_method
         self.assembly_file = assembly_file
@@ -1226,6 +1233,7 @@ class Tandem_Remap:
             bin=self.bin,
             logging_level=self.logging_level,
             cleanup=self.cleanup,
+            logdir=self.logdir,
         )
 
         target_remap_drone.run_remap()
@@ -1267,6 +1275,7 @@ class Tandem_Remap:
             bin=self.bin,
             logging_level=self.logging_level,
             cleanup=self.cleanup,
+            logdir=self.logdir,
         )
 
         assembly_remap_drone.run_remap()
@@ -1296,6 +1305,7 @@ class Mapping_Manager(Tandem_Remap):
         bin: str,
         logging_level: int,
         cleanup: bool,
+        logdir="",
     ):
 
         super().__init__(

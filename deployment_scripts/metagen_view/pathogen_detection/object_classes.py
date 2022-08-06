@@ -1,6 +1,7 @@
 import logging
 import os
 import subprocess
+import time
 from dataclasses import dataclass, field
 from random import randint
 from typing import Type
@@ -15,7 +16,7 @@ class RunCMD:
     Run command line commands.
     """
 
-    def __init__(self, bin):
+    def __init__(self, bin, logdir=""):
         """
         Initialize.
         """
@@ -30,6 +31,8 @@ class RunCMD:
         self.logger.setLevel(logging.CRITICAL)
         self.logger.addHandler(logging.StreamHandler())
         self.logger.propagate = False
+        self.logdir = logdir
+        print("logdir:", logdir)
 
     @staticmethod
     def flag_error(subprocess_errorlog):
@@ -57,6 +60,8 @@ class RunCMD:
 
         self.logger.info(f"running: {self.bin}{cmd}")
 
+        start_time = time.perf_counter()
+
         proc_prep = subprocess.Popen(
             f"{self.bin}{cmd}",
             shell=True,
@@ -65,12 +70,28 @@ class RunCMD:
         )
         out, err = proc_prep.communicate()
 
+        exec_time = time.perf_counter() - start_time
+
         if self.flag_error(err):
             self.logger.error(f"errror in command: {self.bin}{cmd}")
             raise Exception(err.decode("utf-8"))
 
-        self.logs.append(cmd)
-        self.logs.append(out)
+        if self.logdir:
+            with open(os.path.join(self.logdir, "log.txt"), "a") as f:
+                f.write(f"{cmd}\n")
+                try:
+
+                    f.write(f"{out.decode('utf-8')}\n")
+                    f.write(f"{err.decode('utf-8')}\n")
+                except Exception as e:
+                    f.write(f"{out}\n")
+                    f.write(f"{err}\n")
+
+                f.write(f"execution time: {exec_time}\n\n")
+
+        else:
+            self.logs.append(cmd)
+            self.logs.append(out)
 
     def run_python(self, cmd):
         """
@@ -269,8 +290,6 @@ class Read_class:
         """
 
         if len(read_list) > 0:
-            print(f"enriching {self.current}")
-            print(len(read_list))
             self.read_filter_move(self.current, read_list, self.enriched)
             self.is_enriched()
 
@@ -300,8 +319,6 @@ class Read_class:
         self.read_number_enriched = self.get_current_fastq_read_number()
         self.current_status = "enriched"
         self.filepath = os.path.dirname(self.current)
-        print("enriched")
-        print(self.read_number_enriched)
         self.read_number_filtered = self.read_number_enriched
 
     def is_depleted(self):

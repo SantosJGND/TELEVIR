@@ -579,6 +579,7 @@ class Run_Deployment_Methods(RunDetail_main):
             get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
             self.logger_level_detail,
             self.house_cleaning,
+            logdir=self.config["directories"]["log_dir"],
         )
 
         self.logger.info(
@@ -621,6 +622,7 @@ class RunMain_class(Run_Deployment_Methods):
             self.sample.reads_after_processing = self.sample.current_total_read_number()
             self.sample.get_qc_data()
             print(self.sample.reads_after_processing)
+
         if self.enrichment:
             self.deploy_EN()
 

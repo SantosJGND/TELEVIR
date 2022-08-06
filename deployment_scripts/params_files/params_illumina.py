@@ -39,6 +39,7 @@ BINARIES = {
         "virsorter": "hostDepletion/vs2",
         "deSAMBA": "classm_lc/deSAMBA",
         "clark": "classification/Clark",
+        "minimap2_asm": "hostDepletion/hostdep_env",
     },
     "REMAPPING": {"default": "remap/remap"},
     "PREPROCESS": {"default": "preprocess/preproc"},
@@ -96,7 +97,7 @@ SOFTWARE = {
     "ASSEMBLY": ["spades"],  # "flye", "raven"],
     "CONTIG_CLASSIFICATION": [
         "blast",
-        "diamond",
+        "minimap2_asm",
     ],  # ["blast", "minimap-asm", "diamond", "virsorter"],
     "READ_CLASSIFICATION": [
         "kraken2",
@@ -105,6 +106,7 @@ SOFTWARE = {
         "clark",
         "kaiju",
         "centrifuge",
+        "diamond",
     ],
     "REMAPPING": ["snippy"],  # snippy, rematch, bowtie, minimap-rem
 }
@@ -260,6 +262,14 @@ ARGS_CLASS = {
             "refseq_viral.genome.fna.gz",
             "virosaurus90_vertebrate-20200330.fas.gz",
         ],  ##NCBIrs_ViralCG.dustmasked.fna.gz
+    },
+    "minimap2_asm": {
+        "MINIMAP_ARGS": [""],
+        "MINIMAP_QCF": [20],  # filter for alignment score
+        "MINIMAP_DB": [
+            "refseq_viral.genome.fna.gz",
+            "virosaurus90_vertebrate-20200330.fas.gz",
+        ],
     },
     "fastviromeexplorer": {
         "FVE_ARGS": ["-cr 0.5 -co .5 -cn 10", "-cr 0.7 -co .7 -cn 15"],
