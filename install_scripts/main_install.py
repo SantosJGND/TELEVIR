@@ -191,7 +191,7 @@ class main_setup:
         """
         download prot sequences and get taxids.
         """
-        self.wdir.refseq_dl()
+        # self.wdir.refseq_dl()
         self.wdir.swissprot_dl()
 
         if self.organism == "viral":

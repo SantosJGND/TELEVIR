@@ -113,7 +113,9 @@ class RunDetail_main:
         self.logger = logging.getLogger("main {}".format(self.prefix))
         self.logger.setLevel(self.logger_level_main)
         logFormatter = logging.Formatter(
-            fmt="{} %(levelname)s :%(message)s".format(self.prefix)
+            fmt="{} {} %(levelname)s :%(message)s".format(
+                config["sample_name"], self.prefix
+            )
         )
 
         consoleHandler = logging.StreamHandler()
@@ -600,9 +602,9 @@ class RunMain_class(Run_Deployment_Methods):
         self.logger.info(f"enrichment: {self.enrichment}")
         self.logger.info(f"depletion: {self.depletion}")
         self.logger.info(f"assembly: {self.assembly}")
-        self.logger.info(f"remapping: {self.remapping}")
         self.logger.info(f"classification: {self.classification}")
         self.logger.info(f"sift: {self.sift}")
+        self.logger.info(f"remapping: {self.remapping}")
 
         if self.quality_control:
             self.deploy_QC()
@@ -730,15 +732,6 @@ class RunMain_class(Run_Deployment_Methods):
             self.sample.r1.read_number_filtered + self.sample.r2.read_number_filtered
         )
 
-        print(filtered_reads)
-        print(self.sample.r1.read_number_filtered)
-        print(self.sample.r2.read_number_filtered)
-        print(self.sample.r1.read_number_filtered + self.sample.r2.read_number_filtered)
-        print(self.sample.r1.current_status)
-        print(self.sample.r2.current_status)
-        print(self.sample.r1.current)
-        print(self.sample.r2.current)
-
         final_processing_reads = (
             self.sample.r1.current_fastq_read_number()
             + self.sample.r2.current_fastq_read_number()
@@ -758,7 +751,12 @@ class RunMain_class(Run_Deployment_Methods):
             minhit_reads = 0
 
         files = list(
-            set([t.reference.target.file for t in self.remap_manager.mapped_instances])
+            set(
+                [
+                    os.path.basename(t.reference.target.file)
+                    for t in self.remap_manager.mapped_instances
+                ]
+            )
         )
 
         self.run_detail_report = Run_detail_report(

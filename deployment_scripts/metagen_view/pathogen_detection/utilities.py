@@ -63,7 +63,7 @@ def scrape_description(accid: str, existing_description: str = None) -> str:
         return str(title)
 
 
-def read_sam_coordinates(samfile: str) -> pd.DataFrame:
+def read_paf_coordinates(samfile: str) -> pd.DataFrame:
     """Read the sam file and return a dataframe with the coordinates."""
 
     try:

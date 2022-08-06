@@ -18,7 +18,7 @@ from pathogen_detection.object_classes import (
     RunCMD,
     Software_detail,
 )
-from pathogen_detection.utilities import read_sam_coordinates
+from pathogen_detection.utilities import read_paf_coordinates
 
 pd.options.mode.chained_assignment = None
 np.warnings.filterwarnings("ignore")
@@ -710,7 +710,7 @@ class Remapping:
         ]
         self.cmd.run_bash(unzip_cmd)
 
-        cmd = f"minimap2 -t {self.threads} -cx asm5 {tempfile} {self.reference_file} > {self.assembly_map_paf}"
+        cmd = f"minimap2 -t {self.threads} -cx asm10 {self.assembly_path} {self.reference_file} > {self.assembly_map_paf}"
         self.cmd.run(cmd)
 
         os.remove(tempfile)
@@ -916,7 +916,7 @@ class Remapping:
     def plot_dotplot_from_paf(self):
         if os.path.getsize(self.assembly_map_paf):
 
-            df = read_sam_coordinates(self.assembly_map_paf)
+            df = read_paf_coordinates(self.assembly_map_paf)
             plot_dotplot(df, self.dotplot, "dotplot")
             self.dotplot_exists = os.path.exists(self.dotplot)
 

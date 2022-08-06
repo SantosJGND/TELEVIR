@@ -767,6 +767,50 @@ class run_minimap2_ONT(Classifier_init):
         ).rename(columns={0: "qseqid", 2: "acc"})
 
 
+class run_minimap2_asm(Classifier_init):
+    method_name = "minimap2_asm"
+    report_suffix = ".paf"
+    full_report_suffix = ".minimap2"
+
+    def run_SE(self, threads: int = 3):
+        cmd = f"minimap2 -t {threads} -cx asm10 {self.args} {self.db_path} {self.query_path} > {self.report_path}"
+        self.cmd.run(cmd)
+
+    def get_report(self) -> pd.DataFrame:
+
+        if check_report_empty(self.report_path):
+            return pd.DataFrame(columns=["qseqid", "acc"])
+
+        return pd.read_csv(self.report_path, sep="\t", header=None).rename(
+            columns={
+                0: "qseqid",
+                1: "qlen",
+                2: "qstart",
+                3: "qend",
+                4: "strand",
+                5: "acc",
+                6: "tlen",
+                7: "tstart",
+                8: "tend",
+                9: "nmatches",
+                10: "length",
+                11: "qual",
+            }
+        )
+
+    def get_report_simple(self) -> pd.DataFrame:
+        """
+        read classifier output, return only query and reference sequence id columns.
+        """
+
+        if check_report_empty(self.report_path):
+            return pd.DataFrame(columns=["qseqid", "acc"])
+
+        return pd.read_csv(
+            self.report_path, sep="\t", header=None, usecols=[0, 5], comment="@"
+        ).rename(columns={0: "qseqid", 5: "acc"})
+
+
 class run_FastViromeExplorer(Classifier_init):
     method_name = "FastViromeExplorer"
     report_suffix = ".sam"
@@ -947,6 +991,7 @@ class Classifier:
         "kraken2": run_kraken2,
         "minimap2_illumina": run_minimap2_illumina,
         "minimap2_ont": run_minimap2_ONT,
+        "minimap2_asm": run_minimap2_asm,
         "diamond": run_diamond,
         "kaiju": run_kaiju,
         "krakenuniq": run_krakenuniq,

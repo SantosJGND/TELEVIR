@@ -365,14 +365,14 @@ class ReadClassification(models.Model):
     )  # read classification method if any
 
     args = models.CharField(
-        max_length=50, blank=True, null=True
+        max_length=250, blank=True, null=True
     )  # read classification args
     db = models.CharField(
-        max_length=50, blank=True, null=True
+        max_length=250, blank=True, null=True
     )  # read classification db if any
 
     read_classification_report = models.CharField(
-        max_length=200, blank=True, null=True
+        max_length=250, blank=True, null=True
     )  # read classification report
 
     classification_number = models.IntegerField(blank=True, null=True)

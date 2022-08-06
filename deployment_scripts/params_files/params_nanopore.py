@@ -42,6 +42,7 @@ BINARIES = {
         "flye": "assembly/Flye",
         "clark": "classification/Clark",
         "minimap2_ONT": "hostDepletion/hostdep_env",
+        "minimap2_asm": "hostDepletion/hostdep_env",
     },
     "REMAPPING": {"default": "remap/remap"},
     "PREPROCESS": {"default": "preprocess/preproc"},
@@ -97,16 +98,22 @@ SOFTWARE = {
         "krakenuniq",
         "centrifuge",
     ],
-    "ASSEMBLY": ["flye", "raven"],  # spades, velvet,
-    "CONTIG_CLASSIFICATION": ["blast", "diamond"],  # , "minimap-asm"],
+    "ASSEMBLY": [
+        # "flye",
+        "raven"
+    ],  # spades, velvet,
+    "CONTIG_CLASSIFICATION": [
+        # "blast",
+        "minimap2_asm"
+    ],  # , "minimap-asm"],
     "READ_CLASSIFICATION": [
-        "fastviromeexplorer",
-        "krakenuniq",
-        "clark",
-        "desamba",
-        "kaiju",
-        "minimap2_ONT",
+        # "fastviromeexplorer",
+        # "krakenuniq",
+        # "clark",
+        # "desamba",
+        # "kaiju",
         "centrifuge",
+        # "diamond",
     ],
     "REMAPPING": ["minimap-rem"],  # snippy, rematch, bowtie, minimap-rem
 }
@@ -258,7 +265,7 @@ ARGS_CLASS = {
     "diamond": {
         "DIAMOND_ARGS": [
             # "--top 3 -e 0.01 --id 50 --query-cover 50 --sensitive -M 4",
-            "--top 3 -e 0.01 --id 70 --query-cover 60 --fast -M 4",
+            "--top 3 -e 0.01 --id 70 --query-cover 60 --fast -M 4 --long-reads",
         ],
         "DIAMOND_DB": ["diamond/rvdb"],
         "DIAMOND_THREADS": [4],
@@ -270,6 +277,14 @@ ARGS_CLASS = {
     },
     "minimap2_ONT": {
         "MINIMAP_ARGS": [""],
+        "MINIMAP_DB": [
+            "refseq_viral.genome.fna.gz",
+            "virosaurus90_vertebrate-20200330.fas.gz",
+        ],
+    },
+    "minimap2_asm": {
+        "MINIMAP_ARGS": [""],
+        "MINIMAP_QCF": [20],  # filter for alignment score
         "MINIMAP_DB": [
             "refseq_viral.genome.fna.gz",
             "virosaurus90_vertebrate-20200330.fas.gz",
