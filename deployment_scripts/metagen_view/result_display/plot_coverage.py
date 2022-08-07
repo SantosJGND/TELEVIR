@@ -1,3 +1,4 @@
+import itertools as it
 import os
 import sys
 
@@ -53,13 +54,12 @@ class Bedgraph:
     plot_coverage: barplot of coverage by window in bdgraph.
     """
 
-    def __init__(self, bedgraph_file, max_bars=2000):
+    def __init__(self, bedgraph_file, max_bars=7000, bins=300):
         self.max_bars = max_bars
+        self.bins = bins
         self.bedgraph = self.read_bedgraph(bedgraph_file)
-        self.coverage = self.get_coverage_array(self.bedgraph)
         self.reduce_number_bars()
-        self.merge_bedgraph_rows()
-        self.get_bar_coordinates()
+        self.bar_to_histogram()
 
     def read_bedgraph(self, coverage_file) -> pd.DataFrame:
         coverage = pd.read_csv(coverage_file, sep="\t", header=None).rename(
@@ -115,6 +115,18 @@ class Bedgraph:
             if self.bedgraph.iloc[ix - 1].end < (self.bedgraph.iloc[ix].start - 1):
                 self.bedgraph.iloc[ix].end = self.bedgraph.iloc[ix].start - 1
 
+    def bar_to_histogram(self):
+        """
+        Bar to histogram.
+        """
+
+        self.bedgraph["coord"] = self.bedgraph.start + self.bedgraph.end / 2
+        self.coverage = [
+            [self.bedgraph.iloc[x]["coord"]] * self.bedgraph.iloc[x]["coverage"]
+            for x in range(self.bedgraph.shape[0])
+        ]
+        self.coverage = list(it.chain.from_iterable(self.coverage))
+
     def plot_coverage(self, output_file):
         """
         Plot the coverage of the remapping.
@@ -125,20 +137,14 @@ class Bedgraph:
 
         fig, ax = plt.subplots(figsize=(11, 3))
 
-        # np.histogram(coverage.coverage, bins=[coverage.start, coverage.end])
-        # coverage.plot(x="start", y="coverage", kind="scatter")
-
         if len(self.coverage) <= 1:
             return
 
-        print(self.bedgraph.shape)
-        ax.bar(
-            x=self.bedgraph.x.to_list(),
-            height=self.bedgraph.y.to_list(),
-            width=self.bedgraph.width.to_list(),
-            align="edge",
-            fc="skyblue",
-            ec="none",
+        ax.hist(
+            self.coverage,
+            bins=self.bins,
+            color="skyblue",
+            edgecolor="none",
         )
 
         ax.set_xlabel("Reference")

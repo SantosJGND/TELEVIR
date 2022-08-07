@@ -32,7 +32,6 @@ class RunCMD:
         self.logger.addHandler(logging.StreamHandler())
         self.logger.propagate = False
         self.logdir = logdir
-        print("logdir:", logdir)
 
     @staticmethod
     def flag_error(subprocess_errorlog):
