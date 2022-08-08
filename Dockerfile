@@ -4,12 +4,13 @@ RUN set -xe && apt-get update && apt-get install -y python3 python3-pip
 RUN pip install --upgrade pip
 
 RUN apt-get update
-RUN apt-get install -y build-essential 
-RUN apt-get install -y wget
+RUN apt-get install -y build-essential wget apt-utils python3-setuptools
+
 RUN apt-get clean
-RUN apt-get install -y apt-utils
-RUN apt-get install python3-setuptools
-RUN pip install --upgrade setuptools
+RUN apt-get install -y 
+#RUN apt-get install python3-setuptools
+#RUN pip install --upgrade setuptools
+
 RUN rm -rf /var/lib/apt/lists/*
 RUN pip install --upgrade pip
 RUN pip install pandas

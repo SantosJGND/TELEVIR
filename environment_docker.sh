@@ -3,7 +3,7 @@
 apt-get update
 apt-get install default-jre
 apt-get install -y bioperl
-apt-get install python3-pip python3-dev libpq-dev postgresql postgresql-contrib
+apt-get install python3-pip python3-dev libpq-dev postgresql postgresql-contrib tabix
 
 python3 -m venv .venv
 

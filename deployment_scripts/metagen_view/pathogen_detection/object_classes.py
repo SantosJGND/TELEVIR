@@ -7,6 +7,7 @@ from random import randint
 from typing import Type
 
 import pandas as pd
+from numpy import ERR_CALL
 
 from pathogen_detection.utilities import fastqc_parse
 
@@ -52,23 +53,40 @@ class RunCMD:
 
         return False
 
+    @staticmethod
+    def process_cmd_log(cmd_out):
+        """
+        Process command log.
+        """
+
+        if not cmd_out:
+            return ""
+
+        if isinstance(cmd_out, bytes):
+            try:  # python 3
+                cmd_out = cmd_out.decode()
+            except Exception as e:
+                print("log error:", e)
+                print("out:", cmd_out)
+                cmd_out = ""
+
+        if len(cmd_out) > 300:
+            cmd_out = cmd_out[:70] + "..." + cmd_out[-70:].strip()
+
+        return cmd_out
+
     def output_disposal(self, cmd: str, err: str, out: str, exec_time: float):
         if self.logdir:
             with open(os.path.join(self.logdir, self.logfile), "a") as f:
                 software = cmd.split(" ")[0]
                 f.write(f"exec\t{software}\t{exec_time}\n")
                 f.write(f"{cmd}\n")
-                try:
-                    command_output = out.decode("utf-8")
-                    if len(command_output > 100):
-                        command_output = (
-                            command_output[:50] + "..." + command_output[-50:]
-                        )
-                    f.write(f"{command_output}\n")
-                    f.write(f"{err.decode('utf-8')}\n")
-                except Exception as e:
-                    f.write(f"{out}\n")
-                    f.write(f"{err}\n")
+
+                out = self.process_cmd_log(out)
+                err = self.process_cmd_log(err)
+
+                f.write(f"out\t{out}\n")
+                f.write(f"err\t{err}\n")
 
         else:
             self.logs.append(cmd)
