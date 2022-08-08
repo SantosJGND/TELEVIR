@@ -148,8 +148,6 @@ class Bedgraph:
 
         fig, ax = plt.subplots(figsize=(11, 3))
 
-        print(self.bedgraph.tail())
-
         if len(self.coverage) <= 1:
             return
 
@@ -176,8 +174,6 @@ class Bedgraph:
         ax.cla()
         fig.clf()
         plt.close("all")
-
-        print(f"Plotting time: {time.perf_counter() - start_time}")
 
 
 def get_args():

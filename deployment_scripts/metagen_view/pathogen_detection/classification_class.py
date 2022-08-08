@@ -30,6 +30,7 @@ class Classifier_init:
         r2: str = "",
         prefix: str = "",
         bin: str = "",
+        log_dir="",
     ):
         self.db_path = db_path
         self.query_path = query_path
@@ -37,7 +38,7 @@ class Classifier_init:
         self.r2 = r2
         self.prefix = prefix
         self.args = args
-        self.cmd = RunCMD(bin)
+        self.cmd = RunCMD(bin, logdir=log_dir, prefix=prefix)
 
         self.report_path = os.path.join(self.out_path, self.prefix + self.report_suffix)
         self.full_report_path = os.path.join(

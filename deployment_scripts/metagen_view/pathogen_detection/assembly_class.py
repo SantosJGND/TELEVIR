@@ -20,6 +20,8 @@ class Assembly_init:
         threads: int = 3,
         r2: str = "",
         bin: str = "",
+        log_dir: str = "",
+        prefix: str = "",
     ):
 
         self.r1 = r1
@@ -27,7 +29,7 @@ class Assembly_init:
         self.assembly_dir = assembly_dir
         self.assembly_args = assembly_args
         self.threads = threads
-        self.cmd = RunCMD(bin)
+        self.cmd = RunCMD(bin, logdir=log_dir, prefix=prefix, task="assembly")
 
         self.assembly_file_fasta = os.path.join(
             self.assembly_dir, self.assembly_file_name
@@ -303,6 +305,8 @@ class Assembly_class:
             threads=self.threads,
             r2=self.r2,
             bin=self.assembly_method.bin,
+            log_dir=self.cmd.logdir,
+            prefix=self.cmd.prefix,
         )
 
         os.makedirs(self.assembly_dir, exist_ok=True)
