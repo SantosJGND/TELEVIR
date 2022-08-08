@@ -9,8 +9,7 @@ from django.http.response import HttpResponse
 from django.shortcuts import render
 from django.utils.safestring import mark_safe
 from django.views.generic import ListView
-
-# Create your views here.
+from django_tables2 import RequestConfig
 from metagen_view.settings import STATICFILES_DIRS
 
 from result_display import igv_app
@@ -119,6 +118,7 @@ def Sample_main(requesdst, project_name, sample_name):
 
     sampleqc_table = SampleQCTable(sampleqc)
     runs = RunMainTable(runs)
+    RequestConfig(requesdst).configure(runs)
 
     return render(
         requesdst,
