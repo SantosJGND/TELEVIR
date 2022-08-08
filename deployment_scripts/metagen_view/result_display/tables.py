@@ -2,7 +2,7 @@ from typing import DefaultDict
 
 import django_tables2 as tables
 
-from result_display.models import ReferenceContigs, RunMain, Sample, SampleQC
+from result_display.models import Projects, ReferenceContigs, RunMain, Sample, SampleQC
 
 
 class SampleTable(tables.Table):
@@ -21,6 +21,11 @@ class SampleTable(tables.Table):
             "technology",
             "type",
         )
+
+    def render_combinations(self, record):
+        return RunMain.objects.filter(
+            sample__name=record.name, project__name=record.project
+        ).count()
 
     report = tables.LinkColumn(
         "sample_main", text="Report", args=[tables.A("project__name"), tables.A("name")]

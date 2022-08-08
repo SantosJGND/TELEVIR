@@ -226,11 +226,12 @@ class Assembly_class:
         threads: int = 3,
         bin: str = "",
         logging_level: int = logging.ERROR,
+        log_dir: str = "",
     ):
         self.r1 = r1
         self.r2 = r2
         self.type = assembly_type
-        self.cmd = RunCMD(bin)
+        self.cmd = RunCMD(bin, logdir=log_dir, prefix=prefix, task="assembly")
 
         self.assembly_args = assembly_method.args
         self.min_scaffold_length = min_scaffold_length

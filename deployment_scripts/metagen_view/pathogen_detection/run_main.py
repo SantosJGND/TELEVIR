@@ -112,6 +112,7 @@ class RunDetail_main:
         self.logger_level_detail = logging.CRITICAL
         self.logger = logging.getLogger("main {}".format(self.prefix))
         self.logger.setLevel(self.logger_level_main)
+
         logFormatter = logging.Formatter(
             fmt="{} {} %(levelname)s :%(message)s".format(
                 config["sample_name"], self.prefix
@@ -502,6 +503,7 @@ class Run_Deployment_Methods(RunDetail_main):
             threads=self.threads,
             bin=get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
             logging_level=self.logger_level_detail,
+            log_dir=self.log_dir,
         )
 
         self.depletion_drone.run()
@@ -516,6 +518,7 @@ class Run_Deployment_Methods(RunDetail_main):
             threads=self.threads,
             bin=get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
             logging_level=self.logger_level_detail,
+            log_dir=self.log_dir,
         )
 
         self.enrichment_drone.run()
@@ -531,6 +534,7 @@ class Run_Deployment_Methods(RunDetail_main):
             threads=self.threads,
             bin=get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
             logging_level=self.logger_level_detail,
+            log_dir=self.log_dir,
         )
 
         self.assembly_drone.run()
@@ -545,6 +549,7 @@ class Run_Deployment_Methods(RunDetail_main):
             threads=self.threads,
             bin=get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
             logging_level=self.logger_level_detail,
+            log_dir=self.log_dir,
         )
 
         self.contig_classification_drone.run()
@@ -560,6 +565,7 @@ class Run_Deployment_Methods(RunDetail_main):
             threads=self.threads,
             bin=get_bindir_from_binaries(self.config["bin"], "REMAPPING"),
             logging_level=self.logger_level_detail,  #
+            log_dir=self.log_dir,
         )
 
         self.read_classification_drone.run()

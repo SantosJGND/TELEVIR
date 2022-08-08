@@ -1009,6 +1009,7 @@ class Classifier:
         threads: int = 1,
         bin: str = "",
         logging_level: int = logging.INFO,
+        log_dir: str = "",
     ):
         """
         Initialize classifier.
@@ -1025,7 +1026,10 @@ class Classifier:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging_level)
         self.logger.addHandler(logging.StreamHandler())
-        self.cmd = RunCMD(bin)
+        self.log_dir = log_dir
+        self.cmd = RunCMD(
+            bin, logdir=self.log_dir, prefix=prefix, task="classification"
+        )
         self.prefix = prefix
         self.classifier_method = classifier_method
         self.r1 = query_path

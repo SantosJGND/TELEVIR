@@ -272,7 +272,7 @@ class Remapping:
         bin: str = "",
         logging_level: int = logging.CRITICAL,
         cleanup: bool = False,
-        logdir="",
+        log_dir="",
     ):
         """
         Args:
@@ -309,7 +309,7 @@ class Remapping:
         self.r2 = r2
         self.minimum_coverage = minimum_coverage
 
-        self.cmd = RunCMD(bin, logdir)
+        self.cmd = RunCMD(bin, logdir=log_dir, prefix=prefix, task="remapping")
 
         os.makedirs(self.rdir, exist_ok=True)
 
@@ -914,7 +914,7 @@ class Remapping:
     def plot_coverage(self):
         if os.path.getsize(self.genome_coverage):
             bedgraph = Bedgraph(self.genome_coverage)
-            bedgraph.plot_coverage(self.coverage_plot)
+            bedgraph.plot_coverage(self.coverage_plot, tlen=self.reference_fasta_length)
 
         self.coverage_plot_exists = os.path.exists(self.coverage_plot)
 
@@ -922,7 +922,7 @@ class Remapping:
         if os.path.getsize(self.assembly_map_paf):
 
             df = read_paf_coordinates(self.assembly_map_paf)
-            plot_dotplot(df, self.dotplot, "dotplot")
+            plot_dotplot(df, self.dotplot, "dotplot", xmax=self.reference_fasta_length)
             self.dotplot_exists = os.path.exists(self.dotplot)
 
     def move_coverage_plot(self, main_static, static_dir):
@@ -1232,7 +1232,7 @@ class Tandem_Remap:
             bin=self.bin,
             logging_level=self.logging_level,
             cleanup=self.cleanup,
-            logdir=self.logdir,
+            log_dir=self.logdir,
         )
 
         target_remap_drone.run_remap()
@@ -1274,7 +1274,7 @@ class Tandem_Remap:
             bin=self.bin,
             logging_level=self.logging_level,
             cleanup=self.cleanup,
-            logdir=self.logdir,
+            log_dir=self.logdir,
         )
 
         assembly_remap_drone.run_remap()

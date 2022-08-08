@@ -16,7 +16,7 @@ class RunCMD:
     Run command line commands.
     """
 
-    def __init__(self, bin, logdir: str = ""):
+    def __init__(self, bin, logdir: str = "", prefix: str = "run", task: str = "NONE"):
         """
         Initialize.
         """
@@ -31,6 +31,7 @@ class RunCMD:
         self.logger.setLevel(logging.CRITICAL)
         self.logger.addHandler(logging.StreamHandler())
         self.logger.propagate = False
+        self.logfile = os.path.join(logdir, f"{prefix}_{task}.log")
         self.logdir = logdir
 
     @staticmethod
@@ -76,17 +77,16 @@ class RunCMD:
             raise Exception(err.decode("utf-8"))
 
         if self.logdir:
-            with open(os.path.join(self.logdir, "log.txt"), "a") as f:
+            with open(os.path.join(self.logdir, self.logfile), "a") as f:
+                software = cmd.split(" ")[0]
+                f.write(f"{software}\t{exec_time}\n")
                 f.write(f"{cmd}\n")
                 try:
-
                     f.write(f"{out.decode('utf-8')}\n")
                     f.write(f"{err.decode('utf-8')}\n")
                 except Exception as e:
                     f.write(f"{out}\n")
                     f.write(f"{err}\n")
-
-                f.write(f"execution time: {exec_time}\n\n")
 
         else:
             self.logs.append(cmd)

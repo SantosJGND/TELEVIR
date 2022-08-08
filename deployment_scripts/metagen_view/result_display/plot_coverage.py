@@ -5,12 +5,21 @@ import sys
 import matplotlib
 
 matplotlib.use("Agg")
+import time
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
 
-def plot_dotplot(df: pd.DataFrame, out_file: str, title: str, inv_color: str = "red"):
+def plot_dotplot(
+    df: pd.DataFrame,
+    out_file: str,
+    title: str,
+    inv_color: str = "red",
+    xmax=0,
+    borders=50,
+):
     """Plot the dotplot from bamfile
     query and reference coordinates column names are ax, ay, bx, by.
 
@@ -36,6 +45,8 @@ def plot_dotplot(df: pd.DataFrame, out_file: str, title: str, inv_color: str = "
     ax.set_title(title)
     ax.set_xlabel("Reference")
     ax.set_ylabel("Contigs")
+    if xmax:
+        ax.set_xlim(0 - borders, xmax + borders)
 
     fig.savefig(out_file, bbox_inches="tight")
     ax.cla()
@@ -54,9 +65,9 @@ class Bedgraph:
     plot_coverage: barplot of coverage by window in bdgraph.
     """
 
-    def __init__(self, bedgraph_file, max_bars=7000, bins=300):
+    def __init__(self, bedgraph_file, max_bars=7000, nbins=300):
         self.max_bars = max_bars
-        self.bins = bins
+        self.nbins = nbins
         self.bedgraph = self.read_bedgraph(bedgraph_file)
         self.reduce_number_bars()
         self.bar_to_histogram()
@@ -120,14 +131,14 @@ class Bedgraph:
         Bar to histogram.
         """
 
-        self.bedgraph["coord"] = self.bedgraph.start + self.bedgraph.end / 2
+        self.bedgraph["coord"] = (self.bedgraph.start + self.bedgraph.end) / 2
         self.coverage = [
             [self.bedgraph.iloc[x]["coord"]] * self.bedgraph.iloc[x]["coverage"]
             for x in range(self.bedgraph.shape[0])
         ]
         self.coverage = list(it.chain.from_iterable(self.coverage))
 
-    def plot_coverage(self, output_file):
+    def plot_coverage(self, output_file, borders=50, tlen=0):
         """
         Plot the coverage of the remapping.
 
@@ -137,12 +148,16 @@ class Bedgraph:
 
         fig, ax = plt.subplots(figsize=(11, 3))
 
+        print(self.bedgraph.tail())
+
         if len(self.coverage) <= 1:
             return
 
+        start_time = time.perf_counter()
+
         ax.hist(
             self.coverage,
-            bins=self.bins,
+            bins=self.nbins,
             color="skyblue",
             edgecolor="none",
         )
@@ -150,10 +165,19 @@ class Bedgraph:
         ax.set_xlabel("Reference")
         ax.set_ylabel("Coverage")
 
+        ##
+        xmax = self.bedgraph.end.max()
+        if tlen:
+            xmax = tlen
+        ax.set_xlim(0 - borders, xmax + borders)
+        ##
+
         fig.savefig(output_file, bbox_inches="tight")
         ax.cla()
         fig.clf()
         plt.close("all")
+
+        print(f"Plotting time: {time.perf_counter() - start_time}")
 
 
 def get_args():
