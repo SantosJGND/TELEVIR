@@ -21,6 +21,11 @@ def check_report_empty(file, comment="@"):
 
 
 class Classifier_init:
+    """
+    list of clasifiers that overwrite Classifier_init:
+    - run_kaiju
+    """
+
     def __init__(
         self,
         db_path: str,
@@ -38,7 +43,7 @@ class Classifier_init:
         self.r2 = r2
         self.prefix = prefix
         self.args = args
-        self.cmd = RunCMD(bin, logdir=log_dir, prefix=prefix)
+        self.cmd = RunCMD(bin, logdir=log_dir, prefix=prefix, task="classification")
 
         self.report_path = os.path.join(self.out_path, self.prefix + self.report_suffix)
         self.full_report_path = os.path.join(
@@ -75,6 +80,67 @@ class Classifier_init:
         if same:
             os.remove(self.report_path)
             os.rename(output_sam, self.report_path)
+
+
+class run_kaiju(Classifier_init):
+    method_name = "kaiju"
+    report_suffix = ".kaiju.out"
+    full_report_suffix = ".kaiju"
+    classification_type = "viral"
+
+    def __init__(
+        self,
+        db_path: str,
+        query_path: str,
+        out_path: str,
+        args="",
+        r2: str = "",
+        prefix: str = "",
+        bin: str = "",
+        log_dir="",
+    ):
+        super().__init__(db_path, query_path, out_path, args, r2, prefix, bin, log_dir)
+        self.report_path = os.path.join(self.out_path, self.prefix + self.report_suffix)
+
+        try:
+            dbdir = os.path.dirname(self.db_path)
+            self.nodes = os.path.join(dbdir, "nodes.dmp")
+            if not os.path.isfile(self.nodes):
+                raise FileNotFoundError(
+                    "nodes.dmp not found, tried looking in db directory."
+                )
+        except FileNotFoundError:
+            raise FileNotFoundError("Kaiju nodes file not found")
+
+    def run_SE(self, threads: int = 3):
+        cmd = f"kaiju -t {self.nodes} -f {self.db_path} -i {self.query_path} -o {self.report_path} -z {threads} {self.args}"
+        self.cmd.run(cmd)
+
+    def run_PE(self, threads: int = 3):
+        cmd = f"kaiju -t {self.nodes} -f {self.db_path} -i {self.query_path} -j {self.r2} -o {self.report_path} -z {threads} {self.args}"
+        self.cmd.run(cmd)
+
+    def get_report(self) -> pd.DataFrame:
+        if check_report_empty(self.report_path):
+            return pd.DataFrame(columns=["qseqid", "acc"])
+
+        return pd.read_csv(self.report_path, sep="\t", header=None).rename(
+            columns={
+                0: "CU",
+                1: "seqid",
+                2: "taxid",
+                3: "length",
+                4: "LCAmap",
+            }
+        )
+
+    def get_report_simple(self) -> pd.DataFrame:
+        if check_report_empty(self.report_path):
+            return pd.DataFrame(columns=["qseqid", "acc"])
+
+        return pd.read_csv(
+            self.report_path, sep="\t", header=None, usecols=[1, 2], comment="@"
+        ).rename(columns={1: "qseqid", 2: "taxid"})
 
 
 class run_blast(Classifier_init):
@@ -546,66 +612,6 @@ class run_diamond(Classifier_init):
         ).rename(columns={0: "qseqid", 1: "prot_acc"})
         report["prot_acc"] = report["prot_acc"].apply(self.acc_name_simplify)
         return report
-
-
-class run_kaiju(Classifier_init):
-    method_name = "kaiju"
-    report_suffix = ".kaiju.out"
-    full_report_suffix = ".kaiju"
-    classification_type = "viral"
-
-    def __init__(
-        self,
-        db_path: str,
-        query_path: str,
-        out_path: str,
-        args="",
-        r2: str = "",
-        prefix: str = "",
-        bin: str = "",
-    ):
-        super().__init__(db_path, query_path, out_path, args, r2, prefix, bin)
-        self.report_path = os.path.join(self.out_path, self.prefix + self.report_suffix)
-
-        try:
-            dbdir = os.path.dirname(self.db_path)
-            self.nodes = os.path.join(dbdir, "nodes.dmp")
-            if not os.path.isfile(self.nodes):
-                raise FileNotFoundError(
-                    "nodes.dmp not found, tried looking in db directory."
-                )
-        except FileNotFoundError:
-            raise FileNotFoundError("Kaiju nodes file not found")
-
-    def run_SE(self, threads: int = 3):
-        cmd = f"kaiju -t {self.nodes} -f {self.db_path} -i {self.query_path} -o {self.report_path} -z {threads} {self.args}"
-        self.cmd.run(cmd)
-
-    def run_PE(self, threads: int = 3):
-        cmd = f"kaiju -t {self.nodes} -f {self.db_path} -i {self.query_path} -j {self.r2} -o {self.report_path} -z {threads} {self.args}"
-        self.cmd.run(cmd)
-
-    def get_report(self) -> pd.DataFrame:
-        if check_report_empty(self.report_path):
-            return pd.DataFrame(columns=["qseqid", "acc"])
-
-        return pd.read_csv(self.report_path, sep="\t", header=None).rename(
-            columns={
-                0: "CU",
-                1: "seqid",
-                2: "taxid",
-                3: "length",
-                4: "LCAmap",
-            }
-        )
-
-    def get_report_simple(self) -> pd.DataFrame:
-        if check_report_empty(self.report_path):
-            return pd.DataFrame(columns=["qseqid", "acc"])
-
-        return pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[1, 2], comment="@"
-        ).rename(columns={1: "qseqid", 2: "taxid"})
 
 
 class run_krakenuniq(Classifier_init):
@@ -1083,6 +1089,7 @@ class Classifier:
                 r2=self.r2,
                 prefix=self.prefix,
                 bin=self.classifier_method.bin,
+                log_dir=self.log_dir,
             )
 
         except KeyError:
@@ -1095,6 +1102,7 @@ class Classifier:
                 r2=self.r2,
                 prefix=self.prefix,
                 bin=self.classifier_method.bin,
+                log_dir=self.log_dir,
             )
 
     def check_gz_file_not_empty(self, file):

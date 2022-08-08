@@ -56,10 +56,15 @@ class RunCMD:
         if self.logdir:
             with open(os.path.join(self.logdir, self.logfile), "a") as f:
                 software = cmd.split(" ")[0]
-                f.write(f"{software}\t{exec_time}\n")
+                f.write(f"exec\t{software}\t{exec_time}\n")
                 f.write(f"{cmd}\n")
                 try:
-                    f.write(f"{out.decode('utf-8')}\n")
+                    command_output = out.decode("utf-8")
+                    if len(command_output > 100):
+                        command_output = (
+                            command_output[:50] + "..." + command_output[-50:]
+                        )
+                    f.write(f"{command_output}\n")
                     f.write(f"{err.decode('utf-8')}\n")
                 except Exception as e:
                     f.write(f"{out}\n")
@@ -203,7 +208,7 @@ class RunCMD:
             self.logger.error(f"errror in command: {self.bin}{cmd}")
             raise Exception(err.decode("utf-8"))
 
-        self.output_disposal(cmd, err, out, exec_time)
+        self.output_disposal(cmd, err, "", exec_time)
 
         return out
 

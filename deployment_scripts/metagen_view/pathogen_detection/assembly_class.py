@@ -166,8 +166,12 @@ class Assembly_raven(Assembly_init):
         threads: int = 3,
         r2: str = "",
         bin: str = "",
+        log_dir: str = "",
+        prefix: str = "",
     ):
-        super().__init__(r1, assembly_dir, assembly_args, threads, r2, bin)
+        super().__init__(
+            r1, assembly_dir, assembly_args, threads, r2, bin, log_dir, prefix
+        )
 
         self.assembly_file_fasta = os.path.join(assembly_dir, self.assembly_file_name)
         self.assembly_file_gfa = os.path.join(assembly_dir, self.assembly_gfa)
