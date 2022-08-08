@@ -98,22 +98,16 @@ SOFTWARE = {
         "krakenuniq",
         "centrifuge",
     ],
-    "ASSEMBLY": [
-        # "flye",
-        "raven"
-    ],  # spades, velvet,
-    "CONTIG_CLASSIFICATION": [
-        # "blast",
-        "minimap2_asm"
-    ],  # , "minimap-asm"],
+    "ASSEMBLY": ["flye", "raven"],  # spades, velvet,
+    "CONTIG_CLASSIFICATION": ["blast", "minimap2_asm"],  # , "minimap-asm"],
     "READ_CLASSIFICATION": [
-        # "fastviromeexplorer",
-        # "krakenuniq",
-        # "clark",
-        # "desamba",
-        # "kaiju",
+        "fastviromeexplorer",
+        "krakenuniq",
+        "clark",
+        "desamba",
+        "kaiju",
         "centrifuge",
-        # "diamond",
+        "diamond",
     ],
     "REMAPPING": ["minimap-rem"],  # snippy, rematch, bowtie, minimap-rem
 }
@@ -233,7 +227,7 @@ ARGS_ASS = {
 
 ARGS_CLASS = {
     "clark": {
-        "CLARK_ARGS": ["-m 0", "-m 1", "-m 3"],
+        "CLARK_ARGS": ["-m 2", "-m 1"],
         "CLARK_THREADS": [8],
         "CLARK_DB": ["clark/viruses"],
     },
@@ -248,7 +242,7 @@ ARGS_CLASS = {
         "KRAKEN_THREADS": [4],
     },
     "centrifuge": {
-        "CENTRIFUGE_ARGS": ["-k 3 --min-hitlen 22"],
+        "CENTRIFUGE_ARGS": ["--min-hitlen 22"],
         "CENTRIFUGE_THREADS": [4],
         "CENTRIFUGE_DB": ["centrifuge/viral/index"],
     },
@@ -264,7 +258,7 @@ ARGS_CLASS = {
     },
     "diamond": {
         "DIAMOND_ARGS": [
-            # "--top 3 -e 0.01 --id 50 --query-cover 50 --sensitive -M 4",
+            # "--top 3 -e 0.01 --id 50 --query-cover 50 --sensitive -M 5 --long-reads",
             "--top 3 -e 0.01 --id 70 --query-cover 60 --fast -M 5 --long-reads",
         ],
         "DIAMOND_DB": ["diamond/rvdb"],
@@ -294,6 +288,7 @@ ARGS_CLASS = {
         "FVE_ARGS": ["-cr 0.5 -co .5 -cn 10", "-cr 0.7 -co .7 -cn 15"],
         "FVE_DB": [
             "fve/refseq/refseq.idx",
+            "fve/virosaurus/virosaurus.idx",
         ],
         "FVE_THREADS": [4],
     },

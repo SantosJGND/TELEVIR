@@ -239,6 +239,7 @@ class setup_dl:
                 fl = self.seqdir + os.path.basename(fl)
                 subprocess.run(["unxz", fl])
                 fl, _ = os.path.splitext(fl)
+                print("fl", fl)
                 subprocess.run(["bgzip", fl])
                 fl = fl + ".gz"
 
