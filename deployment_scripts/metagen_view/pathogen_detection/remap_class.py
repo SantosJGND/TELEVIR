@@ -861,7 +861,7 @@ class Remapping:
     def get_mapped_reads_no_header(self):
         """
         Get number of mapped reads without header, use samtools."""
-        cmd = f"samtools view -b -F 4 {self.read_map_sorted_bam} | samtools view -h | grep -v '^@' | cut -f1,2,5 > {self.mapped_reads}"
+        cmd = f"samtools view -b -F 4 {self.read_map_sorted_bam} | samtools view -h | grep -v '^@' | cut -f1 | sort | uniq > {self.mapped_reads}"
         self.cmd.run(cmd)
 
     def get_mapped_reads_number(self):
