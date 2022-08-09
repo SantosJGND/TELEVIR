@@ -37,8 +37,7 @@ class RunCMD:
         self.logdir = logdir
         self.prefix = prefix
 
-    @staticmethod
-    def flag_error(subprocess_errorlog):
+    def flag_error(self, subprocess_errorlog, cmd: str = ""):
         """
         Check if error in subprocess.
         """
@@ -46,8 +45,11 @@ class RunCMD:
         if subprocess_errorlog:
             try:
                 subprocess_errorlog = subprocess_errorlog.decode("utf-8")
+                if "Killed" in subprocess_errorlog:
+                    print(f"Killed {cmd}")
                 if "[error]" in subprocess_errorlog.lower():
                     return True
+
             except Exception as e:
                 return False
 
@@ -114,7 +116,7 @@ class RunCMD:
 
         exec_time = time.perf_counter() - start_time
 
-        if self.flag_error(err):
+        if self.flag_error(err, cmd):
             self.logger.error(f"errror in command: {self.bin}{cmd}")
             raise Exception(err.decode("utf-8"))
 

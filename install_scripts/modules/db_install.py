@@ -572,7 +572,7 @@ def untax_get(taxdump, odir, dbname, sdir="taxonomy/"):
                 [
                     "wget",
                     "-P",
-                    odir + dbname + {sdir},
+                    f"{odir + dbname}{sdir}",
                     "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz",
                 ]
             )

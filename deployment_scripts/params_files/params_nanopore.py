@@ -227,7 +227,7 @@ ARGS_ASS = {
 
 ARGS_CLASS = {
     "clark": {
-        "CLARK_ARGS": ["-m 2", "-m 1"],
+        "CLARK_ARGS": ["-m 1"],
         "CLARK_THREADS": [8],
         "CLARK_DB": ["clark/viruses"],
     },
@@ -294,7 +294,10 @@ ARGS_CLASS = {
     },
     "desamba": {
         "DESAMBA_ARGS": [""],
-        "DESAMBA_DB": ["deSAMBA/refseq"],
+        "DESAMBA_DB": [
+            "deSAMBA/refseq",
+            "deSAMBA/virosaurus",
+        ],
         "DESAMBA_QFC": [20],
     },
 }

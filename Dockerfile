@@ -16,6 +16,8 @@ RUN pip install --upgrade pip
 RUN pip install pandas
 RUN pip install numpy
 RUN pip install psycopg2-binary
+RUN apt-get update
+RUN apt-get install -y tabix
 
 RUN apt-get update \
     && apt-get install -y postgresql-server-dev-all gcc python3-dev musl-dev

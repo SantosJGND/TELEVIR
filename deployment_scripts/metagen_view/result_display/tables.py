@@ -78,3 +78,6 @@ class RunMainTable(tables.Table):
         text="Details",
         args=[tables.A("project"), tables.A("sample"), tables.A("name")],
     )
+
+    def render_runtime(self, record):
+        return float(record.runtime.split()[0])
