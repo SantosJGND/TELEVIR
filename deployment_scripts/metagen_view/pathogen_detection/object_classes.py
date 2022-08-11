@@ -306,12 +306,25 @@ class Read_class:
 
         tempf = os.path.join(os.path.dirname(self.current), "temp.fq.gz")
 
-        cmd = ["seqtk", "seq", "-F", quality, self.current, "|", "gzip", ">", tempf]
+        cmd = [
+            "seqtk",
+            "seq",
+            "-F",
+            quality,
+            self.current,
+            "|",
+            "gzip",
+            "-c",
+            ">",
+            tempf,
+        ]
         self.cmd.run(cmd)
 
         if os.path.isfile(tempf):
             os.remove(self.current)
-            os.rename(tempf, self.current)
+            import shutil
+
+            shutil.copy(tempf, self.current)
 
     def filter_cigar_strings(self):
 

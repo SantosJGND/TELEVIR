@@ -175,7 +175,7 @@ class RunDetail_main:
             config["directories"]["PREPROCESS"],
             config["directories"]["reads_enriched_dir"],
             config["directories"]["reads_depleted_dir"],
-            bin=get_bindir_from_binaries(config["bin"], "REMAP"),
+            bin=get_bindir_from_binaries(config["bin"], "PREPROCESS"),
         )
 
         self.r2 = Read_class(
@@ -183,7 +183,7 @@ class RunDetail_main:
             config["directories"]["PREPROCESS"],
             config["directories"]["reads_enriched_dir"],
             config["directories"]["reads_depleted_dir"],
-            bin=get_bindir_from_binaries(config["bin"], "REMAP"),
+            bin=get_bindir_from_binaries(config["bin"], "PREPROCESS"),
         )
 
         self.sample = Sample_runClass(
@@ -618,7 +618,6 @@ class RunMain_class(Run_Deployment_Methods):
 
             self.sample.r1.is_clean()
             self.sample.r2.is_clean()
-            self.sample.fake_quality_strings()
 
             self.sample.qc_soft = self.preprocess_drone.preprocess_method.name
             self.sample.input_fastqc_report = self.preprocess_drone.input_qc_report
@@ -746,9 +745,12 @@ class RunMain_class(Run_Deployment_Methods):
             + self.sample.r2.current_fastq_read_number()
         )
 
-        filtered_reads_perc = (int(filtered_reads) / processed_reads) * 100
-        final_processing_percent = (final_processing_reads / processed_reads) * 100
-
+        if processed_reads:
+            filtered_reads_perc = (int(filtered_reads) / processed_reads) * 100
+            final_processing_percent = (final_processing_reads / processed_reads) * 100
+        else:
+            filtered_reads_perc = 0
+            final_processing_percent = 0
         ### transfer to assembly class / drone.
 
         minhit_assembly = self.aclass_summary["counts"].min()
