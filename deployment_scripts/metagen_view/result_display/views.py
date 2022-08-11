@@ -13,6 +13,7 @@ from django_tables2 import RequestConfig
 from metagen_view.settings import STATICFILES_DIRS
 
 from result_display import igv_app
+from result_display.constants_settings import ConstantsSettings
 from result_display.models import (
     QC_REPORT,
     ContigClassification,
@@ -118,7 +119,9 @@ def Sample_main(requesdst, project_name, sample_name):
 
     sampleqc_table = SampleQCTable(sampleqc)
     runs = RunMainTable(runs)
-    RequestConfig(requesdst).configure(runs)
+    RequestConfig(
+        requesdst, paginate={"per_page": ConstantsSettings.PAGINATE_NUMBER}
+    ).configure(runs)
 
     return render(
         requesdst,

@@ -1,3 +1,4 @@
+import gzip
 import logging
 import os
 import subprocess
@@ -94,6 +95,18 @@ class RunCMD:
             self.logs.append(cmd)
             self.logs.append(out)
 
+    def output_init(self, cmd):
+        """
+        Initialize output.
+        """
+
+        if self.logdir:
+            with open(os.path.join(self.logdir, self.logfile), "a") as f:
+                f.write(f"exec\t{cmd}\n")
+
+        else:
+            self.logs.append(cmd)
+
     def run(self, cmd):
         """
         Run software.
@@ -103,7 +116,7 @@ class RunCMD:
             cmd = " ".join(cmd)
 
         self.logger.info(f"running: {self.bin}{cmd}")
-
+        self.output_init(cmd)
         start_time = time.perf_counter()
 
         proc_prep = subprocess.Popen(
@@ -285,6 +298,41 @@ class Read_class:
         filename = filename.replace(".fasta", "").replace(".fa", "")
 
         return filename
+
+    def fake_quality(self, quality: str = "30"):
+
+        if not self.exists:
+            return
+
+        tempf = os.path.join(os.path.dirname(self.current), "temp.fq.gz")
+
+        cmd = ["seqtk", "seq", "-F", quality, self.current, "|", "gzip", ">", tempf]
+        self.cmd.run(cmd)
+
+        if os.path.isfile(tempf):
+            os.remove(self.current)
+            os.rename(tempf, self.current)
+
+    def filter_cigar_strings(self):
+
+        tempf = os.path.join(os.path.dirname(self.current), "temp.fq.gz")
+
+        with gzip.open(self.current, "rt") as f_in, gzip.open(tempf, "wt") as f_out:
+            counter = 0
+            dict = []
+            for line in f_in:
+                if counter == 3:
+                    if dict[-1][0] != "@":
+                        for ln in dict:
+                            f_out.write(ln)
+                    counter = 0
+                    dict = []
+                dict.append(line)
+                counter += 1
+
+        if os.path.isfile(tempf):
+            os.remove(self.current)
+            os.rename(tempf, self.current)
 
     def read_filter_move(self, input: str, read_list: list, output: str = ""):
 
@@ -483,6 +531,13 @@ class Sample_runClass:
         """
 
         self.qcdata = self.QC_summary()
+
+    def fake_quality_strings(self):
+        """
+        Fake quality strings for fastqc.
+        """
+        self.r1.fake_quality()
+        self.r2.fake_quality()
 
     def clean_unique(self):
         if self.type == "SE":

@@ -175,7 +175,7 @@ class RunDetail_main:
             config["directories"]["PREPROCESS"],
             config["directories"]["reads_enriched_dir"],
             config["directories"]["reads_depleted_dir"],
-            bin=get_bindir_from_binaries(config["bin"], "PREPROCESS"),
+            bin=get_bindir_from_binaries(config["bin"], "REMAP"),
         )
 
         self.r2 = Read_class(
@@ -183,7 +183,7 @@ class RunDetail_main:
             config["directories"]["PREPROCESS"],
             config["directories"]["reads_enriched_dir"],
             config["directories"]["reads_depleted_dir"],
-            bin=get_bindir_from_binaries(config["bin"], "PREPROCESS"),
+            bin=get_bindir_from_binaries(config["bin"], "REMAP"),
         )
 
         self.sample = Sample_runClass(
@@ -618,6 +618,7 @@ class RunMain_class(Run_Deployment_Methods):
 
             self.sample.r1.is_clean()
             self.sample.r2.is_clean()
+            self.sample.fake_quality_strings()
 
             self.sample.qc_soft = self.preprocess_drone.preprocess_method.name
             self.sample.input_fastqc_report = self.preprocess_drone.input_qc_report

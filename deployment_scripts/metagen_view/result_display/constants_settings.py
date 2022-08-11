@@ -14,6 +14,8 @@ class ConstantsSettings:
 
     directory_list = [
         "/home/bioinf/Desktop/METAGEN/db_third_test/deployment/run_2022-06-17/",
-        #"/home/bioinf/Desktop/METAGEN/db_third_test/deployment/run_2022-06-14/",
+        # "/home/bioinf/Desktop/METAGEN/db_third_test/deployment/run_2022-06-14/",
         "/home/bioinf/Desktop/METAGEN/db_third_test/deployment/test_new/",
     ]
+
+    PAGINATE_NUMBER = 50

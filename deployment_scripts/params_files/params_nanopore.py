@@ -101,8 +101,8 @@ SOFTWARE = {
     "ASSEMBLY": ["flye", "raven"],  # spades, velvet,
     "CONTIG_CLASSIFICATION": ["blast", "minimap2_asm"],  # , "minimap-asm"],
     "READ_CLASSIFICATION": [
-        "fastviromeexplorer",
         "krakenuniq",
+        "fastviromeexplorer",
         "clark",
         "desamba",
         "kaiju",
@@ -121,7 +121,9 @@ ARGS_QC = {
         "FQ_THREADS": [8],
     },
     "nanofilt": {
-        "NANOFILT_ARGS": ["-q 8 -l 50 --headcrop 30 --tailcrop 30 --maxlength 50000 "]
+        "NANOFILT_ARGS": [
+            "-q 8 -l 50 --headcrop 30 --tailcrop 30 --length 500 --maxlength 50000 "
+        ]
     },
     "rabbitqc": {
         "RABBIT_ARGS": ["-t 3 -f 3 -g --poly_g_min_len 10 -x --poly_x_min_len 10 -w 4"],
@@ -258,10 +260,9 @@ ARGS_CLASS = {
     },
     "diamond": {
         "DIAMOND_ARGS": [
-            # "--top 3 -e 0.01 --id 50 --query-cover 50 --sensitive -M 5 --long-reads",
-            "--top 3 -e 0.01 --id 70 --query-cover 60 --fast -M 5 --long-reads",
+            "--top 3 -e 0.01 --id 70 --query-cover 60 --algo 0 --very-sensitive --long-reads",
         ],
-        "DIAMOND_DB": ["diamond/rvdb"],
+        "DIAMOND_DB": ["diamond/refseq"],
         "DIAMOND_THREADS": [4],
     },
     "kaiju": {

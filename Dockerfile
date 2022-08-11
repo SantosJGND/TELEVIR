@@ -4,7 +4,7 @@ RUN set -xe && apt-get update && apt-get install -y python3 python3-pip
 RUN pip install --upgrade pip
 
 RUN apt-get update
-RUN apt-get install -y build-essential wget apt-utils python3-setuptools
+RUN apt-get install -y build-essential wget curl rsync apt-utils python3-setuptools
 
 RUN apt-get clean
 RUN apt-get install -y 
@@ -22,7 +22,7 @@ RUN apt-get install -y tabix
 RUN apt-get update \
     && apt-get install -y postgresql-server-dev-all gcc python3-dev musl-dev
 RUN apt-get install libpq-dev
-RUN apt-get install -y git
+RUN apt-get install -y git ncbi-entrez-direct
 
 # Install miniconda
 ENV CONDA_DIR /opt/conda
@@ -36,6 +36,8 @@ WORKDIR /app
 COPY . /app
 
 RUN chmod +x environment_docker.sh
-RUN ./environment_docker.sh
+RUN ./environment_docker.sh 
 
-CMD ["python", "main.py", "--docker"]
+RUN python main.py --docker --envs --partial
+RUN python main.py --docker --seqdl --partial
+RUN python main.py --docker --soft --partial

@@ -27,6 +27,33 @@ def get_args():
             help="test software installation",
         )
 
+        parser.add_argument(
+            "--envs",
+            action="store_true",
+            default=False,
+            help="Install software environments",
+        )
+
+        parser.add_argument(
+            "--seqdl",
+            action="store_true",
+            default=False,
+            help="download sequence databases",
+        )
+        parser.add_argument(
+            "--soft",
+            action="store_true",
+            default=False,
+            help="Install software databases",
+        )
+
+        parser.add_argument(
+            "--partial",
+            action="store_true",
+            default=False,
+            help="Install software databases",
+        )
+
         args = parser.parse_args()
 
     except TypeError as e:
@@ -42,6 +69,10 @@ def main():
     CWD = os.getcwd()
     args = get_args()
     ###
+    if not args.partial:
+        args.envs = True
+        args.soft = True
+        args.seqdl = True
 
     if args.docker:
         SOURCE = "/opt/conda/etc/profile.d/conda.sh"
@@ -100,9 +131,9 @@ def main():
         pdir=CWD + "/install_scripts/",
     )
     metagen_prep.object_input(
-        envs=True,
-        seqdl=True,
-        soft=True,
+        envs=args.envs,
+        seqdl=args.seqdl,
+        soft=args.soft,
         nanopore=(TECH == "nanopore"),
         taxdump=TAXDUMP,
         organism=ORGANISM,

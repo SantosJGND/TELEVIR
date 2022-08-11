@@ -119,4 +119,4 @@ services:
     networks:
       televir_net:
         ipv4_address: 10.1.0.4
-    command: python3 main.py --docker
+    
