@@ -363,7 +363,7 @@ class metaclass_run:
 
 
 class meta_orchestra:
-    def __init__(self, fofn, sup=1, down=1, smax=4, odir="", estimate_only=False):
+    def __init__(self, fofn, sup=1, down=1, smax=5, odir="", estimate_only=False):
         self.sup = sup
         self.down = down
         self.processes = {}

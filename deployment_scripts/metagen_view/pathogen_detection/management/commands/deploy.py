@@ -71,6 +71,13 @@ class Command(BaseCommand):
             default=False,
             help="estimate number of runs based on number of files and number of parameter combinations",
         )
+        parser.add_argument(
+            "--force",
+            action="store_true",
+            required=False,
+            default=False,
+            help="reference genome for host depletion",
+        )
 
     def handle(self, *args, **options):
         ###
@@ -94,6 +101,15 @@ class Command(BaseCommand):
         options["odir"] = os.path.join(os.getcwd(), options["odir"])
 
         if options["fofn"]:
+            if os.path.exists(
+                os.path.join(options["odir"], os.path.basename(options["fofn"]))
+            ):
+                if not options["force"]:
+
+                    print(
+                        f"Output directory already for {options['fofn']} exists. Use --force to overwrite."
+                    )
+                    os._exit(1)
 
             event = meta_orchestra(
                 options["fofn"],
@@ -125,7 +141,7 @@ class Command(BaseCommand):
                     os.path.join(options["odir"], os.path.basename(fofn))
                 ):
                     print("skipping {}".format(fofn))
-                    # continue
+                    continue
 
                 event = meta_orchestra(
                     fofn,
