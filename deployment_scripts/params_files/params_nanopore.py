@@ -94,23 +94,20 @@ SOFTWARE = {
     "PREPROCESS": ["nanofilt"],  # "nanofilt", trimmomatic
     "ENRICHMENT": [
         # "",
-        # "kaiju",
-        # "krakenuniq",
+        "kaiju",
+        "krakenuniq",
         "centrifuge",
     ],
-    "ASSEMBLY": [
-        # "flye",
-        "raven"
-    ],  # spades, velvet,
+    "ASSEMBLY": ["flye", "raven"],  # spades, velvet,
     "CONTIG_CLASSIFICATION": ["blast", "minimap2_asm"],  # , "minimap-asm"],
     "READ_CLASSIFICATION": [
-        # "krakenuniq",
-        # "fastviromeexplorer",
-        # "clark",
-        # "desamba",
+        "krakenuniq",
+        "fastviromeexplorer",
+        "clark",
+        "desamba",
         "kaiju",
         "centrifuge",
-        # "diamond",
+        "diamond",
     ],
     "REMAPPING": ["minimap-rem"],  # snippy, rematch, bowtie, minimap-rem
 }
