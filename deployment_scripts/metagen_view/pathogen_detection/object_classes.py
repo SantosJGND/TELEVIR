@@ -328,19 +328,31 @@ class Read_class:
 
     def filter_cigar_strings(self):
 
+        if not self.exists:
+            return
+
         tempf = os.path.join(os.path.dirname(self.current), "temp.fq.gz")
 
-        with gzip.open(self.current, "rt") as f_in, gzip.open(tempf, "wt") as f_out:
+        with gzip.open(self.current, "rb") as f_in, gzip.open(tempf, "wb") as f_out:
             counter = 0
-            dict = []
+            lines = []
+            print("HEH")
             for line in f_in:
-                if counter == 3:
-                    if dict[-1][0] != "@":
-                        for ln in dict:
+
+                if len(lines) == 4:
+                    print(lines[-1])
+                    print(lines[-1][0])
+
+                    if lines[-1][0].decode() != "@":
+                        for ln in lines:
                             f_out.write(ln)
+
+                    else:
+                        print(lines)
                     counter = 0
-                    dict = []
-                dict.append(line)
+                    lines = []
+
+                lines.append(line)
                 counter += 1
 
         if os.path.isfile(tempf):
@@ -551,6 +563,13 @@ class Sample_runClass:
         """
         self.r1.fake_quality()
         self.r2.fake_quality()
+
+    def filter_cigar_strings(self):
+        """
+        Filter reads with cigar strings.
+        """
+        self.r1.filter_cigar_strings()
+        self.r2.filter_cigar_strings()
 
     def clean_unique(self):
         if self.type == "SE":

@@ -94,20 +94,23 @@ SOFTWARE = {
     "PREPROCESS": ["nanofilt"],  # "nanofilt", trimmomatic
     "ENRICHMENT": [
         # "",
-        "kaiju",
-        "krakenuniq",
+        # "kaiju",
+        # "krakenuniq",
         "centrifuge",
     ],
-    "ASSEMBLY": ["flye", "raven"],  # spades, velvet,
+    "ASSEMBLY": [
+        # "flye",
+        "raven"
+    ],  # spades, velvet,
     "CONTIG_CLASSIFICATION": ["blast", "minimap2_asm"],  # , "minimap-asm"],
     "READ_CLASSIFICATION": [
-        "krakenuniq",
-        "fastviromeexplorer",
-        "clark",
-        "desamba",
+        # "krakenuniq",
+        # "fastviromeexplorer",
+        # "clark",
+        # "desamba",
         "kaiju",
         "centrifuge",
-        "diamond",
+        # "diamond",
     ],
     "REMAPPING": ["minimap-rem"],  # snippy, rematch, bowtie, minimap-rem
 }
@@ -121,9 +124,7 @@ ARGS_QC = {
         "FQ_THREADS": [8],
     },
     "nanofilt": {
-        "NANOFILT_ARGS": [
-            "-q 8 -l 50 --headcrop 30 --tailcrop 30 --length 500 --maxlength 50000 "
-        ]
+        "NANOFILT_ARGS": ["-q 8 -l 50 --headcrop 30 --tailcrop 30 --maxlength 50000"]
     },
     "rabbitqc": {
         "RABBIT_ARGS": ["-t 3 -f 3 -g --poly_g_min_len 10 -x --poly_x_min_len 10 -w 4"],

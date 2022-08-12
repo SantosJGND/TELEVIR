@@ -486,6 +486,7 @@ class Run_Deployment_Methods(RunDetail_main):
             self.threads,
             self.subsample,
             logging_level=self.logger_level_detail,
+            log_dir=self.log_dir,
         )
 
         self.logger.info(f"r1 reads: {self.sample.r1.get_current_fastq_read_number()}")
@@ -616,8 +617,12 @@ class RunMain_class(Run_Deployment_Methods):
         if self.quality_control:
             self.deploy_QC()
 
+            #
+
             self.sample.r1.is_clean()
             self.sample.r2.is_clean()
+            self.sample.fake_quality_strings()
+            # self.sample.filter_cigar_strings()
 
             self.sample.qc_soft = self.preprocess_drone.preprocess_method.name
             self.sample.input_fastqc_report = self.preprocess_drone.input_qc_report

@@ -23,6 +23,8 @@ class Preprocess:
         subsample: bool = False,
         subsample_reads: int = 0,
         logging_level: int = logging.ERROR,
+        log_dir="",
+        prefix="",
     ):
         """
 
@@ -70,7 +72,7 @@ class Preprocess:
             ".gz", ""
         )
         self.preprocess_name_r2 = self.preprocess_name_r2_fastq.replace(".fastq", "")
-        self.cmd = RunCMD(self.bin)
+        self.cmd = RunCMD(self.bin, logdir=log_dir, prefix=prefix, task="preprocess")
 
         self.input_qc_report = os.path.join(self.preprocess_dir, "input_data.html")
         self.processed_qc_report = os.path.join(
