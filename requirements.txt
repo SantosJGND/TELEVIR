@@ -8,5 +8,4 @@ pytz==2022.1
 scipy==1.8.1
 six==1.16.0
 install-jdk==0.3.0
-kallisto==0.43.1
 samtools>=1.4

@@ -74,7 +74,7 @@ class setup_dl:
             if not os.path.isdir(dr):
                 os.mkdir(dr)
 
-    def refseq_dl(self):
+    def refseq_prot_dl(self):
         """
         parse and download latest refseq dbs from ncbi ftp.
         :param org:
@@ -101,12 +101,9 @@ class setup_dl:
         ext_dict = {z: [x[0] for x in ext_dict if x[1] == z] for z in extset}
 
         protf = [g for x, g in ext_dict.items() if "protein.faa" in x][0]
-        nucf = [g for x, g in ext_dict.items() if "genomic.fna" in x][0]
 
         fprot = f"refseq_{self.organism}.protein.faa.gz"
         fprot_suf = os.path.splitext(fprot)[0]
-        fnuc = f"refseq_{self.organism}.genome.fna.gz"
-        fnuc_suf = os.path.splitext(fnuc)[0]
 
         if not os.path.isfile(self.seqdir + fprot):
             if self.test:
@@ -119,6 +116,37 @@ class setup_dl:
         else:
             self.fastas["prot"]["refseq"] = self.seqdir + fprot
             logging.info(f"{fprot_suf} found.")
+
+    def refseq_gen_dl(self):
+        """
+        parse and download latest refseq dbs from ncbi ftp.
+        :param org:
+        :return:
+        """
+        host = "ftp.ncbi.nlm.nih.gov"
+        source = "refseq/release/{}/".format(self.organism)
+
+        try:
+            ftp = FTP(host)
+        except:
+            logging.info("refseq ftp failed. Check internet connection.")
+            return
+
+        ftp.login()
+        ftp.cwd(source)
+        files = ftp.nlst()
+        ftp.quit()
+
+        ext_dict = [x.split(".") for x in files]
+        ext_dict = [[".".join(x), ".".join(x[-3:])] for x in ext_dict]
+        #
+        extset = set([x[1] for x in ext_dict])
+        ext_dict = {z: [x[0] for x in ext_dict if x[1] == z] for z in extset}
+
+        nucf = [g for x, g in ext_dict.items() if "genomic.fna" in x][0]
+
+        fnuc = f"refseq_{self.organism}.genome.fna.gz"
+        fnuc_suf = os.path.splitext(fnuc)[0]
 
         if not os.path.isfile(self.seqdir + fnuc):
             if self.test:

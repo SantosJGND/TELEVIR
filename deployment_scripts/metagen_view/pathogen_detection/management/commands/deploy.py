@@ -140,9 +140,12 @@ class Command(BaseCommand):
                 if os.path.exists(
                     os.path.join(options["odir"], os.path.basename(fofn))
                 ):
-                    print("skipping {}".format(fofn))
-                    continue
+                    if not options["force"]:
 
+                        print(
+                            f"Output directory already for {fofn} exists. Use --force to overwrite."
+                        )
+                        continue
                 event = meta_orchestra(
                     fofn,
                     sup=options["nsup"],

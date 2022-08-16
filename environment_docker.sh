@@ -23,6 +23,3 @@ mv kallisto_linux-v0.43.1/kallisto .venv/bin
 rm kallisto_linux-v0.43.1.tar.gz
 rm -rf kallisto_linux-v0.43.1
 rm ._kallisto_linux-v0.43.1
-
-## django requirements
-python -m pip install -r requirements_django.txt
