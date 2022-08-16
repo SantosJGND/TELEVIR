@@ -154,7 +154,7 @@ class setup_dl:
             else:
                 logging.info(f"{fnuc_suf} not found. downloading...")
                 self.get_concat(nucf, fnuc_suf, host, source)
-                self.fastas["prot"]["refseq"] = self.seqdir + fprot
+                self.fastas["nuc"]["refseq"] = self.seqdir + fnuc
 
         else:
             self.fastas["nuc"]["refseq"] = self.seqdir + fnuc
