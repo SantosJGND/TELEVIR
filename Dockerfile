@@ -49,6 +49,7 @@ RUN ./environment_docker.sh
 
 ## django requirements
 RUN python -m pip install -r requirements_django.txt
+RUN apt-get install -y htslib-tools zlib1g-dev g++
 
 RUN python main.py --docker --envs --partial
 RUN python main.py --docker --seqdl --partial

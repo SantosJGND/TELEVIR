@@ -239,11 +239,11 @@ class env_install:
 
             bash_lines = [
                 "#!/bin/bash",
-                "sudo apt-get install zlib1g-dev",
-                "sudo apt-get install automake",
-                "sudo apt-get install libtool",
-                "sudo apt-get install make",
-                "sudo apt-get install g++",
+                # "apt-get install zlib1g-dev",
+                # "apt-get install automake",
+                # "apt-get install libtool",
+                # "apt-get install make",
+                # "apt-get install g++",
                 f"cd {idir}",
                 "bash ./build",
             ]
