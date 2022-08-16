@@ -35,6 +35,13 @@ def get_args():
         )
 
         parser.add_argument(
+            "--setup_conda",
+            action="store_true",
+            default=False,
+            help="Install software conda environments",
+        )
+
+        parser.add_argument(
             "--seqdl",
             action="store_true",
             default=False,
@@ -46,6 +53,7 @@ def get_args():
             default=False,
             help="Install software databases",
         )
+
         parser.add_argument(
             "--deploy",
             action="store_true",
@@ -148,7 +156,11 @@ def main():
         test=args.test,
     )
 
-    metagen_prep.setup_envs()
+    if args.setup_conda:
+        metagen_prep.setup_envs_conda()
+
+    else:
+        metagen_prep.setup_envs()
 
     os.system(
         f"cp install_scripts/bin/* {ENVDIR + INSTALL_PARAMS['ENVSDIR']['centrifuge']}/bin/"

@@ -144,7 +144,7 @@ class main_setup:
         self.organism = organism
         self.wdir.organism = organism
 
-    def env_prepare(self, ENVS_PARAMS):
+    def env_prepare_conda(self, ENVS_PARAMS):
         """install environments described in ENVS_PARAMS script.
 
         :param ENVS_PARAMS: dictionary of environment parameters
@@ -154,6 +154,16 @@ class main_setup:
         envprep = self.env_install_class()
         envprep.prep_dir(ENVS_PARAMS)
         envprep.conda_install()
+
+    def env_prepare(self, ENVS_PARAMS):
+        """install environments described in ENVS_PARAMS script.
+
+        :param ENVS_PARAMS: dictionary of environment parameters
+        :type ENVS_PARAMS: dict
+        :return: None
+        """
+        envprep = self.env_install_class()
+        envprep.prep_dir(ENVS_PARAMS)
         # envprep.rabbitqc_install()
         envprep.flye_install()
         envprep.clark_install()
@@ -171,6 +181,11 @@ class main_setup:
         os.system(
             f"cp {self.pdir}bin/rsync_from_ncbi.pl {ENVS_PARAMS['ENVSDIR']}kraken2/kraken_env/libexec/"
         )
+
+    def setup_envs_conda(self):
+
+        if self.envs:
+            self.env_prepare_conda(self.ENVS_PARAMS)
 
     def setup_envs(self):
 
@@ -355,6 +370,8 @@ if __name__ == "__main__":
 
     metagen_prep = main_setup(env_install, setup_dl, setup_install)
     metagen_prep.user_input()
+
+    metagen_prep.setup_envs_conda()
     metagen_prep.setup_envs()
     metagen_prep.setup_dir()
     metagen_prep.setup_soft()
