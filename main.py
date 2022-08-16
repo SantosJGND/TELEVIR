@@ -46,6 +46,12 @@ def get_args():
             default=False,
             help="Install software databases",
         )
+        parser.add_argument(
+            "--deploy",
+            action="store_true",
+            default=False,
+            help="setup software deployment",
+        )
 
         parser.add_argument(
             "--partial",
@@ -73,6 +79,7 @@ def main():
         args.envs = True
         args.soft = True
         args.seqdl = True
+        args.deploy = True
 
     if args.docker:
         SOURCE = "/opt/conda/etc/profile.d/conda.sh"
@@ -130,6 +137,7 @@ def main():
         INSTALL_PARAMS=INSTALL_PARAMS,
         pdir=CWD + "/install_scripts/",
     )
+
     metagen_prep.object_input(
         envs=args.envs,
         seqdl=args.seqdl,
@@ -139,6 +147,7 @@ def main():
         organism=ORGANISM,
         test=args.test,
     )
+
     metagen_prep.setup_envs()
 
     os.system(
@@ -146,26 +155,30 @@ def main():
     )
 
     metagen_prep.setup_dir()
-    os.system(f"cp install_scripts/metadata/* {metagen_prep.wdir.metadir}")
+
+    if metagen_prep.seqdl or metagen_prep.soft:
+        os.system(f"cp install_scripts/metadata/* {metagen_prep.wdir.metadir}")
 
     metagen_prep.setup_soft()
     ############
     ############
-    from deployment_scripts.main_deployment_setup import main_deploy_prep
 
-    deploy_prep = main_deploy_prep(pdir=CWD + "/deployment_scripts/")
-    deploy_prep.object_input(
-        DEPLOYMENT_DIR,
-        ENVDIR,
-        metagen_prep.wdir.dbdir,
-        metagen_prep.wdir.seqdir,
-        metagen_prep.wdir.metadir,
-        SOURCE_DIR,
-        tech=TECH,
-    )
+    if args.deploy:
+        from deployment_scripts.main_deployment_setup import main_deploy_prep
 
-    deploy_prep.dir_prep()
-    deploy_prep.export()
+        deploy_prep = main_deploy_prep(pdir=CWD + "/deployment_scripts/")
+        deploy_prep.object_input(
+            DEPLOYMENT_DIR,
+            ENVDIR,
+            metagen_prep.wdir.dbdir,
+            metagen_prep.wdir.seqdir,
+            metagen_prep.wdir.metadir,
+            SOURCE_DIR,
+            tech=TECH,
+        )
+
+        deploy_prep.dir_prep()
+        deploy_prep.export()
 
 
 if __name__ == "__main__":
