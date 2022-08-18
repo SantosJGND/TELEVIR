@@ -3,6 +3,7 @@
 import gzip
 import logging
 import os
+import shutil
 import subprocess
 from ftplib import FTP
 from threading import Thread
@@ -727,7 +728,40 @@ class setup_install(setup_dl):
 
         os.system(f"cat {sdir}/*fna > {sdir}/complete.fna")
 
-        subprocess.run(build_command)
+        try:
+            subprocess.run(build_command)
+        except subprocess.CalledProcessError:
+            logging.info(f"failed to build centrifuge db {dbname}")
+
+            if not os.path.exists(f"{odir}{dbname}/nodes.dmp") or not os.path.exists(
+                f"{odir}{dbname}/names.dmp"
+            ):
+                if not self.taxdump:
+
+                    cmd_dl_taxonomy = [
+                        "wget",
+                        "--quiet",
+                        "--no-check-certificate",
+                        "-P",
+                        f"{odir}{dbname}",
+                        "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz",
+                    ]
+                    subprocess.run(cmd_dl_taxonomy)
+
+                else:
+                    shutil.copy(self.taxdump, f"{odir}{dbname}/taxdump.tar.gz")
+
+                subprocess.run(
+                    [
+                        f"tar",
+                        "-xvzf",
+                        f"{odir}{dbname}/taxdump.tar.gz",
+                        "-C",
+                        f"{odir}{dbname}",
+                    ]
+                )
+
+            subprocess.run(build_command)
 
         os.system(f"bgzip {sdir}/complete.fna")
 

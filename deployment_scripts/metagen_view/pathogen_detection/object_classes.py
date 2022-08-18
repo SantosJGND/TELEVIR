@@ -1,6 +1,7 @@
 import gzip
 import logging
 import os
+import shutil
 import subprocess
 import time
 from dataclasses import dataclass, field
@@ -37,6 +38,7 @@ class RunCMD:
         self.logfile = os.path.join(logdir, f"{prefix}_{task}.log")
         self.logdir = logdir
         self.prefix = prefix
+        self.error_flags = ["[error]", "Killed", "process exited"]
 
     def flag_error(self, subprocess_errorlog, cmd: str = ""):
         """
@@ -44,15 +46,15 @@ class RunCMD:
         """
 
         if subprocess_errorlog:
-            try:
-                subprocess_errorlog = subprocess_errorlog.decode("utf-8")
-                if "Killed" in subprocess_errorlog:
-                    print(f"Killed {cmd}")
-                if "[error]" in subprocess_errorlog.lower():
-                    return True
-
-            except Exception as e:
-                return False
+            for error in self.error_flags:
+                try:
+                    subprocess_errorlog = subprocess_errorlog.decode("utf-8")
+                    if error in subprocess_errorlog:
+                        print(f"{error} in {cmd}")
+                    if error in subprocess_errorlog.lower():
+                        print(f"{error} in {cmd}")
+                except Exception as e:
+                    return False
 
         return False
 
@@ -247,6 +249,19 @@ class RunCMD:
 
 
 class Read_class:
+    filepath: str
+    current: str
+    prefix: str
+    clean: str
+    enriched: str
+    depleted: str
+    current_status: str
+    read_number_raw: int
+    read_number_clean: int
+    read_number_enriched: int
+    read_number_depleted: int
+    read_number_current: int
+
     def __init__(
         self, filepath, clean_dir: str, enriched_dir: str, depleted_dir: str, bin: str
     ):
@@ -283,6 +298,12 @@ class Read_class:
         self.enriched = os.path.join(enriched_dir, self.prefix + ".enriched.fastq.gz")
         self.depleted = os.path.join(depleted_dir, self.prefix + ".depleted.fastq.gz")
 
+    def copy(self, filepath):
+        """
+        Copy file.
+        """
+        shutil.copy(self.filepath, filepath)
+
     def determine_read_name(self, filepath):
 
         if not self.exists:
@@ -298,6 +319,24 @@ class Read_class:
         filename = filename.replace(".fasta", "").replace(".fa", "")
 
         return filename
+
+    def get_read_list(self):
+        """
+        Get list of reads.
+        """
+
+        if not self.exists:
+            return []
+
+        read_grep_cmd = [
+            "zgrep",
+            "-e",
+            "^@",
+            self.filepath,
+        ]
+
+        read_list = self.cmd.run_bash_return(read_grep_cmd)
+        return read_list
 
     def fake_quality(self, quality: str = "30"):
 
