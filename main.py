@@ -96,7 +96,7 @@ def main():
         ENVDIR = "/usr/local/mngs_benchmark/mngs_environments/"
         DEPLOYMENT_DIR = "/usr/local/mngs_benchmark/deployment/"
         TECH = "nanopore"
-        TAXDUMP = ""
+        TAXDUMP = "/insaflu_web/TELEVIR/taxdump.tar.gz"
         ORGANISM = "viral"
 
         INSTALL_PARAMS["HOME"] = HOME

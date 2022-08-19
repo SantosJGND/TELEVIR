@@ -206,7 +206,7 @@ class main_setup:
         """
         download prot sequences and get taxids.
         """
-        self.wdir.refseq_prot_dl()
+        # self.wdir.refseq_prot_dl()
         self.wdir.refseq_gen_dl()
         self.wdir.swissprot_dl()
 
