@@ -650,7 +650,7 @@ class setup_install(setup_dl):
         threads="3",
         id="centrifuge",
         dbdir="centrifuge",
-        dlp="curl",
+        dlp="wget",
     ):
         """
         install centrifuge.
@@ -691,6 +691,8 @@ class setup_install(setup_dl):
             odir + dbname,
             "-P",
             threads,
+            "-g",
+            dlp,
             "taxonomy",
         ]
         #
@@ -703,6 +705,8 @@ class setup_install(setup_dl):
             "-m",
             "-d",
             dbname,
+            "-g",
+            dlp,
             "refseq",
         ]
 

@@ -330,8 +330,6 @@ class RunDetail_main:
     def Update(self, config: dict, method_args: pd.DataFrame):
 
         self.method_args = pd.concat((self.method_args, method_args))
-        # with open(config_json) as json_file:
-        #    config = json.load(json_file)
 
         self.config = config
         self.prefix = config["prefix"]
@@ -470,8 +468,8 @@ class RunDetail_main:
 
 
 class Run_Deployment_Methods(RunDetail_main):
-    def __init__(self, config_json: os.PathLike, method_args: pd.DataFrame):
-        super().__init__(config_json, method_args)
+    def __init__(self, config: dict, method_args: pd.DataFrame):
+        super().__init__(config, method_args)
         self.mapped_instances = []
 
     def deploy_QC(self):
@@ -622,7 +620,6 @@ class RunMain_class(Run_Deployment_Methods):
             self.sample.r1.is_clean()
             self.sample.r2.is_clean()
             self.sample.fake_quality_strings()
-            # self.sample.filter_cigar_strings()
 
             self.sample.qc_soft = self.preprocess_drone.preprocess_method.name
             self.sample.input_fastqc_report = self.preprocess_drone.input_qc_report

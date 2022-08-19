@@ -1,12 +1,16 @@
+import itertools as it
 import json
 import os
 import random
 import shutil
 
+import numpy as np
+import pandas as pd
 from django.test import TestCase
 from pathogen_detection.constants_settings import TestConstants
-from pathogen_detection.object_classes import Read_class, RunCMD
-from pathogen_detection.run_main import get_bindir_from_binaries
+from pathogen_detection.object_classes import (Read_class, RunCMD,
+                                               Sample_runClass)
+from pathogen_detection.run_main import RunMain_class, get_bindir_from_binaries
 from pyrsistent import T
 from this import d
 
@@ -21,6 +25,9 @@ class Dummy_deployment:
 
     rdir: str
     threads: int = 3
+    run_engine: RunMain_class
+    params= dict
+    run_params_db = pd.DataFrame()
 
     def __init__(self, project: str = "test", prefix: str = "main") -> None:
         self.rdir = os.path.join(TestConstants.Test_Temp_Directory, project)
@@ -29,6 +36,8 @@ class Dummy_deployment:
         with open(TestConstants.ont_params_json, "r") as f:
             params = json.load(f)
             params = AttrDict(params)
+        
+        self.params_dict= params
 
         self.config = {
             "project": project,
@@ -54,6 +63,122 @@ class Dummy_deployment:
             self.config["actions"][dr] = False
         self.config.update(params.CONSTANTS)
 
+        self.modules_to_stores = {
+            "PREPROCESS": params.ARGS_QC,
+            "ENRICHMENT": params.ARGS_ENRICH,
+            "ASSEMBLY": params.ARGS_ASS,
+            "CONTIG_CLASSIFICATION": params.ARGS_CLASS,
+            "READ_CLASSIFICATION": params.ARGS_CLASS,
+            "REMAPPING": params.ARGS_REMAP,
+        }
+
+        self.run_params_db = self.parameters_generate_random()
+
+
+
+    def sample_main(
+        self,
+        sample=1,
+        cols=["PREPROCESS", "ENRICHMENT", "ASSEMBLY", "CONTIG_CLASSIFICATION"],
+    ):
+        """
+        sample module / software combinations from dictionaries in params.py. random.
+        :param sample: how many combinations to sample. corresponds to number of metclass run directories to be created.
+        :param cols: keys to sample combinations of in SOFTWARE dict in params.py
+        :return: data frame.
+        """
+        if len(cols) == 0:
+            cols = list(self.params_dict.SOFTWARE.keys())
+
+        venue = [self.params_dict.SOFTWARE[x] for x in cols]
+        venues = list(it.product(*venue))
+
+        if sample > 0 and sample < len(venues):
+
+            vex = np.random.choice(list(range(len(venues))), sample, replace=False)
+            venues = [venues[x] for x in vex]
+
+        venues = pd.DataFrame(venues)
+        venues.columns = cols
+        #
+        return venues
+        
+    def params_extract(self, show, modules=[], sample=1):
+        """
+        takes list of software, which might or not have entries in the argument dictionaries.
+        """
+
+        if len(modules) == 0:
+            modules = list(self.params_dict.SOFTWARE.keys())
+
+        relate = []
+        new_features = []
+        nvens = []
+        #
+        for ix, soft in enumerate(show):
+            soft_module = modules[ix]
+            if soft in self.modules_to_stores[soft_module].keys():
+                for c, g in self.modules_to_stores[soft_module][soft].items():
+                    relate.append([soft_module, soft])
+                    new_features.append(c)
+                    nvens.append(g)
+        #
+        nvens = list(it.product(*nvens))
+        if sample:
+            vex = np.random.choice(list(range(len(nvens))), sample, replace=False)
+            nvens = [nvens[x] for x in vex]
+
+        relate = pd.DataFrame(relate, columns=["module", "software"])
+        nvens = pd.DataFrame(nvens).reset_index(drop=True)
+        nvens.columns = new_features
+
+        return nvens, relate
+    
+    def generate_combinations(self, ncomb: int = 0, modules: list = []):
+
+        hdconf = self.sample_main(sample=ncomb, cols=modules)
+        params2 = {}
+        paramCombs = [
+            self.params_extract(hdconf.iloc[idx], params2, modules=modules, sample=0)
+            for idx in range(hdconf.shape[0])
+        ]
+        linked_dbs = [x[1] for x in paramCombs]
+        paramCombs = [x[0] for x in paramCombs]
+
+        return hdconf, linked_dbs, paramCombs
+
+    @staticmethod
+    def extract_parameters(
+        parameters_df_list: list, linked_db_list: list, common_index: tuple
+    ):
+        """
+        extract parameters from list of data frames.
+        :param parameters_df_list: list of data frames.
+        :param linked_db_list: list of data frames.
+        :param common_index: index of common index in data frames.
+
+        :return: data frame.
+        """
+
+        params = (
+            parameters_df_list[common_index[0]]
+            .loc[[common_index[1]]]
+            .reset_index(drop=True)
+        )
+        params = pd.DataFrame([params.columns, params.loc[0]]).T
+        params = pd.concat(
+            (linked_db_list[common_index[0]], params), axis=1
+        ).reset_index(drop=True)
+        params.columns = ["module", "software", "param", "value"]
+
+        return params
+
+    def parameters_generate_random(self):
+        hdconf, linked_dbs, paramCombs = self.generate_combinations(ncomb=1)
+
+        params= self.extract_parameters(paramCombs, linked_dbs, common_index=(0, 0))
+        return params
+
     def configure_ont(self, sample_path: str) -> None:
         sample_name = os.path.basename(sample_path)
         shutil.copy(sample_path, os.path.join(self.dir, "reads"))
@@ -75,20 +200,24 @@ class Dummy_deployment:
         self.config["type"] = ["SE", "PE"][int(os.path.isfile(self.config["r2"]))]
         self.config["technology"] = "illumina"
 
-    def prep_test_env(self, rdir=""):
+    def prep_test_env(self):
         """
         from main directory bearing scripts, params.py and main.sh, create metagenome run directory
 
         :return:
         """
         #
-        if not self.rdir:
-            rdir = os.getcwd()
 
-        self.dir = rdir + "{}/".format(self.prefix)
+        self.dir = self.rdir + "{}/".format(self.prefix)
 
         for dir in self.config["directories"].values():
             os.system("mkdir -p " + self.dir + dir)
+        
+    def run_main_prep(self):
+
+        self.prep_test_env()
+        self.run_engine = RunMain_class(self.config, self.run_params_db)
+
 
 class test_runcmd(TestCase):
     
@@ -109,8 +238,11 @@ class test_runcmd(TestCase):
         self.assertEqual(self.cmd.logdir, self.container.config["directories"]["log_dir"])
         self.assertEqual(self.cmd.prefix, "test")
     
-    def test_flag_error_success(self):
-
+    def test_flag_error(self):
+        for flag in self.cmd.error_flags:
+            self.assertEqual(self.cmd.flag_error(flag), True)
+        
+    
 
 
 class test_read_class(TestCase):
@@ -257,5 +389,104 @@ class test_read_class(TestCase):
         self.assertEqual(read_number, len(read_list))
 
 
+class test_read_class(TestCase):
+
+    container: Dummy_deployment = Dummy_deployment()
+
+    def SetUp(self):
+
+        self.cmd = RunCMD(
+            get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS")
+        )
+
+        self.container.configure_ont(TestConstants.ont_fastq_gz_file_path)
+
+        self.r1 = Read_class(
+            self.container.config["r1"],
+            self.container.config["directories"]["PREPROCESS"],
+            self.container.config["directories"]["reads_enriched_dir"],
+            self.container.config["directories"]["reads_depleted_dir"],
+            bin=get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS"),
+        )
+
+        self.r2 = Read_class(
+            self.container.config["r2"],
+            self.container.config["directories"]["PREPROCESS"],
+            self.container.config["directories"]["reads_enriched_dir"],
+            self.container.config["directories"]["reads_depleted_dir"],
+            bin=get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS"),
+        )
+
+        self.sample = Sample_runClass(
+            self.r1,
+            self.r2,
+            self.container.config["sample_name"],
+            self.container.config["project_name"],
+            self.container.config["technology"],
+            self.container.config["type"],
+            0,
+            ",".join(
+                [os.path.basename(self.r1.current), os.path.basename(self.r2.current)]
+            ),
+            bin=get_bindir_from_binaries(config["bin"], "PREPROCESS"),
+            threads=self.container.config["threads"],
+        )
+    
+    def test_sample_init(self):
+        self.assertEqual(self.sample.r1.current, self.r1.current)
+        self.assertEqual(self.sample.r2.current, self.r2.current)
+        self.assertEqual(self.sample.r1.current_status, "raw")
+        self.assertEqual(self.sample.r2.current_status, "raw")
+        self.assertEqual(self.sample.sample_name, self.container.config["sample_name"])
+        self.assertEqual(self.sample.project_name, self.container.config["project_name"])
+        self.assertEqual(self.sample.technology, self.container.config["technology"])
+        self.assertEqual(self.sample.type, self.container.config["type"])
+        self.assertEqual(self.sample.combinations, 0)
+        self.assertEqual(self.sample.threads, self.container.config["threads"])
+        self.assertEqual(self.sample.reads_before_processing, self.r1.read_number_raw + self.r2.read_number_raw)
+    
+    def test_sample_clean_unique(self):
+        unique_reads= self.r1.get_read_list() + self.r2.get_read_list()
+        unique_reads= list(set(unique_reads))
+
+        self.sample.clean_unique()
+
+        post_process_reads = self.r1.get_read_list() + self.r2.get_read_list()
+        self.assertEqual(len(post_process_reads), len(unique_reads))
+
+    
+    def test_trimmomatic_sort(self):
+        unique_reads= self.r1.get_read_list() + self.r2.get_read_list()
+        unique_reads= list(set(unique_reads))
+
+        self.sample.trimmomatic_sort()
+
+        post_process_reads = self.r1.get_read_list() + self.r2.get_read_list()
+        self.assertEqual(len(post_process_reads), len(unique_reads))
+
+
 class test_pathid_deployment(TestCase):
-    pass
+    
+    container= Dummy_deployment()
+    cmd: RunCMD
+
+    def setUp(self):
+        self.cmd = RunCMD(
+            get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS")
+        )
+
+        self.container.configure_ont(TestConstants.ont_fastq_gz_file_path)
+
+        self.container.run_main_prep()
+    
+
+
+
+    
+
+    
+
+
+
+
+
