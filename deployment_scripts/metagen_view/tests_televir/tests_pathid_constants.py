@@ -1,6 +1,7 @@
 import itertools as it
 import json
 import os
+import pickle
 import random
 import shutil
 
@@ -8,10 +9,14 @@ import numpy as np
 import pandas as pd
 from django.test import TestCase
 from pathogen_detection.constants_settings import TestConstants
-from pathogen_detection.object_classes import (Read_class, RunCMD,
-                                               Sample_runClass)
+from pathogen_detection.object_classes import (
+    Read_class,
+    RunCMD,
+    Sample_runClass,
+    Software_detail,
+)
+from pathogen_detection.preprocess_class import Preprocess
 from pathogen_detection.run_main import RunMain_class, get_bindir_from_binaries
-from pyrsistent import T
 from this import d
 
 
@@ -26,18 +31,22 @@ class Dummy_deployment:
     rdir: str
     threads: int = 3
     run_engine: RunMain_class
-    params= dict
+    params = dict
     run_params_db = pd.DataFrame()
 
     def __init__(self, project: str = "test", prefix: str = "main") -> None:
         self.rdir = os.path.join(TestConstants.Test_Temp_Directory, project)
+        self.dir = os.path.join(self.rdir, prefix)
+
+        os.makedirs(self.dir, exist_ok=True)
+        self.static_dir = os.path.join(TestConstants.Test_Temp_Directory, "static")
         self.prefix = prefix
 
         with open(TestConstants.ont_params_json, "r") as f:
             params = json.load(f)
             params = AttrDict(params)
-        
-        self.params_dict= params
+
+        self.params_dict = params
 
         self.config = {
             "project": project,
@@ -55,12 +64,15 @@ class Dummy_deployment:
             },
             "technology": params.DATA_TYPE,
             "bin": params.BINARIES,
+            "actions": {},
         }
 
         for dr, g in params.DIRS.items():
-            self.config["directories"][dr] = self.dir + g
-        for dr, g in self.actions.items():
+            self.config["directories"][dr] = os.path.join(self.dir, g)
+
+        for dr, g in params.ACTIONS.items():
             self.config["actions"][dr] = False
+
         self.config.update(params.CONSTANTS)
 
         self.modules_to_stores = {
@@ -73,8 +85,6 @@ class Dummy_deployment:
         }
 
         self.run_params_db = self.parameters_generate_random()
-
-
 
     def sample_main(
         self,
@@ -102,7 +112,7 @@ class Dummy_deployment:
         venues.columns = cols
         #
         return venues
-        
+
     def params_extract(self, show, modules=[], sample=1):
         """
         takes list of software, which might or not have entries in the argument dictionaries.
@@ -133,13 +143,13 @@ class Dummy_deployment:
         nvens.columns = new_features
 
         return nvens, relate
-    
+
     def generate_combinations(self, ncomb: int = 0, modules: list = []):
 
         hdconf = self.sample_main(sample=ncomb, cols=modules)
         params2 = {}
         paramCombs = [
-            self.params_extract(hdconf.iloc[idx], params2, modules=modules, sample=0)
+            self.params_extract(hdconf.iloc[idx], modules=modules, sample=0)
             for idx in range(hdconf.shape[0])
         ]
         linked_dbs = [x[1] for x in paramCombs]
@@ -176,24 +186,29 @@ class Dummy_deployment:
     def parameters_generate_random(self):
         hdconf, linked_dbs, paramCombs = self.generate_combinations(ncomb=1)
 
-        params= self.extract_parameters(paramCombs, linked_dbs, common_index=(0, 0))
+        params = self.extract_parameters(paramCombs, linked_dbs, common_index=(0, 0))
         return params
 
     def configure_ont(self, sample_path: str) -> None:
         sample_name = os.path.basename(sample_path)
-        shutil.copy(sample_path, os.path.join(self.dir, "reads"))
-        sample_path = os.path.join(self.dir, "reads", sample_name)
+        new_sample_path = os.path.join(self.dir, "reads") + "/" + sample_name
+
+        shutil.copy(sample_path, new_sample_path)
 
         self.config["sample_name"] = sample_name
-        self.config["r1"] = sample_path
+        self.config["r1"] = new_sample_path
         self.config["r2"] = "none"
         self.config["type"] = "SE"
         self.config["technology"] = "nanopore"
 
     def configure_illumina(self, r1_path: str, r2_path: str = "") -> None:
-        sample_name = os.path.basename(sample_path)
-        shutil.copy(sample_path, os.path.join(self.dir, "reads"))
-        sample_path = os.path.join(self.dir, "reads", sample_name)
+        sample_name = os.path.basename(r1_path)
+
+        shutil.copy(sample_path, os.path.join(self.dir, "reads") + "/" + sample_name)
+        sample_path = os.path.join(self.dir, "reads") + "/" + sample_name
+        if r2_path:
+            shutil.copy(r2_path, os.path.join(self.dir, "reads") + "/" + sample_name)
+            r2_path = os.path.join(self.dir, "reads") + "/" + sample_name
         self.config["sample_name"] = sample_name
         self.config["r1"] = r1_path
         self.config["r2"] = r2_path
@@ -208,55 +223,64 @@ class Dummy_deployment:
         """
         #
 
-        self.dir = self.rdir + "{}/".format(self.prefix)
-
         for dir in self.config["directories"].values():
-            os.system("mkdir -p " + self.dir + dir)
-        
+            os.makedirs(dir, exist_ok=True)
+
+    def close(self):
+        if os.path.exists(self.dir):
+            shutil.rmtree(self.dir)
+
     def run_main_prep(self):
 
-        self.prep_test_env()
         self.run_engine = RunMain_class(self.config, self.run_params_db)
 
 
 class test_runcmd(TestCase):
-    
-    container= Dummy_deployment()
 
-    def SetUp(self):
-        self.cmd= RunCMD(
+    container = Dummy_deployment(prefix="runCMD")
+
+    def setUp(self):
+        self.cmd = RunCMD(
             get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS"),
             self.container.config["directories"]["log_dir"],
-            prefix= "test", 
-            task= "test"
+            prefix="test",
+            task="test",
         )
 
+    def tearDown(self) -> None:
+        self.container.close()
+        return super().tearDown()
+
     def test_runcmd_config(self):
-        self.assertEqual(self.cmd.logger.level, "CRITICAL")
+        self.assertEqual(self.cmd.logger.level, 50)
         self.assertEqual(self.cmd.logger.propagate, False)
-        self.assertEqual(self.cmd.logfile, os.path.join(self.container.config["directories"]["log_dir"], "test_test.log"))
-        self.assertEqual(self.cmd.logdir, self.container.config["directories"]["log_dir"])
+        self.assertEqual(
+            self.cmd.logfile,
+            os.path.join(
+                self.container.config["directories"]["log_dir"], "test_test.log"
+            ),
+        )
+        self.assertEqual(
+            self.cmd.logdir, self.container.config["directories"]["log_dir"]
+        )
         self.assertEqual(self.cmd.prefix, "test")
-    
+
     def test_flag_error(self):
         for flag in self.cmd.error_flags:
             self.assertEqual(self.cmd.flag_error(flag), True)
-        
-    
 
 
 class test_read_class(TestCase):
 
-    container: Dummy_deployment = Dummy_deployment()
+    container: Dummy_deployment = Dummy_deployment(prefix="Read_class")
 
-    def SetUp(self):
+    def setUp(self):
 
         self.cmd = RunCMD(
             get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS")
         )
-
+        self.container.prep_test_env()
         self.container.configure_ont(TestConstants.ont_fastq_gz_file_path)
-
         self.r1 = Read_class(
             self.container.config["r1"],
             self.container.config["directories"]["PREPROCESS"],
@@ -265,36 +289,43 @@ class test_read_class(TestCase):
             bin=get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS"),
         )
 
+    def tearDown(self) -> None:
+
+        self.container.close()
+
+        return super().tearDown()
+
     def test_read_class_configuration(self):
 
-        self.assertEqual(self.r1.filepath, TestConstants.ont_fastq_gz_file_path)
-        self.assertEqual(self.r1.current, TestConstants.ont_fastq_gz_file_path)
         self.assertEqual(
             self.r1.prefix,
-            os.path.splitext(os.path.basename(TestConstants.ont_fastq_gz_file_path)),
+            os.path.splitext(os.path.basename(TestConstants.ont_fastq_gz_file_path))[0],
         )
 
         self.assertEqual(
             self.r1.clean,
             os.path.join(
                 self.container.config["directories"]["PREPROCESS"],
-                self.container.prefix + ".clean.fastq.gz",
+                os.path.splitext(self.container.config["sample_name"])[0]
+                + ".clean.fastq.gz",
             ),
         )
 
         self.assertEqual(
             self.r1.enriched,
             os.path.join(
-                self.container.config["directories"]["PREPROCESS"],
-                self.container.prefix + ".enriched.fastq.gz",
+                self.container.config["directories"]["reads_enriched_dir"],
+                os.path.splitext(self.container.config["sample_name"])[0]
+                + ".enriched.fastq.gz",
             ),
         )
 
         self.assertEqual(
             self.r1.depleted,
             os.path.join(
-                self.container.config["directories"]["PREPROCESS"],
-                self.container.prefix + ".depleted.fastq.gz",
+                self.container.config["directories"]["reads_depleted_dir"],
+                os.path.splitext(self.container.config["sample_name"])[0]
+                + ".depleted.fastq.gz",
             ),
         )
 
@@ -310,12 +341,12 @@ class test_read_class(TestCase):
             self.container.config["directories"]["reads_depleted_dir"],
         )
 
-        self.assertEqual(self.r1.current, r1_copy.clean)
+        self.assertEqual(self.r1.current, r1_copy.current)
         self.assertEqual(self.r1.enriched, r1_copy.enriched)
         self.assertEqual(self.r1.depleted, r1_copy.depleted)
 
     def test_fake_quality_check(self):
-        temp_path = os.path.join(self.container.dir, "temp.fastq")
+        temp_path = os.path.join(self.container.dir, "temp.fastq.gz")
         self.r1.copy(temp_path)
         temp_r1 = Read_class(
             temp_path,
@@ -328,20 +359,18 @@ class test_read_class(TestCase):
 
         cmd_qual_zgrep = [
             "zcat",
-            temp_r1.current
-            "|"
+            temp_r1.current,
+            "|",
             "awk",
             "'NR % 4 == 0'",
-            "|",
-            "head",
         ]
 
-        qual_grep = self.cmd.run_bash_return(cmd_qual_zgrep)
-        self.assertEqual(list(set(qual_grep[0].strip()))[0], "3")
+        qual_grep = self.cmd.run_bash_return(cmd_qual_zgrep).decode().split("\n")
+        self.assertEqual(list(set(qual_grep[0])), ["3"])
         os.remove(temp_path)
 
     def test_read_filter_move(self):
-        temp_path = os.path.join(self.container.dir, "temp.fastq")
+        temp_path = os.path.join(self.container.dir, "temp.fastq.gz")
         r1_reads = self.r1.get_read_list()
         r1_reads_sample = random.sample(r1_reads, 10)
 
@@ -354,6 +383,7 @@ class test_read_class(TestCase):
         )
 
         self.r1.read_filter_move(self.r1.current, r1_reads_sample, temp_r1.current)
+        temp_r1.exists = True
 
         temp_reads = temp_r1.get_read_list()
         self.assertEqual(len(temp_reads), len(r1_reads_sample))
@@ -365,7 +395,7 @@ class test_read_class(TestCase):
         self.r1.enrich(r1_reads_sample)
 
         enriched_reads = self.r1.get_read_list()
-        self.assertEqual(len(enriched_reads), len(r1_reads_sample))
+        self.assertEqual(len(enriched_reads), self.r1.read_number_enriched)
         self.assertEqual(self.r1.current, self.r1.enriched)
         self.assertEqual(self.r1.current_status, "enriched")
         self.assertEqual(self.r1.read_number_enriched, len(r1_reads_sample))
@@ -377,7 +407,8 @@ class test_read_class(TestCase):
         self.r1.deplete(r1_reads_sample)
 
         depleted_reads = self.r1.get_read_list()
-        self.assertEqual(len(depleted_reads), len(r1_reads_sample))
+
+        self.assertEqual(len(depleted_reads), self.r1.read_number_depleted)
         self.assertEqual(self.r1.current, self.r1.depleted)
         self.assertEqual(self.r1.current_status, "depleted")
         self.assertEqual(self.r1.read_number_depleted, len(r1_reads_sample))
@@ -389,16 +420,16 @@ class test_read_class(TestCase):
         self.assertEqual(read_number, len(read_list))
 
 
-class test_read_class(TestCase):
+class test_sample_class(TestCase):
 
-    container: Dummy_deployment = Dummy_deployment()
+    container: Dummy_deployment = Dummy_deployment(prefix="Sample_runClass")
 
-    def SetUp(self):
+    def setUp(self):
 
         self.cmd = RunCMD(
             get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS")
         )
-
+        self.container.prep_test_env()
         self.container.configure_ont(TestConstants.ont_fastq_gz_file_path)
 
         self.r1 = Read_class(
@@ -428,36 +459,48 @@ class test_read_class(TestCase):
             ",".join(
                 [os.path.basename(self.r1.current), os.path.basename(self.r2.current)]
             ),
-            bin=get_bindir_from_binaries(config["bin"], "PREPROCESS"),
+            bin=get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS"),
             threads=self.container.config["threads"],
         )
-    
+
+        self.container.configure_ont(TestConstants.ont_fastq_gz_file_path)
+
+        self.container.prep_test_env()
+
+    def tearDown(self) -> None:
+        self.container.close()
+        return super().tearDown()
+
     def test_sample_init(self):
         self.assertEqual(self.sample.r1.current, self.r1.current)
         self.assertEqual(self.sample.r2.current, self.r2.current)
         self.assertEqual(self.sample.r1.current_status, "raw")
         self.assertEqual(self.sample.r2.current_status, "raw")
         self.assertEqual(self.sample.sample_name, self.container.config["sample_name"])
-        self.assertEqual(self.sample.project_name, self.container.config["project_name"])
+        self.assertEqual(
+            self.sample.project_name, self.container.config["project_name"]
+        )
         self.assertEqual(self.sample.technology, self.container.config["technology"])
         self.assertEqual(self.sample.type, self.container.config["type"])
         self.assertEqual(self.sample.combinations, 0)
         self.assertEqual(self.sample.threads, self.container.config["threads"])
-        self.assertEqual(self.sample.reads_before_processing, self.r1.read_number_raw + self.r2.read_number_raw)
-    
+        self.assertEqual(
+            self.sample.reads_before_processing,
+            self.r1.read_number_raw + self.r2.read_number_raw,
+        )
+
     def test_sample_clean_unique(self):
-        unique_reads= self.r1.get_read_list() + self.r2.get_read_list()
-        unique_reads= list(set(unique_reads))
+        unique_reads = self.r1.get_read_list() + self.r2.get_read_list()
+        unique_reads = list(set(unique_reads))
 
         self.sample.clean_unique()
 
         post_process_reads = self.r1.get_read_list() + self.r2.get_read_list()
         self.assertEqual(len(post_process_reads), len(unique_reads))
 
-    
     def test_trimmomatic_sort(self):
-        unique_reads= self.r1.get_read_list() + self.r2.get_read_list()
-        unique_reads= list(set(unique_reads))
+        unique_reads = self.r1.get_read_list() + self.r2.get_read_list()
+        unique_reads = list(set(unique_reads))
 
         self.sample.trimmomatic_sort()
 
@@ -465,28 +508,50 @@ class test_read_class(TestCase):
         self.assertEqual(len(post_process_reads), len(unique_reads))
 
 
-class test_pathid_deployment(TestCase):
-    
-    container= Dummy_deployment()
+class test_pathid_Preprocess(TestCase):
+
+    container = Dummy_deployment(prefix="Preprocess")
+    preprocess_engine = Preprocess
     cmd: RunCMD
 
     def setUp(self):
         self.cmd = RunCMD(
             get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS")
         )
-
+        self.container.prep_test_env()
         self.container.configure_ont(TestConstants.ont_fastq_gz_file_path)
-
         self.container.run_main_prep()
-    
 
+        self.preprocess_engine = Preprocess(
+            self.container.run_engine.sample.r1.current,
+            self.container.run_engine.sample.r2.current,
+            self.container.run_engine.filtered_reads_dir,
+            self.container.run_engine.type,
+            self.container.run_engine.preprocess_method,
+            self.container.run_engine.sample.r1.clean,
+            self.container.run_engine.sample.r2.clean,
+            self.container.run_engine.threads,
+            self.container.run_engine.subsample,
+        )
 
+    def tearDown(self) -> None:
+        self.container.close()
+        return super().tearDown()
 
-    
+    def test_check_file_not_empty(self):
+        result = self.preprocess_engine.check_gz_file_not_empty(
+            self.container.run_engine.r1.current
+        )
+        self.assertEqual(result, True)
 
-    
+        neg_file = self.container.dir + "/temp_test.txt"
+        open(neg_file, "w").close()
 
+        negative_result = self.preprocess_engine.check_gz_file_not_empty(neg_file)
 
+        self.assertFalse(negative_result)
 
+    def test_fastqc_input(self):
+        self.preprocess_engine.fastqc_input("input_data")
 
-
+        self.assertTrue(os.path.exists(self.preprocess_engine.input_qc_report))

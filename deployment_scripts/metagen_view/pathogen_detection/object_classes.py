@@ -51,10 +51,20 @@ class RunCMD:
                     subprocess_errorlog = subprocess_errorlog.decode("utf-8")
                     if error in subprocess_errorlog:
                         print(f"{error} in {cmd}")
+                        return True
                     if error in subprocess_errorlog.lower():
                         print(f"{error} in {cmd}")
+                        return True
                 except Exception as e:
-                    return False
+                    try:
+                        if error in subprocess_errorlog:
+                            print(f"{error} in {cmd}")
+                            return True
+                        if error in subprocess_errorlog.lower():
+                            print(f"{error} in {cmd}")
+                            return True
+                    except Exception as e:
+                        return False
 
         return False
 
@@ -320,7 +330,7 @@ class Read_class:
 
         return filename
 
-    def get_read_list(self):
+    def get_read_list(self) -> str:
         """
         Get list of reads.
         """
@@ -329,13 +339,23 @@ class Read_class:
             return []
 
         read_grep_cmd = [
-            "zgrep",
+            "zcat",
+            self.current,
+            "|",
+            "sed",
+            "-n",
+            "1~4p",
+            "|",
+            "awk",
+            "'{ print $1 }'",
+            "|",
+            "sed",
             "-e",
-            "^@",
-            self.filepath,
+            "'s/^@'//g",
         ]
 
-        read_list = self.cmd.run_bash_return(read_grep_cmd)
+        read_list = self.cmd.run_bash_return(read_grep_cmd).decode().split("\n")
+        read_list = [x for x in read_list if x]
         return read_list
 
     def fake_quality(self, quality: str = "30"):
@@ -361,7 +381,6 @@ class Read_class:
 
         if os.path.isfile(tempf):
             os.remove(self.current)
-            import shutil
 
             shutil.copy(tempf, self.current)
 
@@ -375,7 +394,6 @@ class Read_class:
         with gzip.open(self.current, "rb") as f_in, gzip.open(tempf, "wb") as f_out:
             counter = 0
             lines = []
-            print("HEH")
             for line in f_in:
 
                 if len(lines) == 4:
@@ -411,7 +429,7 @@ class Read_class:
 
         self.read_filter(input, output, temp_reads_keep)
 
-        # os.remove(temp_reads_keep)
+        os.remove(temp_reads_keep)
 
     def read_filter_inplace(self, input: str, read_list: str):
 
@@ -488,8 +506,6 @@ class Read_class:
         self.read_number_depleted = self.get_current_fastq_read_number()
         self.current_status = "depleted"
         self.filepath = os.path.dirname(self.current)
-        print("depleted")
-        print(self.read_number_depleted)
         self.read_number_filtered = self.read_number_depleted
 
     def get_current_fastq_read_number(self):
@@ -565,9 +581,6 @@ class Sample_runClass:
         self.reads_before_processing = self.r1.read_number_raw + self.r2.read_number_raw
 
     def current_total_read_number(self):
-        print("current total")
-        print(self.r1.get_current_fastq_read_number())
-        print(self.r2.get_current_fastq_read_number())
         return (
             self.r1.get_current_fastq_read_number()
             + self.r2.get_current_fastq_read_number()

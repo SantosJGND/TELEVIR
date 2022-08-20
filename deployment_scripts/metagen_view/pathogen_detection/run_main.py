@@ -220,10 +220,10 @@ class RunDetail_main:
         self.sift = config["actions"]["SIFT"]
         self.depletion = config["actions"]["DEPLETE"]
         self.enrichment = config["actions"]["ENRICH"]
-        self.assembly = config["actions"]["ASSEMBLY"]
+        self.assembly = config["actions"]["ASSEMBLE"]
         self.classification = config["actions"]["CLASSIFY"]
-        self.remapping = config["actions"]["REMAPPING"]
-        self.house_cleaning = config["actions"]["CLEANING"]
+        self.remapping = config["actions"]["REMAP"]
+        self.house_cleaning = config["actions"]["CLEAN"]
 
         ### methods
         self.preprocess_method = Software_detail(
@@ -367,10 +367,10 @@ class RunDetail_main:
         self.sift = config["actions"]["SIFT"]
         self.depletion = config["actions"]["DEPLETE"]
         self.enrichment = config["actions"]["ENRICH"]
-        self.assembly = config["actions"]["ASSEMBLY"]
+        self.assembly = config["actions"]["ASSEMBLE"]
         self.classification = config["actions"]["CLASSIFY"]
-        self.remapping = config["actions"]["REMAPPING"]
-        self.house_cleaning = config["actions"]["CLEANING"]
+        self.remapping = config["actions"]["REMAP"]
+        self.house_cleaning = config["actions"]["CLEAN"]
 
         ### methods
 

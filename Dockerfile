@@ -7,8 +7,6 @@ RUN apt-get update
 RUN apt-get install -y build-essential wget curl rsync apt-utils python3-setuptools
 
 RUN apt-get clean
-#RUN apt-get install python3-setuptools
-#RUN pip install --upgrade setuptools
 
 RUN rm -rf /var/lib/apt/lists/*
 RUN pip install --upgrade pip

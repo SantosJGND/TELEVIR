@@ -67,7 +67,7 @@ DIRS = {
 ################################## MODULES
 
 ACTIONS = {
-    "CLEANING": False,
+    "CLEAN": False,
     "QCONTROL": True,
     "ENRICH": True,
     "DEPLETE": False,
@@ -76,6 +76,7 @@ ACTIONS = {
     "REMAP": True,
     "PHAGE_DEPL": True,
     "VIRSORT": False,
+    "SIFT": True,
 }
 
 ################################## CONSTANT PARAMS

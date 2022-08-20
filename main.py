@@ -92,11 +92,11 @@ def main():
     if args.docker:
         SOURCE = "/opt/conda/etc/profile.d/conda.sh"
         SOURCE_DIR = "/opt/conda/"
-        HOME = "/usr/local/mngs_benchmark/"
-        ENVDIR = "/usr/local/mngs_benchmark/mngs_environments/"
-        DEPLOYMENT_DIR = "/usr/local/mngs_benchmark/deployment/"
+        HOME = "/televir/mngs_benchmark/"
+        ENVDIR = "/televir/mngs_benchmark/mngs_environments/"
+        DEPLOYMENT_DIR = "/televir/mngs_benchmark/deployment/"
         TECH = "nanopore"
-        TAXDUMP = "/insaflu_web/TELEVIR/taxdump.tar.gz"
+        TAXDUMP = ""
         ORGANISM = "viral"
 
         INSTALL_PARAMS["HOME"] = HOME

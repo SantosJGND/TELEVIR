@@ -113,16 +113,19 @@ class main_deploy_prep:
         print("dir: ", self.dir)
         copy_tree(self.django_dir, self.dir)
 
-        self.dir = os.path.join(self.dir, "pathogen_detection") + "/"
+        self.app_dir = os.path.join(self.dir, "pathogen_detection") + "/"
         # os.makedirs(self.dir)
 
     def export(self):
         self.paramf = self.pdir + f"params_files/params_{self.tech}.py"
         self.mainsh = self.pdir + f"main/main_{self.tech}.sh"
-        new_params = self.dir + "params.py"
+        new_params = self.app_dir + "params.py"
+        test_params_dict = (
+            os.path.join(self.dir, "static", "tests") + "/ont_params.json"
+        )
 
         os.system(f"cp {self.paramf} {new_params}")
-        os.system(f"cp {self.mainpy} {self.dir}")
+        os.system(f"cp {self.mainpy} {self.app_dir}")
 
         mods_dict = {
             "$ENVDIR": self.envd,
@@ -136,6 +139,7 @@ class main_deploy_prep:
             if repl[-1] != "/":
                 repl += "/"
             os.system(f"sed -i 's#{tag}#{repl}#g' {new_params}")
+            os.system(f"sed -i 's#{tag}#{repl}#g' {test_params_dict}")
 
         os.system(f"sed -i 's#$SOURCE#{self.source}#g' {new_params}")
 

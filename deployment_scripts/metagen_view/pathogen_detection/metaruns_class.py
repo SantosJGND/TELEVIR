@@ -62,15 +62,15 @@ class metaclass_run:
 
         self.id = id
         self.actions = {
-            "CLEANING": ACTIONS["CLEANING"],
+            "CLEAN": ACTIONS["CLEANING"],
             "SIFT": ACTIONS["PHAGE_DEPL"],
             "VIRSORT": ACTIONS["VIRSORT"],
             "QCONTROL": False,
-            "ASSEMBLY": ACTIONS["ASSEMBLE"],
+            "ASSEMBLE": ACTIONS["ASSEMBLE"],
             "DEPLETE": ACTIONS["DEPLETE"],
             "ENRICH": ACTIONS["ENRICH"],
             "CLASSIFY": False,
-            "REMAPPING": False,
+            "REMAP": False,
         }
         self.sample_name = sample_name
         self.project_name = project_name
@@ -582,11 +582,11 @@ class meta_orchestra:
         child.actions["QCONTROL"] = False
         child.actions["DEPLETE"] = False
         child.actions["ENRICH"] = False
-        child.actions["ASSEMBLY"] = False
+        child.actions["ASSEMBLE"] = False
         child.actions["SIFT"] = ACTIONS["PHAGE_DEPL"]
         child.actions["VIRSORT"] = ACTIONS["VIRSORT"]
         child.actions["CLASSIFY"] = ACTIONS["CLASSIFY"]
-        child.actions["REMAPPING"] = ACTIONS["REMAP"]
+        child.actions["REMAP"] = ACTIONS["REMAP"]
 
         if len(paramCombs[srun[0]]) == 0:
             return self
