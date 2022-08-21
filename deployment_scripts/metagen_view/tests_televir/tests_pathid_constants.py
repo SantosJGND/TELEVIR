@@ -28,6 +28,8 @@ class AttrDict(dict):
 
 class Dummy_deployment:
 
+    project: str
+    prefix: str
     rdir: str
     threads: int = 3
     run_engine: RunMain_class
@@ -35,56 +37,14 @@ class Dummy_deployment:
     run_params_db = pd.DataFrame()
 
     def __init__(self, project: str = "test", prefix: str = "main") -> None:
+        self.project = project
+        self.prefix = prefix
         self.rdir = os.path.join(TestConstants.Test_Temp_Directory, project)
         self.dir = os.path.join(self.rdir, prefix)
 
         os.makedirs(self.dir, exist_ok=True)
         self.static_dir = os.path.join(TestConstants.Test_Temp_Directory, "static")
         self.prefix = prefix
-
-        with open(TestConstants.ont_params_json, "r") as f:
-            params = json.load(f)
-            params = AttrDict(params)
-
-        self.params_dict = params
-
-        self.config = {
-            "project": project,
-            "source": params.SOURCE,
-            "directories": {
-                "root": self.rdir,
-            },
-            "static_dir": self.static_dir,
-            "threads": self.threads,
-            "prefix": self.prefix,
-            "project_name": project,
-            "metadata": {
-                x: os.path.join(params.METADATA["ROOT"], g)
-                for x, g in params.METADATA.items()
-            },
-            "technology": params.DATA_TYPE,
-            "bin": params.BINARIES,
-            "actions": {},
-        }
-
-        for dr, g in params.DIRS.items():
-            self.config["directories"][dr] = os.path.join(self.dir, g)
-
-        for dr, g in params.ACTIONS.items():
-            self.config["actions"][dr] = False
-
-        self.config.update(params.CONSTANTS)
-
-        self.modules_to_stores = {
-            "PREPROCESS": params.ARGS_QC,
-            "ENRICHMENT": params.ARGS_ENRICH,
-            "ASSEMBLY": params.ARGS_ASS,
-            "CONTIG_CLASSIFICATION": params.ARGS_CLASS,
-            "READ_CLASSIFICATION": params.ARGS_CLASS,
-            "REMAPPING": params.ARGS_REMAP,
-        }
-
-        self.run_params_db = self.parameters_generate_random()
 
     def sample_main(
         self,
@@ -189,7 +149,67 @@ class Dummy_deployment:
         params = self.extract_parameters(paramCombs, linked_dbs, common_index=(0, 0))
         return params
 
+    def get_params_ont(self):
+
+        with open(TestConstants.ont_params_json, "r") as f:
+            params = json.load(f)
+            params = AttrDict(params)
+
+        self.params_dict = params
+
+    def get_params_illumina(self):
+
+        with open(TestConstants.illumina_params_json, "r") as f:
+            params = json.load(f)
+            params = AttrDict(params)
+
+        self.params_dict = params
+
+    def generate_config_file(self):
+
+        self.config = {
+            "project": self.project,
+            "source": self.params_dict.SOURCE,
+            "directories": {
+                "root": self.rdir,
+            },
+            "static_dir": self.static_dir,
+            "threads": self.threads,
+            "prefix": self.prefix,
+            "project_name": self.project,
+            "metadata": {
+                x: os.path.join(self.params_dict.METADATA["ROOT"], g)
+                for x, g in self.params_dict.METADATA.items()
+            },
+            "technology": self.params_dict.DATA_TYPE,
+            "bin": self.params_dict.BINARIES,
+            "actions": {},
+        }
+
+        for dr, g in self.params_dict.DIRS.items():
+            self.config["directories"][dr] = os.path.join(self.dir, g)
+
+        for dr, g in self.params_dict.ACTIONS.items():
+            self.config["actions"][dr] = False
+
+        self.config.update(self.params_dict.CONSTANTS)
+
+        self.modules_to_stores = {
+            "PREPROCESS": self.params_dict.ARGS_QC,
+            "ENRICHMENT": self.params_dict.ARGS_ENRICH,
+            "ASSEMBLY": self.params_dict.ARGS_ASS,
+            "CONTIG_CLASSIFICATION": self.params_dict.ARGS_CLASS,
+            "READ_CLASSIFICATION": self.params_dict.ARGS_CLASS,
+            "REMAPPING": self.params_dict.ARGS_REMAP,
+        }
+
+        self.run_params_db = self.parameters_generate_random()
+
     def configure_ont(self, sample_path: str) -> None:
+        self.get_params_ont()
+        self.generate_config_file()
+        self.prep_test_env()
+
         sample_name = os.path.basename(sample_path)
         new_sample_path = os.path.join(self.dir, "reads") + "/" + sample_name
 
@@ -202,16 +222,23 @@ class Dummy_deployment:
         self.config["technology"] = "nanopore"
 
     def configure_illumina(self, r1_path: str, r2_path: str = "") -> None:
-        sample_name = os.path.basename(r1_path)
 
-        shutil.copy(sample_path, os.path.join(self.dir, "reads") + "/" + sample_name)
-        sample_path = os.path.join(self.dir, "reads") + "/" + sample_name
+        self.get_params_illumina()
+        self.generate_config_file()
+        self.prep_test_env()
+
+        r1_name = os.path.basename(r1_path)
+        new_r1_path = os.path.join(self.dir, "reads") + "/" + r1_name
+        shutil.copy(r1_path, new_r1_path)
+
         if r2_path:
-            shutil.copy(r2_path, os.path.join(self.dir, "reads") + "/" + sample_name)
-            r2_path = os.path.join(self.dir, "reads") + "/" + sample_name
-        self.config["sample_name"] = sample_name
-        self.config["r1"] = r1_path
-        self.config["r2"] = r2_path
+            r2_name = os.path.basename(r1_path)
+            new_r2_path = os.path.join(self.dir, "reads") + "/" + r2_name
+            shutil.copy(r2_path, new_r2_path)
+
+        self.config["sample_name"] = r1_name
+        self.config["r1"] = new_r1_path
+        self.config["r2"] = new_r2_path
         self.config["type"] = ["SE", "PE"][int(os.path.isfile(self.config["r2"]))]
         self.config["technology"] = "illumina"
 
@@ -240,6 +267,9 @@ class test_runcmd(TestCase):
     container = Dummy_deployment(prefix="runCMD")
 
     def setUp(self):
+
+        self.container.configure_ont(TestConstants.ont_fastq_gz_file_path)
+
         self.cmd = RunCMD(
             get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS"),
             self.container.config["directories"]["log_dir"],
@@ -276,17 +306,17 @@ class test_read_class(TestCase):
 
     def setUp(self):
 
-        self.cmd = RunCMD(
-            get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS")
-        )
-        self.container.prep_test_env()
         self.container.configure_ont(TestConstants.ont_fastq_gz_file_path)
+
         self.r1 = Read_class(
             self.container.config["r1"],
             self.container.config["directories"]["PREPROCESS"],
             self.container.config["directories"]["reads_enriched_dir"],
             self.container.config["directories"]["reads_depleted_dir"],
             bin=get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS"),
+        )
+        self.cmd = RunCMD(
+            get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS")
         )
 
     def tearDown(self) -> None:
@@ -426,10 +456,6 @@ class test_sample_class(TestCase):
 
     def setUp(self):
 
-        self.cmd = RunCMD(
-            get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS")
-        )
-        self.container.prep_test_env()
         self.container.configure_ont(TestConstants.ont_fastq_gz_file_path)
 
         self.r1 = Read_class(
@@ -465,7 +491,9 @@ class test_sample_class(TestCase):
 
         self.container.configure_ont(TestConstants.ont_fastq_gz_file_path)
 
-        self.container.prep_test_env()
+        self.cmd = RunCMD(
+            get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS")
+        )
 
     def tearDown(self) -> None:
         self.container.close()
@@ -510,48 +538,99 @@ class test_sample_class(TestCase):
 
 class test_pathid_Preprocess(TestCase):
 
-    container = Dummy_deployment(prefix="Preprocess")
+    container_ont = Dummy_deployment(prefix="Preprocess_ont")
+    container_illumina = Dummy_deployment(prefix="Preprocess_illumina")
     preprocess_engine = Preprocess
     cmd: RunCMD
 
     def setUp(self):
-        self.cmd = RunCMD(
-            get_bindir_from_binaries(self.container.config["bin"], "PREPROCESS")
-        )
-        self.container.prep_test_env()
-        self.container.configure_ont(TestConstants.ont_fastq_gz_file_path)
-        self.container.run_main_prep()
 
-        self.preprocess_engine = Preprocess(
-            self.container.run_engine.sample.r1.current,
-            self.container.run_engine.sample.r2.current,
-            self.container.run_engine.filtered_reads_dir,
-            self.container.run_engine.type,
-            self.container.run_engine.preprocess_method,
-            self.container.run_engine.sample.r1.clean,
-            self.container.run_engine.sample.r2.clean,
-            self.container.run_engine.threads,
-            self.container.run_engine.subsample,
+        self.container_ont.configure_ont(TestConstants.ont_fastq_gz_file_path)
+
+        self.container_ont.run_main_prep()
+
+        self.preprocess_engine_ont = Preprocess(
+            self.container_ont.run_engine.sample.r1.current,
+            self.container_ont.run_engine.sample.r2.current,
+            self.container_ont.run_engine.filtered_reads_dir,
+            self.container_ont.run_engine.type,
+            self.container_ont.run_engine.preprocess_method,
+            self.container_ont.run_engine.sample.r1.clean,
+            self.container_ont.run_engine.sample.r2.clean,
+            self.container_ont.run_engine.threads,
+            self.container_ont.run_engine.subsample,
+        )
+        ##########
+        ##########
+        self.container_illumina.configure_illumina(
+            TestConstants.illumina_fastq_gz_file_r1_path,
+            TestConstants.illumina_fastq_gz_file_r2_path,
+        )
+
+        self.container_illumina.run_main_prep()
+
+        self.preprocess_engine_illumina = Preprocess(
+            self.container_illumina.run_engine.sample.r1.current,
+            self.container_illumina.run_engine.sample.r2.current,
+            self.container_illumina.run_engine.filtered_reads_dir,
+            self.container_illumina.run_engine.type,
+            self.container_illumina.run_engine.preprocess_method,
+            self.container_illumina.run_engine.sample.r1.clean,
+            self.container_illumina.run_engine.sample.r2.clean,
+            self.container_illumina.run_engine.threads,
+            self.container_illumina.run_engine.subsample,
+        )
+
+        self.cmd = RunCMD(
+            get_bindir_from_binaries(self.container_ont.config["bin"], "PREPROCESS")
         )
 
     def tearDown(self) -> None:
-        self.container.close()
+        self.container_ont.close()
+        # self.container_illumina.close()
         return super().tearDown()
 
     def test_check_file_not_empty(self):
-        result = self.preprocess_engine.check_gz_file_not_empty(
-            self.container.run_engine.r1.current
+        result = self.preprocess_engine_ont.check_gz_file_not_empty(
+            self.container_ont.run_engine.r1.current
         )
         self.assertEqual(result, True)
 
-        neg_file = self.container.dir + "/temp_test.txt"
+        neg_file = self.container_ont.dir + "/temp_test.txt"
         open(neg_file, "w").close()
 
-        negative_result = self.preprocess_engine.check_gz_file_not_empty(neg_file)
+        negative_result = self.preprocess_engine_ont.check_gz_file_not_empty(neg_file)
 
         self.assertFalse(negative_result)
 
-    def test_fastqc_input(self):
-        self.preprocess_engine.fastqc_input("input_data")
+    def test_fastqc_input_SE(self):
+        self.preprocess_engine_ont.fastqc_input("input_data")
+        self.assertTrue(os.path.exists(self.preprocess_engine_ont.input_qc_report))
 
-        self.assertTrue(os.path.exists(self.preprocess_engine.input_qc_report))
+    def test_fastqc_input_PE(self):
+        self.preprocess_engine_illumina.fastqc_input("input_data")
+        self.assertTrue(os.path.exists(self.preprocess_engine_illumina.input_qc_report))
+
+    def test_preprocess_illumina_SE(self):
+        self.preprocess_engine_illumina.trimmomatic_SE()
+
+        self.assertTrue(
+            os.path.exists(self.preprocess_engine_illumina.preprocess_name_fastq_gz)
+        )
+
+    def test_preprocess_illumina_PE(self):
+        self.preprocess_engine_illumina.trimmomatic_PE()
+
+        self.assertTrue(
+            os.path.exists(self.preprocess_engine_illumina.preprocess_name_fastq_gz)
+        )
+        self.assertTrue(
+            os.path.exists(self.preprocess_engine_illumina.preprocess_name_r2_fastq_gz)
+        )
+
+    def test_preprocess_ont(self):
+        self.preprocess_engine_ont.preprocess_QC()
+
+        self.assertTrue(
+            os.path.exists(self.preprocess_engine_ont.preprocess_name_fastq_gz)
+        )

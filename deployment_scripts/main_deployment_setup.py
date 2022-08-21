@@ -120,8 +120,11 @@ class main_deploy_prep:
         self.paramf = self.pdir + f"params_files/params_{self.tech}.py"
         self.mainsh = self.pdir + f"main/main_{self.tech}.sh"
         new_params = self.app_dir + "params.py"
-        test_params_dict = (
+        test_params_ont_json = (
             os.path.join(self.dir, "static", "tests") + "/ont_params.json"
+        )
+        test_params_illumina_json = (
+            os.path.join(self.dir, "static", "tests") + "/illumina_params.json"
         )
 
         os.system(f"cp {self.paramf} {new_params}")
@@ -139,7 +142,8 @@ class main_deploy_prep:
             if repl[-1] != "/":
                 repl += "/"
             os.system(f"sed -i 's#{tag}#{repl}#g' {new_params}")
-            os.system(f"sed -i 's#{tag}#{repl}#g' {test_params_dict}")
+            os.system(f"sed -i 's#{tag}#{repl}#g' {test_params_ont_json}")
+            os.system(f"sed -i 's#{tag}#{repl}#g' {test_params_illumina_json}")
 
         os.system(f"sed -i 's#$SOURCE#{self.source}#g' {new_params}")
 

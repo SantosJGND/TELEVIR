@@ -123,8 +123,6 @@ class Metadata_handler:
             self.input_protein_accession_to_taxid_path, sep="\t", header=0
         )
 
-        self.logger.info("Finished retrieving metadata")
-
     def merge_report_to_metadata(self, df: pd.DataFrame) -> pd.DataFrame:
         """
 

@@ -343,8 +343,8 @@ class main_setup:
         if self.seqdl or self.soft:
 
             # repdl = self.setup_dir(self.INSTALL_PARAMS)
-            self.prep_dl()
-            self.dl_metadata_prot()
+            # self.prep_dl()
+            # self.dl_metadata_prot()
 
             if self.soft:
 
