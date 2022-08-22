@@ -975,7 +975,7 @@ class setup_install(setup_dl):
         dbname="viral",
         threads="6",
         dl_args="--force --min-seq-len 300 --dust",
-        build_args="--jellyfish-hash-size 10M --kmer-len 31 --taxids-for-genomes --taxids-for-sequences",
+        build_args="--work-on-disk --jellyfish-hash-size 10M --kmer-len 31 --taxids-for-genomes --taxids-for-sequences",
     ):
 
         odir = self.dbdir + dbdir + "/"
