@@ -1045,19 +1045,32 @@ class setup_install(setup_dl):
         except subprocess.CalledProcessError:
             logging.error("failed to install krakenuniq db")
 
-        seqid = pd.read_csv(f"{odir + dbname}/seqid2taxid.map.orig", sep="\t")
-        seqid.columns = ["refseq", "taxid", "merge"]
-        seqid[["GTDB", "description"]] = seqid["merge"].str.split(" ", 1, expand=True)
-        seqid = seqid.drop("merge", 1)
-        seqid.to_csv(
-            f"{odir + dbname}/seqid2taxid.map.orig", sep="\t", header=True, index=False
-        )
+        map_orig_file = f"{odir + dbname}/seqid2taxid.map.orig"
+        if os.path.exists(map_orig_file):
+            seqid = pd.read_csv(f"{odir + dbname}/seqid2taxid.map.orig", sep="\t")
+            seqid.columns = ["refseq", "taxid", "merge"]
+            seqid[["GTDB", "description"]] = seqid["merge"].str.split(
+                " ", 1, expand=True
+            )
+            seqid = seqid.drop("merge", 1)
+            seqid.to_csv(
+                f"{odir + dbname}/seqid2taxid.map.orig",
+                sep="\t",
+                header=True,
+                index=False,
+            )
 
-        seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
-        seqmap.columns = ["acc", "protid"]
-        seqmap.to_csv(
-            f"{self.metadir}/protein_acc2protid.tsv", sep="\t", header=True, index=False
-        )
+        map_file = f"{odir + dbname}/seqid2taxid.map"
+
+        if os.path.exists(map_file):
+            seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
+            seqmap.columns = ["acc", "protid"]
+            seqmap.to_csv(
+                f"{self.metadir}/protein_acc2protid.tsv",
+                sep="\t",
+                header=True,
+                index=False,
+            )
 
         self.dbs[id] = {"dir": odir, "dbname": dbname}
 

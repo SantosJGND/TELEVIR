@@ -274,7 +274,7 @@ class main_setup:
             ] = f"{prepdl.seqdir}{centlib}"  # add to fastas dict
 
         ########################## clark ##################################
-        # sofprep.clark_install(dbname=self.organism)
+        sofprep.clark_install(dbname=self.organism)
 
         ########################## kraken2 ###############################
         sofprep.kraken2_install(dbname=self.organism)
