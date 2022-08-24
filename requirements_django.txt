@@ -4,7 +4,7 @@ django-braces==1.15.0
 django_tables2==2.4.1
 django-bootstrap-breadcrumbs
 django_plotly_dash==2.0.0
-django-background-task==1.2.5
+django-background-tasks==1.2.5
 django-crispy-forms==1.14.0
 dpd_static_support==0.0.5
 dash_bio==1.0.2
