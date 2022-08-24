@@ -17,7 +17,7 @@ class Ephemeral_Project_Manager:
 
     def handle_uploaded_file(self, f):
         print(f.name)
-        os.path.makedirs(self.root, exist_ok=True)
+        os.makedirs(self.root, exist_ok=True)
         with open(os.path.join(self.root, f.name), "wb+") as destination:
             for chunk in f.chunks():
                 destination.write(chunk)
