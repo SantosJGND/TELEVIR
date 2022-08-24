@@ -15,6 +15,8 @@ class ConstantsSettings:
     static_directory = STATICFILES_DIRS[0]
     job_directory = "/mnt/sdc/TELEVIR/jobs/"
 
+    ont_params_json = os.path.join(BASE_DIR, "product", "ont_params.json")
+    illumina_params_json = os.path.join(BASE_DIR, "product", "illumina_params.json")
     django_env: str
 
     def __init__(self):
@@ -31,4 +33,4 @@ class ConstantsSettings:
         self.env_file = os.path.join(BASE_DIR, ".env")
 
         # with open(self.env_file, "r") as f:
-        #    self.django_env = f.read().strip()
+        #     = f.read().strip()

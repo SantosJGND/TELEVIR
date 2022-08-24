@@ -120,11 +120,9 @@ class main_deploy_prep:
         self.paramf = self.pdir + f"params_files/params_{self.tech}.py"
         self.mainsh = self.pdir + f"main/main_{self.tech}.sh"
         new_params = self.app_dir + "params.py"
-        test_params_ont_json = (
-            os.path.join(self.dir, "static", "tests") + "/ont_params.json"
-        )
+        test_params_ont_json = os.path.join(self.dir, "product") + "/ont_params.json"
         test_params_illumina_json = (
-            os.path.join(self.dir, "static", "tests") + "/illumina_params.json"
+            os.path.join(self.dir, "product") + "/illumina_params.json"
         )
 
         os.system(f"cp {self.paramf} {new_params}")

@@ -156,7 +156,7 @@ class Dummy_deployment:
 
     def get_params_ont(self):
 
-        with open(TestConstants.ont_params_json, "r") as f:
+        with open(ConstantsSettings.ont_params_json, "r") as f:
             params = json.load(f)
             params = AttrDict(params)
 
@@ -164,7 +164,7 @@ class Dummy_deployment:
 
     def get_params_illumina(self):
 
-        with open(TestConstants.illumina_params_json, "r") as f:
+        with open(ConstantsSettings.illumina_params_json, "r") as f:
             params = json.load(f)
             params = AttrDict(params)
 
