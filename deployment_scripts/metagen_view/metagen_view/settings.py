@@ -38,15 +38,18 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "background_task",
     "result_display.apps.ResultDisplayConfig",
     "django_bootstrap_breadcrumbs",
     "django_tables2",
     "file_upload",
+    "crispy_forms",
     "metagen_view",
     "pathogen_detection",
     "django_plotly_dash.apps.DjangoPlotlyDashConfig",
     "dpd_static_support",
     "view_breadcrumbs",
+    "product",
 ]
 
 MIDDLEWARE = [
@@ -91,7 +94,7 @@ WSGI_APPLICATION = "metagen_view.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "televir",
+        "NAME": "product",
         "USER": "bioinf",
         "PASSWORD": "artic",
         "HOST": "localhost",
@@ -157,6 +160,7 @@ PLOTLY_COMPONENTS = [
 # Media files
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field

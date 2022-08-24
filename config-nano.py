@@ -15,3 +15,4 @@ TAXDUMP = (
     "/home/bioinf/Desktop/METAGEN/taxdump.tar.gz"  # path to the taxdump.tar.gz file.
 )
 ORGANISM = "viral"  # organism name.
+ENV = "/home/bioinf/Desktop/CODE/TELEVIR/.venv"

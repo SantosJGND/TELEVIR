@@ -22,7 +22,8 @@ from result_display import igv_app
 
 urlpatterns = [
     re_path("^admin/", admin.site.urls),
-    re_path("^", include("result_display.urls")),
+    re_path("^command_line/", include("result_display.urls")),
+    re_path("^", include("product.urls")),
     path("file_upload/", include("file_upload.urls")),
     path("django_plotly_dash/", include("django_plotly_dash.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

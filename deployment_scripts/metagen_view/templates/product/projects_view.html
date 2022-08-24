@@ -1,0 +1,35 @@
+{% extends '_layouts/base.html' %}
+{% load render_table from django_tables2 %}
+{% load django_bootstrap_breadcrumbs %}
+
+{% load static %}
+
+
+{% block content %}
+
+<style>
+    ul li {
+        font-size: 16px;
+        font-family: "Monospace";
+
+    }
+</style>
+
+<div class="container">
+    <div>
+        <div>
+            <h1>Project</h1>
+            Proxy of INSaFLU projects.
+            <ul>
+                {% for project in projects %}
+                <li><a href={% url 'project_samples' project_name=project.name %}>
+                        {{ project.name }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

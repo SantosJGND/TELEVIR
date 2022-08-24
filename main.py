@@ -106,6 +106,7 @@ def main():
         ENVS_PARAMS["SOURCE"] = SOURCE
         ENVS_PARAMS["ENVSDIR"] = ENVDIR
         ENVS_PARAMS["YMLDIR"] = CWD + "/install_scripts/yaml/"
+        ENV = CWD + ".venv"
 
     else:
 
@@ -123,6 +124,7 @@ def main():
         TAXDUMP = mainconf.TAXDUMP
         TECH = mainconf.TECH
         ORGANISM = mainconf.ORGANISM
+        ENV = mainconf.ENV
 
         INSTALL_PARAMS["HOME"] = HOME
         INSTALL_PARAMS["ENVSDIR"]["SOURCE"] = SOURCE
@@ -191,6 +193,9 @@ def main():
 
         deploy_prep.dir_prep()
         deploy_prep.export()
+
+        with open(DEPLOYMENT_DIR + ".env", "w") as f:
+            f.write(ENV)
 
 
 if __name__ == "__main__":
