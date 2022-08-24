@@ -26,7 +26,7 @@ SECRET_KEY = "django-insecure-fe*pdrj-=blq*zq&&#fv80ndc$dj&3+a1%y!=4v784(&8_^m&x
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["194.210.120.32", "127.0.0.1"]
+ALLOWED_HOSTS = ["194.210.120.32", "127.0.0.1", "www.televir.com"]
 
 
 # Application definition
