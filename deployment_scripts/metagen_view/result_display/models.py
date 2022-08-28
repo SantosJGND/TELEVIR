@@ -10,11 +10,21 @@ from django.utils.safestring import mark_safe
 
 
 class Projects(models.Model):
+
+    INHOUSE = 1
+    EXTERNAL = 2
+
     name = models.CharField(max_length=100, blank=True, db_index=True, null=True)
     full_path = models.CharField(max_length=200, blank=True, db_index=True, null=True)
     created_by = models.ForeignKey(
         User, on_delete=models.CASCADE, blank=True, null=True
     )
+
+    project_type = models.IntegerField(
+        choices=((INHOUSE, "In-House"), (EXTERNAL, "External")), default=INHOUSE
+    )
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_modified = models.DateTimeField(auto_now_add=True)
 
     submit_index = models.IntegerField(default=0)
 

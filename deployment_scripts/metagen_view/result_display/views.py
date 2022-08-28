@@ -68,7 +68,7 @@ class Project_page(ListView):
     def get_context_data(self, **kwargs):
         context = super(Project_page, self).get_context_data(**kwargs)
 
-        projects = Projects.objects.all()
+        projects = Projects.objects.filter(project_type=Projects.EXTERNAL)
         context["projects"] = projects
 
         return context

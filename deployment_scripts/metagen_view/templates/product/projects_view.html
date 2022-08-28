@@ -22,7 +22,7 @@
             Proxy of INSaFLU projects.
             <ul>
                 {% for project in projects %}
-                <li><a href={% url 'project_samples' project_name=project.name %}>
+                <li><a href={% url 'televir_project_samples' project_name=project.name %}>
                         {{ project.name }}
                     </a>
                 </li>

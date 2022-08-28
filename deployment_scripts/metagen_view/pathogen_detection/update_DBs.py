@@ -33,11 +33,15 @@ def Update_project(project_directory_path):
     project_name_simple = project_name.replace(".", "_").replace(":", "_")
 
     try:
-        project = Projects.objects.get(name=project_name)
+        project = Projects.objects.get(name=project_name, project_type=Projects.INHOUSE)
 
     except Projects.DoesNotExist:
         print("project_name: ", project_name)
-        project = Projects(name=project_name, full_path=project_directory_path)
+        project = Projects(
+            name=project_name,
+            full_path=project_directory_path,
+            project_type=Projects.INHOUSE,
+        )
         project.save()
 
 

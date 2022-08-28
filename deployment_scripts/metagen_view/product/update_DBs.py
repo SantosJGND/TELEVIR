@@ -11,11 +11,14 @@ def Update_project(project_directory_path, user: str = "admin", submit_index: in
     project_name_simple = project_name.replace(".", "_").replace(":", "_")
 
     try:
-        project = Projects.objects.get(name=project_name)
+        project = Projects.objects.get(
+            name=project_name, project_type=Projects.EXTERNAL
+        )
     except Projects.DoesNotExist:
         project = Projects(
             name=project_name,
             full_path=project_directory_path,
+            project_type=Projects.EXTERNAL,
             submit_index=submit_index,
         )
         project.save()

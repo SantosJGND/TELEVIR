@@ -67,8 +67,6 @@ class Upload_file(FormView):
             # Run the main script
             # self.manager.submit_job(new_fastq_input)
             request.session["submit_index"] = new_fastq_input.pk
-            print(new_fastq_input.project_name)
-            print(new_fastq_input.pk)
 
             url = reverse(
                 "televir_submit_job",
@@ -178,12 +176,8 @@ def submit_view(request, project_name, pk):
                     "project_name": project_name,
                 },
             )
-    print(len(input_processed))
-    print(len(input_submitted))
-    print(input_submitted)
-    print(input_processed)
+
     project = Projects.objects.get(name=project_name)
-    print("nin", sample_name)
     sample = Sample.objects.get(project=project, name=sample_name)
 
     try:
@@ -219,6 +213,23 @@ def submit_view(request, project_name, pk):
     )
 
 
+class Project_page(ListView):
+    """Project page"""
+
+    template_name = "product/projects_view.html"
+
+    def get_queryset(self):
+        return None
+
+    def get_context_data(self, **kwargs):
+        context = super(Project_page, self).get_context_data(**kwargs)
+
+        projects = Projects.objects.filter(project_type=Projects.EXTERNAL)
+        context["projects"] = projects
+
+        return context
+
+
 def ProjectView(request, project_name):
     """
     home page
@@ -244,7 +255,7 @@ def Sample_Main(requesdst, project_name, sample_name):
     """Sample page"""
     template_name = "product/sample_main.html"
 
-    project = Projects.objects.get(name=project_name)
+    project = Projects.objects.get(name=project_name, project_type=Projects.EXTERNAL)
     sample = Sample.objects.get(project=project, name=sample_name)
 
     try:

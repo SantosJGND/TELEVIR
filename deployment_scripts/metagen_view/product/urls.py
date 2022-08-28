@@ -21,19 +21,16 @@ urlpatterns = [
         views.submit_view,
         name="televir_submit_job",
     ),
+    path("all_projects", views.Project_page.as_view(), name="televir_projects_main"),
+    path("<slug:project_name>", views.ProjectView, name="televir_project_samples"),
     path(
-        "project/(?P<project_name>[\w\-]+)/",
-        views.ProjectView,
-        name="televir_project_view",
-    ),
-    path(
-        "projects/(?P<project_name>[\w\-]+)/(?P<sample_name>[\w\-]+)/",
+        "projects/<slug:project_name>/<slug:sample_name>/",
         views.Sample_Main,
         name="televir_sample_main",
     ),
     ##
     path(
-        "(?P<project>[\w\-]+)/(?P<sample>[\w\-]+)/(?P<name>[\w\-]+)",
+        "<slug:project>/<slug:sample>/<slug:name>",
         views.Sample_detail,
         name="televir_sample_detail",
     ),
