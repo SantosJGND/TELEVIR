@@ -16,3 +16,4 @@ TAXDUMP = (
 )
 ORGANISM = "viral"  # organism name.
 ENV = "/home/bioinf/Desktop/CODE/TELEVIR/.venv"
+INSTALL_CONFIG = "minimal"

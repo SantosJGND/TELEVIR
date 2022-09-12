@@ -166,6 +166,9 @@ class main_setup:
 
             self.layout = Televir_Layout_minimal()
 
+        self.installed_software = []
+        self.installed_dbs = []
+
     def user_input(self):
         args = get_args_install()
         self.envs = args.envs
@@ -273,19 +276,25 @@ class main_setup:
         """
         if self.layout.install_refseq_prot:
             self.wdir.refseq_prot_dl()
+            self.installed_dbs.append("refseq_prot")
+
         if self.layout.install_refseq_gen:
             self.wdir.refseq_gen_dl()
+            self.installed_dbs.append("refseq_gen")
+
         if self.layout.install_swissprot:
             self.wdir.swissprot_dl()
-            print("i")
+            self.installed_dbs.append("swissprot")
 
         if self.organism == "viral":
 
             if self.layout.install_virosaurus:
                 self.wdir.virosaurus_dl()
+                self.installed_dbs.append("virosaurus")
 
             if self.layout.install_rvdb:
                 self.wdir.RVDB_dl()
+                self.installed_dbs.append("rvdb")
 
     def dl_metadata_prot(self):
         """
@@ -348,9 +357,12 @@ class main_setup:
                     "centrifuge"
                 ] = f"{prepdl.seqdir}{centlib}"  # add to fastas dict
 
+            self.installed_software.append("centrifuge")
+
         ########################## clark ##################################
         if self.layout.install_clark:
             sofprep.install_clark(dbname=self.organism)
+            self.installed_software.append("clark")
 
         ########################## kraken2 ###############################
 
@@ -368,24 +380,30 @@ class main_setup:
             if os.path.isfile(f"{prepdl.seqdir}{krlib}"):
                 prepdl.fastas["nuc"]["kraken2"] = f"{prepdl.seqdir}{krlib}"
 
+            self.installed_software.append("kraken2")
+
         ########################## krakenuniq ###############################
         if self.layout.install_krakenuniq:
             sofprep.kuniq_install(dbname=self.organism)
+            self.installed_software.append("krakenuniq")
 
         ### install viral specific databases
         if self.organism == "viral":
 
             if self.layout.install_kaiju:
                 sofprep.kaiju_viral_install()
+                self.installed_software.append("kaiju")
 
             if self.layout.install_virsorter:
                 sofprep.virsorter_install()
+                self.installed_software.append("virsorter")
 
         ### install prot databases using local files.
         for fname, fdb in prepdl.fastas["prot"].items():
 
             if self.layout.install_diamond:
                 sofprep.diamond_install(dbname=fname, db=fdb)
+                self.installed_software.append("diamond")
 
             if self.layout.install_blast:
                 if fname == "refseq":
@@ -398,6 +416,7 @@ class main_setup:
                         args="-parse_seqids",
                         title=f"refseq {self.organism} prot",
                     )
+                    self.installed_software.append("blast")
 
         ### install nuc databases using local files.
         for fname, fdb in prepdl.fastas["nuc"].items():
@@ -409,6 +428,7 @@ class main_setup:
                     virus_list=sofprep.metadir + f"{fname}-list.txt",
                     list_create=True,
                 )
+                self.installed_software.append("fastviromeexplorer")
 
             if self.layout.install_blast:
 
@@ -421,6 +441,7 @@ class main_setup:
                         args="-parse_seqids",
                         title=f"refseq {self.organism} genome",
                     )
+                    self.installed_software.append("blast")
 
             if nanopore:
 
@@ -429,6 +450,7 @@ class main_setup:
                         reference=fdb,
                         dbname=fname,
                     )
+                    self.installed_software.append("desamba")
 
     def setup_soft(self):
 

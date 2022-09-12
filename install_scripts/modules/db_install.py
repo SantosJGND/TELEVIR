@@ -487,9 +487,15 @@ class setup_dl:
                 p2t = pd.read_csv(outfile, sep="\t")
                 to_concat.append(p2t)
 
-        general_db = pd.concat(to_concat, axis=0)
-        general_db.columns = ["prot_acc", "taxid"]
-        general_db.drop_duplicates(subset="prot_acc")
+        if to_concat:
+
+            general_db = pd.concat(to_concat, axis=0)
+            general_db.columns = ["prot_acc", "taxid"]
+            general_db.drop_duplicates(subset="prot_acc")
+
+        else:
+            general_db = pd.DataFrame(columns=["prot_acc", "taxid"])
+
         general_db.to_csv(final_db_path, header=True, index=False, sep="\t")
 
     def temp_nucmeta(self):
