@@ -99,6 +99,7 @@ def main():
         TECH = "nanopore"
         TAXDUMP = "/opt/taxdump.tar.gz"
         ORGANISM = "viral"
+        INSTALL_CONFIG = "minimal"
 
         INSTALL_PARAMS["HOME"] = HOME
         INSTALL_PARAMS["ENVSDIR"]["SOURCE"] = SOURCE
@@ -126,6 +127,7 @@ def main():
         TECH = mainconf.TECH
         ORGANISM = mainconf.ORGANISM
         ENV = mainconf.ENV
+        INSTALL_CONFIG = mainconf.INSTALL_CONFIG
 
         INSTALL_PARAMS["HOME"] = HOME
         INSTALL_PARAMS["ENVSDIR"]["SOURCE"] = SOURCE
@@ -147,6 +149,7 @@ def main():
         ENVS_PARAMS=ENVS_PARAMS,
         INSTALL_PARAMS=INSTALL_PARAMS,
         pdir=CWD + "/install_scripts/",
+        install_config=INSTALL_CONFIG,
     )
 
     metagen_prep.object_input(

@@ -127,6 +127,7 @@ class main_setup:
         pdir="",
         ENVS_PARAMS="",
         INSTALL_PARAMS="",
+        install_config="full",
     ) -> None:
         if not ENVS_PARAMS:
             from install_source import ENVS_PARAMS
@@ -145,13 +146,25 @@ class main_setup:
             pdir += "/"
         self.pdir = pdir
 
-        try:
-            from install_scripts.config import Televir_Layout
-        except ModuleNotFoundError as e:
-            print("check install config.py exists")
-            sys.exit()
+        if install_config == "full":
 
-        self.layout = Televir_Layout()
+            try:
+                from install_scripts.config import Televir_Layout_full
+            except ModuleNotFoundError as e:
+                print("check install config.py exists")
+                sys.exit()
+
+            self.layout = Televir_Layout_full()
+
+        if install_config == "minimal":
+
+            try:
+                from install_scripts.config import Televir_Layout_minimal
+            except ModuleNotFoundError as e:
+                print("check install config.py exists")
+                sys.exit()
+
+            self.layout = Televir_Layout_minimal()
 
     def user_input(self):
         args = get_args_install()
