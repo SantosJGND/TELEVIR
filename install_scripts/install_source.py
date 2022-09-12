@@ -1,8 +1,8 @@
 #!/usr/bin/python
 ################################# DIRS
 
-HOME = "/home/artic/Desktop/METAGEN/db_second_test/"
-SOURCE = "~/miniconda3/etc/profile.d/conda.sh"
+# HOME = "/home/artic/Desktop/METAGEN/db_second_test/"
+# SOURCE = "~/miniconda3/etc/profile.d/conda.sh"
 
 #
 ## Installation directions.

@@ -2,6 +2,7 @@
 import logging
 import os
 import sys
+from distutils.command.install import install
 
 
 def get_args_install():
@@ -81,6 +82,43 @@ class main_setup:
     prepare metagenomics run environments, databases.
     """
 
+    # internal log. read this to know what is available.
+    available_classifiers = [
+        "kraken2",
+        "centrifuge",
+        # "metaphlan2",
+        # "humann2",
+        "diamond",
+        # "vsearch",
+        "blast",
+        "blastp",
+        "kaiju",
+        "kuniq",
+        # "virsorter",
+        "desamba",
+        "clark",
+        "fastviromeexplorer",
+    ]
+
+    available_assemblers = [
+        "spades",
+        "raven",
+        "velvet",
+        "flye",
+    ]
+
+    available_preprocessors = ["trimmomatic", "nanofilt"]
+
+    available_remapers = [
+        "bwa",
+        "minimap2",
+        "rematch",
+        "snippy",
+        "bowtie2",
+        # "hisat2",
+        # "star",
+    ]
+
     def __init__(
         self,
         env_install,
@@ -91,9 +129,9 @@ class main_setup:
         INSTALL_PARAMS="",
     ) -> None:
         if not ENVS_PARAMS:
-            from install_config import ENVS_PARAMS
+            from install_source import ENVS_PARAMS
         if not INSTALL_PARAMS:
-            from install_config import INSTALL_PARAMS
+            from install_source import INSTALL_PARAMS
 
         self.ENVS_PARAMS = ENVS_PARAMS
         self.INSTALL_PARAMS = INSTALL_PARAMS
@@ -106,6 +144,14 @@ class main_setup:
         if pdir[-1] != "/":
             pdir += "/"
         self.pdir = pdir
+
+        try:
+            from install_scripts.config import Televir_Layout
+        except ModuleNotFoundError as e:
+            print("check install config.py exists")
+            sys.exit()
+
+        self.layout = Televir_Layout()
 
     def user_input(self):
         args = get_args_install()
@@ -163,13 +209,19 @@ class main_setup:
         :return: None
         """
         envprep = self.env_install_class()
+
         envprep.prep_dir(ENVS_PARAMS)
         # envprep.rabbitqc_install()
-        envprep.flye_install()
-        envprep.clark_install()
-        envprep.fve_install()
+        if self.layout.install_flye:
+            envprep.flye_install()
 
-        if self.nanopore:
+        if self.layout.install_clark:
+            envprep.clark_install()
+
+        if self.layout.install_fastviromeexplorer:
+            envprep.fve_install()
+
+        if self.layout.install_desamba:
             envprep.deSAMBA_install()
 
         os.system(
@@ -206,13 +258,21 @@ class main_setup:
         """
         download prot sequences and get taxids.
         """
-        # self.wdir.refseq_prot_dl()
-        self.wdir.refseq_gen_dl()
-        self.wdir.swissprot_dl()
+        if self.layout.install_refseq_prot:
+            self.wdir.refseq_prot_dl()
+        if self.layout.install_refseq_gen:
+            self.wdir.refseq_gen_dl()
+        if self.layout.install_swissprot:
+            self.wdir.swissprot_dl()
+            print("i")
 
         if self.organism == "viral":
-            self.wdir.virosaurus_dl()
-            self.wdir.RVDB_dl()
+
+            if self.layout.install_virosaurus:
+                self.wdir.virosaurus_dl()
+
+            if self.layout.install_rvdb:
+                self.wdir.RVDB_dl()
 
     def dl_metadata_prot(self):
         """
@@ -259,84 +319,103 @@ class main_setup:
         logging.info("install prepped")
 
         ######################### centrifuge ###############################
-        sofprep.centrifuge_install(dbname=self.organism)
-        centlib = f"refseq-{self.organism}.dust.fna.gz"
-        if os.path.isfile(sofprep.dbs["centrifuge"]["fasta"]):
-            os.system(
-                f"mv {sofprep.dbs['centrifuge']['fasta']} {prepdl.seqdir}{centlib}"
-            )
-        else:
-            if not os.path.isfile(f"{prepdl.seqdir}{centlib}"):
-                logging.info("centrifuge database not found.")
-        if os.path.isfile(f"{prepdl.seqdir}{centlib}"):
-            prepdl.fastas["nuc"][
-                "centrifuge"
-            ] = f"{prepdl.seqdir}{centlib}"  # add to fastas dict
+
+        if self.layout.install_centrifuge:
+            sofprep.centrifuge_install(dbname=self.organism)
+            centlib = f"refseq-{self.organism}.dust.fna.gz"
+            if os.path.isfile(sofprep.dbs["centrifuge"]["fasta"]):
+                os.system(
+                    f"mv {sofprep.dbs['centrifuge']['fasta']} {prepdl.seqdir}{centlib}"
+                )
+            else:
+                if not os.path.isfile(f"{prepdl.seqdir}{centlib}"):
+                    logging.info("centrifuge database not found.")
+            if os.path.isfile(f"{prepdl.seqdir}{centlib}"):
+                prepdl.fastas["nuc"][
+                    "centrifuge"
+                ] = f"{prepdl.seqdir}{centlib}"  # add to fastas dict
 
         ########################## clark ##################################
-        # sofprep.clark_install(dbname=self.organism)
+        if self.layout.install_clark:
+            sofprep.install_clark(dbname=self.organism)
 
         ########################## kraken2 ###############################
-        sofprep.kraken2_install(dbname=self.organism)
-        krlib = f"kraken2-{self.organism}-library.fna.gz"
-        if os.path.isfile(sofprep.dbs["kraken2"]["fasta"]):
-            os.system(f"mv {sofprep.dbs['kraken2']['fasta']} {prepdl.seqdir}{krlib}")
-        else:
-            if not os.path.isfile(f"{prepdl.seqdir}{krlib}"):
-                logging.info("kraken2 database not found.")
 
-        if os.path.isfile(f"{prepdl.seqdir}{krlib}"):
-            prepdl.fastas["nuc"]["kraken2"] = f"{prepdl.seqdir}{krlib}"
+        if self.layout.install_kraken2:
+            sofprep.kraken2_install(dbname=self.organism)
+            krlib = f"kraken2-{self.organism}-library.fna.gz"
+            if os.path.isfile(sofprep.dbs["kraken2"]["fasta"]):
+                os.system(
+                    f"mv {sofprep.dbs['kraken2']['fasta']} {prepdl.seqdir}{krlib}"
+                )
+            else:
+                if not os.path.isfile(f"{prepdl.seqdir}{krlib}"):
+                    logging.info("kraken2 database not found.")
+
+            if os.path.isfile(f"{prepdl.seqdir}{krlib}"):
+                prepdl.fastas["nuc"]["kraken2"] = f"{prepdl.seqdir}{krlib}"
 
         ########################## krakenuniq ###############################
-        sofprep.kuniq_install(dbname=self.organism)
+        if self.layout.install_krakenuniq:
+            sofprep.kuniq_install(dbname=self.organism)
 
         ### install viral specific databases
         if self.organism == "viral":
-            sofprep.kaiju_viral_install()
-            sofprep.virsorter_install()
+
+            if self.layout.install_kaiju:
+                sofprep.kaiju_viral_install()
+
+            if self.layout.install_virsorter:
+                sofprep.virsorter_install()
 
         ### install prot databases using local files.
         for fname, fdb in prepdl.fastas["prot"].items():
 
-            sofprep.diamond_install(dbname=fname, db=fdb)
+            if self.layout.install_diamond:
+                sofprep.diamond_install(dbname=fname, db=fdb)
 
-            if fname == "refseq":
+            if self.layout.install_blast:
+                if fname == "refseq":
 
-                sofprep.blast_install(
-                    reference=fdb,
-                    dbname=f"refseq_{self.organism}_prot",
-                    nuc=False,
-                    taxid_map=sofprep.metadir + "acc2taxid.prot.map",
-                    args="-parse_seqids",
-                    title=f"refseq {self.organism} prot",
-                )
+                    sofprep.blast_install(
+                        reference=fdb,
+                        dbname=f"refseq_{self.organism}_prot",
+                        nuc=False,
+                        taxid_map=sofprep.metadir + "acc2taxid.prot.map",
+                        args="-parse_seqids",
+                        title=f"refseq {self.organism} prot",
+                    )
 
         ### install nuc databases using local files.
         for fname, fdb in prepdl.fastas["nuc"].items():
-            sofprep.fve_install(
-                reference=fdb,
-                dbname=fname,
-                virus_list=sofprep.metadir + f"{fname}-list.txt",
-                list_create=True,
-            )
 
-            if fname == "refseq":
-                sofprep.blast_install(
-                    reference=prepdl.fastas["nuc"]["refseq"],
-                    dbname=f"refseq_{self.organism}_genome",
-                    nuc=True,
-                    taxid_map=sofprep.metadir + "acc2taxid.nuc.map",
-                    args="-parse_seqids",
-                    title=f"refseq {self.organism} genome",
+            if self.layout.install_fastviromeexplorer:
+                sofprep.fve_install(
+                    reference=fdb,
+                    dbname=fname,
+                    virus_list=sofprep.metadir + f"{fname}-list.txt",
+                    list_create=True,
                 )
+
+            if self.layout.install_blast:
+
+                if fname == "refseq":
+                    sofprep.blast_install(
+                        reference=prepdl.fastas["nuc"]["refseq"],
+                        dbname=f"refseq_{self.organism}_genome",
+                        nuc=True,
+                        taxid_map=sofprep.metadir + "acc2taxid.nuc.map",
+                        args="-parse_seqids",
+                        title=f"refseq {self.organism} genome",
+                    )
 
             if nanopore:
 
-                sofprep.deSAMBA_install(
-                    reference=fdb,
-                    dbname=fname,
-                )
+                if self.layout.install_desamba:
+                    sofprep.deSAMBA_install(
+                        reference=fdb,
+                        dbname=fname,
+                    )
 
     def setup_soft(self):
 
@@ -354,6 +433,7 @@ class main_setup:
                     nanopore=self.nanopore,
                     taxdump=self.taxdump,
                 )
+
                 self.dl_metadata_nuc()
 
 

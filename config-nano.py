@@ -1,6 +1,7 @@
 #!/usr/bin/python
 ##
 ## replace the variables bellow with paths in your system. Beware of permissions.
+INSTALL_USER_CONF = "/televir/mngs_benchmark/config.py"
 
 SOURCE = (
     "/home/bioinf/miniconda3/etc/profile.d/conda.sh"  # path to miniconda3 executable.

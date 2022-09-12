@@ -78,7 +78,8 @@ def get_args():
 
 
 def main():
-    from install_scripts.install_config import ENVS_PARAMS, INSTALL_PARAMS
+
+    from install_scripts.install_source import ENVS_PARAMS, INSTALL_PARAMS
 
     CWD = os.getcwd()
     args = get_args()
