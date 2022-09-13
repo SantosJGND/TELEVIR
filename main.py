@@ -141,11 +141,13 @@ def main():
     from install_scripts.main_install import main_setup
     from install_scripts.modules.db_install import setup_dl, setup_install
     from install_scripts.modules.env_install import env_install
+    from install_scripts.modules.utility_manager import Utility_Repository
 
     metagen_prep = main_setup(
         env_install,
         setup_dl,
         setup_install,
+        Utility_Repository,
         ENVS_PARAMS=ENVS_PARAMS,
         INSTALL_PARAMS=INSTALL_PARAMS,
         pdir=CWD + "/install_scripts/",

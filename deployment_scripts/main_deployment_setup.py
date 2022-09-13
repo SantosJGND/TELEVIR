@@ -104,6 +104,17 @@ class main_deploy_prep:
         self.metad = metad
         self.paramf = paramf
 
+    def read_available_software(self):
+        """
+        read available software from params file.
+        """
+        import sys
+
+        sys.path.append(self.pdir)
+        from utility_manager import installed_utilities
+
+        self.software = soft
+
     def dir_prep(self):
 
         if not os.path.isdir(self.dir):

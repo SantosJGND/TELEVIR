@@ -77,6 +77,28 @@ def get_args_install():
     return args
 
 
+class software_item:
+    def __init__(self, name, path, database, installed, env_path) -> None:
+        self.name = name
+        self.path = path
+        self.database = database
+        self.installed = installed
+        self.env_path = env_path
+
+    def __repr__(self) -> str:
+        return f"({self.name}, {self.path}, {self.database}, {self.installed}, {self.env_path})"
+
+
+class database_item:
+    def __init__(self, name, path, installed) -> None:
+        self.name = name
+        self.path = path
+        self.installed = installed
+
+    def __repr__(self) -> str:
+        return f"({self.name}, {self.path}, {self.installed})"
+
+
 class main_setup:
     """
     prepare metagenomics run environments, databases.
@@ -119,11 +141,15 @@ class main_setup:
         # "star",
     ]
 
+    installed_software = []
+    installed_dbs = []
+
     def __init__(
         self,
         env_install,
         setup_dl,
         setup_install,
+        repository,
         pdir="",
         ENVS_PARAMS="",
         INSTALL_PARAMS="",
@@ -139,6 +165,7 @@ class main_setup:
         self.wdir = setup_dl(INSTALL_PARAMS)
         self.env_install_class = env_install
         self.setup_install_class = setup_install
+        self.install_config = install_config
 
         if not pdir:
             pdir = os.getcwd()
@@ -146,7 +173,11 @@ class main_setup:
             pdir += "/"
         self.pdir = pdir
 
-        if install_config == "full":
+        self.setup_config()
+        self.utilities = repository(db_path=self.wdir.home)
+
+    def setup_config(self):
+        if self.install_config == "full":
 
             try:
                 from install_scripts.config import Televir_Layout_full
@@ -156,7 +187,7 @@ class main_setup:
 
             self.layout = Televir_Layout_full()
 
-        if install_config == "minimal":
+        if self.install_config == "minimal":
 
             try:
                 from install_scripts.config import Televir_Layout_minimal
@@ -166,12 +197,9 @@ class main_setup:
 
             self.layout = Televir_Layout_minimal()
 
-        self.installed_software = []
-        self.installed_dbs = []
-
     def user_input(self):
         args = get_args_install()
-        self.envs = args.envs
+        self.install_envs = args.envs
         self.seqdl = args.seqdl
         self.soft = args.soft
         self.nanopore = args.nanopore
@@ -197,7 +225,7 @@ class main_setup:
         test=False,
         organism="viral",
     ):
-        self.envs = envs
+        self.install_envs = envs
         self.seqdl = seqdl
         self.soft = soft
         self.nanopore = nanopore
@@ -252,12 +280,12 @@ class main_setup:
 
     def setup_envs_conda(self):
 
-        if self.envs:
+        if self.install_envs:
             self.env_prepare_conda(self.ENVS_PARAMS)
 
     def setup_envs(self):
 
-        if self.envs:
+        if self.install_envs:
             self.env_prepare(self.ENVS_PARAMS)
 
     def setup_dir(self):
@@ -278,13 +306,37 @@ class main_setup:
             self.wdir.refseq_prot_dl()
             self.installed_dbs.append("refseq_prot")
 
+            self.utilities.add_database(
+                (
+                    "refseq_prot",
+                    self.wdir.fastas["prot"]["refseq"],
+                    True,
+                )
+            )
+
         if self.layout.install_refseq_gen:
             self.wdir.refseq_gen_dl()
             self.installed_dbs.append("refseq_gen")
 
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    "refseq_gen",
+                    self.wdir.fastas["nuc"]["refseq"],
+                    True,
+                )
+            )
+
         if self.layout.install_swissprot:
             self.wdir.swissprot_dl()
             self.installed_dbs.append("swissprot")
+
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    "swissprot",
+                    self.wdir.fastas["prot"]["swissprot"],
+                    True,
+                )
+            )
 
         if self.organism == "viral":
 
@@ -292,9 +344,25 @@ class main_setup:
                 self.wdir.virosaurus_dl()
                 self.installed_dbs.append("virosaurus")
 
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        "virosaurus",
+                        self.wdir.fastas["nuc"]["virosaurus"],
+                        True,
+                    )
+                )
+
             if self.layout.install_rvdb:
                 self.wdir.RVDB_dl()
                 self.installed_dbs.append("rvdb")
+
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        "rvdb",
+                        self.wdir.fastas["prot"]["rvdb"],
+                        True,
+                    )
+                )
 
     def dl_metadata_prot(self):
         """
@@ -357,12 +425,31 @@ class main_setup:
                     "centrifuge"
                 ] = f"{prepdl.seqdir}{centlib}"  # add to fastas dict
 
-            self.installed_software.append("centrifuge")
+                self.installed_software.append("centrifuge")
+
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "centrifuge",
+                        sofprep.dbdir + "centrifuge",
+                        "default",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
+                    )
+                )
 
         ########################## clark ##################################
         if self.layout.install_clark:
             sofprep.install_clark(dbname=self.organism)
             self.installed_software.append("clark")
+            self.utilities.add_software(
+                self.utilities.software_item(
+                    "clark",
+                    sofprep.dbdir + "clark",
+                    "default",
+                    True,
+                    sofprep.envs["ROOT"] + sofprep.envs["clark"],
+                )
+            )
 
         ########################## kraken2 ###############################
 
@@ -380,12 +467,31 @@ class main_setup:
             if os.path.isfile(f"{prepdl.seqdir}{krlib}"):
                 prepdl.fastas["nuc"]["kraken2"] = f"{prepdl.seqdir}{krlib}"
 
-            self.installed_software.append("kraken2")
+                self.installed_software.append("kraken2")
+
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "kraken2",
+                        sofprep.dbdir + "kraken2",
+                        "default",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
+                    )
+                )
 
         ########################## krakenuniq ###############################
         if self.layout.install_krakenuniq:
             sofprep.kuniq_install(dbname=self.organism)
             self.installed_software.append("krakenuniq")
+            self.utilities.add_software(
+                self.utilities.software_item(
+                    "krakenuniq",
+                    sofprep.dbdir + "krakenuniq",
+                    "default",
+                    True,
+                    sofprep.envs["ROOT"] + sofprep.envs["krakenuniq"],
+                )
+            )
 
         ### install viral specific databases
         if self.organism == "viral":
@@ -394,9 +500,29 @@ class main_setup:
                 sofprep.kaiju_viral_install()
                 self.installed_software.append("kaiju")
 
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "kaiju",
+                        sofprep.dbdir + "kaiju",
+                        "default",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["kaiju"],
+                    )
+                )
+
             if self.layout.install_virsorter:
                 sofprep.virsorter_install()
                 self.installed_software.append("virsorter")
+
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "virsorter",
+                        sofprep.dbdir + "virsorter",
+                        "default",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["virsorter"],
+                    )
+                )
 
         ### install prot databases using local files.
         for fname, fdb in prepdl.fastas["prot"].items():
@@ -404,6 +530,16 @@ class main_setup:
             if self.layout.install_diamond:
                 sofprep.diamond_install(dbname=fname, db=fdb)
                 self.installed_software.append("diamond")
+
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "diamond",
+                        sofprep.dbdir + "diamond",
+                        fname,
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["diamond"],
+                    )
+                )
 
             if self.layout.install_blast:
                 if fname == "refseq":
@@ -416,7 +552,18 @@ class main_setup:
                         args="-parse_seqids",
                         title=f"refseq {self.organism} prot",
                     )
+
                     self.installed_software.append("blast")
+
+                    self.utilities.add_software(
+                        self.utilities.software_item(
+                            "blast",
+                            sofprep.dbdir + "blast",
+                            f"refseq_{self.organism}_prot",
+                            True,
+                            sofprep.envs["ROOT"] + sofprep.envs["blast"],
+                        )
+                    )
 
         ### install nuc databases using local files.
         for fname, fdb in prepdl.fastas["nuc"].items():
@@ -429,6 +576,16 @@ class main_setup:
                     list_create=True,
                 )
                 self.installed_software.append("fastviromeexplorer")
+
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "fastviromeexplorer",
+                        sofprep.dbdir + "fastviromeexplorer",
+                        fname,
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["fastviromeexplorer"],
+                    )
+                )
 
             if self.layout.install_blast:
 
@@ -443,6 +600,16 @@ class main_setup:
                     )
                     self.installed_software.append("blast")
 
+                    self.utilities.add_software(
+                        self.utilities.software_item(
+                            "blast",
+                            sofprep.dbdir + "blast",
+                            f"refseq_{self.organism}_genome",
+                            True,
+                            sofprep.envs["ROOT"] + sofprep.envs["blast"],
+                        )
+                    )
+
             if nanopore:
 
                 if self.layout.install_desamba:
@@ -451,6 +618,16 @@ class main_setup:
                         dbname=fname,
                     )
                     self.installed_software.append("desamba")
+
+                    self.utilities.add_software(
+                        self.utilities.software_item(
+                            "desamba",
+                            sofprep.dbdir + "desamba",
+                            fname,
+                            True,
+                            sofprep.envs["ROOT"] + sofprep.envs["desamba"],
+                        )
+                    )
 
     def setup_soft(self):
 
@@ -476,6 +653,7 @@ if __name__ == "__main__":
 
     from modules.db_install import setup_dl, setup_install
     from modules.env_install import env_install
+    from modules.utility_manager import Utility_Repository
 
     logging.basicConfig(
         format="%(asctime)s - %(message)s",
@@ -483,7 +661,7 @@ if __name__ == "__main__":
         level=logging.INFO,
     )
 
-    metagen_prep = main_setup(env_install, setup_dl, setup_install)
+    metagen_prep = main_setup(env_install, setup_dl, setup_install, Utility_Repository)
     metagen_prep.user_input()
 
     metagen_prep.setup_envs_conda()

@@ -976,7 +976,7 @@ class setup_install(setup_dl):
 
     def kuniq_install(
         self,
-        id="kuniq",
+        id="krakenuniq",
         dbdir="kuniq",
         dbname="viral",
         threads="6",
@@ -1227,7 +1227,7 @@ class setup_install(setup_dl):
 
     def fve_install(
         self,
-        id="fve",
+        id="fastviromeexplorer",
         dbdir="fve",
         dbname="viral",
         virus_list="viruslist.txt",
