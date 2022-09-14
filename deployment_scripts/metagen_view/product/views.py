@@ -4,6 +4,7 @@ import subprocess
 from webbrowser import BackgroundBrowser
 
 from background_task import background
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
@@ -16,6 +17,7 @@ from result_display.models import (
     FinalReport,
     Projects,
     ReadClassification,
+    ReferenceContigs,
     ReferenceMap_Main,
     RunAssembly,
     RunDetail,
@@ -24,7 +26,7 @@ from result_display.models import (
     Sample,
     SampleQC,
 )
-from result_display.tables import SampleQCTable
+from result_display.tables import ContigTable, SampleQCTable
 
 from product.file_management import Ephemeral_Project_Manager
 from product.forms import UploadFileForm
@@ -33,12 +35,27 @@ from product.tables import RunMainTable, SampleTable
 from product.utils import Run_Main_from_Fastq_Input
 
 
+def entry_page(request):
+    """
+    home page
+    """
+
+    return render(request, "product/entry_page.html")
+
+
 class Upload_file(FormView):
     template_name = "product/file_upload.html"
     success_url = "sample_view/"
     form_class = UploadFileForm
 
     manager = Ephemeral_Project_Manager()
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+
+        if not self.request.user or not self.request.user.is_authenticated:
+            return HttpResponseRedirect(reverse("entry_page"))
+        return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
         form_class = self.get_form_class()
@@ -121,6 +138,7 @@ def submit_view(request, project_name, pk):
     tasks = Task.objects.filter(verbose_name=f"Run_deployment_task_{pk}")
 
     input_submitted = Submitted.objects.filter(fastq_input=fastq_input)
+
     if len(input_submitted) == 0:
 
         if len(tasks) == 0:
@@ -213,10 +231,18 @@ def submit_view(request, project_name, pk):
     )
 
 
+from django.shortcuts import redirect
+
+
 class Project_page(ListView):
     """Project page"""
 
     template_name = "product/projects_view.html"
+
+    def get(self, request, *args, **kwargs):
+        if not self.request.user or not self.request.user.is_authenticated:
+            return HttpResponseRedirect(reverse("entry_page"))
+        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
         return None
@@ -224,7 +250,15 @@ class Project_page(ListView):
     def get_context_data(self, **kwargs):
         context = super(Project_page, self).get_context_data(**kwargs)
 
-        projects = Projects.objects.filter(project_type=Projects.EXTERNAL)
+        user = self.request.user
+
+        if user.is_superuser:
+            projects = Projects.objects.all()
+
+        elif user.is_authenticated:
+            projects = Projects.objects.filter(created_by=user)
+
+        # projects = Projects.objects.filter(project_type=Projects.EXTERNAL)
         context["projects"] = projects
 
         return context
@@ -236,6 +270,14 @@ def ProjectView(request, project_name):
     """
 
     template_name = "product/project_page.html"
+
+    if not request.user.is_authenticated:
+        return render(request, "users/login.html")
+
+    project = Projects.objects.get(name=project_name)
+
+    if not request.user == project.created_by and not request.user.is_superuser:
+        return render(request, "users/login.html")
 
     samples = Sample.objects.filter(project__name=project_name)
 
@@ -251,11 +293,26 @@ def ProjectView(request, project_name):
     )
 
 
+def Project_reports(requesdst, project):
+    """
+    sample main page
+    """
+    template_name = "product/allreports_table.html"
+
+    all_reports = FinalReport.objects.filter(run__project__name=project)
+
+    return render(
+        requesdst,
+        template_name,
+        {"all_reports": all_reports, "project": project},
+    )
+
+
 def Sample_Main(requesdst, project_name, sample_name):
     """Sample page"""
     template_name = "product/sample_main.html"
 
-    project = Projects.objects.get(name=project_name, project_type=Projects.EXTERNAL)
+    project = Projects.objects.get(name=project_name)
     sample = Sample.objects.get(project=project, name=sample_name)
 
     try:
@@ -340,4 +397,39 @@ def Sample_detail(requesdst, project="", sample="", name=""):
         requesdst,
         template_name,
         context,
+    )
+
+
+def Scaffold_Remap(requesdst, project="", sample="", run="", reference=""):
+    """
+    home page
+    """
+    template_name = "product/scaffold_remap.html"
+    ##
+
+    sample_main = Sample.objects.get(project__name=project, name=sample)
+    #
+    run_main = RunMain.objects.get(sample=sample_main, name=run)
+
+    try:
+        ref_main = ReferenceMap_Main.objects.get(
+            reference=reference, sample=sample_main, run=run_main
+        )
+        map_db = ReferenceContigs.objects.filter(
+            reference=ref_main,
+            run=run_main,
+        )
+    except ReferenceMap_Main.DoesNotExist:
+
+        return Http404("Sample not found")
+
+    return render(
+        requesdst,
+        template_name,
+        {
+            "table": ContigTable(map_db),
+            "project": project,
+            "sample": sample,
+            "run": run,
+        },
     )

@@ -55,14 +55,12 @@
     }
 </style>
 
-
 <ul class="breadcrumb">
     <li><a href={% url 'entry_page' %}> Home </a></li>
     <li><a href={% url 'televir_projects_main' %}> Projects </a></li>
     <li><a href={% url 'televir_project_samples' project_name=project %}> project {{ project }} </a></li>
-    <li> results {{run_name}}</li>
+    <li>{{run_name}}</li>
 </ul>
-
 
 
 <body>
@@ -76,23 +74,57 @@
             <thead>
                 <tr>
                     <th>Sample</th>
-                    <th>Software</th>
-                    <th>type</th>
-                    <th>input reads</th>
-                    <th>processed reads</th>
-                    <th>percent passed (%%)</th>
+                    <th>Run</th>
+                    <th>Description</th>
+                    <th>Taxid</th>
+                    <th>accID</th>
+                    <th>Cov (%)</th>
+                    <th>Depth</th>
+                    <th>DepthC</th>
+                    <th>Mapped reads</th>
+                    <th>start prop (%)</th>
+                    <th>mapped_prop (%)</th>
+                    <th> Gaps </th>
+                    <th>class. success</th>
+                    <th>mapping success</th>
                 </tr>
             </thead>
             <tbody>
                 {% for value in all_reports %}
+                {% if value.coverage > 0 or value.refa_dotplot_exists %}
                 <tr class="parent">
                     <td data-title="Sample">{{value.sample.name}}</td>
-                    <td data-title="Software">{{value.software}}</td>
-                    <td data-title="encoding">{{value.encoding}}</td>
-                    <td data-title="input_reads">{{value.input_reads}}</td>
-                    <td data-title="processed_reads">{{value.processed_reads}}</td>
-                    <td data-title="percent_passed">{{value.percent_passed}}</td>
+                    <td data-title="Run">
+                        <a
+                            href={% url 'sample_detail' project=project sample=value.sample.name name=value.run.name %}>{{value.run.name}}</a>
+                    </td>
+
+                    <td data-title="Description">{{value.description}}</td>
+                    <td data-title="Taxid">{{value.taxid}}</td>
+                    <td data-title="accID">
+                        <a href={{value.accid|link_ncbi}}>{{value.accid}}</a>
+                    </td>
+                    <td data-title="Cov" style="{{ value.coverage|color_code }}">
+                        {{value.coverage|round}}</td>
+                    <td data-title="Depth">
+                        {{value.depth|round}}</td>
+                    <td data-title="DepthC">
+                        {{value.depthR|round}}</td>
+                    <td data-title="Mapped reads">
+                        {{value.mapped_reads|round}}</td>
+                    <td data-title="start prop">
+                        {{value.ref_proportion|round_to_int}}</td>
+                    <td data-title="mapped_prop">
+                        {{value.mapped_proportion|round_to_int}}</td>
+                    <td data-title="Gaps">
+                        {{value.ngaps}}</td>
+                    <td data-title="class. success" style="{% success_count_color value.classification_success %}">
+                        {{value.classification_success}}</td>
+                    <td data-title="mappin success" style="{% success_count_color value.mapping_success %}">
+                        {{value.mapping_success}}</td>
+
                 </tr>
+                {% endif %}
                 {% endfor %}
             </tbody>
         </table>

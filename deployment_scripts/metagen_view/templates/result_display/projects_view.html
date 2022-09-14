@@ -13,6 +13,12 @@
 </style>
 
 <div class="container">
+    <button class="btn btn-primary" type="submit">
+        <a href="{% url "login" %}?next={{request.path}}">Login</a>
+    </button>
+</div>
+
+<div class="container">
     <div>
         <div>
             <h1>Project</h1>

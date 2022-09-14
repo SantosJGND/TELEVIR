@@ -3,6 +3,8 @@ import os
 from typing import Final
 
 from django import forms
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
 from django.forms.models import model_to_dict
 from django.http import Http404, HttpResponseNotFound
 from django.http.response import HttpResponse
@@ -20,7 +22,6 @@ from result_display.models import (
     FinalReport,
     Projects,
     ReadClassification,
-    ReferenceContigs,
     ReferenceMap_Main,
     RunAssembly,
     RunDetail,
@@ -29,7 +30,7 @@ from result_display.models import (
     Sample,
     SampleQC,
 )
-from result_display.tables import ContigTable, RunMainTable, SampleQCTable, SampleTable
+from result_display.tables import RunMainTable, SampleQCTable, SampleTable
 
 # from result_display.forms import IGVform
 
@@ -68,7 +69,15 @@ class Project_page(ListView):
     def get_context_data(self, **kwargs):
         context = super(Project_page, self).get_context_data(**kwargs)
 
-        projects = Projects.objects.filter(project_type=Projects.EXTERNAL)
+        user = self.request.user
+
+        if user.is_superuser:
+            projects = Projects.objects.filter(project_type=Projects.INHOUSE)
+        else:
+            projects = Projects.objects.filter(
+                project_type=Projects.INHOUSE, created_by=user
+            )
+
         context["projects"] = projects
 
         return context
@@ -81,10 +90,15 @@ def MainPage(request, project_name):
 
     template_name = "result_display/main_page.html"
 
-    try:
-        samples = Sample.objects.filter(project__name=project_name)
-    except Sample.DoesNotExist:
-        samples = parser.get_samples()
+    project = Projects.objects.get(name=project_name)
+
+    if not request.user.is_authenticated:
+        return render(request, "users/login.html")
+
+    if not request.user == project.created_by and not request.user.is_superuser:
+        return render(request, "users/login.html")
+
+    samples = Sample.objects.filter(project__name=project_name)
 
     samples = SampleTable(samples)
     context = {}
@@ -153,21 +167,6 @@ def sample_QCall(requestdst, project):
         requestdst,
         template_name,
         {"all_reports": sampleqc, "project": project},
-    )
-
-
-def Project_reports(requesdst, project):
-    """
-    sample main page
-    """
-    template_name = "result_display/allreports_table.html"
-
-    all_reports = FinalReport.objects.filter(run__project__name=project)
-
-    return render(
-        requesdst,
-        template_name,
-        {"all_reports": all_reports, "project": project},
     )
 
 
@@ -399,35 +398,3 @@ def download_file(requestdst):
             ] = "attachment; filename=%s" % os.path.basename(filepath)
             # Return the response value
             return response
-
-
-def Scaffold_Remap(requesdst, project="", sample="", run="", reference=""):
-    """
-    home page
-    """
-    template_name = "result_display/scaffold_remap.html"
-    ##
-
-    sample_main = Sample.objects.get(project__name=project, name=sample)
-    #
-    run_main = RunMain.objects.get(sample=sample_main, name=run)
-
-    try:
-        ref_main = ReferenceMap_Main.objects.get(
-            reference=reference, sample=sample_main, run=run_main
-        )
-        map_db = ReferenceContigs.objects.filter(
-            reference=ref_main,
-            run=run_main,
-        )
-    except ReferenceMap_Main.DoesNotExist:
-
-        return Http404("Sample not found")
-
-    return render(
-        requesdst,
-        template_name,
-        {
-            "table": ContigTable(map_db),
-        },
-    )

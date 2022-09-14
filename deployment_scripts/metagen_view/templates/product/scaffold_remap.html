@@ -1,0 +1,28 @@
+{% extends '_layouts/base.html' %}
+{% load render_table from django_tables2 %}
+{%load html_tags%}
+
+{% load static %}
+
+
+{% block content %}
+
+<ul class="breadcrumb">
+    <li><a href={% url 'entry_page' %}> Home </a></li>
+    <li><a href={% url 'televir_projects_main' %}> Projects </a></li>
+    <li><a href={% url 'televir_sample_main' project_name=project sample_name=sample  %}> sample </a></li>
+    <li><a href={% url 'televir_sample_detail' project=project sample=sample name=run %}> {{run}} </a>
+    </li>
+</ul>
+
+
+<table>
+
+    {{ block.super }}
+    <link href="{% static 'django_tables2/themes/paleblue/css/screen.css' %}" rel="stylesheet">
+
+    {% render_table table %}
+
+</table>
+
+{% endblock %}

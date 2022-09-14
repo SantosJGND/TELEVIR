@@ -17,11 +17,15 @@ from django.conf import settings
 from django.conf.urls import include
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path, re_path
-from result_display import igv_app
 
 urlpatterns = [
     re_path("^admin/", admin.site.urls),
+    path("login/", LoginView.as_view(template_name="users/login.html"), name="login"),
+    path(
+        "logout/", LogoutView.as_view(template_name="users/logout.html"), name="logout"
+    ),
     re_path("^command_line/", include("result_display.urls")),
     re_path("^", include("product.urls")),
     path("file_upload/", include("file_upload.urls")),

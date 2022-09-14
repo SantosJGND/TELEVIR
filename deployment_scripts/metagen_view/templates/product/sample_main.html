@@ -7,7 +7,8 @@
 {% block content %}
 
 <ul class="breadcrumb">
-    <li><a href={% url 'televir_upload_data' %}> Sample Upload </a></li>
+    <li><a href={% url 'entry_page' %}> Home </a></li>
+    <li><a href={% url 'televir_projects_main' %}> Projects </a></li>
     <li><a href={% url 'televir_project_samples' project_name=project_name %}> project {{ project_name }} </a></li>
 </ul>
 

@@ -84,10 +84,18 @@ class setup_dl:
         host = "ftp.ncbi.nlm.nih.gov"
         source = "refseq/release/{}/".format(self.organism)
 
+        fprot = f"refseq_{self.organism}.protein.faa.gz"
+        fprot_suf = os.path.splitext(fprot)[0]
+
+        if os.path.isfile(self.seqdir + fprot):
+            self.fastas["prot"]["refseq"] = self.seqdir + fprot
+            logging.info(f"{fprot_suf} found.")
+            return
+
         try:
             ftp = FTP(host)
         except:
-            logging.info("refseq ftp failed. Check internet connection.")
+            logging.info("refseq ftp attempt failed. Check internet connection.")
             return
 
         ftp.login()
@@ -102,9 +110,6 @@ class setup_dl:
         ext_dict = {z: [x[0] for x in ext_dict if x[1] == z] for z in extset}
 
         protf = [g for x, g in ext_dict.items() if "protein.faa" in x][0]
-
-        fprot = f"refseq_{self.organism}.protein.faa.gz"
-        fprot_suf = os.path.splitext(fprot)[0]
 
         if not os.path.isfile(self.seqdir + fprot):
             if self.test:
@@ -126,6 +131,14 @@ class setup_dl:
         """
         host = "ftp.ncbi.nlm.nih.gov"
         source = "refseq/release/{}/".format(self.organism)
+
+        fnuc = f"refseq_{self.organism}.genome.fna.gz"
+        fnuc_suf = os.path.splitext(fnuc)[0]
+
+        if os.path.isfile(self.seqdir + fnuc):
+            self.fastas["nuc"]["refseq"] = self.seqdir + fnuc
+            logging.info(f"{fnuc_suf} found.")
+            return
 
         try:
             ftp = FTP(host)

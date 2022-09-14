@@ -1,6 +1,7 @@
 import os
 from typing import Type
 
+from django.contrib.auth.models import User
 from django.core.files import File
 
 from result_display.models import (
@@ -23,16 +24,30 @@ from result_display.samples import Reference_Map, RunMetaData, SampleMetaData
 
 ####################################################################################################################
 ####################################################################################################################
-def Update_project(project_directory_path):
+def Update_project(
+    project_directory_path,
+    ser: str = "admin",
+):
     """Updates the project"""
     project_directory_path = os.path.dirname(project_directory_path)
     project_name = os.path.basename(project_directory_path)
     project_name_simple = project_name.replace(".", "_").replace(":", "_")
+    try:
+        user = User.objects.get(username=ser)
+    except User.DoesNotExist:
+        user = User.objects.get(username="admin")
 
     try:
-        project = Projects.objects.get(name=project_name)
+        project = Projects.objects.get(
+            name=project_name, project_type=Projects.EXTERNAL
+        )
     except Projects.DoesNotExist:
-        project = Projects(name=project_name, full_path=project_directory_path)
+        project = Projects(
+            name=project_name,
+            full_path=project_directory_path,
+            project_type=Projects.INHOUSE,
+            created_by=user,
+        )
         project.save()
 
 
