@@ -1,6 +1,7 @@
 import os
 import shlex
 import subprocess
+from urllib import request
 from webbrowser import BackgroundBrowser
 
 from background_task import background
@@ -300,7 +301,9 @@ def Project_reports(requesdst, project):
     """
     template_name = "product/allreports_table.html"
 
-    all_reports = FinalReport.objects.filter(run__project__name=project)
+    all_reports = FinalReport.objects.filter(
+        run__project__name=project, created_by=requesdst.user
+    )
 
     return render(
         requesdst,
