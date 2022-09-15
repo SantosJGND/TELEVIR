@@ -1,5 +1,6 @@
 import os
 from datetime import date
+from tkinter.tix import Tree
 
 from django.core.management.base import BaseCommand
 from pathogen_detection.constants_settings import ConstantsSettings
@@ -98,7 +99,9 @@ class Command(BaseCommand):
 
         if options["estimate_runs"]:
             print("estimate")
-            event = meta_orchestra(options["fofn"], estimate_only=True)
+            event = meta_orchestra(
+                options["fofn"], technology=options["tech"], estimate_only=True
+            )
 
         if not options["odir"]:
             options["odir"] = "run_" + str(date.today())

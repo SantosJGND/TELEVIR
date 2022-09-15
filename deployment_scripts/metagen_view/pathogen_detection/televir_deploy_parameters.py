@@ -342,19 +342,19 @@ class Params_Nanopore:
         "PREPROCESS": ["nanofilt"],  # "nanofilt", trimmomatic
         "ENRICHMENT": [
             # "",
-            "kaiju",
-            "krakenuniq",
+            # "kaiju",
+            # "krakenuniq",
             "centrifuge",
         ],
         "ASSEMBLY": ["flye", "raven"],  # spades, velvet,
         "CONTIG_CLASSIFICATION": ["blast", "minimap2_asm"],  # , "minimap-asm"],
         "READ_CLASSIFICATION": [
-            "krakenuniq",
+            # "krakenuniq",
             "fastviromeexplorer",
-            "clark",
-            "desamba",
-            "kaiju",
-            "centrifuge",
+            # "clark",
+            # "desamba",
+            # "kaiju",
+            # "centrifuge",
             "diamond",
         ],
         "REMAPPING": ["minimap-rem"],  # snippy, rematch, bowtie, minimap-rem

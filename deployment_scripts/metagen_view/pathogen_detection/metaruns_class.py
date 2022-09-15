@@ -468,6 +468,8 @@ class meta_orchestra:
         else:
             raise ValueError("technology not supported")
 
+        print(self.params_conf.SOFTWARE)
+
     def clean(self, delete: bool = True):
         for sid, sac in self.projects.items():
             sac.clean(delete=delete, outf=self.outd)
