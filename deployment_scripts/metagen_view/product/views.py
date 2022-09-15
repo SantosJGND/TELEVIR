@@ -356,7 +356,7 @@ def Sample_detail(requesdst, project="", sample="", name=""):
 
     sample_main = Sample.objects.get(name=sample, project=project_main)
     #
-    run_main = RunMain.objects.get(project=project, sample=sample_main, name=name)
+    run_main = RunMain.objects.get(project=project_main, sample=sample_main, name=name)
     #
     run_detail = RunDetail.objects.get(sample=sample_main, run=run_main)
     #
