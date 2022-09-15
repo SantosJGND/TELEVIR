@@ -2,16 +2,17 @@ import logging
 import os
 import re
 import shutil
+from ast import Constant
 from random import randint
 from typing import List, Type
 
 import numpy as np
 import pandas as pd
 from Bio.SeqIO.FastaIO import SimpleFastaParser
+from product.constants_settings import ConstantsSettings
 from result_display.plot_coverage import Bedgraph, plot_dotplot
 from scipy.stats import kstest
 
-from pathogen_detection.constants_settings import ConstantsSettings
 from pathogen_detection.object_classes import (
     Read_class,
     Remap_Target,
@@ -929,22 +930,22 @@ class Remapping:
         """
         Move coverage plot to static directory."""
         new_coverage_plot = os.path.join(
-            static_dir, os.path.basename(self.coverage_plot)
+            main_static,
+            static_dir,
+            os.path.basename(self.coverage_plot),
         )
 
-        self.coverage_plot_exists = os.path.exists(
-            os.path.join(
-                ConstantsSettings.static_directory, main_static, self.coverage_plot
-            )
-        )
+        # self.coverage_plot_exists = os.path.exists(
+        #    os.path.join(
+        #        ConstantsSettings.static_directory, main_static, self.coverage_plot
+        #    )
+        # )
 
         if self.coverage_plot_exists:
 
             os.rename(
                 self.coverage_plot,
-                os.path.join(
-                    ConstantsSettings.static_directory, main_static, new_coverage_plot
-                ),
+                os.path.join(ConstantsSettings.static_directory, new_coverage_plot),
             )
             self.coverage_plot = new_coverage_plot
 
@@ -952,19 +953,27 @@ class Remapping:
         """
         Move dotplot to static directory."""
 
-        new_coverage_plot = os.path.join(static_dir, os.path.basename(self.dotplot))
-
-        self.dotplot_exists = os.path.exists(
-            os.path.join(ConstantsSettings.static_directory, main_static, self.dotplot)
+        new_coverage_plot = os.path.join(
+            main_static,
+            static_dir,
+            os.path.basename(self.dotplot),
         )
+        # self.dotplot_exists = os.path.exists(
+        #    os.path.join(ConstantsSettings.static_directory, main_static, self.dotplot)
+        # )
+
+        print("################")
+        print("dotplot exists", self.dotplot_exists)
+        print("dotplot", self.dotplot)
+        print("new_coverage_plot", new_coverage_plot)
+        print("main static", main_static)
+        print("static dir", static_dir)
 
         if self.dotplot_exists:
 
             os.rename(
                 self.dotplot,
-                os.path.join(
-                    ConstantsSettings.static_directory, main_static, new_coverage_plot
-                ),
+                os.path.join(ConstantsSettings.static_directory, new_coverage_plot),
             )
             self.dotplot = new_coverage_plot
 

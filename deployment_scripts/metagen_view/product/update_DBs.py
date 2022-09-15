@@ -18,7 +18,8 @@ def Update_project(project_directory_path, user: str = "admin", submit_index: in
 
     try:
         project = Projects.objects.get(
-            name=project_name, project_type=Projects.EXTERNAL
+            name=project_name,
+            created_by=user,
         )
 
     except Projects.DoesNotExist:

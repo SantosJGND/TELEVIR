@@ -4,7 +4,9 @@ from django.db import models
 
 
 class UploadFileForm(forms.Form):
-    technology = forms.ChoiceField(choices=[("ILL", "Illumina"), ("ONT", "nanopore")])
+    technology = forms.ChoiceField(
+        choices=[("illumina", "Illumina"), ("nanopore", "nanopore")]
+    )
     file_r1 = forms.FileField(
         widget=forms.ClearableFileInput(attrs={"multiple": True, "accept": "*"})
     )

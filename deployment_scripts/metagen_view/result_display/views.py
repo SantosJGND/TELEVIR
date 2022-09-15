@@ -200,7 +200,7 @@ def Sample_detail(requesdst, project="", sample="", name=""):
     #
     run_assembly = RunAssembly.objects.get(sample=sample_main, run=run_main)
     #
-    print(run_assembly)
+
     run_remap = RunRemapMain.objects.get(sample=sample_main, run=run_main)
     #
     read_classification = ReadClassification.objects.get(
@@ -209,6 +209,7 @@ def Sample_detail(requesdst, project="", sample="", name=""):
     #
     final_report = FinalReport.objects.filter(sample=sample_main, run=run_main)
     #
+
     contig_classification = ContigClassification.objects.get(
         sample=sample_main, run=run_main
     )
@@ -379,7 +380,8 @@ def download_file(requestdst):
             print(BASE_DIR)
             print(filepath)
 
-            filepath = BASE_DIR + filepath
+            if not os.path.exists(filepath):
+                filepath = BASE_DIR + filepath
 
             if "//" in filepath:
                 filepath = "/" + filepath.split("//")[1]

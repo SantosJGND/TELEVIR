@@ -530,9 +530,9 @@ class FinalReport(models.Model):
     mapping_success = models.CharField(max_length=20, blank=True, null=True)
     classification_success = models.CharField(max_length=20, blank=True, null=True)
 
-    refa_dotplot = models.TextField(blank=True, null=True)
+    refa_dotplot = models.CharField(max_length=250, blank=True, null=True)
     refa_dotplot_exists = models.BooleanField(default=False)
-    covplot = models.TextField(blank=True, null=True)
+    covplot = models.CharField(max_length=250, blank=True, null=True)
     covplot_exists = models.BooleanField(default=False)
     bam_path = models.CharField(max_length=200, blank=True, null=True)
     bai_path = models.CharField(max_length=200, blank=True, null=True)

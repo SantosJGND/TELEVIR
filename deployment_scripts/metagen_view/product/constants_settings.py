@@ -13,6 +13,7 @@ class ConstantsSettings:
 
     product_directory = "/mnt/sdc/TELEVIR/products/"
     static_directory = STATICFILES_DIRS[0]
+    static_directory_product = "product"
     job_directory = "/mnt/sdc/TELEVIR/jobs/"
 
     ont_params_json = os.path.join(BASE_DIR, "product", "ont_params.json")

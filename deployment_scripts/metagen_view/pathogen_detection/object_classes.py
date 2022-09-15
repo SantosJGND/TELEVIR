@@ -11,6 +11,7 @@ from typing import Type
 import pandas as pd
 from numpy import ERR_CALL
 
+from pathogen_detection.constants_settings import ConstantsSettings
 from pathogen_detection.utilities import fastqc_parse
 
 
@@ -534,6 +535,23 @@ class Read_class:
         else:
             return 0
 
+    def move_to_static(self, main_static, sub_static):
+        """
+        Move current fastq file to static folder.
+        """
+
+        new_file = os.path.basename(self.current)
+        new_file = os.path.join(
+            ConstantsSettings.static_directory, main_static, sub_static, new_file
+        )
+        print("moving to static: %s" % self.current)
+        print("new file: %s" % new_file)
+
+        if not os.path.exists(new_file) and self.exists:
+            os.rename(self.current, new_file)
+
+        self.current = new_file
+
     def __str__(self):
         return self.filepath
 
@@ -551,6 +569,7 @@ class Sample_runClass:
     input_fastqc_report: os.PathLike
     processed_fastqc_report: os.PathLike
     threads: int = 1
+    user_name: str
 
     def __init__(
         self,
@@ -558,6 +577,7 @@ class Sample_runClass:
         r2: Type[Read_class],
         sample_name: str,
         project_name: str,
+        user_name: str,
         technology: str,
         type: str,
         combinations: str,
@@ -570,6 +590,7 @@ class Sample_runClass:
         self.r2 = r2
         self.sample_name = sample_name
         self.project_name = project_name
+        self.user_name = user_name
         self.technology = technology
         self.type = type
         self.combinations = combinations

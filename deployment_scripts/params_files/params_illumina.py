@@ -64,7 +64,7 @@ DIRS = {
 ################################## MODULES
 
 ACTIONS = {
-    "CLEANING": False,
+    "CLEAN": False,
     "QCONTROL": True,
     "ENRICH": True,
     "DEPLETE": False,

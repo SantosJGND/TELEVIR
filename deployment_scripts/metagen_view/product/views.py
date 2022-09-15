@@ -71,6 +71,7 @@ class Upload_file(FormView):
             file_r1 = self.manager.handle_uploaded_file(file_r1)
             file_r2 = self.manager.handle_uploaded_file(file_r2) if file_r2 else None
             # Save the file to the database
+            print("technology received", technology)
 
             new_fastq_input = Fastq_Input(
                 technology=technology,
@@ -101,6 +102,7 @@ class Upload_file(FormView):
 @background(schedule=1)
 def add_deployment_task(pk):
     # fastq_input = Fastq_Input.objects.get(pk=pk)
+
     run_task = Run_Main_from_Fastq_Input(pk)
     run_task.Submit()
 
@@ -231,9 +233,6 @@ def submit_view(request, project_name, pk):
     )
 
 
-from django.shortcuts import redirect
-
-
 class Project_page(ListView):
     """Project page"""
 
@@ -274,12 +273,14 @@ def ProjectView(request, project_name):
     if not request.user.is_authenticated:
         return render(request, "users/login.html")
 
-    project = Projects.objects.get(name=project_name)
+    project = Projects.objects.get(name=project_name, created_by=request.user)
 
     if not request.user == project.created_by and not request.user.is_superuser:
         return render(request, "users/login.html")
 
-    samples = Sample.objects.filter(project__name=project_name)
+    samples = Sample.objects.filter(
+        project__name=project_name, project__created_by=request.user
+    )
 
     samples = SampleTable(samples)
     context = {}
@@ -312,7 +313,7 @@ def Sample_Main(requesdst, project_name, sample_name):
     """Sample page"""
     template_name = "product/sample_main.html"
 
-    project = Projects.objects.get(name=project_name)
+    project = Projects.objects.get(name=project_name, created_by=requesdst.user)
     sample = Sample.objects.get(project=project, name=sample_name)
 
     try:
@@ -360,7 +361,7 @@ def Sample_detail(requesdst, project="", sample="", name=""):
     #
     run_assembly = RunAssembly.objects.get(sample=sample_main, run=run_main)
     #
-    print(run_assembly)
+
     run_remap = RunRemapMain.objects.get(sample=sample_main, run=run_main)
     #
     read_classification = ReadClassification.objects.get(
@@ -369,6 +370,8 @@ def Sample_detail(requesdst, project="", sample="", name=""):
     #
     final_report = FinalReport.objects.filter(sample=sample_main, run=run_main)
     #
+    for r in final_report:
+        print(r.covplot)
     contig_classification = ContigClassification.objects.get(
         sample=sample_main, run=run_main
     )

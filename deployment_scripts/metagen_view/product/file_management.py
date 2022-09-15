@@ -70,4 +70,3 @@ class Ephemeral_Project_Manager:
                 "&",
             ]
         )
-        # (f"nohup sh {job_file_path} &> {log_file} &")

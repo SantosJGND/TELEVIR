@@ -44,6 +44,10 @@ class Command(BaseCommand):
         )
 
         parser.add_argument(
+            "-u", "--user", type=str, default="admin", help="User to assign to project."
+        )
+
+        parser.add_argument(
             "--clean",
             action="store_true",
             default=False,
@@ -116,6 +120,7 @@ class Command(BaseCommand):
                 sup=options["nsup"],
                 down=options["nlow"],
                 odir=options["odir"],
+                user=options["user"],
             )
             event.reference = options["ref"]
 
@@ -151,6 +156,7 @@ class Command(BaseCommand):
                     sup=options["nsup"],
                     down=options["nlow"],
                     odir=options["odir"],
+                    user=options["user"],
                 )
 
                 event.reference = options["ref"]

@@ -6,8 +6,8 @@ from django.urls import reverse
 
 
 class Fastq_Input(models.Model):
-    CATEGORIES = (("ILL", "Illumina"), ("ONT", "nanopore"))
-    technology = models.CharField(max_length=5, choices=CATEGORIES)
+    CATEGORIES = (("illumina", "Illumina"), ("nanopore", "nanopore"))
+    technology = models.CharField(max_length=20, choices=CATEGORIES)
     file_r1 = models.FileField(upload_to="files/")
     file_r2 = models.FileField(upload_to="files/", blank=True, null=True)
 

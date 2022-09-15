@@ -14,8 +14,8 @@ from typing import Type
 import numpy as np
 import pandas as pd
 from metagen_view.settings import STATICFILES_DIRS
+from product.constants_settings import ConstantsSettings
 
-from pathogen_detection.constants_settings import ConstantsSettings
 from pathogen_detection.object_classes import Sample_runClass
 from pathogen_detection.params import (
     ACTIONS,
@@ -54,6 +54,7 @@ class metaclass_run:
         self,
         project_name: str,
         sample_name: str,
+        username: str,
         id="1",
         rdir="",
         child="",
@@ -62,7 +63,7 @@ class metaclass_run:
 
         self.id = id
         self.actions = {
-            "CLEAN": ACTIONS["CLEANING"],
+            "CLEAN": ACTIONS["CLEAN"],
             "SIFT": ACTIONS["PHAGE_DEPL"],
             "VIRSORT": ACTIONS["VIRSORT"],
             "QCONTROL": False,
@@ -74,6 +75,7 @@ class metaclass_run:
         }
         self.sample_name = sample_name
         self.project_name = project_name
+        self.username = username
 
         self.r1 = ""
         self.r2 = ""
@@ -318,7 +320,7 @@ class metaclass_run:
         """
         #
         self.prep_config_dict()
-        self.RunMain = RunMain_class(self.config_dict, self.params)
+        self.RunMain = RunMain_class(self.config_dict, self.params, self.username)
 
         self.RunMain.Run()
         self.RunMain.Summarize()
@@ -363,13 +365,16 @@ class metaclass_run:
 
 
 class meta_orchestra:
-    def __init__(self, fofn, sup=1, down=1, smax=5, odir="", estimate_only=False):
+    def __init__(
+        self, fofn, sup=1, down=1, smax=5, odir="", estimate_only=False, user="admin"
+    ):
         self.sup = sup
         self.down = down
         self.processes = {}
         self.smax = smax
         self.odir = odir
         self.fofn = fofn
+        self.user = user
         self.reference = ""
 
         ###
@@ -405,19 +410,26 @@ class meta_orchestra:
         os.makedirs(self.outd, exist_ok=True)
 
         self.staticdir = os.path.join(
+            ConstantsSettings.static_directory_product,
+            self.user,
             self.project_name,
             self.sample_name,
         )
         os.makedirs(
-            os.path.join(ConstantsSettings.static_directory, self.staticdir),
+            os.path.join(
+                ConstantsSettings.static_directory,
+                self.staticdir,
+            ),
             exist_ok=True,
         )
 
         ### create meta_classifier instances
         self.projects = {}
         print("updating project")
-        Update_project(self.odir)
-        self.total_runs = retrieve_number_of_runs(self.project_name, self.sample_name)
+        Update_project(self.odir, user=self.user)
+        self.total_runs = retrieve_number_of_runs(
+            self.project_name, self.sample_name, self.user
+        )
 
     def clean(self, delete: bool = True):
         for sid, sac in self.projects.items():
@@ -797,6 +809,7 @@ class meta_orchestra:
         qcrun = metaclass_run(
             self.project_name,
             self.sample_name,
+            self.user,
             id="sampleQC",
             static_dir=self.staticdir,
         )
@@ -850,6 +863,7 @@ class meta_orchestra:
         nrun = metaclass_run(
             self.project_name,
             self.sample_name,
+            self.user,
             id=run_id,
             static_dir=self.staticdir,
         )

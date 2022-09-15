@@ -49,19 +49,20 @@ class RunDetail_main:
     config: dict
     prefix: str
     project_name: str
+    username: str
     ## input
     sample_name: str
     type: str
     r1_suffix: str
     r2_suffix: str
 
-    r1: Type[Read_class]
-    r2: Type[Read_class]
+    r1: Read_class
+    r2: Read_class
 
-    sample: Type[Sample_runClass]
+    sample: Sample_runClass
 
     ##  metadata
-    metadata_tool: Type[Metadata_handler]
+    metadata_tool: Metadata_handler
     sift_query: str
     max_remap: int
     taxid_limit: int
@@ -97,9 +98,10 @@ class RunDetail_main:
     ## output content
     report: pd.DataFrame
 
-    def __init__(self, config: dict, method_args: pd.DataFrame):
+    def __init__(self, config: dict, method_args: pd.DataFrame, username: str):
 
         self.project_name = config["project_name"]
+        self.username = username
         self.prefix = config["prefix"]
         self.suprun = self.prefix
 
@@ -136,6 +138,17 @@ class RunDetail_main:
         self.full_static_dir = os.path.join(
             ConstantsSettings.static_directory, self.static_dir
         )
+
+        self.static_dir_reads = f"depleted_reads"
+        os.makedirs(
+            os.path.join(
+                ConstantsSettings.static_directory,
+                self.static_dir,
+                self.static_dir_reads,
+            ),
+            exist_ok=True,
+        )
+
         self.static_dir_classification = f"classification_reports"
         os.makedirs(
             os.path.join(
@@ -191,6 +204,7 @@ class RunDetail_main:
             self.r2,
             self.sample_name,
             self.project_name,
+            self.username,
             self.config["technology"],
             self.type,
             0,
@@ -468,8 +482,8 @@ class RunDetail_main:
 
 
 class Run_Deployment_Methods(RunDetail_main):
-    def __init__(self, config: dict, method_args: pd.DataFrame):
-        super().__init__(config, method_args)
+    def __init__(self, config: dict, method_args: pd.DataFrame, username: str):
+        super().__init__(config, method_args, username)
         self.mapped_instances = []
 
     def deploy_QC(self):
@@ -599,8 +613,10 @@ class Run_Deployment_Methods(RunDetail_main):
 
 
 class RunMain_class(Run_Deployment_Methods):
-    def __init__(self, config_json: os.PathLike, method_args: pd.DataFrame):
-        super().__init__(config_json, method_args)
+    def __init__(
+        self, config_json: os.PathLike, method_args: pd.DataFrame, username: str
+    ):
+        super().__init__(config_json, method_args, username)
 
     def Run(self):
 
@@ -671,6 +687,7 @@ class RunMain_class(Run_Deployment_Methods):
             self.report = self.remap_manager.report
             self.export_final_reports()
 
+        self.move_reads_to_static()
         self.Update_exec_time()
 
     #### SUMMARY FUNCTIONS ####
@@ -721,6 +738,10 @@ class RunMain_class(Run_Deployment_Methods):
         )
 
         ###
+
+    def move_reads_to_static(self):
+        self.sample.r1.move_to_static(self.static_dir, self.static_dir_reads)
+        self.sample.r2.move_to_static(self.static_dir, self.static_dir_reads)
 
     def Summarize(self):
 

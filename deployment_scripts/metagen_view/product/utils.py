@@ -21,6 +21,16 @@ from product.models import Fastq_Input, Processed, Submitted
 from product.update_DBs import Update_project
 
 
+def simplify_name(name):
+    return (
+        name.replace("_", "_")
+        .replace("-", "_")
+        .replace(" ", "_")
+        .replace(".", "_")
+        .lower()
+    )
+
+
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
@@ -37,19 +47,28 @@ class Dummy_deployment:
     params = dict
     run_params_db = pd.DataFrame()
     pk: int = 0
+    username: str
 
     def __init__(
-        self, project: str = "test", prefix: str = "main", pk: int = 0
+        self,
+        project: str = "test",
+        prefix: str = "main",
+        username: str = "admin",
+        pk: int = 0,
+        static_dir: str = "static",
     ) -> None:
+
+        self.username = username
         self.project = project
         self.prefix = prefix
         self.rdir = os.path.join(ConstantsSettings.product_directory, project)
         self.dir = os.path.join(self.rdir, prefix)
 
         os.makedirs(self.dir, exist_ok=True)
-        self.static_dir = os.path.join(ConstantsSettings.static_directory, "product")
+
         self.prefix = prefix
         self.pk = pk
+        self.static_dir = self.static_dir
 
     def sample_main(
         self,
@@ -212,16 +231,6 @@ class Dummy_deployment:
 
         self.run_params_db = self.parameters_generate_random()
 
-    @staticmethod
-    def simplify_name(name):
-        return (
-            name.replace("_", "_")
-            .replace("-", "_")
-            .replace(" ", "_")
-            .replace(".", "_")
-            .lower()
-        )
-
     def configure_ont(self, sample_path: str) -> None:
         self.get_params_ont()
         self.generate_config_file()
@@ -232,7 +241,7 @@ class Dummy_deployment:
 
         shutil.copy(sample_path, new_sample_path)
 
-        self.config["sample_name"] = self.simplify_name(sample_name)
+        self.config["sample_name"] = simplify_name(sample_name)
         self.config["r1"] = new_sample_path
         self.config["r2"] = "none"
         self.config["type"] = "SE"
@@ -253,7 +262,7 @@ class Dummy_deployment:
             new_r2_path = os.path.join(self.dir, "reads") + "/" + r2_name
             shutil.copy(r2_path, new_r2_path)
 
-        self.config["sample_name"] = self.simplify_name(r1_name)
+        self.config["sample_name"] = simplify_name(r1_name)
         self.config["r1"] = new_r1_path
         self.config["r2"] = new_r2_path
         self.config["type"] = ["SE", "PE"][
@@ -278,7 +287,9 @@ class Dummy_deployment:
 
     def run_main_prep(self):
 
-        self.run_engine = RunMain_class(self.config, self.run_params_db)
+        os.makedirs(self.static_dir, exist_ok=True)
+
+        self.run_engine = RunMain_class(self.config, self.run_params_db, self.username)
 
 
 class Run_Main_from_Fastq_Input:
@@ -305,22 +316,35 @@ class Run_Main_from_Fastq_Input:
         if input_data.file_r2:
             self.file_r2 = input_data.file_r2.path
         self.technology = input_data.technology
-        self.name = input_data.name
+        self.user = input_data.name
         self.project_name = input_data.project_name
         self.date_created = input_data.date_created
         self.date_modified = input_data.date_modified
         self.pk = input_data.pk
 
+        self.static_dir = os.path.join(
+            ConstantsSettings.static_directory_product,
+            self.user,
+            self.project_name,
+            simplify_name(os.path.basename(self.file_r1)),
+        )
+
+        self.static_dir = os.path.join(
+            ConstantsSettings.static_directory, self.static_dir
+        )
+
         self.container = Dummy_deployment(
             project=self.project_name,
             prefix=f"{self.project_name}_{self.pk}",
+            username=self.user,
+            static_dir=self.static_dir,
         )
 
     def configure(self):
 
-        Update_project(self.container.dir, submit_index=self.pk)
+        Update_project(self.container.dir, user=self.user, submit_index=self.pk)
 
-        if self.technology == "Illumina":
+        if self.technology == "illumina":
             self.container.configure_illumina(self.file_r1, self.file_r2)
         else:
             self.container.configure_ont(self.file_r1)

@@ -365,7 +365,7 @@
                         <p>Mapping Coverage</p>
                     </td>
                     <td colspan="9" align="center">
-                        <img src="{% static "product/" %}/{{ value.covplot }}"="200"="250" alt="">
+                        <img src="{% static value.covplot %}"="200"="250" alt="">
                     </td>
                     <td colspan="1" align="center">
 
@@ -409,7 +409,7 @@
                     </td>
 
                     <td colspan="9" align="center">
-                        <img src="{% static "product/" %}/{{ value.refa_dotplot }}"="200"="250" alt="">
+                        <img src="{% static value.refa_dotplot %}"="200"="250" alt="">
                     </td>
                     <td colspan="1" align="center" style="position:relative">
                         <div>
@@ -471,13 +471,13 @@
 <script>
     var my_form = document.forms["download_processed_reads_r1"];
     var static_dir = "{% static 'depleted_reads/' %}";
-    my_form.elements["file_path"].value = static_dir + "{{run_main.processed_reads_r1}}";
+    my_form.elements["file_path"].value = "{{run_main.processed_reads_r1}}";
     document.getElementById("my_form").submit();
 </script>
 <script>
     var my_form = document.forms["download_processed_reads_r2"];
     var static_dir = "{% static 'depleted_reads/' %}";
-    my_form.elements["file_path"].value = static_dir + "{{run_main.processed_reads_r2}}";
+    my_form.elements["file_path"].value = "{{run_main.processed_reads_r2}}";
     document.getElementById("my_form").submit();
 </script>
 <script>
