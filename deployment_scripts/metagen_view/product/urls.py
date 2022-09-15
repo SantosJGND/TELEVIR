@@ -35,6 +35,11 @@ urlpatterns = [
         views.Sample_Main,
         name="televir_sample_main",
     ),
+    path(
+        "project_<project>/all_QC",
+        views.sample_QCall,
+        name="all_project_qc",
+    ),
     ##
     path(
         "<slug:project>/<slug:sample>/<slug:name>",

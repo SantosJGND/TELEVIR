@@ -17,11 +17,6 @@ urlpatterns = [
         name="igv_browser",
     ),  ## get values for IGV
     path(
-        "project_<project>/all_QC",
-        views.sample_QCall,
-        name="all_project_qc",
-    ),
-    path(
         "show_igv_<slug:sample_name>/<slug:run_name>/<slug:reference>",
         ajax_views.show_igv,
         name="show_igv",

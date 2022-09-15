@@ -17,22 +17,12 @@ from metagen_view.settings import STATICFILES_DIRS
 from product.constants_settings import ConstantsSettings
 
 from pathogen_detection.object_classes import Sample_runClass
-from pathogen_detection.params import (
-    ACTIONS,
-    ARGS_ASS,
-    ARGS_CLASS,
-    ARGS_ENRICH,
-    ARGS_QC,
-    ARGS_REMAP,
-    BINARIES,
-    CONSTANTS,
-    DATA_TYPE,
-    DIRS,
-    METADATA,
-    SOFTWARE,
-    SOURCE,
-)
 from pathogen_detection.run_main import RunMain_class
+from pathogen_detection.televir_deploy_parameters import (
+    Deployment_Params,
+    Params_Illumina,
+    Params_Nanopore,
+)
 from pathogen_detection.update_DBs import (
     RunIndex_Update_Retrieve_Key,
     Update_project,
@@ -59,23 +49,15 @@ class metaclass_run:
         rdir="",
         child="",
         static_dir: str = "",
+        technology: str = "illumina",
     ):
 
         self.id = id
-        self.actions = {
-            "CLEAN": ACTIONS["CLEAN"],
-            "SIFT": ACTIONS["PHAGE_DEPL"],
-            "VIRSORT": ACTIONS["VIRSORT"],
-            "QCONTROL": False,
-            "ASSEMBLE": ACTIONS["ASSEMBLE"],
-            "DEPLETE": ACTIONS["DEPLETE"],
-            "ENRICH": ACTIONS["ENRICH"],
-            "CLASSIFY": False,
-            "REMAP": False,
-        }
+
         self.sample_name = sample_name
         self.project_name = project_name
         self.username = username
+        self.base_params = Deployment_Params
 
         self.r1 = ""
         self.r2 = ""
@@ -84,6 +66,31 @@ class metaclass_run:
         self.begin_time = time.perf_counter()
         self.exec_time = 0
         self.static_dir = static_dir
+
+        self.technology = technology
+        self.import_params()
+        self.prep_actions_default()
+
+    def prep_actions_default(self):
+        self.actions = {
+            "CLEAN": self.base_params.ACTIONS["CLEAN"],
+            "SIFT": self.base_params.ACTIONS["PHAGE_DEPL"],
+            "VIRSORT": self.base_params.ACTIONS["VIRSORT"],
+            "QCONTROL": False,
+            "ASSEMBLE": self.base_params.ACTIONS["ASSEMBLE"],
+            "DEPLETE": self.base_params.ACTIONS["DEPLETE"],
+            "ENRICH": self.base_params.ACTIONS["ENRICH"],
+            "CLASSIFY": False,
+            "REMAP": False,
+        }
+
+    def import_params(self):
+        if self.technology == "illumina":
+            self.params_conf = Params_Illumina
+        elif self.technology == "nanopore":
+            self.params_conf = Params_Nanopore
+        else:
+            raise ValueError("technology not supported")
 
     def update_runtime(self):
         """
@@ -124,15 +131,20 @@ class metaclass_run:
         self.config = {}
         self.params = {}
 
-        for dr in ACTIONS.keys():
+        for dr in self.base_params.ACTIONS.keys():
             if dr in settings.keys():
                 self.actions[dr] = settings[dr] == "true"
 
-        for dr in SOFTWARE.keys():
+        for dr in self.params_conf.SOFTWARE.keys():
             if dr in settings.keys():
                 self.config[dr] = [settings[dr]]
 
-        pooled_params = {**ARGS_ENRICH, **ARGS_ASS, **ARGS_CLASS, **ARGS_REMAP}
+        pooled_params = {
+            **self.params_conf.ARGS_ENRICH,
+            **self.params_conf.ARGS_ASS,
+            **self.params_conf.ARGS_CLASS,
+            **self.params_conf.ARGS_REMAP,
+        }
 
         for dr in pooled_params.keys():
             if dr in settings.keys():
@@ -196,11 +208,11 @@ class metaclass_run:
 
         lines.append("##")
         #
-        for dr, path in SOURCE.items():
+        for dr, path in self.base_params.SOURCE.items():
             lines.append('{}="{}"'.format(dr, path))
         lines.append("## DIRECTORIES")
         #
-        for dr, path in DIRS.items():
+        for dr, path in self.base_params.DIRS.items():
 
             lines.append('{}="{}"'.format(dr, self.dir + path))
         lines.append("## ACTIONS")
@@ -231,7 +243,7 @@ class metaclass_run:
         """
         config = {
             "project": os.getcwd(),
-            "source": SOURCE,
+            "source": self.base_params.SOURCE,
             "directories": {
                 "root": self.dir,
             },
@@ -244,21 +256,22 @@ class metaclass_run:
             "sample_name": self.sample_name,
             "project_name": self.project_name,
             "metadata": {
-                x: os.path.join(METADATA["ROOT"], g) for x, g in METADATA.items()
+                x: os.path.join(self.base_params.METADATA["ROOT"], g)
+                for x, g in self.base_params.METADATA.items()
             },
             "r1": self.r1,
             "r2": self.r2,
-            "technology": DATA_TYPE,
-            "bin": BINARIES,
+            "technology": self.params_conf.DATA_TYPE,
+            "bin": self.base_params.BINARIES,
         }
 
         for dr, g in self.actions.items():
             config["actions"][dr] = g
 
-        for dr, g in DIRS.items():
+        for dr, g in self.base_params.DIRS.items():
             config["directories"][dr] = self.dir + g
 
-        config.update(CONSTANTS)
+        config.update(self.params_conf.CONSTANTS)
 
         self.config_dict = config
 
@@ -274,7 +287,7 @@ class metaclass_run:
 
         self.dir = rdir + "{}/".format(self.id)
 
-        for dir in DIRS.values():
+        for dir in self.base_params.DIRS.values():
             os.system("mkdir -p " + self.dir + dir)
 
     def spawn(self, fofn="", config="config.sh", source="main.sh", sink="main.sh"):
@@ -353,10 +366,12 @@ class metaclass_run:
             os.makedirs(outf + self.id, exist_ok=True)
 
         subprocess.Popen(
-            "mv {}*tsv {}".format(self.dir, self.dir + DIRS["OUTD"]), shell=True
+            "mv {}*tsv {}".format(self.dir, self.dir + self.base_params.DIRS["OUTD"]),
+            shell=True,
         )
         subprocess.Popen(
-            "mv {}*sh {}".format(self.dir, self.dir + DIRS["OUTD"]), shell=True
+            "mv {}*sh {}".format(self.dir, self.dir + self.base_params.DIRS["OUTD"]),
+            shell=True,
         )
 
         if delete:
@@ -366,7 +381,15 @@ class metaclass_run:
 
 class meta_orchestra:
     def __init__(
-        self, fofn, sup=1, down=1, smax=5, odir="", estimate_only=False, user="admin"
+        self,
+        fofn,
+        sup=1,
+        down=1,
+        smax=5,
+        odir="",
+        estimate_only=False,
+        technology: str = "illumina",
+        user="admin",
     ):
         self.sup = sup
         self.down = down
@@ -376,15 +399,19 @@ class meta_orchestra:
         self.fofn = fofn
         self.user = user
         self.reference = ""
+        self.technology = technology
+
+        self.import_params()
+        self.base_params = Deployment_Params()
 
         ###
         self.modules_to_stores = {
-            "PREPROCESS": ARGS_QC,
-            "ENRICHMENT": ARGS_ENRICH,
-            "ASSEMBLY": ARGS_ASS,
-            "CONTIG_CLASSIFICATION": ARGS_CLASS,
-            "READ_CLASSIFICATION": ARGS_CLASS,
-            "REMAPPING": ARGS_REMAP,
+            "PREPROCESS": self.params_conf.ARGS_QC,
+            "ENRICHMENT": self.params_conf.ARGS_ENRICH,
+            "ASSEMBLY": self.params_conf.ARGS_ASS,
+            "CONTIG_CLASSIFICATION": self.params_conf.ARGS_CLASS,
+            "READ_CLASSIFICATION": self.params_conf.ARGS_CLASS,
+            "REMAPPING": self.params_conf.ARGS_REMAP,
         }
 
         if estimate_only:
@@ -404,10 +431,12 @@ class meta_orchestra:
         shutil.copy(fofn, os.path.join(self.rdir + "input.fofn"))
 
         with open(self.rdir + "technology.txt", "w") as f:
-            f.write("technology\t{}".format(DATA_TYPE))
+            f.write("technology\t{}".format(self.technology))
 
         self.outd = self.rdir + "output/"
         os.makedirs(self.outd, exist_ok=True)
+
+        ##### create static_directory
 
         self.staticdir = os.path.join(
             ConstantsSettings.static_directory_product,
@@ -431,6 +460,14 @@ class meta_orchestra:
             self.project_name, self.sample_name, self.user
         )
 
+    def import_params(self):
+        if self.technology == "illumina":
+            self.params_conf = Params_Illumina
+        elif self.technology == "nanopore":
+            self.params_conf = Params_Nanopore
+        else:
+            raise ValueError("technology not supported")
+
     def clean(self, delete: bool = True):
         for sid, sac in self.projects.items():
             sac.clean(delete=delete, outf=self.outd)
@@ -447,9 +484,9 @@ class meta_orchestra:
         :return: data frame.
         """
         if len(cols) == 0:
-            cols = list(SOFTWARE.keys())
+            cols = list(self.params_conf.SOFTWARE.keys())
 
-        venue = [SOFTWARE[x] for x in cols]
+        venue = [self.params_conf.SOFTWARE[x] for x in cols]
         venues = list(it.product(*venue))
 
         if sample > 0 and sample < len(venues):
@@ -468,7 +505,7 @@ class meta_orchestra:
         """
 
         if len(modules) == 0:
-            modules = list(SOFTWARE.keys())
+            modules = list(self.params_conf.SOFTWARE.keys())
 
         relate = []
         new_features = []
@@ -500,8 +537,7 @@ class meta_orchestra:
         :return: None
         """
         for sd, tb in self.processes.items():
-            # params = tb["params"]
-            # params.to_csv(sd + ".args.tsv", sep="\t", header=True, index=False)
+
             with open(sd + ".runtime", "w") as f:
                 f.write(str(tb["runtime"]))
 
@@ -595,10 +631,10 @@ class meta_orchestra:
         child.actions["DEPLETE"] = False
         child.actions["ENRICH"] = False
         child.actions["ASSEMBLE"] = False
-        child.actions["SIFT"] = ACTIONS["PHAGE_DEPL"]
-        child.actions["VIRSORT"] = ACTIONS["VIRSORT"]
-        child.actions["CLASSIFY"] = ACTIONS["CLASSIFY"]
-        child.actions["REMAP"] = ACTIONS["REMAP"]
+        child.actions["SIFT"] = self.base_params.ACTIONS["PHAGE_DEPL"]
+        child.actions["VIRSORT"] = self.base_params.ACTIONS["VIRSORT"]
+        child.actions["CLASSIFY"] = self.base_params.ACTIONS["CLASSIFY"]
+        child.actions["REMAP"] = self.base_params.ACTIONS["REMAP"]
 
         if len(paramCombs[srun[0]]) == 0:
             return self
@@ -610,7 +646,9 @@ class meta_orchestra:
         child.params_get(params)
         #
         child.spawn(
-            fofn=child.dir + DIRS["log_dir"] + "{}_latest.fofn".format(sac.id),
+            fofn=child.dir
+            + self.base_params.DIRS["log_dir"]
+            + "{}_latest.fofn".format(sac.id),
             config=child.dir + "confch_{}.sh".format(child.id),
             source=child.main,
             sink=child.dir + "main_{}.sh".format(child.id),
@@ -799,7 +837,7 @@ class meta_orchestra:
         :return: self
         """
         modules = ["PREPROCESS"]
-        paramsqc = {**ARGS_QC}
+        paramsqc = {**self.params_conf.ARGS_QC}
         conf = self.sample_main(sample=1, cols=modules)
 
         params = self.params_extract(conf.iloc[0], paramsqc, modules=modules, sample=1)
@@ -814,7 +852,7 @@ class meta_orchestra:
             static_dir=self.staticdir,
         )
         qcrun.actions = {x: False for x in qcrun.actions.keys()}
-        qcrun.actions["QCONTROL"] = ACTIONS["QCONTROL"]
+        qcrun.actions["QCONTROL"] = self.base_params.ACTIONS["QCONTROL"]
 
         qcrun.config_get(conf)
 
@@ -879,14 +917,16 @@ class meta_orchestra:
         #
         nrun.prep_env(rdir=self.rdir)
         nrun.spawn(
-            fofn=self.qcrun.dir + DIRS["log_dir"] + "{}_latest.fofn".format("sampleQC"),
+            fofn=self.qcrun.dir
+            + self.base_params.DIRS["log_dir"]
+            + "{}_latest.fofn".format("sampleQC"),
             config=nrun.dir + "config.sh",
             sink=nrun.dir + "main.sh",
         )  ### fofn currently flobal variable.
 
         shutil.copy(
-            self.qcrun.dir + DIRS["log_dir"] + "reads_latest.stats",
-            nrun.dir + DIRS["log_dir"],
+            self.qcrun.dir + self.base_params.DIRS["log_dir"] + "reads_latest.stats",
+            nrun.dir + self.base_params.DIRS["log_dir"],
         )
 
         supstart = time.perf_counter()

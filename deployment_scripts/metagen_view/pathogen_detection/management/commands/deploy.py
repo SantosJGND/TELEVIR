@@ -40,6 +40,14 @@ class Command(BaseCommand):
         )
 
         parser.add_argument(
+            "-t",
+            "--tech",
+            type=str,
+            default="nanopore",
+            help="technology. detemines parameters used. [default=nanopore]",
+        )
+
+        parser.add_argument(
             "-o", "--odir", type=str, default="", help="Output directory."
         )
 
@@ -121,6 +129,7 @@ class Command(BaseCommand):
                 down=options["nlow"],
                 odir=options["odir"],
                 user=options["user"],
+                technology=options["tech"],
             )
             event.reference = options["ref"]
 
@@ -157,6 +166,7 @@ class Command(BaseCommand):
                     down=options["nlow"],
                     odir=options["odir"],
                     user=options["user"],
+                    technology=options["tech"],
                 )
 
                 event.reference = options["ref"]

@@ -2,8 +2,6 @@
 ################################# DIRS
 
 
-DATA_TYPE = "illumina"
-
 SOURCE = {
     "ENVSDIR": "$ENVDIR",
     "CONDA": "$SOURCE",
@@ -74,6 +72,12 @@ ACTIONS = {
     "PHAGE_DEPL": True,
     "VIRSORT": False,
 }
+
+################################## PARAMS
+
+
+DATA_TYPE = "illumina"
+
 
 ################################## CONSTANT PARAMS
 

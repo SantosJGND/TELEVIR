@@ -128,15 +128,16 @@ class main_deploy_prep:
         # os.makedirs(self.dir)
 
     def export(self):
-        self.paramf = self.pdir + f"params_files/params_{self.tech}.py"
+        # self.paramf = self.pdir + f"params_files/params_{self.tech}.py"
+        self.paramf = self.pdir + f"pathogen_detection/televir_deploy_parameters.py"
         self.mainsh = self.pdir + f"main/main_{self.tech}.sh"
-        new_params = self.app_dir + "params.py"
+        new_params = self.app_dir + "televir_deploy_parameters.py"
         test_params_ont_json = os.path.join(self.dir, "product") + "/ont_params.json"
         test_params_illumina_json = (
             os.path.join(self.dir, "product") + "/illumina_params.json"
         )
 
-        os.system(f"cp {self.paramf} {new_params}")
+        # os.system(f"cp {self.paramf} {new_params}")
         os.system(f"cp {self.mainpy} {self.app_dir}")
 
         mods_dict = {

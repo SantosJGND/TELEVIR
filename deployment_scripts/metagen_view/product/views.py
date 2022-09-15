@@ -347,6 +347,28 @@ def Sample_Main(requesdst, project_name, sample_name):
     )
 
 
+def sample_QCall(requestdst, project):
+    """
+    sample main page
+    """
+    template_name = "fastqc_html/fastqc_all.html"
+
+    user = requestdst.user
+    project = Projects.objects.get(name=project, created_by=user)
+
+    try:
+        sampleqc = SampleQC.objects.all(sample__project=project)
+
+    except SampleQC.DoesNotExist:
+        sampleqc = None
+
+    return render(
+        requestdst,
+        template_name,
+        {"all_reports": sampleqc, "project": project},
+    )
+
+
 def Sample_detail(requesdst, project="", sample="", name=""):
     """
     home page

@@ -151,25 +151,6 @@ def Sample_main(requesdst, project_name, sample_name):
     )
 
 
-def sample_QCall(requestdst, project):
-    """
-    sample main page
-    """
-    template_name = "fastqc_html/fastqc_all.html"
-
-    try:
-        sampleqc = SampleQC.objects.all()
-
-    except SampleQC.DoesNotExist:
-        sampleqc = None
-
-    return render(
-        requestdst,
-        template_name,
-        {"all_reports": sampleqc, "project": project},
-    )
-
-
 def display_fastqc_report(requesdst, name: str, report_source: str):
     """display input fastqc report"""
 
