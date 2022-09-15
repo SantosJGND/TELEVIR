@@ -12,20 +12,10 @@ from django.views.generic import ListView
 from django.views.generic.edit import FormView
 from django_tables2 import RequestConfig
 from result_display.constants_settings import ConstantsSettings
-from result_display.models import (
-    ContigClassification,
-    FinalReport,
-    Projects,
-    ReadClassification,
-    ReferenceContigs,
-    ReferenceMap_Main,
-    RunAssembly,
-    RunDetail,
-    RunMain,
-    RunRemapMain,
-    Sample,
-    SampleQC,
-)
+from result_display.models import (ContigClassification, FinalReport, Projects,
+                                   ReadClassification, ReferenceContigs,
+                                   ReferenceMap_Main, RunAssembly, RunDetail,
+                                   RunMain, RunRemapMain, Sample, SampleQC)
 from result_display.tables import ContigTable, SampleQCTable
 
 from product.file_management import Ephemeral_Project_Manager
@@ -352,10 +342,10 @@ def Sample_detail(requesdst, project="", sample="", name=""):
     home page
     """
     template_name = "product/sample_detail.html"
-    project_main = Projects.objects.get(name=project)
-    sample_main = Sample.objects.get(name=sample, project__name=project)
+    project_main = Projects.objects.get(name=project, created_by=requesdst.user)
+    sample_main = Sample.objects.get(name=sample, project_main)
     #
-    run_main = RunMain.objects.get(project__name=project, sample=sample_main, name=name)
+    run_main = RunMain.objects.get(project=project, sample=sample_main, name=name)
     #
     run_detail = RunDetail.objects.get(sample=sample_main, run=run_main)
     #

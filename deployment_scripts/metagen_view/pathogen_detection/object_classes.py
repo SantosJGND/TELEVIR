@@ -544,8 +544,6 @@ class Read_class:
         new_file = os.path.join(
             ConstantsSettings.static_directory, main_static, sub_static, new_file
         )
-        print("moving to static: %s" % self.current)
-        print("new file: %s" % new_file)
 
         if not os.path.exists(new_file) and self.exists:
             os.rename(self.current, new_file)
