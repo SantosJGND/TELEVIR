@@ -300,9 +300,10 @@ def Project_reports(requesdst, project):
     sample main page
     """
     template_name = "product/allreports_table.html"
+    project = Projects.objects.get(name=project, created_by=request.user)
 
     all_reports = FinalReport.objects.filter(
-        run__project__name=project, created_by=requesdst.user
+        run__project=project,
     )
 
     return render(
