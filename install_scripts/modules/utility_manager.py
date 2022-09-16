@@ -75,7 +75,7 @@ class Utility_Repository:
         from decouple import config
 
         self.engine = create_engine(
-            f"postgresql+psycopg2://{config('DB_USER')}:{config('DB_PASSWORD')}@{config('DB_HOST')}/{config('DB_NAME')}"
+            f"postgresql+psycopg2://{config('DB_USER')}:{config('DB_PASSWORD')}@{config('DB_HOST')}:{config('DB_PORT')}/{config('DB_NAME')}"
         )
 
     def create_software_table(self):
