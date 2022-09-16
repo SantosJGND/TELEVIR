@@ -241,6 +241,8 @@ class metaclass_run:
         function to prepare config dictionary for writing to config file.
         :return: config dictionary.
         """
+        print(self.params_conf.DATA_TYPE)
+
         config = {
             "project": os.getcwd(),
             "source": self.base_params.SOURCE,
@@ -852,6 +854,7 @@ class meta_orchestra:
             self.user,
             id="sampleQC",
             static_dir=self.staticdir,
+            technology=self.technology,
         )
         qcrun.actions = {x: False for x in qcrun.actions.keys()}
         qcrun.actions["QCONTROL"] = self.base_params.ACTIONS["QCONTROL"]
@@ -906,6 +909,7 @@ class meta_orchestra:
             self.user,
             id=run_id,
             static_dir=self.staticdir,
+            technology=self.technology,
         )
         nrun.reference = self.reference
         nrun.qcrun = self.qcrun.RunMain

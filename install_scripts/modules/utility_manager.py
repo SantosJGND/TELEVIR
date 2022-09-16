@@ -45,7 +45,10 @@ class Utility_Repository:
     software_item = software_item
 
     def __init__(self, db_path="", dbtype="sqlite") -> None:
+        if db_path[:-1] == "/":
+            db_path = db_path[:-1]
         self.engine = create_engine(f"{dbtype}:///{db_path}/utility.db")
+        print(db_path)
         self.metadata = MetaData()
         self.create_tables()
 

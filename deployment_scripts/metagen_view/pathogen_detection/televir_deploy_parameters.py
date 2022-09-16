@@ -326,7 +326,7 @@ class Params_Illumina:
 
 
 class Params_Nanopore:
-    DATA_TYPE = "ONT"
+    DATA_TYPE = "nanopore"
 
     CONSTANTS = {
         "minimum_coverage_threshold": 1,
