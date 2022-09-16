@@ -49,9 +49,9 @@ class Utility_Repository:
     dbtype_local: str = "sqlite"
 
     def __init__(self, db_path="", install_type="local") -> None:
-        self.db_path = db_path
+        self.db_path = ""
 
-        self.setup_engine(install_type)
+        self.setup_engine("local")
 
         print(self.engine)
 
