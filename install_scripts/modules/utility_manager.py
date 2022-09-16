@@ -39,16 +39,21 @@ class database_item:
         return f"({self.name}, {self.path}, {self.installed})"
 
 
+import os
+
+
 class Utility_Repository:
 
     database_item = database_item
     software_item = software_item
 
     def __init__(self, db_path="", dbtype="sqlite") -> None:
-        if db_path[-1] == "/":
-            db_path = db_path[:-1]
-        self.engine = create_engine(f"{dbtype}:///{db_path}/utility.db")
-        print(db_path)
+        print(f"{dbtype}:////{os.path.join(*db_path.split('/'))}utility.db")
+        print(f"{dbtype}:///{db_path}utility.db")
+        self.engine = create_engine(
+            f"{dbtype}:////{os.path.join(*db_path.split('/'))}utility.db"
+        )
+
         self.metadata = MetaData()
         self.create_tables()
 
