@@ -51,7 +51,7 @@ class Utility_Repository:
         print(f"{dbtype}:////{os.path.join(*db_path.split('/'))}utility.db")
         print(f"{dbtype}:///{db_path}utility.db")
         self.engine = create_engine(
-            f"{dbtype}:///{os.path.join(*db_path.split('/'))}utility.db"
+            f"{dbtype}:///" + os.path.join(*db_path.split("/"), "utility.db")
         )
 
         self.metadata = MetaData()
