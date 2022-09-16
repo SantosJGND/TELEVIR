@@ -100,6 +100,7 @@ def main():
         TAXDUMP = "/opt/taxdump.tar.gz"
         ORGANISM = "viral"
         INSTALL_CONFIG = "minimal"
+        INSTALL_TYPE = "docker"
 
         INSTALL_PARAMS["HOME"] = HOME
         INSTALL_PARAMS["ENVSDIR"]["SOURCE"] = SOURCE
@@ -128,6 +129,7 @@ def main():
         ORGANISM = mainconf.ORGANISM
         ENV = mainconf.ENV
         INSTALL_CONFIG = mainconf.INSTALL_CONFIG
+        INSTALL_TYPE = "local"
 
         INSTALL_PARAMS["HOME"] = HOME
         INSTALL_PARAMS["ENVSDIR"]["SOURCE"] = SOURCE
@@ -152,6 +154,7 @@ def main():
         INSTALL_PARAMS=INSTALL_PARAMS,
         pdir=CWD + "/install_scripts/",
         install_config=INSTALL_CONFIG,
+        install_type=INSTALL_TYPE,
     )
 
     metagen_prep.object_input(

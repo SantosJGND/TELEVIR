@@ -154,6 +154,7 @@ class main_setup:
         ENVS_PARAMS="",
         INSTALL_PARAMS="",
         install_config="full",
+        install_type="local",
     ) -> None:
         if not ENVS_PARAMS:
             from install_source import ENVS_PARAMS
@@ -174,7 +175,7 @@ class main_setup:
         self.pdir = pdir
 
         self.setup_config()
-        self.utilities = repository(db_path=self.wdir.home)
+        self.utilities = repository(db_path=self.wdir.home, install_type=install_type)
 
     def setup_config(self):
         if self.install_config == "full":
