@@ -61,7 +61,7 @@ class Dummy_deployment:
         self.username = username
         self.project = project
         self.prefix = prefix
-        self.rdir = os.path.join(ConstantsSettings.product_directory, project)
+        self.rdir = os.path.join(ConstantsSettings.product_directory, username, project)
         self.dir = os.path.join(self.rdir, prefix)
 
         os.makedirs(self.dir, exist_ok=True)

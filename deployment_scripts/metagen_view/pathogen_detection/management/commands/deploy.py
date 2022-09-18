@@ -106,8 +106,12 @@ class Command(BaseCommand):
         if not options["odir"]:
             options["odir"] = "run_" + str(date.today())
 
+        if not options["user"]:
+            print("user not specified, using admin")
+            options["user"] = "admin"
+
         options["odir"] = os.path.join(
-            ConstantsSettings.project_directory, options["odir"]
+            ConstantsSettings.project_directory, options["user"], options["odir"]
         )
 
         if options["odir"][-1] != "/":
