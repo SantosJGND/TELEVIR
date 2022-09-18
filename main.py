@@ -95,7 +95,7 @@ def main():
         SOURCE_DIR = "/opt/conda/"
         HOME = "/televir/mngs_benchmark/"
         ENVDIR = "/televir/mngs_benchmark/mngs_environments/"
-        DEPLOYMENT_DIR = "/televir/mngs_benchmark/deployment/"
+        DEPLOYMENT_DIR = "/televir/app/"
         TECH = "nanopore"
         TAXDUMP = "/opt/taxdump.tar.gz"
         ORGANISM = "viral"

@@ -295,6 +295,9 @@ def ProjectView(request, project_name):
     )
 
 
+import pandas as pd
+
+
 def Project_reports(requesdst, project):
     """
     sample main page
@@ -305,6 +308,28 @@ def Project_reports(requesdst, project):
     all_reports = FinalReport.objects.filter(
         run__project=project,
     )
+
+    # all_reports = pd.DataFrame.from_records(all_reports.values())
+
+    return render(
+        requesdst,
+        template_name,
+        {"all_reports": all_reports, "project": project},
+    )
+
+
+def Sample_reports(requesdst, project, sample_name):
+    """
+    sample main page
+    """
+    template_name = "product/allreports_table.html"
+    project = Projects.objects.get(name=project, created_by=requesdst.user)
+    sample = Sample.objects.get(name=sample_name, project=project)
+
+    all_reports = FinalReport.objects.filter(run__project=project, sample=sample)
+
+    # all_reports = pd.DataFrame.from_records(all_reports.values())
+    # print(all_reports.head())
 
     return render(
         requesdst,

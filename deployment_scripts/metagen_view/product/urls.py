@@ -36,6 +36,11 @@ urlpatterns = [
         name="televir_sample_main",
     ),
     path(
+        "project_<project>/<sample_name>/all_reports",
+        views.Sample_reports,
+        name="all_sample_reports",
+    ),
+    path(
         "project_<project>/all_QC",
         views.sample_QCall,
         name="all_project_qc",

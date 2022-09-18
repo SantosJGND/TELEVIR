@@ -381,3 +381,24 @@ def download_file(requestdst):
             ] = "attachment; filename=%s" % os.path.basename(filepath)
             # Return the response value
             return response
+
+
+import pandas as pd
+
+
+def Analysis_Project_Results(requesdst, project):
+    """
+    sample main page
+    """
+    template_name = "product/allreports_table.html"
+    project = Projects.objects.get(name=project, created_by=requesdst.user)
+
+    all_reports = FinalReport.objects.filter(
+        run__project=project,
+    )
+
+    all_parameters = []
+
+    all_reports = pd.DataFrame.from_records(all_reports)
+
+    # all_parameters=

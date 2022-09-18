@@ -19,7 +19,8 @@ RUN apt-get update \
 RUN apt-get install libpq-dev
 RUN apt-get install -y git ncbi-entrez-direct tabix samtools bioperl 
 
-RUN apt-get install default-jre python3-pip python3-dev libpq-dev postgresql postgresql-contrib
+RUN apt-get install -y default-jre python3-pip python3-dev 
+RUN apt-get install -y libpq-dev 
 
 # Install miniconda
 ENV CONDA_DIR /opt/conda
@@ -42,8 +43,7 @@ RUN rm ._kallisto_linux-v0.43.1
 WORKDIR /app
 COPY . /app
 
-RUN chmod +x environment_docker.sh
-RUN ./environment_docker.sh 
+#RUN ./environment_docker.sh 
 
 ## django requirements
 RUN python -m pip install -r requirements_django.txt
