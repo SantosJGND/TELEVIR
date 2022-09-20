@@ -5,6 +5,8 @@ import pandas as pd
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from product.utils import Run_Main_from_Fastq_Input
+from result_display.eda_class_native import Validator, run_eda
+from result_display.graph_utils import pipeline_tree, tree_plot
 from result_display.models import FinalReport, Projects, RunDetail, RunMain, Sample
 
 
@@ -47,6 +49,13 @@ class Command(BaseCommand):
             "-p",
             "--project",
             default="all",
+            type=str,
+            help="project to target",
+        )
+
+        parser.add_argument(
+            "--tech",
+            default="nanopore",
             type=str,
             help="project to target",
         )
@@ -108,4 +117,4 @@ class Command(BaseCommand):
 
         all_parameters.to_csv("all_parameters.tsv", index=False, sep="\t")
 
-        # all_parameters=
+        #

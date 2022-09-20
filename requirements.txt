@@ -10,3 +10,4 @@ install-jdk==0.3.0
 sqlalchemy==1.4.41
 matplotlib==3.5.2
 BeautifulSoup4==4.11.1
+networkx==2.8.6
