@@ -49,7 +49,7 @@ class Command(BaseCommand):
         )
 
         parser.add_argument(
-            "-o", "--odir", type=str, default="", help="Output directory."
+            "-p", "--project", type=str, default="", help="Output directory."
         )
 
         parser.add_argument(
@@ -103,25 +103,25 @@ class Command(BaseCommand):
                 options["fofn"], technology=options["tech"], estimate_only=True
             )
 
-        if not options["odir"]:
-            options["odir"] = "run_" + str(date.today())
+        if not options["project"]:
+            options["project"] = "run_" + str(date.today())
 
         if not options["user"]:
             print("user not specified, using admin")
             options["user"] = "admin"
 
-        options["odir"] = os.path.join(
-            ConstantsSettings.project_directory, options["user"], options["odir"]
+        options["project"] = os.path.join(
+            ConstantsSettings.project_directory, options["user"], options["project"]
         )
 
-        if options["odir"][-1] != "/":
-            options["odir"] += "/"
+        if options["project"][-1] != "/":
+            options["project"] += "/"
 
-        options["odir"] = os.path.join(os.getcwd(), options["odir"])
+        options["project"] = os.path.join(os.getcwd(), options["project"])
 
         if options["fofn"]:
             if os.path.exists(
-                os.path.join(options["odir"], os.path.basename(options["fofn"]))
+                os.path.join(options["project"], os.path.basename(options["fofn"]))
             ):
                 if not options["force"]:
 
@@ -134,7 +134,7 @@ class Command(BaseCommand):
                 options["fofn"],
                 sup=options["nsup"],
                 down=options["nlow"],
-                odir=options["odir"],
+                odir=options["project"],
                 user=options["user"],
                 technology=options["tech"],
             )
@@ -159,7 +159,7 @@ class Command(BaseCommand):
 
             for fofn in flist:
                 if os.path.exists(
-                    os.path.join(options["odir"], os.path.basename(fofn))
+                    os.path.join(options["project"], os.path.basename(fofn))
                 ):
                     if not options["force"]:
 
@@ -171,7 +171,7 @@ class Command(BaseCommand):
                     fofn,
                     sup=options["nsup"],
                     down=options["nlow"],
-                    odir=options["odir"],
+                    odir=options["project"],
                     user=options["user"],
                     technology=options["tech"],
                 )
