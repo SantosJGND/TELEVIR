@@ -93,9 +93,9 @@ def main():
     if args.docker:
         SOURCE = "/opt/conda/etc/profile.d/conda.sh"
         SOURCE_DIR = "/opt/conda/"
-        HOME = "/televir/mngs_benchmark/"
-        ENVDIR = "/televir/mngs_benchmark/mngs_environments/"
-        DEPLOYMENT_DIR = "/televir/app/"
+        HOME = "/televir-build/mngs_benchmark/"
+        ENVDIR = "/televir-build/mngs_benchmark/mngs_environments/"
+        DEPLOYMENT_DIR = "/televir-build/app/"
         TECH = "nanopore"
         TAXDUMP = "/opt/taxdump.tar.gz"
         ORGANISM = "viral"
