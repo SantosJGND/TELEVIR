@@ -12,6 +12,9 @@ from django.urls import reverse
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
 from django_tables2 import RequestConfig
+from pathogen_detection.constants_settings import (
+    ConstantsSettings as PathogenConstantsSettings,
+)
 from result_display.constants_settings import ConstantsSettings
 from result_display.models import (
     ContigClassification,
@@ -422,8 +425,19 @@ def Sample_detail(requesdst, project="", sample="", name=""):
     #
     final_report = FinalReport.objects.filter(sample=sample_main, run=run_main)
     #
-    for r in final_report:
-        print(r.covplot)
+    final_report_df = pd.DataFrame.from_records(final_report.values())
+
+    # print(final_report_df.columns)
+    exclude_runids = final_report_df[
+        final_report_df["description"].str.contains(
+            "|".join(PathogenConstantsSettings.exclude_descriptions)
+        )
+    ]["unique_id"].values
+
+    final_report = final_report.exclude(unique_id__in=exclude_runids)
+
+    print(exclude_runids)
+    #
     contig_classification = ContigClassification.objects.get(
         sample=sample_main, run=run_main
     )

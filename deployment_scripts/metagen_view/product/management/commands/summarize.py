@@ -32,7 +32,8 @@ def collect_parameters(queryset_df):
         params = read_parameters(row)
         if params is not None:
             all_parameters.append(params)
-    return pd.concat(all_parameters)
+    all_parameters = pd.concat(all_parameters).rename(columns={"sample": "sample_name"})
+    return
 
 
 class Command(BaseCommand):

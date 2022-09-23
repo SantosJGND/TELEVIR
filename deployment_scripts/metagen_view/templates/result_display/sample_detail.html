@@ -296,6 +296,7 @@
             </thead>
             <tbody>
                 {% for value in final_report %}
+                {% if value.coverage > 0 or value.refa_dotplot_exists %}
                 <tr class="parent">
                     <td data-title="Description"><a href="#" id="plotShow">{{value.description}}</a></td>
                     <td data-title="Taxid">{{value.taxid}}</td>
@@ -441,6 +442,7 @@
                     </td>
                 </tr>
 
+                {% endif %}
                 {% endif %}
                 {% endfor %}
             </tbody>

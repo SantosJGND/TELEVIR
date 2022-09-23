@@ -16,7 +16,6 @@ import pandas as pd
 from metagen_view.settings import STATICFILES_DIRS
 from product.constants_settings import ConstantsSettings
 
-from pathogen_detection.object_classes import Sample_runClass
 from pathogen_detection.run_main import RunMain_class
 from pathogen_detection.televir_deploy_parameters import (
     Deployment_Params,
