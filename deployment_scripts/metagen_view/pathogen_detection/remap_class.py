@@ -935,12 +935,6 @@ class Remapping:
             os.path.basename(self.coverage_plot),
         )
 
-        # self.coverage_plot_exists = os.path.exists(
-        #    os.path.join(
-        #        ConstantsSettings.static_directory, main_static, self.coverage_plot
-        #    )
-        # )
-
         if self.coverage_plot_exists:
 
             os.rename(
@@ -958,16 +952,6 @@ class Remapping:
             static_dir,
             os.path.basename(self.dotplot),
         )
-        # self.dotplot_exists = os.path.exists(
-        #    os.path.join(ConstantsSettings.static_directory, main_static, self.dotplot)
-        # )
-
-        print("################")
-        print("dotplot exists", self.dotplot_exists)
-        print("dotplot", self.dotplot)
-        print("new_coverage_plot", new_coverage_plot)
-        print("main static", main_static)
-        print("static dir", static_dir)
 
         if self.dotplot_exists:
 

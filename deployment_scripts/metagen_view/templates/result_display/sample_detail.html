@@ -296,7 +296,7 @@
             </thead>
             <tbody>
                 {% for value in final_report %}
-                {% if value.coverage > 0 or value.refa_dotplot_exists %}
+                {% if value.coverage|round > 0 or value.refa_dotplot_exists %}
                 <tr class="parent">
                     <td data-title="Description"><a href="#" id="plotShow">{{value.description}}</a></td>
                     <td data-title="Taxid">{{value.taxid}}</td>
@@ -304,7 +304,7 @@
                         <a href={{value.accid|link_ncbi}}>{{value.accid}}</a>
                     </td>
                     <td data-title="Cov" style="{{ value.coverage|color_code }}">
-                        {{value.coverage|round}}</td>
+                        {{value.coverage}}</td>
                     <td data-title="Depth" style="{% depth_color value.depth run_detail.max_depth %}">
                         {{value.depth|round}}</td>
                     <td data-title="DepthC" style="{% depth_color value.depthR run_detail.max_depthR %}">
