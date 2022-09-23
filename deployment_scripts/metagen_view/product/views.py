@@ -301,6 +301,30 @@ def ProjectView(request, project_name):
 import pandas as pd
 
 
+def remove_unwanted_runs(final_report_qs):
+    """
+    Remove unwanted runs from the final report
+    """
+
+    final_report_df = pd.DataFrame.from_records(final_report_qs.values())
+
+    if len(final_report_df) == 0:
+        return final_report_qs
+
+    if "description" not in final_report_df.columns:
+        return final_report_qs
+
+    exclude_runids = final_report_df[
+        final_report_df["description"].str.contains(
+            "|".join(PathogenConstantsSettings.exclude_descriptions)
+        )
+    ]["unique_id"].values
+
+    final_report_qs = final_report_qs.exclude(unique_id__in=exclude_runids)
+
+    return final_report_qs
+
+
 def Project_reports(requesdst, project):
     """
     sample main page
@@ -312,7 +336,7 @@ def Project_reports(requesdst, project):
         run__project=project,
     )
 
-    # all_reports = pd.DataFrame.from_records(all_reports.values())
+    all_reports = remove_unwanted_runs(all_reports)
 
     return render(
         requesdst,
@@ -424,17 +448,8 @@ def Sample_detail(requesdst, project="", sample="", name=""):
     )
     #
     final_report = FinalReport.objects.filter(sample=sample_main, run=run_main)
-    #
-    final_report_df = pd.DataFrame.from_records(final_report.values())
 
-    # print(final_report_df.columns)
-    exclude_runids = final_report_df[
-        final_report_df["description"].str.contains(
-            "|".join(PathogenConstantsSettings.exclude_descriptions)
-        )
-    ]["unique_id"].values
-
-    final_report = final_report.exclude(unique_id__in=exclude_runids)
+    final_report = remove_unwanted_runs(final_report)
 
     print(exclude_runids)
     #
