@@ -451,7 +451,6 @@ def Sample_detail(requesdst, project="", sample="", name=""):
 
     final_report = remove_unwanted_runs(final_report)
 
-    print(exclude_runids)
     #
     contig_classification = ContigClassification.objects.get(
         sample=sample_main, run=run_main
