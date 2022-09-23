@@ -296,7 +296,7 @@
             </thead>
             <tbody>
                 {% for value in final_report %}
-                {% if value.coverage|round > 0 or value.refa_dotplot_exists %}
+                {% if value.mapping_success == "none" %}
                 <tr class="parent">
                     <td data-title="Description"><a href="#" id="plotShow">{{value.description}}</a></td>
                     <td data-title="Taxid">{{value.taxid}}</td>
