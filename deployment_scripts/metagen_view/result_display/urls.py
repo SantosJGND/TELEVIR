@@ -30,11 +30,6 @@ urlpatterns = [
         name="sample_main",
     ),
     path(
-        "sample_<name>/<report_source>_fastqc_report",
-        views.display_fastqc_report,
-        name="display_fastqc_report",
-    ),
-    path(
         "<slug:project>/sample_<slug:sample>/<slug:name>",
         views.Sample_detail,
         name="sample_detail",

@@ -453,6 +453,7 @@ class Preprocess:
         if os.path.isfile(self.preprocess_name_fastq_gz):
             os.remove(self.preprocess_name_fastq_gz)
         self.cmd.run_bash(gzip_cmd)
+        os.remove(temp_file_path)
 
     def clean_read_names(self):
         """

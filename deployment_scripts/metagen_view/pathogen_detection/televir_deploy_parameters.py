@@ -63,7 +63,7 @@ class Deployment_Params:
 
     ACTIONS = {
         "CLEAN": False,
-        "QCONTROL": False,
+        "QCONTROL": True,
         "ENRICH": True,
         "DEPLETE": False,
         "ASSEMBLE": True,

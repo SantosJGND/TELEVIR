@@ -635,7 +635,6 @@ class RunMain_class(Run_Deployment_Methods):
             self.deploy_QC()
 
             #
-
             self.sample.r1.is_clean()
             self.sample.r2.is_clean()
             self.sample.fake_quality_strings()
@@ -648,7 +647,6 @@ class RunMain_class(Run_Deployment_Methods):
 
             self.sample.reads_after_processing = self.sample.current_total_read_number()
             self.sample.get_qc_data()
-            print(self.sample.reads_after_processing)
 
         else:
             self.deploy_QC(fake_run=True)
