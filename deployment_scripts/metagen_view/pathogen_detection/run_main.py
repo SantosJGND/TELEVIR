@@ -637,7 +637,7 @@ class RunMain_class(Run_Deployment_Methods):
             #
             self.sample.r1.is_clean()
             self.sample.r2.is_clean()
-            self.sample.fake_quality_strings()
+            # self.sample.fake_quality_strings()
 
             self.sample.qc_soft = self.preprocess_drone.preprocess_method.name
             self.sample.input_fastqc_report = self.preprocess_drone.input_qc_report
@@ -664,7 +664,7 @@ class RunMain_class(Run_Deployment_Methods):
 
             self.sample.r1.is_clean()
             self.sample.r2.is_clean()
-            self.sample.fake_quality_strings()
+            # self.sample.fake_quality_strings()
             self.sample.reads_after_processing = self.sample.current_total_read_number()
             self.sample.get_fake_qc_data()
             print(self.r1.current)
