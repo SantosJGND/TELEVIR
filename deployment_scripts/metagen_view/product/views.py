@@ -355,7 +355,7 @@ def Sample_reports(requesdst, project, sample_name):
     sample = Sample.objects.get(name=sample_name, project=project)
 
     all_reports = FinalReport.objects.filter(run__project=project, sample=sample)
-
+    all_reports = remove_unwanted_runs(all_reports)
     # all_reports = pd.DataFrame.from_records(all_reports.values())
     # print(all_reports.head())
 

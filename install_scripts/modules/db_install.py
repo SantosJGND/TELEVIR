@@ -695,6 +695,7 @@ class setup_install(setup_dl):
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": f"{sdir}/complete.fna.gz",
+                "db": f"{odir}{dbname}/index",
             }
             return
         else:
@@ -794,6 +795,7 @@ class setup_install(setup_dl):
             "dir": odir,
             "dbname": dbname,
             "fasta": f"{sdir}/complete.fna.gz",
+            "db": f"{odir}{dbname}/index",
         }
 
     def clark_install(
@@ -821,6 +823,7 @@ class setup_install(setup_dl):
             self.dbs[id] = {
                 "dir": odir,
                 "dbname": dbname,
+                "db": f"{odir}{dbname}",
             }
             return
         else:
@@ -860,6 +863,7 @@ class setup_install(setup_dl):
             "dir": odir,
             "dbname": dbname,
             "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
+            "db": f"{odir}{dbname}",
         }
 
     def kraken2_install(
@@ -885,6 +889,7 @@ class setup_install(setup_dl):
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
+                "db": odir + dbname,
             }
             return
         else:
@@ -961,6 +966,7 @@ class setup_install(setup_dl):
             "dir": odir,
             "dbname": dbname,
             "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
+            "db": odir + dbname,
         }
 
     def diamond_install(
@@ -972,6 +978,12 @@ class setup_install(setup_dl):
 
         if os.path.isfile(odir + dbname + ".dmnd"):
             logging.info(f"diamond db {dbname}.dmnd present. Diamond prepped.")
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "db": odir + dbname,
+            }
+
             return
         else:
             if self.test:
@@ -985,7 +997,11 @@ class setup_install(setup_dl):
 
         subprocess.call(" ".join(command), shell=True)
 
-        self.dbs[id] = {"dir": odir, "dbname": dbname}
+        self.dbs[id] = {
+            "dir": odir,
+            "dbname": dbname,
+            "db": odir + dbname,
+        }
 
     def kuniq_install(
         self,
@@ -1002,6 +1018,12 @@ class setup_install(setup_dl):
 
         if os.path.isfile(odir + dbname + "/taxDB"):
             logging.info(f"Krakenuniq {dbname} taxDB present. prepped.")
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "db": odir + dbname,
+            }
+
             if not os.path.isfile(f"{self.metadir}/protein_acc2protid.tsv"):
                 seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
                 seqmap.columns = ["acc", "protid"]
@@ -1091,7 +1113,7 @@ class setup_install(setup_dl):
                 index=False,
             )
 
-        self.dbs[id] = {"dir": odir, "dbname": dbname}
+        self.dbs[id] = {"dir": odir, "dbname": dbname, "db": odir + dbname}
 
     def kaiju_viral_install(self, id="kaiju", dbdir="kaiju", dbname="viral"):
 
@@ -1102,6 +1124,7 @@ class setup_install(setup_dl):
         file = os.path.basename(db_online)
         if os.path.isfile(subdb + "kaiju_db_viruses.fmi"):
             logging.info(f"Kaiju {dbname}  is installed.")
+            self.dbs[id] = {"dir": odir, "dbname": dbname, "db": odir + dbname}
             return
         else:
             logging.info(f"Kaiju {dbname} db is not installed. Installing...")
@@ -1117,7 +1140,7 @@ class setup_install(setup_dl):
         subprocess.run(["rm", file])
         os.chdir(CWD)
 
-        self.dbs[id] = {"dir": subdb, "dbname": dbname}
+        self.dbs[id] = {"dir": subdb, "dbname": dbname, "db": odir + dbname}
 
     def blast_install(
         self,
@@ -1145,6 +1168,7 @@ class setup_install(setup_dl):
         db = sdir + dbname
         if os.path.isfile(db + f".{dbtype[0]}db"):
             logging.info(f"blast index for {dbname} is installed.")
+            self.dbs[id] = {"dir": odir, "dbname": dbname, "db": db}
             return
         else:
             logging.info(f"blast index for {reference} is not installed. Installing...")
@@ -1180,7 +1204,7 @@ class setup_install(setup_dl):
                 subprocess.run(["bgzip", reference])
                 reference = reference + ".gz"
 
-        self.dbs[id] = {"dir": sdir, "dbname": dbname}
+        self.dbs[id] = {"dir": sdir, "dbname": dbname, "db": db}
 
     def virsorter_install(
         self, id="virsorter", dbdir="virsorter", dbname="viral", threads="4"
@@ -1262,6 +1286,7 @@ class setup_install(setup_dl):
 
         if os.path.isfile(fidx):
             logging.info(f"FastViromeExplorer index for {reference} is installed.")
+            self.dbs[id] = {"dir": odir, "dbname": dbname, "db": fidx}
             return
         else:
             if self.test:
@@ -1314,7 +1339,7 @@ class setup_install(setup_dl):
                 subprocess.run(["bgzip", reference])
                 reference = reference + ".gz"
 
-        self.dbs[id] = {"dir": subdir, "dbname": dbname}
+        self.dbs[id] = {"dir": subdir, "dbname": dbname, "db": fidx}
 
     def deSAMBA_install(
         self, id="deSAMBA", dbdir="deSAMBA", dbname="viral", reference=""
@@ -1332,7 +1357,9 @@ class setup_install(setup_dl):
         bin = self.envs["ROOT"] + self.envs[id]
 
         if os.path.isfile(sdir + "/deSAMBA.bwt"):
+
             logging.info(f"deSAMBA db {dbname} is installed.")
+            self.dbs[id] = {"dir": sdir, "dbname": dbname, "db": sdir}
             return
         else:
             if self.test:
@@ -1360,4 +1387,4 @@ class setup_install(setup_dl):
                 subprocess.run(["bgzip", reference])
                 reference = reference + ".gz"
 
-        self.dbs[id] = {"dir": odir, "dbname": dbname}
+        self.dbs[id] = {"dir": odir, "dbname": dbname, "db": sdir}

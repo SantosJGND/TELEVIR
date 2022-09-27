@@ -308,7 +308,7 @@ class main_setup:
             self.installed_dbs.append("refseq_prot")
 
             self.utilities.add_database(
-                (
+                self.utilities.database_item(
                     "refseq_prot",
                     self.wdir.fastas["prot"]["refseq"],
                     True,
@@ -431,7 +431,7 @@ class main_setup:
                 self.utilities.add_software(
                     self.utilities.software_item(
                         "centrifuge",
-                        sofprep.dbdir + "centrifuge",
+                        sofprep.dbs["centrifuge"]["db"],
                         "default",
                         True,
                         sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
@@ -445,7 +445,7 @@ class main_setup:
             self.utilities.add_software(
                 self.utilities.software_item(
                     "clark",
-                    sofprep.dbdir + "clark",
+                    sofprep.dbs["clark"]["db"],
                     "default",
                     True,
                     sofprep.envs["ROOT"] + sofprep.envs["clark"],
@@ -473,7 +473,7 @@ class main_setup:
                 self.utilities.add_software(
                     self.utilities.software_item(
                         "kraken2",
-                        sofprep.dbdir + "kraken2",
+                        sofprep.dbs["kraken2"]["db"],
                         "default",
                         True,
                         sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
@@ -487,7 +487,7 @@ class main_setup:
             self.utilities.add_software(
                 self.utilities.software_item(
                     "krakenuniq",
-                    sofprep.dbdir + "krakenuniq",
+                    sofprep.dbs["krakenuniq"]["db"],
                     "default",
                     True,
                     sofprep.envs["ROOT"] + sofprep.envs["krakenuniq"],
@@ -504,7 +504,7 @@ class main_setup:
                 self.utilities.add_software(
                     self.utilities.software_item(
                         "kaiju",
-                        sofprep.dbdir + "kaiju",
+                        sofprep.dbs["kaiju"]["db"],
                         "default",
                         True,
                         sofprep.envs["ROOT"] + sofprep.envs["kaiju"],
@@ -535,7 +535,7 @@ class main_setup:
                 self.utilities.add_software(
                     self.utilities.software_item(
                         "diamond",
-                        sofprep.dbdir + "diamond",
+                        sofprep.dbs["diamond"]["db"],
                         fname,
                         True,
                         sofprep.envs["ROOT"] + sofprep.envs["diamond"],
@@ -559,7 +559,7 @@ class main_setup:
                     self.utilities.add_software(
                         self.utilities.software_item(
                             "blast",
-                            sofprep.dbdir + "blast",
+                            sofprep.dbs["blast"]["db"],
                             f"refseq_{self.organism}_prot",
                             True,
                             sofprep.envs["ROOT"] + sofprep.envs["blast"],
@@ -581,7 +581,7 @@ class main_setup:
                 self.utilities.add_software(
                     self.utilities.software_item(
                         "fastviromeexplorer",
-                        sofprep.dbdir + "fastviromeexplorer",
+                        sofprep.dbs["fastviromeexplorer"]["db"],
                         fname,
                         True,
                         sofprep.envs["ROOT"] + sofprep.envs["fastviromeexplorer"],
@@ -604,7 +604,7 @@ class main_setup:
                     self.utilities.add_software(
                         self.utilities.software_item(
                             "blast",
-                            sofprep.dbdir + "blast",
+                            sofprep.dbs["blast"]["db"],
                             f"refseq_{self.organism}_genome",
                             True,
                             sofprep.envs["ROOT"] + sofprep.envs["blast"],
@@ -623,7 +623,7 @@ class main_setup:
                     self.utilities.add_software(
                         self.utilities.software_item(
                             "desamba",
-                            sofprep.dbdir + "desamba",
+                            sofprep.dbs["desamba"]["db"],
                             fname,
                             True,
                             sofprep.envs["ROOT"] + sofprep.envs["desamba"],
