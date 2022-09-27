@@ -413,7 +413,7 @@ def sample_QCall(requestdst, project):
     project = Projects.objects.get(name=project, created_by=user)
 
     try:
-        sampleqc = SampleQC.objects.all(sample__project=project)
+        sampleqc = SampleQC.objects.filter(sample__project=project)
 
     except SampleQC.DoesNotExist:
         sampleqc = None
