@@ -719,7 +719,8 @@ class Remapping:
         cmd = f"minimap2 -t {self.threads} -cx asm10 {self.assembly_path} {self.reference_file} > {self.assembly_map_paf}"
         self.cmd.run(cmd)
 
-        os.remove(tempfile)
+        if os.path.exists(tempfile):
+            os.remove(tempfile)
 
     def remap_deploy(self):
         """

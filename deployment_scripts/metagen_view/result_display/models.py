@@ -292,6 +292,8 @@ class RunMain(models.Model):
 
 class RunDetail(models.Model):
 
+    run = models.ForeignKey(RunMain, blank=True, null=True, on_delete=models.CASCADE)
+
     name = models.CharField(
         max_length=100, db_index=True, blank=True, null=True
     )  # Create your models here.
