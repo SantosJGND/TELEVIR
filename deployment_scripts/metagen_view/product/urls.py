@@ -45,6 +45,11 @@ urlpatterns = [
         views.sample_QCall,
         name="all_project_qc",
     ),
+    path(
+        "project_<project>/sample_<name>/<report_source>_fastqc_report",
+        views.display_fastqc_report,
+        name="display_fastqc_report",
+    ),
     ##
     path(
         "<slug:project>/<slug:sample>/<slug:name>",

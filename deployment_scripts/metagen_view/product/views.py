@@ -17,6 +17,7 @@ from pathogen_detection.constants_settings import (
 )
 from result_display.constants_settings import ConstantsSettings
 from result_display.models import (
+    QC_REPORT,
     ContigClassification,
     FinalReport,
     Projects,
@@ -400,6 +401,25 @@ def Sample_Main(requesdst, project_name, sample_name):
             "project_main": True,
             "project_name": project_name,
         },
+    )
+
+
+def display_fastqc_report(requesdst, name: str, report_source: str, project: str):
+    """display input fastqc report"""
+
+    template_name = "fastqc_html/fastqc_report.html"
+
+    user = requesdst.user
+    project = Projects.objects.get(name=project, created_by=user)
+
+    sample = Sample.objects.get(name=name, project=project)
+
+    report = QC_REPORT.objects.get(sample=sample, report_source=report_source)
+
+    return render(
+        requesdst,
+        template_name,
+        {"fastqc_input": report, "sample_main": True},
     )
 
 

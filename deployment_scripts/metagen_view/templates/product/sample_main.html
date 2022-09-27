@@ -50,14 +50,14 @@
             <div class="row">
                 <div class="col-md-12">
                     <p> Input Fastqc <a
-                            href="{% url 'display_fastqc_report' name=name report_source="input" %}">report</a>
+                            href="{% url 'display_fastqc_report' name=name report_source="input" project=project_name %}">report</a>
                     </p>
 
                 </div>
 
                 <div class="col-md-12">
                     <p> Processed Fastqc <a
-                            href="{% url 'display_fastqc_report' name=name report_source="processed" %}">report</a>
+                            href="{% url 'display_fastqc_report' name=name report_source="processed" project=project_name %}">report</a>
                     </p>
 
                 </div>
