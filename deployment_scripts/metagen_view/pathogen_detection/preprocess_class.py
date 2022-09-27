@@ -181,6 +181,25 @@ class Preprocess:
 
         self.fastqc_processed()
 
+    def fake_run(self):
+        self.logger.info("Fake run. Not running anything.")
+        self.generate_fake_input_html()
+        self.generate_fake_processed_html()
+
+    def generate_fake_input_html(self):
+        """
+        Generate fake input html
+        """
+        with open(self.input_qc_report, "w") as f:
+            f.write("Fake input html")
+
+    def generate_fake_processed_html(self):
+        """
+        Generate fake processed html
+        """
+        with open(self.processed_qc_report, "w") as f:
+            f.write("Fake processed html")
+
     def r2_output_check(self):
         """
         Check if filtered output exists

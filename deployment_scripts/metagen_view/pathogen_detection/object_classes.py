@@ -628,6 +628,28 @@ class Sample_runClass:
 
         self.qcdata = self.QC_summary()
 
+    def get_fake_qc_data(self):
+        """get fake qc data for sample_class. Update sample_class.qc_data.
+
+        :param sample_class:
+        :return: None
+        """
+
+        fake_df = pd.DataFrame(
+            [
+                ["Total_sequences", 1000000],
+                ["Sequence length", 5000],
+                ["%GC", 50],
+                ["Q20", 90],
+            ],
+            columns=["measure", "value"],
+        ).set_index("measure")
+
+        self.qcdata = {
+            "input": fake_df,
+            "processed": fake_df,
+        }
+
     def fake_quality_strings(self):
         """
         Fake quality strings for fastqc.

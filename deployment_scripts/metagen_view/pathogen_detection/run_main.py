@@ -486,7 +486,7 @@ class Run_Deployment_Methods(RunDetail_main):
         super().__init__(config, method_args, username)
         self.mapped_instances = []
 
-    def deploy_QC(self):
+    def deploy_QC(self, fake_run: bool = False):
         self.preprocess_drone = Preprocess(
             self.sample.r1.current,
             self.sample.r2.current,
@@ -504,7 +504,10 @@ class Run_Deployment_Methods(RunDetail_main):
         self.logger.info(f"r1 reads: {self.sample.r1.get_current_fastq_read_number()}")
         self.logger.info(f"r2 reads: {self.sample.r2.get_current_fastq_read_number()}")
 
-        self.preprocess_drone.run()
+        if fake_run:
+            self.preprocess_drone.fake_run()
+        else:
+            self.preprocess_drone.run()
 
     def deploy_HD(self):
         self.depletion_drone = Classifier(
@@ -645,6 +648,28 @@ class RunMain_class(Run_Deployment_Methods):
 
             self.sample.reads_after_processing = self.sample.current_total_read_number()
             self.sample.get_qc_data()
+            print(self.sample.reads_after_processing)
+
+        else:
+            self.deploy_QC(fake_run=True)
+            import shutil
+
+            shutil.copy(self.sample.r1.current, self.sample.r1.clean)
+            if self.sample.r2.exists:
+                shutil.copy(self.sample.r2.current, self.sample.r2.clean)
+
+            self.sample.qc_soft = "none"
+            self.sample.input_fastqc_report = self.preprocess_drone.input_qc_report
+            self.sample.processed_fastqc_report = (
+                self.preprocess_drone.processed_qc_report
+            )
+
+            self.sample.r1.is_clean()
+            self.sample.r2.is_clean()
+            self.sample.fake_quality_strings()
+            self.sample.reads_after_processing = self.sample.current_total_read_number()
+            self.sample.get_fake_qc_data()
+            print(self.r1.current)
             print(self.sample.reads_after_processing)
 
         if self.enrichment:
