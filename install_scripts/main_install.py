@@ -558,7 +558,7 @@ class main_setup:
 
                     self.utilities.add_software(
                         self.utilities.software_item(
-                            "blast",
+                            "blastp",
                             sofprep.dbs["blast"]["db"],
                             f"refseq_{self.organism}_prot",
                             True,
@@ -603,7 +603,7 @@ class main_setup:
 
                     self.utilities.add_software(
                         self.utilities.software_item(
-                            "blast",
+                            "blastn",
                             sofprep.dbs["blast"]["db"],
                             f"refseq_{self.organism}_genome",
                             True,
