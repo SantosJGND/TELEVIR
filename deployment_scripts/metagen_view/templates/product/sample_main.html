@@ -15,6 +15,12 @@
 <body>
 
     <div class="container" id="left">
+
+
+        {% if waiting %} <div class="alert alert-info"> <strong> Please wait </strong> </div>
+        {% elif error %} <div class="alert alert-danger"> <strong> Error </strong> </div>
+        {% else %}
+
         <div>
             <div>
                 <div class="button" style="display: inline-block" display="center">
@@ -23,10 +29,6 @@
                 </div>
             </div>
         </div>
-
-        {% if waiting %} <div class="alert alert-info"> <strong> Please wait </strong> </div>
-        {% elif error %} <div class="alert alert-danger"> <strong> Error </strong> </div>
-        {% else %}
         <div class="container">
             <div class="row">
                 <div class="col-md-12">

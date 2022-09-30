@@ -68,7 +68,7 @@ class Dummy_deployment:
 
         self.prefix = prefix
         self.pk = pk
-        self.static_dir = self.static_dir
+        self.static_dir = static_dir
 
     def sample_main(
         self,
