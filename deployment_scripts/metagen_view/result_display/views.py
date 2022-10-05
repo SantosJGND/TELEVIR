@@ -177,6 +177,9 @@ def clean_filepath(filepath):
     if not os.path.exists(filepath):
         filepath = BASE_DIR + filepath
 
+    if "/static/mnt/sdc/field_studies/static" in filepath:
+        filepath = filepath.replace("/static/mnt/sdc/field_studies/static", "/static")
+
     return filepath
 
 
