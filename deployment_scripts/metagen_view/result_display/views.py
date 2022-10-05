@@ -165,6 +165,31 @@ def display_fastqc_report(requesdst, name: str, report_source: str):
     )
 
 
+def clean_filepath(filepath):
+    """clean filepath"""
+    filepath = filepath.replace("\\", "/")
+    filepath = filepath.replace("//", "/")
+    filepath = filepath.replace(" /mnt/sdc/field_studies/mnt/", "/mnt/")
+
+    filepath = filepath.replace("static/mnt", "mnt")
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    if not os.path.exists(filepath):
+        filepath = BASE_DIR + filepath
+
+    return filepath
+
+
+def clean_queryset_filepaths(queryset):
+    """clean queryset filepaths"""
+
+    for value in queryset:
+        value.covplot = clean_filepath(value.covplot)
+        value.refa_dotplot = clean_filepath(value.refa_dotplot)
+
+    return queryset
+
+
 def Sample_detail(requesdst, project="", sample="", name=""):
     """
     home page
@@ -187,6 +212,7 @@ def Sample_detail(requesdst, project="", sample="", name=""):
     )
     #
     final_report = FinalReport.objects.filter(sample=sample_main, run=run_main)
+    final_report = clean_queryset_filepaths(final_report)
     #
 
     contig_classification = ContigClassification.objects.get(
@@ -346,21 +372,6 @@ def download_file_igv(requestdst):
             return response
 
 
-def clean_filepath(filepath):
-    """clean filepath"""
-    filepath = filepath.replace("\\", "/")
-    filepath = filepath.replace("//", "/")
-    filepath = filepath.replace(" /mnt/sdc/field_studies/mnt/", "/mnt/")
-
-    filepath = filepath.replace("static/mnt", "mnt")
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-    if not os.path.exists(filepath):
-        filepath = BASE_DIR + filepath
-
-    return filepath
-
-
 def download_file(requestdst):
     """download fasta file"""
     if requestdst.method == "POST":
@@ -369,6 +380,7 @@ def download_file(requestdst):
         if form.is_valid():
             filepath = form.cleaned_data.get("file_path")
             filepath = clean_filepath(filepath)
+
             if not os.path.isfile(filepath):
                 return HttpResponseNotFound(
                     f"file {os.path.basename(filepath)} not found"
