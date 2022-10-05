@@ -445,6 +445,45 @@ def sample_QCall(requestdst, project):
     )
 
 
+def clean_filepath(filepath: str):
+    """clean filepath"""
+    filepath = filepath.replace("\\", "/")
+    filepath = filepath.replace("//", "/")
+    filepath = filepath.replace(" /mnt/sdc/field_studies/mnt/", "/mnt/")
+
+    filepath = filepath.replace("static/mnt", "mnt")
+    filepath = filepath.replace("static/home", "home")
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    if not os.path.exists(filepath):
+        filepath = BASE_DIR + filepath
+
+    if "/static/mnt/sdc/field_studies/static" in filepath:
+        filepath = filepath.replace("/static/mnt/sdc/field_studies/static", "/static")
+
+    if filepath.startswith("/mnt/sdc/field_studies/static"):
+        filepath = filepath.replace("/mnt/sdc/field_studies/static", "")
+    if filepath.startswith("/home/bioinf/Desktop/CODE/ARGUS_PRODUCT"):
+        filepath = filepath.replace("/home/bioinf/Desktop/CODE/ARGUS_PRODUCT", "")
+
+    print("hi")
+    print(filepath)
+    return filepath
+
+
+def clean_queryset_filepaths(queryset):
+    """clean queryset filepaths"""
+    print("hi")
+
+    for value in queryset:
+        value.covplot = clean_filepath(value.covplot)
+        value.refa_dotplot = clean_filepath(value.refa_dotplot)
+
+        print(value.covplot)
+
+    return queryset
+
+
 def Sample_detail(requesdst, project="", sample="", name=""):
     """
     home page
@@ -470,6 +509,7 @@ def Sample_detail(requesdst, project="", sample="", name=""):
     final_report = FinalReport.objects.filter(sample=sample_main, run=run_main)
 
     final_report = remove_unwanted_runs(final_report)
+    final_report = clean_queryset_filepaths(final_report)
 
     #
     contig_classification = ContigClassification.objects.get(

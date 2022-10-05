@@ -165,13 +165,14 @@ def display_fastqc_report(requesdst, name: str, report_source: str):
     )
 
 
-def clean_filepath(filepath):
+def clean_filepath(filepath: str):
     """clean filepath"""
     filepath = filepath.replace("\\", "/")
     filepath = filepath.replace("//", "/")
     filepath = filepath.replace(" /mnt/sdc/field_studies/mnt/", "/mnt/")
 
     filepath = filepath.replace("static/mnt", "mnt")
+    filepath = filepath.replace("static/home", "home")
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     if not os.path.exists(filepath):
@@ -180,15 +181,21 @@ def clean_filepath(filepath):
     if "/static/mnt/sdc/field_studies/static" in filepath:
         filepath = filepath.replace("/static/mnt/sdc/field_studies/static", "/static")
 
+    if filepath.startswith("/mnt/sdc/field_studies/static"):
+        filepath = filepath.replace("/mnt/sdc/field_studies/static", "")
+    print(filepath)
     return filepath
 
 
 def clean_queryset_filepaths(queryset):
     """clean queryset filepaths"""
+    print("hi")
 
     for value in queryset:
         value.covplot = clean_filepath(value.covplot)
         value.refa_dotplot = clean_filepath(value.refa_dotplot)
+
+        print(value.covplot)
 
     return queryset
 
