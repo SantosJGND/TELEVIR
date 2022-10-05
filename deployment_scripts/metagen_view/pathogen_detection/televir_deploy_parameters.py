@@ -556,7 +556,7 @@ class Params_Nanopore:
 
     ARGS_REMAP = {
         "snippy": {
-            "SNIPPY_ARGS": ["--mapqual 60 --mincov 10"],
+            "SNIPPY_ARGS": ["--mapqual 40 --mincov 10"],
             "SNIPPY_RESOURCES": ["--cpus 3 --ram 8"],
             "REMAP_REF": ["refseq_viral.genome.fna.gz"],
         },
@@ -577,7 +577,7 @@ class Params_Nanopore:
         },
         "minimap-rem": {
             "MINIMAP_THREADS": ["-t 4"],
-            "MINIMAP_ARGS": ["-t 4"],
+            "MINIMAP_ARGS": ["-t 4 --secondary=no"],
             "MINIMAP_DB": ["refseq_viral.genome.fna.gz"],
             "MINIMAP_AX": ["map-ont"],
             "REMAP_REF": [

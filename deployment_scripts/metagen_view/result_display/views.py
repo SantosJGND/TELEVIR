@@ -72,11 +72,9 @@ class Project_page(ListView):
         user = self.request.user
 
         if user.is_superuser:
-            projects = Projects.objects.filter(project_type=Projects.INHOUSE)
+            projects = Projects.objects.all()
         else:
-            projects = Projects.objects.filter(
-                project_type=Projects.INHOUSE, created_by=user
-            )
+            projects = Projects.objects.filter(created_by=user)
 
         context["projects"] = projects
 
