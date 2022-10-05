@@ -346,6 +346,21 @@ def download_file_igv(requestdst):
             return response
 
 
+def clean_filepath(filepath):
+    """clean filepath"""
+    filepath = filepath.replace("\\", "/")
+    filepath = filepath.replace("//", "/")
+    filepath = filepath.replace(" /mnt/sdc/field_studies/mnt/", "/mnt/")
+
+    filepath = filepath.replace("static/mnt", "mnt")
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    if not os.path.exists(filepath):
+        filepath = BASE_DIR + filepath
+
+    return filepath
+
+
 def download_file(requestdst):
     """download fasta file"""
     if requestdst.method == "POST":
@@ -353,20 +368,11 @@ def download_file(requestdst):
 
         if form.is_valid():
             filepath = form.cleaned_data.get("file_path")
-
-            BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-            print(BASE_DIR)
-            print(filepath)
-
-            if not os.path.exists(filepath):
-                filepath = BASE_DIR + filepath
-
-            if "//" in filepath:
-                filepath = "/" + filepath.split("//")[1]
-
+            filepath = clean_filepath(filepath)
             if not os.path.isfile(filepath):
-                return HttpResponseNotFound(f"file {filepath} not found")
+                return HttpResponseNotFound(
+                    f"file {os.path.basename(filepath)} not found"
+                )
 
             path = open(filepath, "rb")
             # Set the mime type
