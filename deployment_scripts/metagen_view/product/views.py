@@ -464,7 +464,7 @@ def clean_filepath(filepath: str):
     if filepath.startswith("/mnt/sdc/field_studies/static"):
         filepath = filepath.replace("/mnt/sdc/field_studies/static", "")
 
-    if filepath.startswith("/mnt/sdc/field_studies/"):
+    if filepath.startswith("/mnt/sdc/field_studies"):
         filepath = filepath.replace("/mnt/sdc/field_studies", "")
 
     if filepath.startswith("/home/bioinf/Desktop/CODE/ARGUS_PRODUCT"):
