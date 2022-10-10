@@ -389,7 +389,7 @@ def download_file(requestdst):
 
         if form.is_valid():
             filepath = form.cleaned_data.get("file_path")
-            filepath = clean_filepath(filepath)
+            # filepath = clean_filepath(filepath)
 
             if not os.path.isfile(filepath):
                 return HttpResponseNotFound(
