@@ -466,7 +466,8 @@
 <script>
     var my_form = document.forms["download_params"];
     var static_dir = "{% static 'classification_reports/' %}";
-    my_form.elements["file_path"].value = static_dir + "{{run_main.params_file_path}}";
+    my_form.elements["file_path"].value = "{{run_main.params_file_path}}";
+    my_form.elements["static_dir"]= static_dir;
     document.getElementById("my_form").submit();
 </script>
 
@@ -474,49 +475,57 @@
     var my_form = document.forms["download_processed_reads_r1"];
     var static_dir = "{% static 'depleted_reads/' %}";
     my_form.elements["file_path"].value = "{{run_main.processed_reads_r1}}";
+    my_form.elements["static_dir"]= static_dir;
     document.getElementById("my_form").submit();
 </script>
 <script>
     var my_form = document.forms["download_processed_reads_r2"];
     var static_dir = "{% static 'depleted_reads/' %}";
     my_form.elements["file_path"].value = "{{run_main.processed_reads_r2}}";
+    my_form.elements["static_dir"]= static_dir;
     document.getElementById("my_form").submit();
 </script>
 <script>
     var my_form = document.forms["download_assembly"];
     var static_dir = "{% static 'assemblies/' %}";
-    my_form.elements["file_path"].value = static_dir + "{{assembly.assembly_contigs}}";
+    my_form.elements["file_path"].value = "{{assembly.assembly_contigs}}";
+    my_form.elements["static_dir"]= static_dir;    
     document.getElementById("my_form").submit();
 </script>
 <script>
     var my_form = document.forms["download_contig_class_report"];
     var static_dir = "{% static 'classification_reports/' %}";
-    my_form.elements["file_path"].value = static_dir + "{{contig_classification.contig_classification_report}}";
+    my_form.elements["file_path"].value = "{{contig_classification.contig_classification_report}}";
+    my_form.elements["static_dir"]= static_dir;
     document.getElementById("my_form").submit();
 </script>
 <script>
     var my_form = document.forms["download_read_class_report"];
     var static_dir = "{% static 'classification_reports/' %}";
-    my_form.elements["file_path"].value = static_dir + "{{read_classification.read_classification_report}}";
+    my_form.elements["file_path"].value = "{{read_classification.read_classification_report}}";
+    my_form.elements["static_dir"]= static_dir;
     document.getElementById("my_form").submit();
 </script>
 <script>
     var my_form = document.forms["merged_report_download"];
     var static_dir = "{% static 'classification_reports/' %}";
-    my_form.elements["file_path"].value = static_dir + "{{run_remap.merged_log}}";
+    my_form.elements["file_path"].value = "{{run_remap.merged_log}}";
+    my_form.elements["static_dir"]= static_dir;
     document.getElementById("my_form").submit();
 </script>
 <script>
     var my_form = document.forms["download_remap_plan"];
     var static_dir = "{% static 'classification_reports/' %}";
-    my_form.elements["file_path"].value = static_dir + "{{run_remap.remap_plan}}";
+    my_form.elements["file_path"].value = "{{run_remap.remap_plan}}";
+    my_form.elements["static_dir"]= static_dir;
     document.getElementById("my_form").submit();
 </script>
 
 <script>
     var my_form = document.forms["download_bam_{{value.accid}}"];
     var static_dir = "{% static 'classification_reports/' %}";
-    my_form.elements["file_path"].value = static_dir + "{{value.path_bam}}";
+    my_form.elements["file_path"].value = "{{value.path_bam}}";
+    my_form.elements["static_dir"]= static_dir;
     document.getElementById("my_form").submit();
 </script>
 <script>
