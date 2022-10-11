@@ -564,7 +564,10 @@ class setup_dl:
         for si in range(1, 11):
             file = f"https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.FULL.{si}.gz"
             filename = os.path.basename(file)
-            fexist = os.path.exists(file)
+            destination_file = os.path.join(
+                self.metadir, "prot.accession2taxid", filename
+            )
+            fexist = os.path.exists(destination_file)
             print(f"file {filename} exists: {fexist}")
             tries = 0
             while not fexist:
