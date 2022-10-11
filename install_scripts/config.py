@@ -38,7 +38,7 @@ class Televir_Layout_minimal:
     # databases. chose at least one.
     install_refseq_prot = False
     install_refseq_gen = True
-    install_swissprot = False
+    install_swissprot = True
     install_rvdb = False
     install_virosaurus = True
 
@@ -46,12 +46,12 @@ class Televir_Layout_minimal:
     install_centrifuge = True
     install_kraken2 = False
     install_krakenuniq = True
-    install_kaiju = False
+    install_kaiju = True
     install_diamond = False
     install_minimap2 = False
     install_fastviromeexplorer = True
     install_clark = False
-    install_desamba = False
+    install_desamba = True
     install_blast = True
 
     # assemblers.
