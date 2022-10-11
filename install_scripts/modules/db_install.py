@@ -564,7 +564,7 @@ class setup_dl:
         for si in range(1, 11):
             file = f"https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.FULL.{si}.gz"
             filename = os.path.basename(file)
-            fexist = False
+            fexist = os.path.exists(file)
             tries = 0
             while not fexist:
                 try:
