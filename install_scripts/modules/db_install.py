@@ -565,6 +565,7 @@ class setup_dl:
             file = f"https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.FULL.{si}.gz"
             filename = os.path.basename(file)
             fexist = os.path.exists(file)
+            print(f"file {filename} exists: {fexist}")
             tries = 0
             while not fexist:
                 try:
