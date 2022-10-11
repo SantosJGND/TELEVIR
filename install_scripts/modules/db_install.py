@@ -193,7 +193,7 @@ class setup_dl:
                     link = "https://{}/{}{}".format(host, source, fl)
 
                     while not correctly_downloaded:
-                        subprocess.run(["wget", "--quiet", link, "-P", self.seqdir])
+                        subprocess.run(["wget", link, "-P", self.seqdir])
                         try:
                             with gzip.open(os.path.join(self.seqdir, fl)) as fd:
                                 fd.read()
@@ -235,7 +235,7 @@ class setup_dl:
                 logging.info("uniref{}.fasta not found.".format(vs))
             else:
                 logging.info("uniref{}.fasta not found. downloading...".format(vs))
-                subprocess.run(["wget", "--quiet", fl, "-P", self.seqdir])
+                subprocess.run(["wget", fl, "-P", self.seqdir])
         else:
             logging.info("uniref{}.fasta found.".format(vs))
 
@@ -277,7 +277,7 @@ class setup_dl:
                 logging.info("U-RVDBv{}.fasta.xz not found.".format(vs))
             else:
                 logging.info("U-RVDBv{}.fasta.xz not found. downloading...".format(vs))
-                subprocess.run(["wget", "--quiet", "-P", "--quiet", self.seqdir, fl])
+                subprocess.run(["wget", "-P", self.seqdir, fl])
                 fl = self.seqdir + os.path.basename(fl)
                 subprocess.run(["unxz", fl])
                 fl, _ = os.path.splitext(fl)
@@ -306,7 +306,7 @@ class setup_dl:
                 logging.info(
                     "virosaurus90_vertebrate%2D20200330.fas not found. downloading..."
                 )
-                subprocess.run(["wget", "--quiet", fl, "-P", self.seqdir])
+                subprocess.run(["wget", fl, "-P", self.seqdir])
         else:
             logging.info("virosaurus90_vertebrate%2D20200330.fas found.")
 
@@ -571,7 +571,6 @@ class setup_dl:
                         subprocess.run(
                             [
                                 "wget",
-                                "--qiuet",
                                 "-P",
                                 self.metadir + "prot.accession2taxid/",
                                 f"https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.FULL.{si}.gz",
@@ -620,7 +619,6 @@ def untax_get(taxdump, odir, dbname, sdir="taxonomy/"):
             subprocess.run(
                 [
                     "wget",
-                    "--quiet",
                     "-P",
                     f"{odir + dbname}{sdir}",
                     "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz",
@@ -766,7 +764,6 @@ class setup_install(setup_dl):
 
                     cmd_dl_taxonomy = [
                         "wget",
-                        "--quiet",
                         "--no-check-certificate",
                         "-P",
                         f"{odir}{dbname}",
@@ -1131,9 +1128,7 @@ class setup_install(setup_dl):
 
         subprocess.run(["mkdir", "-p", odir])
 
-        subprocess.run(
-            ["wget", "--quiet", "-P", subdb, db_online, "--no-check-certificate"]
-        )
+        subprocess.run(["wget", "-P", subdb, db_online, "--no-check-certificate"])
         CWD = os.getcwd()
         os.chdir(subdb)
         subprocess.run(["tar", "-zxvf", file])
