@@ -559,33 +559,33 @@ class setup_dl:
         acc2tax_dir = self.metadir + "prot.accession2taxid/"
 
         if not os.path.isdir(acc2tax_dir):
-            os.mkdir(acc2tax_dir)
+            os.makedirs(acc2tax_dir, exist_ok=True)
 
-            for si in range(1, 11):
-                file = f"https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.FULL.{si}.gz"
-                filename = os.path.basename(file)
-                fexist = False
-                tries = 0
-                while not fexist:
-                    try:
-                        subprocess.run(
-                            [
-                                "wget",
-                                "-P",
-                                self.metadir + "prot.accession2taxid/",
-                                f"https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.FULL.{si}.gz",
-                            ]
+        for si in range(1, 11):
+            file = f"https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.FULL.{si}.gz"
+            filename = os.path.basename(file)
+            fexist = False
+            tries = 0
+            while not fexist:
+                try:
+                    subprocess.run(
+                        [
+                            "wget",
+                            "-P",
+                            self.metadir + "prot.accession2taxid/",
+                            f"https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.FULL.{si}.gz",
+                        ]
+                    )
+                except subprocess.CalledProcessError as e:
+                    print(f"failed download protein taxonomy {filename}")
+                    tries += 1
+                    if tries == 10:
+                        logging.info(
+                            f"tried downloading {filename} 10 times. check connection. exiting."
                         )
-                    except subprocess.CalledProcessError as e:
-                        print(f"failed download protein taxonomy {filename}")
-                        tries += 1
-                        if tries == 10:
-                            logging.info(
-                                f"tried downloading {filename} 10 times. check connection. exiting."
-                            )
-                            raise SystemExit()
-                    else:
-                        fexist = True
+                        raise SystemExit()
+                else:
+                    fexist = True
 
         return acc2tax_dir
 
