@@ -280,7 +280,7 @@ class env_install:
             if jelly_bin is not None:
                 os.system(
                     "sed -i 's#./bin/jellyfish#{}#g' {}".format(
-                        jelly_bin, os.path.join(idir, "bin", "build-index")
+                        jelly_bin, os.path.join(idir, "build-index")
                     )
                 )
             os.system("rm " + tmpsh)
