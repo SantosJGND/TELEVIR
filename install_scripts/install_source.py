@@ -26,7 +26,7 @@ INSTALL_PARAMS = {
         "fastviromeexplorer": "FastViromeExplorer/FastViromeExplorer",
         "kallisto": "FastViromeExplorer/fve",
         "virsorter": "hostDepletion/vs2",
-        "deSAMBA": "classm_lc/deSAMBA",
+        "desamba": "classm_lc/deSAMBA",
         "clark": "classification/Clark",
     },
     "BINDIR": {"deSAMBA": "classm_lc/deSAMBA"},
