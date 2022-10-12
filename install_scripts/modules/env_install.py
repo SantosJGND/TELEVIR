@@ -256,9 +256,10 @@ class env_install:
             bash_lines = [
                 "#!/bin/bash",
                 f"cd {idir}",
-                "cd .src",
+                "cd ./src",
                 "make -j 4",
                 "cd ..",
+                "mkdir bin",
                 "cp ./src/deSAMBA ./bin",
             ]
 
