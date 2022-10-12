@@ -18,7 +18,7 @@ INSTALL_PARAMS = {
         "SOURCE": "~/miniconda3/etc/profile.d/conda.sh",
         "ROOT": "/home/artic/Desktop/METAGEN/db_second_test/mngs_environments/",
         "centrifuge": "hostDepletion/hostdep_env",
-        "jellyfish": "jellyfish/jellyfish_env",
+        "jellyfish": "hostDepletion/hostdep_env",
         "diamond": "hostDepletion/hostdep_env",
         "kaiju": "hostDepletion/hostdep_env",
         "krakenuniq": "hostDepletion/hostdep_env",
@@ -68,4 +68,7 @@ ENVS_PARAMS = {
         "classification/Clark": "http://clark.cs.ucr.edu/Download/CLARKV1.2.6.1.tar.gz",
     },
     "PIP": {"classm_lc/venvlc": "venvlc.txt"},
+    "BIN": {
+        "jellyfish": "hostDepletion/hostdep_env",
+    },
 }

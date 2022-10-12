@@ -17,6 +17,7 @@ class env_install:
         self.git = ENVDICT["GIT"]
         self.tar = ENVDICT["TAR"]
         self.source = ENVDICT["SOURCE"]
+        self.bin = ENVDICT["BIN"]
 
         os.makedirs(self.envsdir, exist_ok=True)
 
@@ -205,9 +206,10 @@ class env_install:
     def jellyfish_get(self):
 
         pid = "jellyfish"
-        if pid in self.envsdir.keys():
+        if pid in self.bin.keys():
             bin = os.path.join(
-                self.envsdir[pid],
+                self.envsdir,
+                self.bin[pid],
                 "bin",
                 pid,
             )
