@@ -699,11 +699,11 @@ class setup_install(setup_dl):
                 "fasta": f"{sdir}/complete.fna.gz",
                 "db": f"{odir}{dbname}/index",
             }
-            return
+            return True
         else:
             if self.test:
                 logging.info(f"Centrifuge db {dbname} is not installed.")
-                return
+                return False
             else:
                 logging.info(f"Centrifuge db {dbname} is not installed. Installing...")
 
@@ -751,53 +751,58 @@ class setup_install(setup_dl):
         ]
 
         ###
-        subprocess.run(tax_command)
-        os.system(" ".join(seqmap_command) + f" > {odir}{dbname}.seq2taxid.map")
-
-        os.system(f"cat {sdir}/*fna > {sdir}/complete.fna")
-
         try:
-            subprocess.run(build_command)
+            subprocess.run(tax_command)
+            os.system(" ".join(seqmap_command) + f" > {odir}{dbname}.seq2taxid.map")
+
+            os.system(f"cat {sdir}/*fna > {sdir}/complete.fna")
+
+            try:
+                subprocess.run(build_command)
+            except subprocess.CalledProcessError:
+                logging.info(f"failed to build centrifuge db {dbname}")
+
+                if not os.path.exists(
+                    f"{odir}{dbname}/nodes.dmp"
+                ) or not os.path.exists(f"{odir}{dbname}/names.dmp"):
+                    if not self.taxdump:
+
+                        cmd_dl_taxonomy = [
+                            "wget",
+                            "--no-check-certificate",
+                            "-P",
+                            f"{odir}{dbname}",
+                            "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz",
+                        ]
+                        subprocess.run(cmd_dl_taxonomy)
+
+                    else:
+                        shutil.copy(self.taxdump, f"{odir}{dbname}/taxdump.tar.gz")
+
+                    subprocess.run(
+                        [
+                            f"tar",
+                            "-xvzf",
+                            f"{odir}{dbname}/taxdump.tar.gz",
+                            "-C",
+                            f"{odir}{dbname}",
+                        ]
+                    )
+
+                subprocess.run(build_command)
+
+            os.system(f"bgzip {sdir}/complete.fna")
+
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "fasta": f"{sdir}/complete.fna.gz",
+                "db": f"{odir}{dbname}/index",
+            }
+            return True
         except subprocess.CalledProcessError:
-            logging.info(f"failed to build centrifuge db {dbname}")
-
-            if not os.path.exists(f"{odir}{dbname}/nodes.dmp") or not os.path.exists(
-                f"{odir}{dbname}/names.dmp"
-            ):
-                if not self.taxdump:
-
-                    cmd_dl_taxonomy = [
-                        "wget",
-                        "--no-check-certificate",
-                        "-P",
-                        f"{odir}{dbname}",
-                        "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz",
-                    ]
-                    subprocess.run(cmd_dl_taxonomy)
-
-                else:
-                    shutil.copy(self.taxdump, f"{odir}{dbname}/taxdump.tar.gz")
-
-                subprocess.run(
-                    [
-                        f"tar",
-                        "-xvzf",
-                        f"{odir}{dbname}/taxdump.tar.gz",
-                        "-C",
-                        f"{odir}{dbname}",
-                    ]
-                )
-
-            subprocess.run(build_command)
-
-        os.system(f"bgzip {sdir}/complete.fna")
-
-        self.dbs[id] = {
-            "dir": odir,
-            "dbname": dbname,
-            "fasta": f"{sdir}/complete.fna.gz",
-            "db": f"{odir}{dbname}/index",
-        }
+            logging.info(f"failed to download centrifuge db {dbname}")
+            return False
 
     def clark_install(
         self,
@@ -826,11 +831,11 @@ class setup_install(setup_dl):
                 "dbname": dbname,
                 "db": f"{odir}{dbname}",
             }
-            return
+            return True
         else:
             if self.test:
                 logging.info(f"CLARK db {dbname} is not installed.")
-                return
+                return False
             else:
                 logging.info(f"CLARK db {dbname} is not installed. Installing...")
 
@@ -847,25 +852,31 @@ class setup_install(setup_dl):
         spaced_command = [bin + "buildSpacedDB.sh"]
 
         try:
-            subprocess.run(lib_command)
 
-        except subprocess.CalledProcessError as e:
-            logging.error(f"CLARK db {dbname} failed to download. {e}")
-            return
+            try:
+                subprocess.run(lib_command)
 
-        try:
-            subprocess.run(spaced_command)
+            except subprocess.CalledProcessError as e:
+                logging.error(f"CLARK db {dbname} failed to download. {e}")
+                return
 
-        except subprocess.CalledProcessError as e:
-            logging.error(f"CLARK db spaced DB failed to build. {e}")
-            return
+            try:
+                subprocess.run(spaced_command)
 
-        self.dbs[id] = {
-            "dir": odir,
-            "dbname": dbname,
-            "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
-            "db": f"{odir}{dbname}",
-        }
+            except subprocess.CalledProcessError as e:
+                logging.error(f"CLARK db spaced DB failed to build. {e}")
+                return
+
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
+                "db": f"{odir}{dbname}",
+            }
+            return True
+        except subprocess.CalledProcessError:
+            logging.info(f"failed to download CLARK db {dbname}")
+            return False
 
     def kraken2_install(
         self,
@@ -892,11 +903,11 @@ class setup_install(setup_dl):
                 "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
                 "db": odir + dbname,
             }
-            return
+            return True
         else:
             if self.test:
                 logging.info(f"Kraken2 db {dbname} is not installed.")
-                return
+                return False
             else:
                 logging.info(f"Kraken2 db {dbname} is not installed. Installing...")
 
@@ -935,40 +946,46 @@ class setup_install(setup_dl):
             tax_command.append("--ftp")
 
         try:
-            subprocess.run(lib_command)
 
-        except subprocess.CalledProcessError as e:
-            if not ftp:
-                logging.info(
-                    f"Kraken2 db {dbname} library download failed. Attempting to download from ftp."
-                )
-                lib_command.append("--ftp")
+            try:
                 subprocess.run(lib_command)
 
-            logging.error("kraken2 library download failed command.")
-        ##
-        try:
-            subprocess.run(tax_command)
+            except subprocess.CalledProcessError as e:
+                if not ftp:
+                    logging.info(
+                        f"Kraken2 db {dbname} library download failed. Attempting to download from ftp."
+                    )
+                    lib_command.append("--ftp")
+                    subprocess.run(lib_command)
 
-        except subprocess.CalledProcessError as e:
-            if not ftp:
-                logging.info(
-                    f"Kraken2 db {dbname} taxonomy download failed. Attempting to download from ftp."
-                )
-                tax_command.append("--ftp")
+                logging.error("kraken2 library download failed command.")
+            ##
+            try:
                 subprocess.run(tax_command)
-            logging.error("kraken2 taxonomy download failed command.")
 
-        subprocess.call(" ".join(build_command), shell=True)
-        untax_get(self.taxdump, odir, dbname)
-        os.system("bgzip " + odir + dbname + "/library/" + dbname + "/library.fna")
+            except subprocess.CalledProcessError as e:
+                if not ftp:
+                    logging.info(
+                        f"Kraken2 db {dbname} taxonomy download failed. Attempting to download from ftp."
+                    )
+                    tax_command.append("--ftp")
+                    subprocess.run(tax_command)
+                logging.error("kraken2 taxonomy download failed command.")
 
-        self.dbs[id] = {
-            "dir": odir,
-            "dbname": dbname,
-            "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
-            "db": odir + dbname,
-        }
+            subprocess.call(" ".join(build_command), shell=True)
+            untax_get(self.taxdump, odir, dbname)
+            os.system("bgzip " + odir + dbname + "/library/" + dbname + "/library.fna")
+
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
+                "db": odir + dbname,
+            }
+            return True
+        except subprocess.CalledProcessError:
+            logging.info(f"failed to download Kraken2 db {dbname}")
+            return False
 
     def diamond_install(
         self, id="diamond", dbdir="diamond", dbname="swissprot", db="swissprot.gz"
@@ -985,24 +1002,31 @@ class setup_install(setup_dl):
                 "db": odir + dbname,
             }
 
-            return
+            return True
         else:
             if self.test:
-                logging.info(f"diamond db {dbname} .")
-                return
+                logging.info(f"diamond db {dbname} not installed.")
+                return False
             else:
                 logging.info(f"diamond db {dbname} . Installing...")
 
-        subprocess.run(["mkdir", "-p", odir])
-        command = [bin + "diamond", "makedb", "--in", db, "--db", odir + dbname]
+        try:
 
-        subprocess.call(" ".join(command), shell=True)
+            subprocess.run(["mkdir", "-p", odir])
+            command = [bin + "diamond", "makedb", "--in", db, "--db", odir + dbname]
 
-        self.dbs[id] = {
-            "dir": odir,
-            "dbname": dbname,
-            "db": odir + dbname,
-        }
+            subprocess.call(" ".join(command), shell=True)
+
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "db": odir + dbname,
+            }
+            return True
+
+        except subprocess.CalledProcessError:
+            logging.info(f"failed to download diamond db {dbname}")
+            return False
 
     def kuniq_install(
         self,
@@ -1035,17 +1059,15 @@ class setup_install(setup_dl):
                     index=False,
                 )
 
-            return
+            return True
         else:
             if self.test:
                 logging.info(f"Krakenuniq {dbname} taxDB not present.")
-                return
+                return False
             else:
                 logging.info(
                     f"Krakenuniq {dbname} viral is not installed. Installing..."
                 )
-
-        subprocess.run(["mkdir", "-p", odir])
 
         tax_command = [
             bin + "krakenuniq-download",
@@ -1077,44 +1099,52 @@ class setup_install(setup_dl):
         ]
 
         try:
-            subprocess.run(tax_command)
-            untax_get(self.taxdump, odir, dbname)
-            #
-            subprocess.run(" ".join(lib_command), shell=True)
+            subprocess.run(["mkdir", "-p", odir])
 
-            subprocess.call(" ".join(build_command), shell=True)
+            try:
+                subprocess.run(tax_command)
+                untax_get(self.taxdump, odir, dbname)
+                #
+                subprocess.run(" ".join(lib_command), shell=True)
 
+                subprocess.call(" ".join(build_command), shell=True)
+
+            except subprocess.CalledProcessError:
+                logging.error("failed to install krakenuniq db")
+
+            map_orig_file = f"{odir + dbname}/seqid2taxid.map.orig"
+            if os.path.exists(map_orig_file):
+                seqid = pd.read_csv(f"{odir + dbname}/seqid2taxid.map.orig", sep="\t")
+                seqid.columns = ["refseq", "taxid", "merge"]
+                seqid[["GTDB", "description"]] = seqid["merge"].str.split(
+                    " ", 1, expand=True
+                )
+                seqid = seqid.drop("merge", 1)
+                seqid.to_csv(
+                    f"{odir + dbname}/seqid2taxid.map.orig",
+                    sep="\t",
+                    header=True,
+                    index=False,
+                )
+
+            map_file = f"{odir + dbname}/seqid2taxid.map"
+
+            if os.path.exists(map_file):
+                seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
+                seqmap.columns = ["acc", "protid"]
+                seqmap.to_csv(
+                    f"{self.metadir}/protein_acc2protid.tsv",
+                    sep="\t",
+                    header=True,
+                    index=False,
+                )
+
+            self.dbs[id] = {"dir": odir, "dbname": dbname, "db": odir + dbname}
+
+            return True
         except subprocess.CalledProcessError:
-            logging.error("failed to install krakenuniq db")
-
-        map_orig_file = f"{odir + dbname}/seqid2taxid.map.orig"
-        if os.path.exists(map_orig_file):
-            seqid = pd.read_csv(f"{odir + dbname}/seqid2taxid.map.orig", sep="\t")
-            seqid.columns = ["refseq", "taxid", "merge"]
-            seqid[["GTDB", "description"]] = seqid["merge"].str.split(
-                " ", 1, expand=True
-            )
-            seqid = seqid.drop("merge", 1)
-            seqid.to_csv(
-                f"{odir + dbname}/seqid2taxid.map.orig",
-                sep="\t",
-                header=True,
-                index=False,
-            )
-
-        map_file = f"{odir + dbname}/seqid2taxid.map"
-
-        if os.path.exists(map_file):
-            seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
-            seqmap.columns = ["acc", "protid"]
-            seqmap.to_csv(
-                f"{self.metadir}/protein_acc2protid.tsv",
-                sep="\t",
-                header=True,
-                index=False,
-            )
-
-        self.dbs[id] = {"dir": odir, "dbname": dbname, "db": odir + dbname}
+            logging.info(f"failed to download Krakenuniq db {dbname}")
+            return False
 
     def kaiju_viral_install(self, id="kaiju", dbdir="kaiju", dbname="viral"):
 
@@ -1126,20 +1156,31 @@ class setup_install(setup_dl):
         if os.path.isfile(subdb + "kaiju_db_viruses.fmi"):
             logging.info(f"Kaiju {dbname}  is installed.")
             self.dbs[id] = {"dir": odir, "dbname": dbname, "db": odir + dbname}
-            return
+            return True
         else:
-            logging.info(f"Kaiju {dbname} db is not installed. Installing...")
+            if self.test:
+                logging.info(f"Kaiju {dbname} db is not installed.")
 
-        subprocess.run(["mkdir", "-p", odir])
+                return False
+            else:
+                logging.info(f"Kaiju {dbname} db is not installed. Installing...")
 
-        subprocess.run(["wget", "-P", subdb, db_online, "--no-check-certificate"])
-        CWD = os.getcwd()
-        os.chdir(subdb)
-        subprocess.run(["tar", "-zxvf", file])
-        subprocess.run(["rm", file])
-        os.chdir(CWD)
+        try:
 
-        self.dbs[id] = {"dir": subdb, "dbname": dbname, "db": odir + dbname}
+            subprocess.run(["mkdir", "-p", odir])
+
+            subprocess.run(["wget", "-P", subdb, db_online, "--no-check-certificate"])
+            CWD = os.getcwd()
+            os.chdir(subdb)
+            subprocess.run(["tar", "-zxvf", file])
+            subprocess.run(["rm", file])
+            os.chdir(CWD)
+
+            self.dbs[id] = {"dir": subdb, "dbname": dbname, "db": odir + dbname}
+            return True
+        except subprocess.CalledProcessError:
+            logging.info(f"failed to download Kaiju db {dbname}")
+            return False
 
     def blast_install(
         self,
@@ -1168,17 +1209,15 @@ class setup_install(setup_dl):
         if os.path.isfile(db + f".{dbtype[0]}db"):
             logging.info(f"blast index for {dbname} is installed.")
             self.dbs[id] = {"dir": odir, "dbname": dbname, "db": db}
-            return
+            return False
         else:
-            logging.info(f"blast index for {reference} is not installed. Installing...")
-
-        subprocess.run(["mkdir", "-p", odir])
-
-        gzipped = False
-        if reference[-3:] == ".gz":
-            gzipped = True
-            subprocess.run(["gunzip", reference])
-            reference = os.path.splitext(reference)[0]
+            if self.test:
+                logging.info(f"blast index for {dbname} is not installed.")
+                return False
+            else:
+                logging.info(
+                    f"blast index for {reference} is not installed. Installing..."
+                )
 
         commands = [
             bin + "makeblastdb",
@@ -1193,17 +1232,32 @@ class setup_install(setup_dl):
             args,
         ]
 
-        if taxid_map:
-            commands += ["-taxid_map", taxid_map]
-
         try:
-            subprocess.run(commands)
-        finally:
-            if gzipped:
-                subprocess.run(["bgzip", reference])
-                reference = reference + ".gz"
+            subprocess.run(["mkdir", "-p", odir])
 
-        self.dbs[id] = {"dir": sdir, "dbname": dbname, "db": db}
+            gzipped = False
+            if reference[-3:] == ".gz":
+                gzipped = True
+                subprocess.run(["gunzip", reference])
+                reference = os.path.splitext(reference)[0]
+
+            if taxid_map:
+                commands += ["-taxid_map", taxid_map]
+
+            try:
+                subprocess.run(commands)
+            finally:
+                if gzipped:
+                    subprocess.run(["bgzip", reference])
+                    reference = reference + ".gz"
+
+            self.dbs[id] = {"dir": sdir, "dbname": dbname, "db": db}
+
+            return True
+
+        except subprocess.CalledProcessError:
+            logging.info(f"failed to download blast db {dbname}")
+            return False
 
     def virsorter_install(
         self, id="virsorter", dbdir="virsorter", dbname="viral", threads="4"
@@ -1220,14 +1274,13 @@ class setup_install(setup_dl):
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
         if os.path.isfile(odir + "Done_all_setup"):
             logging.info("Virsorter is installed.")
-            return
+            return True
         else:
             if self.test:
                 logging.info("Virsorter is not installed.")
+                return False
             else:
                 logging.info("Virsorter is not installed. Installing...")
-
-        subprocess.run(["mkdir", "-p", odir])
 
         commands = [
             bin + "virsorter",
@@ -1247,19 +1300,26 @@ class setup_install(setup_dl):
             " ".join(commands),
             "conda deactivate",
         ]
+        try:
+            subprocess.run(["mkdir", "-p", odir])
 
-        os.system("touch " + tmpsh)
-        with open(tmpsh, "w") as f:
-            for l in bash_lines:
-                os.system('echo "{}" >> {}'.format(l, tmpsh))
-        #                f.write("/n".join(bash_lines))
+            os.system("touch " + tmpsh)
+            with open(tmpsh, "w") as f:
+                for l in bash_lines:
+                    os.system('echo "{}" >> {}'.format(l, tmpsh))
+            #                f.write("/n".join(bash_lines))
 
-        subprocess.run(["chmod", "+x", tmpsh])
-        subprocess.call(f"./{tmpsh}")
+            subprocess.run(["chmod", "+x", tmpsh])
+            subprocess.call(f"./{tmpsh}")
 
-        os.system("rm " + tmpsh)
+            os.system("rm " + tmpsh)
 
-        self.dbs[id] = {"dir": odir, "dbname": dbname}
+            self.dbs[id] = {"dir": odir, "dbname": dbname}
+            return True
+
+        except subprocess.CalledProcessError:
+            logging.info(f"failed to install virsorter")
+            return False
 
     def fve_install(
         self,
@@ -1286,59 +1346,66 @@ class setup_install(setup_dl):
         if os.path.isfile(fidx):
             logging.info(f"FastViromeExplorer index for {reference} is installed.")
             self.dbs[id] = {"dir": odir, "dbname": dbname, "db": fidx}
-            return
+            return True
         else:
             if self.test:
                 logging.info(f"FastViromeExplorer {reference} index is not installed.")
+                return False
             else:
                 logging.info(
                     f"FastViromeExplorer {reference} index is not installed. Installing..."
                 )
 
-        subprocess.run(["mkdir", "-p", subdir])
-
-        gzipped = False
-        if reference[-3:] == ".gz":
-            gzipped = True
-            subprocess.run(["gunzip", reference])
-            reference = os.path.splitext(reference)[0]
-
-        genlistbin = (
-            self.envs["ROOT"]
-            + self.envs[id]
-            + "/utility-scripts/"
-            + "generateGenomeList.sh"
-        )
-
-        comm_vlist = [
-            genlistbin,
-            reference,
-            virus_list,
-        ]
-
-        com_kallisto = [
-            self.envs["ROOT"] + self.envs["kallisto"] + "/bin/kallisto",
-            "index",
-            "-i",
-            fidx,
-            reference,
-            "--make-unique",
-        ]
-
         try:
-            if list_create or not virus_list:
-                os.system(f"chmod +x {genlistbin}")
-                subprocess.call(" ".join(comm_vlist), shell=True)
+            subprocess.run(["mkdir", "-p", subdir])
 
-            subprocess.run(com_kallisto)
-            os.system(f"mv {virus_list} {subdir}")
+            gzipped = False
+            if reference[-3:] == ".gz":
+                gzipped = True
+                subprocess.run(["gunzip", reference])
+                reference = os.path.splitext(reference)[0]
 
-        finally:
-            if gzipped:
-                subprocess.run(["bgzip", reference])
-                reference = reference + ".gz"
+            genlistbin = (
+                self.envs["ROOT"]
+                + self.envs[id]
+                + "/utility-scripts/"
+                + "generateGenomeList.sh"
+            )
 
-        self.dbs[id] = {"dir": subdir, "dbname": dbname, "db": fidx}
+            comm_vlist = [
+                genlistbin,
+                reference,
+                virus_list,
+            ]
+
+            com_kallisto = [
+                self.envs["ROOT"] + self.envs["kallisto"] + "/bin/kallisto",
+                "index",
+                "-i",
+                fidx,
+                reference,
+                "--make-unique",
+            ]
+
+            try:
+                if list_create or not virus_list:
+                    os.system(f"chmod +x {genlistbin}")
+                    subprocess.call(" ".join(comm_vlist), shell=True)
+
+                subprocess.run(com_kallisto)
+                os.system(f"mv {virus_list} {subdir}")
+
+            finally:
+                if gzipped:
+                    subprocess.run(["bgzip", reference])
+                    reference = reference + ".gz"
+
+            self.dbs[id] = {"dir": subdir, "dbname": dbname, "db": fidx}
+            return True
+
+        except subprocess.CalledProcessError:
+            logging.info(f"failed to install FastViromeExplorer")
+            return False
 
     def deSAMBA_install(
         self, id="desamba", dbdir="desamba", dbname="viral", reference=""
@@ -1359,31 +1426,38 @@ class setup_install(setup_dl):
 
             logging.info(f"deSAMBA db {dbname} is installed.")
             self.dbs[id] = {"dir": sdir, "dbname": dbname, "db": sdir}
-            return
+            return True
         else:
             if self.test:
                 logging.info(f"deSAMBA db {dbname} is not installed.")
+                return False
             else:
                 logging.info(f"deSAMBA db {dbname} is not installed. Installing...")
 
-        subprocess.run(["mkdir", "-p", odir])
-
-        gzipped = False
-        if reference[-3:] == ".gz":
-            gzipped = True
-            subprocess.run(["gunzip", reference])
-            reference = os.path.splitext(reference)[0]
-
-        build_command = [bin + "/build-index", reference, sdir]
         try:
-            CWD = os.getcwd()
-            os.chdir(bin)
-            subprocess.call(" ".join(build_command), shell=True)
-            os.chdir(CWD)
+            subprocess.run(["mkdir", "-p", odir])
 
-        finally:
-            if gzipped:
-                subprocess.run(["bgzip", reference])
-                reference = reference + ".gz"
+            gzipped = False
+            if reference[-3:] == ".gz":
+                gzipped = True
+                subprocess.run(["gunzip", reference])
+                reference = os.path.splitext(reference)[0]
 
-        self.dbs[id] = {"dir": odir, "dbname": dbname, "db": sdir}
+            build_command = [bin + "/build-index", reference, sdir]
+            try:
+                CWD = os.getcwd()
+                os.chdir(bin)
+                subprocess.call(" ".join(build_command), shell=True)
+                os.chdir(CWD)
+
+            finally:
+                if gzipped:
+                    subprocess.run(["bgzip", reference])
+                    reference = reference + ".gz"
+
+            self.dbs[id] = {"dir": odir, "dbname": dbname, "db": sdir}
+            return True
+
+        except subprocess.CalledProcessError:
+            logging.info(f"failed to install deSAMBA")
+            return False

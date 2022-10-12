@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 from distutils.command.install import install
+from re import I
 
 
 def get_args_install():
@@ -412,7 +413,7 @@ class main_setup:
         ######################### centrifuge ###############################
 
         if self.layout.install_centrifuge:
-            sofprep.centrifuge_install(dbname=self.organism)
+            install_success = sofprep.centrifuge_install(dbname=self.organism)
             centlib = f"refseq-{self.organism}.dust.fna.gz"
             if os.path.isfile(sofprep.dbs["centrifuge"]["fasta"]):
                 os.system(
@@ -426,36 +427,39 @@ class main_setup:
                     "centrifuge"
                 ] = f"{prepdl.seqdir}{centlib}"  # add to fastas dict
 
-                self.installed_software.append("centrifuge")
+                if install_success:
+                    self.installed_software.append("centrifuge")
 
-                self.utilities.add_software(
-                    self.utilities.software_item(
-                        "centrifuge",
-                        sofprep.dbs["centrifuge"]["db"],
-                        "default",
-                        True,
-                        sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
+                    self.utilities.add_software(
+                        self.utilities.software_item(
+                            "centrifuge",
+                            sofprep.dbs["centrifuge"]["db"],
+                            "default",
+                            True,
+                            sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
+                        )
                     )
-                )
 
         ########################## clark ##################################
         if self.layout.install_clark:
-            sofprep.install_clark(dbname=self.organism)
-            self.installed_software.append("clark")
-            self.utilities.add_software(
-                self.utilities.software_item(
-                    "clark",
-                    sofprep.dbs["clark"]["db"],
-                    "default",
-                    True,
-                    sofprep.envs["ROOT"] + sofprep.envs["clark"],
+            success_install = sofprep.install_clark(dbname=self.organism)
+            if success_install:
+                self.installed_software.append("clark")
+
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "clark",
+                        sofprep.dbs["clark"]["db"],
+                        "default",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["clark"],
+                    )
                 )
-            )
 
         ########################## kraken2 ###############################
 
         if self.layout.install_kraken2:
-            sofprep.kraken2_install(dbname=self.organism)
+            success_install = sofprep.kraken2_install(dbname=self.organism)
             krlib = f"kraken2-{self.organism}-library.fna.gz"
             if os.path.isfile(sofprep.dbs["kraken2"]["fasta"]):
                 os.system(
@@ -468,31 +472,34 @@ class main_setup:
             if os.path.isfile(f"{prepdl.seqdir}{krlib}"):
                 prepdl.fastas["nuc"]["kraken2"] = f"{prepdl.seqdir}{krlib}"
 
-                self.installed_software.append("kraken2")
+                if success_install:
 
-                self.utilities.add_software(
-                    self.utilities.software_item(
-                        "kraken2",
-                        sofprep.dbs["kraken2"]["db"],
-                        "default",
-                        True,
-                        sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
+                    self.installed_software.append("kraken2")
+
+                    self.utilities.add_software(
+                        self.utilities.software_item(
+                            "kraken2",
+                            sofprep.dbs["kraken2"]["db"],
+                            "default",
+                            True,
+                            sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
+                        )
                     )
-                )
 
         ########################## krakenuniq ###############################
         if self.layout.install_krakenuniq:
-            sofprep.kuniq_install(dbname=self.organism)
-            self.installed_software.append("krakenuniq")
-            self.utilities.add_software(
-                self.utilities.software_item(
-                    "krakenuniq",
-                    sofprep.dbs["krakenuniq"]["db"],
-                    "default",
-                    True,
-                    sofprep.envs["ROOT"] + sofprep.envs["krakenuniq"],
+            success_install = sofprep.kuniq_install(dbname=self.organism)
+            if success_install:
+                self.installed_software.append("krakenuniq")
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "krakenuniq",
+                        sofprep.dbs["krakenuniq"]["db"],
+                        "default",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["krakenuniq"],
+                    )
                 )
-            )
 
         ### install viral specific databases
         if self.organism == "viral":
@@ -512,40 +519,43 @@ class main_setup:
                 )
 
             if self.layout.install_virsorter:
-                sofprep.virsorter_install()
-                self.installed_software.append("virsorter")
+                success_install = sofprep.virsorter_install()
+                if success_install:
+                    self.installed_software.append("virsorter")
 
-                self.utilities.add_software(
-                    self.utilities.software_item(
-                        "virsorter",
-                        sofprep.dbdir + "virsorter",
-                        "default",
-                        True,
-                        sofprep.envs["ROOT"] + sofprep.envs["virsorter"],
+                    self.utilities.add_software(
+                        self.utilities.software_item(
+                            "virsorter",
+                            sofprep.dbdir + "virsorter",
+                            "default",
+                            True,
+                            sofprep.envs["ROOT"] + sofprep.envs["virsorter"],
+                        )
                     )
-                )
 
         ### install prot databases using local files.
         for fname, fdb in prepdl.fastas["prot"].items():
 
             if self.layout.install_diamond:
-                sofprep.diamond_install(dbname=fname, db=fdb)
-                self.installed_software.append("diamond")
+                install_success = sofprep.diamond_install(dbname=fname, db=fdb)
 
-                self.utilities.add_software(
-                    self.utilities.software_item(
-                        "diamond",
-                        sofprep.dbs["diamond"]["db"],
-                        fname,
-                        True,
-                        sofprep.envs["ROOT"] + sofprep.envs["diamond"],
+                if install_success:
+                    self.installed_software.append("diamond")
+
+                    self.utilities.add_software(
+                        self.utilities.software_item(
+                            "diamond",
+                            sofprep.dbs["diamond"]["db"],
+                            fname,
+                            True,
+                            sofprep.envs["ROOT"] + sofprep.envs["diamond"],
+                        )
                     )
-                )
 
             if self.layout.install_blast:
                 if fname == "refseq":
 
-                    sofprep.blast_install(
+                    success_install = sofprep.blast_install(
                         reference=fdb,
                         dbname=f"refseq_{self.organism}_prot",
                         nuc=False,
@@ -554,44 +564,46 @@ class main_setup:
                         title=f"refseq {self.organism} prot",
                     )
 
-                    self.installed_software.append("blast")
+                    if success_install:
+                        self.installed_software.append("blast")
 
-                    self.utilities.add_software(
-                        self.utilities.software_item(
-                            "blastp",
-                            sofprep.dbs["blast"]["db"],
-                            f"refseq_{self.organism}_prot",
-                            True,
-                            sofprep.envs["ROOT"] + sofprep.envs["blast"],
+                        self.utilities.add_software(
+                            self.utilities.software_item(
+                                "blastp",
+                                sofprep.dbs["blast"]["db"],
+                                f"refseq_{self.organism}_prot",
+                                True,
+                                sofprep.envs["ROOT"] + sofprep.envs["blast"],
+                            )
                         )
-                    )
 
         ### install nuc databases using local files.
         for fname, fdb in prepdl.fastas["nuc"].items():
 
             if self.layout.install_fastviromeexplorer:
-                sofprep.fve_install(
+                install_success = sofprep.fve_install(
                     reference=fdb,
                     dbname=fname,
                     virus_list=sofprep.metadir + f"{fname}-list.txt",
                     list_create=True,
                 )
-                self.installed_software.append("fastviromeexplorer")
+                if install_success:
+                    self.installed_software.append("fastviromeexplorer")
 
-                self.utilities.add_software(
-                    self.utilities.software_item(
-                        "fastviromeexplorer",
-                        sofprep.dbs["fastviromeexplorer"]["db"],
-                        fname,
-                        True,
-                        sofprep.envs["ROOT"] + sofprep.envs["fastviromeexplorer"],
+                    self.utilities.add_software(
+                        self.utilities.software_item(
+                            "fastviromeexplorer",
+                            sofprep.dbs["fastviromeexplorer"]["db"],
+                            fname,
+                            True,
+                            sofprep.envs["ROOT"] + sofprep.envs["fastviromeexplorer"],
+                        )
                     )
-                )
 
             if self.layout.install_blast:
 
                 if fname == "refseq":
-                    sofprep.blast_install(
+                    install_success = sofprep.blast_install(
                         reference=prepdl.fastas["nuc"]["refseq"],
                         dbname=f"refseq_{self.organism}_genome",
                         nuc=True,
@@ -599,36 +611,40 @@ class main_setup:
                         args="-parse_seqids",
                         title=f"refseq {self.organism} genome",
                     )
-                    self.installed_software.append("blast")
 
-                    self.utilities.add_software(
-                        self.utilities.software_item(
-                            "blastn",
-                            sofprep.dbs["blast"]["db"],
-                            f"refseq_{self.organism}_genome",
-                            True,
-                            sofprep.envs["ROOT"] + sofprep.envs["blast"],
+                    if install_success:
+                        self.installed_software.append("blast")
+
+                        self.utilities.add_software(
+                            self.utilities.software_item(
+                                "blastn",
+                                sofprep.dbs["blast"]["db"],
+                                f"refseq_{self.organism}_genome",
+                                True,
+                                sofprep.envs["ROOT"] + sofprep.envs["blast"],
+                            )
                         )
-                    )
 
             if nanopore:
 
                 if self.layout.install_desamba:
-                    sofprep.deSAMBA_install(
+                    install_success = sofprep.deSAMBA_install(
                         reference=fdb,
                         dbname=fname,
                     )
-                    self.installed_software.append("desamba")
 
-                    self.utilities.add_software(
-                        self.utilities.software_item(
-                            "desamba",
-                            sofprep.dbs["desamba"]["db"],
-                            fname,
-                            True,
-                            sofprep.envs["ROOT"] + sofprep.envs["desamba"],
+                    if install_success:
+                        self.installed_software.append("desamba")
+
+                        self.utilities.add_software(
+                            self.utilities.software_item(
+                                "desamba",
+                                sofprep.dbs["desamba"]["db"],
+                                fname,
+                                True,
+                                sofprep.envs["ROOT"] + sofprep.envs["desamba"],
+                            )
                         )
-                    )
 
     def setup_soft(self):
 

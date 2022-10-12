@@ -40,7 +40,7 @@ class Televir_Layout_minimal:
     install_refseq_gen = True
     install_swissprot = True
     install_rvdb = False
-    install_virosaurus = True
+    install_virosaurus = False
 
     # classification software.
     install_centrifuge = True

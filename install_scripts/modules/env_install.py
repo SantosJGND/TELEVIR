@@ -216,8 +216,6 @@ class env_install:
         if os.path.isfile(bin):
             return bin
 
-        print("jellyfish bin %s" % pid)
-
         return None
 
     def deSAMBA_install(self, force_install=False):
