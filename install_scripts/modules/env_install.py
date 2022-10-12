@@ -262,6 +262,18 @@ class env_install:
                 "bash ./build",
             ]
 
+            os.system("touch " + tmpsh)
+            with open(tmpsh, "w") as f:
+                for l in bash_lines:
+                    os.system('echo "{}" >> {}'.format(l, tmpsh))
+            #                f.write("/n".join(bash_lines))
+
+            subprocess.run(["chmod", "+x", tmpsh])
+            subprocess.run(["chmod", "+x", idir + "/build"])
+            subprocess.run(["chmod", "+x", idir + "/build-index"])
+            print("Running deSAMBA installation script...")
+            subprocess.call(f"./{tmpsh}")
+
             jelly_bin = self.jellyfish_get()
             jelly_desamba_bin = os.path.join(
                 idir,
@@ -279,16 +291,6 @@ class env_install:
                         ),
                     )
 
-            os.system("touch " + tmpsh)
-            with open(tmpsh, "w") as f:
-                for l in bash_lines:
-                    os.system('echo "{}" >> {}'.format(l, tmpsh))
-            #                f.write("/n".join(bash_lines))
-
-            subprocess.run(["chmod", "+x", tmpsh])
-            subprocess.run(["chmod", "+x", idir + "/build"])
-            subprocess.run(["chmod", "+x", idir + "/build-index"])
-            subprocess.call(f"./{tmpsh}")
             os.system("rm " + tmpsh)
 
         os.chdir(CWD)
