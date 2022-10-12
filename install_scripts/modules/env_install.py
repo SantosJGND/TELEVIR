@@ -255,20 +255,17 @@ class env_install:
 
             bash_lines = [
                 "#!/bin/bash",
-                # "apt-get install zlib1g-dev",
-                # "apt-get install automake",
-                # "apt-get install libtool",
-                # "apt-get install make",
-                # "apt-get install g++",
                 f"cd {idir}",
-                "bash ./build",
+                "cd .src",
+                "make -j 4",
+                "cd ..",
+                "cp ./src/deSAMBA ./bin",
             ]
 
             os.system("touch " + tmpsh)
             with open(tmpsh, "w") as f:
                 for l in bash_lines:
                     os.system('echo "{}" >> {}'.format(l, tmpsh))
-            #                f.write("/n".join(bash_lines))
 
             subprocess.run(["chmod", "+x", tmpsh])
             subprocess.run(["chmod", "+x", idir + "/build"])
@@ -277,22 +274,12 @@ class env_install:
             subprocess.call(f"./{tmpsh}")
 
             jelly_bin = self.jellyfish_get()
-            jelly_desamba_bin = os.path.join(
-                idir,
-                "bin",
-                "jellyfish",
-            )
             if jelly_bin is not None:
-                if not os.path.isfile(jelly_desamba_bin):
-
-                    shutil.copy(
-                        jelly_bin,
-                        os.path.join(
-                            idir,
-                            "bin",
-                        ),
+                os.system(
+                    "sed -i 's#./bin/jellyfish#{}#g' {}".format(
+                        jelly_bin, os.path.join(idir, "bin", "build-index")
                     )
-
+                )
             os.system("rm " + tmpsh)
 
         os.chdir(CWD)
