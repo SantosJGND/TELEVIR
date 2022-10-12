@@ -1341,7 +1341,7 @@ class setup_install(setup_dl):
         self.dbs[id] = {"dir": subdir, "dbname": dbname, "db": fidx}
 
     def deSAMBA_install(
-        self, id="deSAMBA", dbdir="deSAMBA", dbname="viral", reference=""
+        self, id="desamba", dbdir="desamba", dbname="viral", reference=""
     ):
         """
         install virsorter
