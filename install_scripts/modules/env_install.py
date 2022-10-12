@@ -202,6 +202,20 @@ class env_install:
 
         os.chdir(CWD)
 
+    def jellyfish_get(self):
+
+        pid = "jellyfish"
+        if pid in self.envsdir.keys():
+            bin = os.path.join(
+                self.envsdir[pid],
+                "bin",
+                pid,
+            )
+            if os.path.isfile(bin):
+                return bin
+
+        return None
+
     def deSAMBA_install(self, force_install=False):
         """
         deSAMBA installation.
@@ -247,6 +261,23 @@ class env_install:
                 f"cd {idir}",
                 "bash ./build",
             ]
+
+            jelly_bin = self.jellyfish_get()
+            jelly_desamba_bin = os.path.join(
+                idir,
+                "bin",
+                "jellyfish",
+            )
+            if jelly_bin is not None:
+                if not os.path.isfile(jelly_desamba_bin):
+
+                    shutil.copy(
+                        jelly_bin,
+                        os.path.join(
+                            idir,
+                            "bin",
+                        ),
+                    )
 
             os.system("touch " + tmpsh)
             with open(tmpsh, "w") as f:

@@ -18,6 +18,7 @@ INSTALL_PARAMS = {
         "SOURCE": "~/miniconda3/etc/profile.d/conda.sh",
         "ROOT": "/home/artic/Desktop/METAGEN/db_second_test/mngs_environments/",
         "centrifuge": "hostDepletion/hostdep_env",
+        "jellyfish": "jellyfish/jellyfish_env",
         "diamond": "hostDepletion/hostdep_env",
         "kaiju": "hostDepletion/hostdep_env",
         "krakenuniq": "hostDepletion/hostdep_env",
