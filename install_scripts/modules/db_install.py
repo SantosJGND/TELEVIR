@@ -1158,7 +1158,7 @@ class setup_install(setup_dl):
             self.dbs[id] = {
                 "dir": odir,
                 "dbname": dbname,
-                "db": odir + subdb + "kaiju_db_viruses.fmi",
+                "db": subdb + "kaiju_db_viruses.fmi",
             }
             return True
         else:
