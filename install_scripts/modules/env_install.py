@@ -206,15 +206,17 @@ class env_install:
     def jellyfish_get(self):
 
         pid = "jellyfish"
-        if pid in self.bin.keys():
-            bin = os.path.join(
-                self.envsdir,
-                self.bin[pid],
-                "bin",
-                pid,
-            )
-            if os.path.isfile(bin):
-                return bin
+        bin = os.path.join(
+            self.envsdir,
+            self.bin[pid],
+            "bin",
+            pid,
+        )
+
+        if os.path.isfile(bin):
+            return bin
+
+        print("jellyfish bin %s" % pid)
 
         return None
 
