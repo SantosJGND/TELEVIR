@@ -1155,7 +1155,11 @@ class setup_install(setup_dl):
         file = os.path.basename(db_online)
         if os.path.isfile(subdb + "kaiju_db_viruses.fmi"):
             logging.info(f"Kaiju {dbname}  is installed.")
-            self.dbs[id] = {"dir": odir, "dbname": dbname, "db": odir + dbname}
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "db": odir + subdb + "kaiju_db_viruses.fmi",
+            }
             return True
         else:
             if self.test:
@@ -1176,7 +1180,11 @@ class setup_install(setup_dl):
             subprocess.run(["rm", file])
             os.chdir(CWD)
 
-            self.dbs[id] = {"dir": subdb, "dbname": dbname, "db": odir + dbname}
+            self.dbs[id] = {
+                "dir": subdb,
+                "dbname": dbname,
+                "db": subdb + "kaiju_db_viruses.fmi",
+            }
             return True
         except subprocess.CalledProcessError:
             logging.info(f"failed to download Kaiju db {dbname}")
