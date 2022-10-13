@@ -419,6 +419,7 @@ class main_setup:
                 os.system(
                     f"mv {sofprep.dbs['centrifuge']['fasta']} {prepdl.seqdir}{centlib}"
                 )
+
             else:
                 if not os.path.isfile(f"{prepdl.seqdir}{centlib}"):
                     logging.info("centrifuge database not found.")

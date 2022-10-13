@@ -1217,7 +1217,7 @@ class setup_install(setup_dl):
         if os.path.isfile(db + f".{dbtype[0]}db"):
             logging.info(f"blast index for {dbname} is installed.")
             self.dbs[id] = {"dir": odir, "dbname": dbname, "db": db}
-            return False
+            return True
         else:
             if self.test:
                 logging.info(f"blast index for {dbname} is not installed.")
