@@ -532,18 +532,18 @@ class FinalReport(models.Model):
     mapping_success = models.CharField(max_length=20, blank=True, null=True)
     classification_success = models.CharField(max_length=20, blank=True, null=True)
 
-    refa_dotplot = models.CharField(max_length=250, blank=True, null=True)
+    refa_dotplot = models.CharField(max_length=350, blank=True, null=True)
     refa_dotplot_exists = models.BooleanField(default=False)
-    covplot = models.CharField(max_length=250, blank=True, null=True)
+    covplot = models.CharField(max_length=350, blank=True, null=True)
     covplot_exists = models.BooleanField(default=False)
-    bam_path = models.CharField(max_length=200, blank=True, null=True)
-    bai_path = models.CharField(max_length=200, blank=True, null=True)
-    reference_path = models.CharField(max_length=200, blank=True, null=True)
-    reference_index_path = models.CharField(max_length=200, blank=True, null=True)
-    reference_assembly_paf = models.CharField(max_length=200, blank=True, null=True)
-    mapped_scaffolds_path = models.CharField(max_length=200, blank=True, null=True)
+    bam_path = models.CharField(max_length=350, blank=True, null=True)
+    bai_path = models.CharField(max_length=350, blank=True, null=True)
+    reference_path = models.CharField(max_length=350, blank=True, null=True)
+    reference_index_path = models.CharField(max_length=350, blank=True, null=True)
+    reference_assembly_paf = models.CharField(max_length=350, blank=True, null=True)
+    mapped_scaffolds_path = models.CharField(max_length=350, blank=True, null=True)
     mapped_scaffolds_index_path = models.CharField(
-        max_length=200, blank=True, null=True
+        max_length=350, blank=True, null=True
     )
 
 
