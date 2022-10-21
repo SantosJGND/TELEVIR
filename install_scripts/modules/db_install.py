@@ -1227,8 +1227,6 @@ class setup_install(setup_dl):
                     f"blast index for {dbname} is not installed. Installing..."
                 )
 
-
-
         try:
             subprocess.run(["mkdir", "-p", odir])
 
@@ -1253,6 +1251,8 @@ class setup_install(setup_dl):
 
             if taxid_map:
                 commands += ["-taxid_map", taxid_map]
+
+            print(" ".join(commands))
 
             try:
                 subprocess.run(commands)
