@@ -128,10 +128,14 @@ def Update_sample_qc(sample_class: Type[Sample_runClass]):
 
     sample = Sample.objects.get(project=project, name_extended=sample_class.sample_name)
 
-    percent_passed = (
-        int(sample_class.reads_after_processing)
-        / int(sample_class.reads_before_processing)
-    ) * 100
+    if int(sample_class.reads_before_processing) == 0:
+        percent_passed = 0
+    else:
+        percent_passed = (
+            int(sample_class.reads_after_processing)
+            / int(sample_class.reads_before_processing)
+            * 100
+        )
 
     input_report = open(sample_class.input_fastqc_report, "r")
     processed_report = open(sample_class.processed_fastqc_report, "r")

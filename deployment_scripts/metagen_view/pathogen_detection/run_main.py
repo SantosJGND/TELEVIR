@@ -633,7 +633,6 @@ class RunMain_class(Run_Deployment_Methods):
 
         if self.quality_control:
             self.deploy_QC()
-
             #
             self.sample.r1.is_clean()
             self.sample.r2.is_clean()
