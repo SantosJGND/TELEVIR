@@ -1224,21 +1224,10 @@ class setup_install(setup_dl):
                 return False
             else:
                 logging.info(
-                    f"blast index for {reference} is not installed. Installing..."
+                    f"blast index for {dbname} is not installed. Installing..."
                 )
 
-        commands = [
-            bin + "makeblastdb",
-            "-in",
-            reference,
-            "-out",
-            db,
-            "-dbtype",
-            dbtype,
-            "-title",
-            title,
-            args,
-        ]
+
 
         try:
             subprocess.run(["mkdir", "-p", odir])
@@ -1248,6 +1237,19 @@ class setup_install(setup_dl):
                 gzipped = True
                 subprocess.run(["gunzip", reference])
                 reference = os.path.splitext(reference)[0]
+
+            commands = [
+                bin + "makeblastdb",
+                "-in",
+                reference,
+                "-out",
+                db,
+                "-dbtype",
+                dbtype,
+                "-title",
+                title,
+                args,
+            ]
 
             if taxid_map:
                 commands += ["-taxid_map", taxid_map]
