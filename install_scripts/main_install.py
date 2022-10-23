@@ -138,8 +138,6 @@ class main_setup:
         "rematch",
         "snippy",
         "bowtie2",
-        # "hisat2",
-        # "star",
     ]
 
     installed_software = []
@@ -365,6 +363,8 @@ class main_setup:
                         True,
                     )
                 )
+
+        self.wdir.index_fasta_files()
 
     def dl_metadata_prot(self):
         """

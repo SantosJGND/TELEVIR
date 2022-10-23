@@ -75,6 +75,37 @@ class setup_dl:
             if not os.path.isdir(dr):
                 os.mkdir(dr)
 
+    @staticmethod
+    def bgzip_file(filename):
+        """
+        bgzip file.
+        :param filename:
+        :return:
+        """
+        basename = os.path.splitext(filename)[0]
+        subprocess.run(["gunzip", filename])
+
+        logging.info(f"bgzipping {filename}")
+        subprocess.run(["bgzip", basename])
+
+    def index_fasta_files(self):
+        """
+        index fasta files.
+        :return:
+        """
+        for k, v in self.fastas["prot"].items():
+            self.bgzip_file(v)
+
+            if not os.path.isfile(v + ".fai"):
+                logging.info(f"indexing {v}")
+                subprocess.run(["samtools", "faidx", v])
+
+        for k, v in self.fastas["nuc"].items():
+            print(v)
+            if not os.path.isfile(v + ".fai"):
+                print("indexing")
+                subprocess.run(["samtools", "faidx", v])
+
     def refseq_prot_dl(self):
         """
         parse and download latest refseq dbs from ncbi ftp.
