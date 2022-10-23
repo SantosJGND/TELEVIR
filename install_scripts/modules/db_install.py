@@ -101,7 +101,7 @@ class setup_dl:
                 subprocess.run(["samtools", "faidx", v])
 
         for k, v in self.fastas["nuc"].items():
-            print(v)
+            self.bgzip_file(v)
             if not os.path.isfile(v + ".fai"):
                 print("indexing")
                 subprocess.run(["samtools", "faidx", v])
