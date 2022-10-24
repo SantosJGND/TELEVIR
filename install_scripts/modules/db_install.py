@@ -1372,7 +1372,7 @@ class setup_install(setup_dl):
             )
             return False
 
-        if os.path.isfile(f"{odir}{dbname}/{dbname}"):
+        if os.path.isfile(f"{odir}{dbname}/{dbname}.bwt"):
             logging.info(f"BWA db {dbname} is installed.")
             self.dbs[id] = {
                 "dir": odir,
