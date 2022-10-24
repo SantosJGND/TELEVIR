@@ -62,7 +62,7 @@ class setup_dl:
         self.source = self.envs["SOURCE"]
         self.home = home
         self.bindr = bindir
-        self.fastas = {"prot": {}, "nuc": {}}
+        self.fastas = {"prot": {}, "nuc": {}, "host": {}}
         self.meta = {}
         self.test = test
 
@@ -93,18 +93,59 @@ class setup_dl:
         index fasta files.
         :return:
         """
-        for k, v in self.fastas["prot"].items():
-            self.bgzip_file(v)
 
-            if not os.path.isfile(v + ".fai"):
-                logging.info(f"indexing {v}")
-                subprocess.run(["samtools", "faidx", v])
+        for k, v in self.fastas.items():
+            for kk, vv in v.items():
+                self.bgzip_file(vv)
 
-        for k, v in self.fastas["nuc"].items():
-            self.bgzip_file(v)
-            if not os.path.isfile(v + ".fai"):
-                print("indexing")
-                subprocess.run(["samtools", "faidx", v])
+                if not os.path.isfile(vv + ".fai"):
+                    logging.info(f"indexing {vv}")
+                    subprocess.run(["samtools", "faidx", vv])
+
+    def download_hg38(self):
+        """
+        download hg38 fasta from ucsc.
+        :return:
+        """
+        host = "hgdownload.soe.ucsc.edu"
+        source = "goldenPath/hg38/bigZips/"
+
+        f = "hg38.fa.gz"
+
+        if os.path.isfile(self.seqdir + f):
+            self.fastas["host"]["hg38"] = self.seqdir + f
+            logging.info(f"{f} found.")
+            return True
+
+        try:
+            ftp = FTP(host)
+        except:
+            logging.info("hg38 ftp attempt failed. Check internet connection.")
+            return False
+
+        ftp.login()
+        ftp.cwd(source)
+        files = ftp.nlst()
+        ftp.quit()
+
+        if f not in files:
+            logging.info(f"{f} not found.")
+            return False
+
+        if not os.path.isfile(self.seqdir + f):
+            if self.test:
+                logging.info(f"{f} not found.")
+                return False
+            else:
+                logging.info(f"{f} not found. downloading...")
+                subprocess.run(["wget", f"ftp://{host}/{source}{f}", "-P", self.seqdir])
+                self.fastas["host"]["hg38"] = self.seqdir + f
+                return True
+
+        else:
+            self.fastas["host"]["hg38"] = self.seqdir + f
+            logging.info(f"{f} found.")
+            return True
 
     def refseq_prot_dl(self):
         """
@@ -121,13 +162,13 @@ class setup_dl:
         if os.path.isfile(self.seqdir + fprot):
             self.fastas["prot"]["refseq"] = self.seqdir + fprot
             logging.info(f"{fprot_suf} found.")
-            return
+            return False
 
         try:
             ftp = FTP(host)
         except:
             logging.info("refseq ftp attempt failed. Check internet connection.")
-            return
+            return False
 
         ftp.login()
         ftp.cwd(source)
@@ -145,14 +186,16 @@ class setup_dl:
         if not os.path.isfile(self.seqdir + fprot):
             if self.test:
                 logging.info(f"{fprot_suf} not found.")
+                False
             else:
                 logging.info(f"{fprot_suf} not found. downloading...")
                 self.get_concat(protf, fprot_suf, host, source)
                 self.fastas["prot"]["refseq"] = self.seqdir + fprot
-
+                True
         else:
             self.fastas["prot"]["refseq"] = self.seqdir + fprot
             logging.info(f"{fprot_suf} found.")
+            return True
 
     def refseq_gen_dl(self):
         """
@@ -169,13 +212,13 @@ class setup_dl:
         if os.path.isfile(self.seqdir + fnuc):
             self.fastas["nuc"]["refseq"] = self.seqdir + fnuc
             logging.info(f"{fnuc_suf} found.")
-            return
+            return True
 
         try:
             ftp = FTP(host)
         except:
             logging.info("refseq ftp failed. Check internet connection.")
-            return
+            return False
 
         ftp.login()
         ftp.cwd(source)
@@ -196,14 +239,16 @@ class setup_dl:
         if not os.path.isfile(self.seqdir + fnuc):
             if self.test:
                 logging.info(f"{fnuc_suf} not found.")
+                return False
             else:
                 logging.info(f"{fnuc_suf} not found. downloading...")
                 self.get_concat(nucf, fnuc_suf, host, source)
-                self.fastas["nuc"]["refseq"] = self.seqdir + fnuc
 
         else:
-            self.fastas["nuc"]["refseq"] = self.seqdir + fnuc
             logging.info(f"{fnuc_suf} found.")
+
+        self.fastas["nuc"]["refseq"] = self.seqdir + fnuc
+        return True
 
     def get_concat(self, flist, outf, host, source):
         """
@@ -264,6 +309,7 @@ class setup_dl:
         if not os.path.isfile(self.seqdir + uniprot_file):
             if self.test:
                 logging.info("uniref{}.fasta not found.".format(vs))
+                return False
             else:
                 logging.info("uniref{}.fasta not found. downloading...".format(vs))
                 subprocess.run(["wget", fl, "-P", self.seqdir])
@@ -272,7 +318,7 @@ class setup_dl:
 
         self.fastas["prot"]["uniprot"] = self.seqdir + os.path.basename(fl)
 
-        return self
+        return True
 
     def swissprot_dl(self):
         """
@@ -284,15 +330,18 @@ class setup_dl:
         if not os.path.isfile(self.seqdir + os.path.basename(fl)):
             if self.test:
                 logging.info("swissprot.gz not found.")
+                return False
             else:
                 logging.info("swissprot.gz not found. downloading...")
                 subprocess.run(["wget", "--quiet", "-P", self.seqdir, fl])
+
         else:
             logging.info("swissprot.gz found.")
 
         fl = self.seqdir + os.path.basename(fl)
 
         self.fastas["prot"]["swissprot"] = fl
+        return True
 
     def RVDB_dl(self, vs="22.0"):
         """
@@ -306,6 +355,7 @@ class setup_dl:
         if not os.path.isfile(self.seqdir + os.path.basename(fl).replace(".xz", ".gz")):
             if self.test:
                 logging.info("U-RVDBv{}.fasta.xz not found.".format(vs))
+                return False
             else:
                 logging.info("U-RVDBv{}.fasta.xz not found. downloading...".format(vs))
                 subprocess.run(["wget", "-P", self.seqdir, fl])
@@ -321,7 +371,7 @@ class setup_dl:
             fl = self.seqdir + os.path.basename(fl).replace(".xz", ".gz")
 
         self.fastas["prot"]["rvdb"] = fl
-        return self
+        return True
 
     def virosaurus_dl(self):
         """
@@ -333,6 +383,7 @@ class setup_dl:
         if not os.path.isfile(self.seqdir + os.path.basename(fl).replace("%2D", "-")):
             if self.test:
                 logging.info("virosaurus90_vertebrate%2D20200330.fas not found.")
+                return False
             else:
                 logging.info(
                     "virosaurus90_vertebrate%2D20200330.fas not found. downloading..."
@@ -345,7 +396,7 @@ class setup_dl:
             "%2D", "-"
         )
 
-        return self
+        return True
 
     def nuc_metadata(self, outfile="acc2taxid.tsv"):
         """
@@ -1299,6 +1350,73 @@ class setup_install(setup_dl):
         except subprocess.CalledProcessError:
             logging.info(f"failed to download blast db {dbname}")
             return False
+
+    def bwa_install(
+        self,
+        dbname="bwa",
+        url="",
+        reference="",
+        id="bwa",
+        dbdir="bwa",
+        dlp="wget",
+    ):
+        """ """
+
+        odir = self.dbdir + dbdir + "/"
+        bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
+        sdir = odir + dbname + "/" + dbname
+
+        if not url and not reference:
+            logging.info(
+                "Please provide either sequence or url for bwa install. Skipping."
+            )
+            return False
+
+        if os.path.isfile(f"{odir}{dbname}/{dbname}"):
+            logging.info(f"BWA db {dbname} is installed.")
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "fasta": f"{sdir}.fa",
+                "db": f"{odir}{dbname}/{dbname}",
+            }
+            return True
+
+        else:
+            if self.test:
+                logging.info(f"BWA db {dbname} is not installed.")
+                return False
+            else:
+                logging.info(f"BWA db {dbname} is not installed. Installing...")
+
+        subprocess.run(["mkdir", "-p", sdir])
+
+        gzipped = False
+
+        if reference[-3:] == ".gz":
+            gzipped = True
+            subprocess.run(["gunzip", reference])
+            reference = os.path.splitext(reference)[0]
+            subprocess.run(["samtools", "faidx", reference])
+
+        command = [bin + "bwa", "index", "-p", f"{odir}{dbname}/{dbname}", reference]
+
+        try:
+            subprocess.run(command)
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "fasta": f"{sdir}.fa",
+                "db": f"{odir}{dbname}/{dbname}",
+            }
+            return True
+        except subprocess.CalledProcessError:
+            logging.info(f"failed to download bwa db {dbname}")
+            return False
+        finally:
+            if gzipped:
+                subprocess.run(["bgzip", reference])
+                reference = reference + ".gz"
 
     def virsorter_install(
         self, id="virsorter", dbdir="virsorter", dbname="viral", threads="4"

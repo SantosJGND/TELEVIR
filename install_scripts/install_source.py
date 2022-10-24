@@ -29,6 +29,7 @@ INSTALL_PARAMS = {
         "virsorter": "hostDepletion/vs2",
         "desamba": "classm_lc/deSAMBA",
         "clark": "classification/Clark",
+        "bwa": "remap/remap",
     },
     "BINDIR": {"deSAMBA": "classm_lc/deSAMBA"},
 }

@@ -6,6 +6,7 @@ class Televir_Layout_full:
     install_swissprot = True
     install_rvdb = True
     install_virosaurus = True
+    install_hg38 = False
 
     # classification software.
     install_centrifuge = True
@@ -41,6 +42,7 @@ class Televir_Layout_minimal:
     install_swissprot = True
     install_rvdb = False
     install_virosaurus = True
+    install_hg38 = True
 
     # classification software.
     install_centrifuge = True

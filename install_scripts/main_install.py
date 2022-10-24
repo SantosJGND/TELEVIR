@@ -302,69 +302,88 @@ class main_setup:
         """
         download prot sequences and get taxids.
         """
-        if self.layout.install_refseq_prot:
-            self.wdir.refseq_prot_dl()
-            self.installed_dbs.append("refseq_prot")
 
-            self.utilities.add_database(
-                self.utilities.database_item(
-                    "refseq_prot",
-                    self.wdir.fastas["prot"]["refseq"],
-                    True,
+        if self.layout.install_refseq_prot:
+            success_refprot = self.wdir.refseq_prot_dl()
+            if success_refprot:
+                self.installed_dbs.append("refseq_prot")
+
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        "refseq_prot",
+                        self.wdir.fastas["prot"]["refseq"],
+                        True,
+                    )
                 )
-            )
 
         if self.layout.install_refseq_gen:
-            self.wdir.refseq_gen_dl()
-            self.installed_dbs.append("refseq_gen")
+            success_refnuc = self.wdir.refseq_gen_dl()
+            if success_refnuc:
+                self.installed_dbs.append("refseq_gen")
 
-            self.utilities.add_database(
-                self.utilities.database_item(
-                    "refseq_gen",
-                    self.wdir.fastas["nuc"]["refseq"],
-                    True,
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        "refseq_gen",
+                        self.wdir.fastas["nuc"]["refseq"],
+                        True,
+                    )
                 )
-            )
 
         if self.layout.install_swissprot:
-            self.wdir.swissprot_dl()
-            self.installed_dbs.append("swissprot")
+            swissprot_dl = self.wdir.swissprot_dl()
+            if swissprot_dl:
+                self.installed_dbs.append("swissprot")
 
-            self.utilities.add_database(
-                self.utilities.database_item(
-                    "swissprot",
-                    self.wdir.fastas["prot"]["swissprot"],
-                    True,
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        "swissprot",
+                        self.wdir.fastas["prot"]["swissprot"],
+                        True,
+                    )
                 )
-            )
+
+        if self.layout.install_hg38:
+
+            success_hg38 = self.wdir.download_hg38()
+            if success_hg38:
+                self.installed_dbs.append("hg38")
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        "hg38",
+                        self.wdir.fastas["host"]["hg38"],
+                        True,
+                    )
+                )
 
         if self.organism == "viral":
 
             if self.layout.install_virosaurus:
-                self.wdir.virosaurus_dl()
-                self.installed_dbs.append("virosaurus")
+                success_virosaurus = self.wdir.virosaurus_dl()
+                if success_virosaurus:
+                    self.installed_dbs.append("virosaurus")
 
-                self.utilities.add_database(
-                    self.utilities.database_item(
-                        "virosaurus",
-                        self.wdir.fastas["nuc"]["virosaurus"],
-                        True,
+                    self.utilities.add_database(
+                        self.utilities.database_item(
+                            "virosaurus",
+                            self.wdir.fastas["nuc"]["virosaurus"],
+                            True,
+                        )
                     )
-                )
 
             if self.layout.install_rvdb:
-                self.wdir.RVDB_dl()
-                self.installed_dbs.append("rvdb")
+                success_rvdb = self.wdir.RVDB_dl()
+                if success_rvdb:
+                    self.installed_dbs.append("rvdb")
 
-                self.utilities.add_database(
-                    self.utilities.database_item(
-                        "rvdb",
-                        self.wdir.fastas["prot"]["rvdb"],
-                        True,
+                    self.utilities.add_database(
+                        self.utilities.database_item(
+                            "rvdb",
+                            self.wdir.fastas["prot"]["rvdb"],
+                            True,
+                        )
                     )
-                )
 
-        self.wdir.index_fasta_files()
+        # self.wdir.index_fasta_files()
 
     def dl_metadata_prot(self):
         """
@@ -533,6 +552,22 @@ class main_setup:
                             sofprep.envs["ROOT"] + sofprep.envs["virsorter"],
                         )
                     )
+
+        ### install host dbs.
+
+        for fname, fpath in prepdl.fastas["host"].items():
+            bwa_install = sofprep.bwa_install(dbname=fname, reference=fpath)
+            if bwa_install:
+                self.installed_software.append("bwa")
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "bwa",
+                        sofprep.dbs["bwa"]["db"],
+                        fname,
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["bwa"],
+                    )
+                )
 
         ### install prot databases using local files.
         for fname, fdb in prepdl.fastas["prot"].items():
