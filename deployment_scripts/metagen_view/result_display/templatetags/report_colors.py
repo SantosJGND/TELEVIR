@@ -57,7 +57,7 @@ def flag_false_positive(depth, depthc, coverage):
     if depthc > 0:
         if depthc / depth > 10 and coverage < 1:
             return "Possible False Positive"
-    return "Not a False Positive"
+    return ""
 
 
 @register.simple_tag
