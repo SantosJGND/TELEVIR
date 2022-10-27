@@ -63,7 +63,7 @@ def flag_false_positive(depth, depthc, coverage):
 @register.simple_tag
 def flag_false_positive_color(depth, depthc, coverage):
     if depthc > 0:
-        if depth / depthc > 10 and coverage < 1:
+        if depthc / depth > 10 and coverage < 1:
             return "background-color: rgba(255, 0, 0, 0.5);"
     return ""
 
