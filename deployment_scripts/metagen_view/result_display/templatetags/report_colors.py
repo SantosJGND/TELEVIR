@@ -53,6 +53,22 @@ def depth_color(depth_value, max_value):
 
 
 @register.simple_tag
+def flag_false_positive(depth, depthc, coverage):
+    if depthc > 0:
+        if depth / depthc > 10 and coverage < 0.01:
+            return "Possible False Positive"
+    return "Not a False Positive"
+
+
+@register.simple_tag
+def flag_false_positive_color(depth, depthc, coverage):
+    if depthc > 0:
+        if depth / depthc > 10 and coverage < 0.01:
+            return "background-color: rgba(255, 0, 0, 0.5);"
+    return ""
+
+
+@register.simple_tag
 def success_count_color(success):
     counts_dict = {
         "none": 0,
