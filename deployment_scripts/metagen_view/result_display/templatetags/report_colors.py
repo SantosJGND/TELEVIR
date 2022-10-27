@@ -56,7 +56,9 @@ def depth_color(depth_value, max_value):
 def flag_false_positive(depth, depthc, coverage):
     if depthc > 0:
         if depthc / depth > 10 and coverage < 5:
-            return "Possible False Positive"
+            return "Likely False Positive"
+        # elif coverage > 90:
+        #    return "Likely True Positive"
     return ""
 
 
@@ -65,6 +67,8 @@ def flag_false_positive_color(depth, depthc, coverage):
     if depthc > 0:
         if depthc / depth > 10 and coverage < 5:
             return "background-color: rgba(255, 0, 0, 0.5);"
+        # elif coverage > 90:
+        #    return "background-color: rgba(50, 255, 50, 0.5);"
     return ""
 
 
