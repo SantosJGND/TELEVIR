@@ -55,7 +55,7 @@ def depth_color(depth_value, max_value):
 @register.simple_tag
 def flag_false_positive(depth, depthc, coverage):
     if depthc > 0:
-        if depthc / depth > 10 and coverage < 1:
+        if depthc / depth > 10 and coverage < 5:
             return "Possible False Positive"
     return ""
 
