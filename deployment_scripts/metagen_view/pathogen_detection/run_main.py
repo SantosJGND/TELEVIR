@@ -632,6 +632,9 @@ class RunMain_class(Run_Deployment_Methods):
         self.logger.info(f"remapping: {self.remapping}")
 
         if self.quality_control:
+            self.sample.clean_unique()
+            self.sample.trimmomatic_sort()
+
             self.deploy_QC()
             #
             self.sample.r1.is_clean()

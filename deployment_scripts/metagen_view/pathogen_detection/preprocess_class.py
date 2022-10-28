@@ -174,10 +174,10 @@ class Preprocess:
         if self.subsample:
             self.subsample_reads()
 
+        self.clean_read_names()
         self.fastqc_input()
 
         self.preprocess_QC()
-        self.clean_read_names()
 
         self.fastqc_processed()
 
