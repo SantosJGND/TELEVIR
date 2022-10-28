@@ -255,34 +255,37 @@ class Preprocess:
         """
         Fastqc PE
         """
-        fastq_cmd = [
-            "zcat",
-            self.r1,
-            self.r2,
-            "|",
+        tempf = os.path.join(
+            os.path.dirname(self.preprocess_name_fastq_gz),
+            "temp_{}".format(os.path.basename(self.preprocess_name_fastq_gz)),
+        )
+        paste_cmd = ["zcat", self.r1, self.r2, ">", tempf]
+        # self.cmd.run_bash(paste_cmd)
+
+        fastqc_cmd = [
             os.path.join(self.cmd.bin, "fastqc"),
-            "stdin",
+            "--noextract",
             "--outdir",
             self.preprocess_dir,
+            self.r1,
+            self.r2,
         ]
 
-        self.cmd.run_bash(fastq_cmd)
+        self.cmd.run_bash(fastqc_cmd)
 
     def fastqc_SE(self):
         """
         Fastqc SE
         """
-        fastq_cmd = [
-            "zcat",
-            self.r1,
-            "|",
+        fastqc_cmd = [
             os.path.join(self.cmd.bin, "fastqc"),
-            "stdin",
+            "--noextract",
             "--outdir",
             self.preprocess_dir,
+            self.r1,
         ]
 
-        self.cmd.run_bash(fastq_cmd)
+        self.cmd.run_bash(fastqc_cmd)
 
     def fastqc_processed(self, suffix="processed_data"):
         """
@@ -316,14 +319,11 @@ class Preprocess:
         Fastqc PE
         """
         fastq_cmd = [
-            "zcat",
-            self.preprocess_name_fastq_gz,
-            self.preprocess_name_r2_fastq_gz,
-            "|",
             os.path.join(self.cmd.bin, "fastqc"),
-            "stdin",
             "--outdir",
             self.preprocess_dir,
+            self.preprocess_name_fastq_gz,
+            self.preprocess_name_r2_fastq_gz,
         ]
 
         self.cmd.run_bash(fastq_cmd)
@@ -333,13 +333,10 @@ class Preprocess:
         Fastqc SE
         """
         fastq_cmd = [
-            "zcat",
-            self.preprocess_name_fastq_gz,
-            "|",
             os.path.join(self.cmd.bin, "fastqc"),
-            "stdin",
             "--outdir",
             self.preprocess_dir,
+            self.preprocess_name_fastq_gz,
         ]
 
         self.cmd.run_bash(fastq_cmd)
