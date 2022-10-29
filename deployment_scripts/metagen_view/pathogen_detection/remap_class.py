@@ -1360,6 +1360,27 @@ class Mapping_Manager(Tandem_Remap):
 
             self.mapped_instances.append(mapped_instance)
 
+    def run_mappings_move_clean(self, main_static, static__plots_dir, media_dir):
+        for target in self.remap_targets:
+            mapped_instance = self.reciprocal_map(target)
+
+            self.mapped_instances.append(mapped_instance)
+
+            apres = mapped_instance.reference.number_of_contigs_mapped > 0
+            rpres = mapped_instance.reference.number_of_reads_mapped > 0
+            if rpres:
+                mapped_instance.reference.move_coverage_plot(
+                    main_static, static__plots_dir
+                )
+
+            if apres:
+                mapped_instance.reference.move_dotplot(main_static, static__plots_dir)
+
+            if mapped_instance.reference.number_of_reads_mapped > 0:
+                mapped_instance.reference.move_igv_files(main_static, media_dir)
+            else:
+                mapped_instance.reference.cleanup_files()
+
     def move_plots_to_static(self, main_static, static_dir):
         for instance in self.mapped_instances:
             apres = instance.reference.number_of_contigs_mapped > 0
