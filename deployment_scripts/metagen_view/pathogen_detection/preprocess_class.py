@@ -174,10 +174,10 @@ class Preprocess:
         if self.subsample:
             self.subsample_reads()
 
-        self.clean_read_names()
         self.fastqc_input()
 
         self.preprocess_QC()
+        self.clean_read_names()
 
         self.fastqc_processed()
 
@@ -255,37 +255,34 @@ class Preprocess:
         """
         Fastqc PE
         """
-        tempf = os.path.join(
-            os.path.dirname(self.preprocess_name_fastq_gz),
-            "temp_{}".format(os.path.basename(self.preprocess_name_fastq_gz)),
-        )
-        paste_cmd = ["zcat", self.r1, self.r2, ">", tempf]
-        # self.cmd.run_bash(paste_cmd)
-
-        fastqc_cmd = [
-            os.path.join(self.cmd.bin, "fastqc"),
-            "--noextract",
-            "--outdir",
-            self.preprocess_dir,
+        fastq_cmd = [
+            "zcat",
             self.r1,
             self.r2,
+            "|",
+            os.path.join(self.cmd.bin, "fastqc"),
+            "stdin",
+            "--outdir",
+            self.preprocess_dir,
         ]
 
-        self.cmd.run_bash(fastqc_cmd)
+        self.cmd.run_script(fastq_cmd)
 
     def fastqc_SE(self):
         """
         Fastqc SE
         """
-        fastqc_cmd = [
+        fastq_cmd = [
+            "zcat",
+            self.r1,
+            "|",
             os.path.join(self.cmd.bin, "fastqc"),
-            "--noextract",
+            "stdin",
             "--outdir",
             self.preprocess_dir,
-            self.r1,
         ]
 
-        self.cmd.run_bash(fastqc_cmd)
+        self.cmd.run_script(fastq_cmd)
 
     def fastqc_processed(self, suffix="processed_data"):
         """
@@ -319,27 +316,33 @@ class Preprocess:
         Fastqc PE
         """
         fastq_cmd = [
-            os.path.join(self.cmd.bin, "fastqc"),
-            "--outdir",
-            self.preprocess_dir,
+            "zcat",
             self.preprocess_name_fastq_gz,
             self.preprocess_name_r2_fastq_gz,
+            "|",
+            os.path.join(self.cmd.bin, "fastqc"),
+            "stdin",
+            "--outdir",
+            self.preprocess_dir,
         ]
 
-        self.cmd.run_bash(fastq_cmd)
+        self.cmd.run_script(fastq_cmd)
 
     def fastqc_processed_SE(self):
         """
         Fastqc SE
         """
         fastq_cmd = [
+            "zcat",
+            self.preprocess_name_fastq_gz,
+            "|",
             os.path.join(self.cmd.bin, "fastqc"),
+            "stdin",
             "--outdir",
             self.preprocess_dir,
-            self.preprocess_name_fastq_gz,
         ]
 
-        self.cmd.run_bash(fastq_cmd)
+        self.cmd.run_script(fastq_cmd)
 
     def run_trimmomatic(self):
         """
@@ -571,7 +574,7 @@ class Preprocess:
             common_reads,
         ]
 
-        self.cmd.run(cmd_find_common)
+        self.cmd.run_script(cmd_find_common)
         if os.path.getsize(common_reads) == 0:
             self.logger.info("No common reads found")
             return
@@ -662,15 +665,15 @@ class Preprocess:
 
         mv_trimmomatic_output_r2_cmd = ["mv", temp2, self.r2]
 
-        self.cmd.run(find_common_seqtk_cmd)
+        self.cmd.run_script(find_common_seqtk_cmd)
         if os.path.getsize(common_reads) > 0:
-            self.cmd.run(subseq_r2_cmd)
-            self.cmd.run(subseq_r1_cmd)
+            self.cmd.run_script(subseq_r2_cmd)
+            self.cmd.run_script(subseq_r1_cmd)
             os.system(" ".join(mv_r1))
             os.system(" ".join(mv_r2))
-            self.cmd.run(trimmomatic_cmd)
-            self.cmd.run(" ".join(mv_trimmomatic_output_r1_cmd))
-            self.cmd.run(" ".join(mv_trimmomatic_output_r2_cmd))
+            self.cmd.run_script(trimmomatic_cmd)
+            self.cmd.run_script(" ".join(mv_trimmomatic_output_r1_cmd))
+            self.cmd.run_script(" ".join(mv_trimmomatic_output_r2_cmd))
 
         else:
             raise ValueError("No common reads found")

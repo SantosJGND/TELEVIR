@@ -30,6 +30,7 @@ class RunCMD:
 
         self.bin = bin
         self.logs = []
+        self.task = task
 
         self.logger = logging.getLogger(f"{prefix}_{task}")
         self.logger.setLevel(logging.CRITICAL)
@@ -40,6 +41,19 @@ class RunCMD:
         self.logdir = logdir
         self.prefix = prefix
         self.error_flags = ["[error]", "Killed", "process exited"]
+
+    def temp_script_log(self):
+        """
+        Create temporary script.
+        """
+
+        seed = str(randint(1000000, 9999999))
+
+        bash_script = f"temp_{self.task}_{seed}.sh"
+        bash_log = f"temp_{self.task}_{seed}.log"
+        bash_flag = f"temp_{self.task}_{seed}.flag"
+
+        return bash_script, bash_log, bash_flag
 
     def flag_error(self, subprocess_errorlog, cmd: str = ""):
         """
@@ -226,6 +240,56 @@ class RunCMD:
         if self.flag_error(err):
             self.logger.error(f"errror in command: {self.bin}{cmd}")
             raise Exception(err.decode("utf-8"))
+
+    def run_script(self, cmd):
+        """
+        Run bash command.
+        """
+
+        if isinstance(cmd, list):
+            cmd = " ".join(cmd)
+
+        start_time = time.perf_counter()
+
+        bash_script, bash_log, bash_flag = self.temp_script_log()
+        bash_script = os.path.join(self.logdir, bash_script)
+        bash_log = os.path.join(self.logdir, bash_log)
+        bash_flag = os.path.join(self.logdir, bash_flag)
+
+        with open(bash_script, "w") as f:
+            f.write("#!/bin/bash")
+            f.write("\n")
+            f.write(cmd)
+            f.write("\n")
+            f.write("touch " + bash_flag)
+
+        proc_prep = subprocess.Popen(
+            "bash " + bash_script + " &> " + bash_log,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+
+        out, err = proc_prep.communicate()
+
+        found_flag = False
+        print("waiting for flag")
+        print(cmd)
+        print(bash_flag)
+        while not found_flag:
+            time.sleep(1)
+            found_flag = os.path.exists(bash_flag)
+
+        err = open(bash_log).read()
+
+        exec_time = time.perf_counter() - start_time
+
+        if self.flag_error(err):
+            self.logger.error(f"errror in command: {self.bin}{cmd}")
+
+        os.remove(bash_script)
+        os.remove(bash_log)
+        os.remove(bash_flag)
 
         self.output_disposal(cmd, err, out, exec_time)
 
