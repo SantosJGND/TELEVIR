@@ -264,6 +264,8 @@ class Preprocess:
             "stdin",
             "--outdir",
             self.preprocess_dir,
+            "-t",
+            str(self.threads),
         ]
 
         self.cmd.run_script(fastq_cmd)
@@ -280,6 +282,8 @@ class Preprocess:
             "stdin",
             "--outdir",
             self.preprocess_dir,
+            "-t",
+            str(self.threads),
         ]
 
         self.cmd.run_script(fastq_cmd)
