@@ -39,7 +39,7 @@ def entrez_ncbi_taxid_command(lines, tempfile, outdir, outfile):
         ftemp.write(lines)
 
     os.system(
-        f"cat {ftemp} | epost -db nuccore | esummary -db nuccore | xtract -pattern DocumentSummary -element AccessionVersion,TaxId >> {outdir}{outfile}"
+        f"cat {tempfile} | epost -db nuccore | esummary -db nuccore | xtract -pattern DocumentSummary -element AccessionVersion,TaxId >> {outdir}{outfile}"
     )
 
 
