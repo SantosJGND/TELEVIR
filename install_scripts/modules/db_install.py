@@ -6,6 +6,8 @@ import os
 import shutil
 import subprocess
 from ftplib import FTP
+from pathlib import Path
+from random import randint
 from threading import Thread
 
 import pandas as pd
@@ -29,12 +31,49 @@ def sed_out_after_dot(file):
     os.system("sed -i 's/[:].*$//g' {}".format(file))
 
 
-def entrez_ncbi_taxid(file, outdir, outfile):
-    """get taxids from ncbi accessions in single column file. return both, using Entrez Utilities"""
+def entrez_ncbi_taxid_command(lines, tempfile, outdir, outfile):
+
+    Path(tempfile).touch()
+
+    with open(tempfile, "w") as ftemp:
+        ftemp.write(lines)
 
     os.system(
-        f"cat {file} | epost -db nuccore | esummary -db nuccore | xtract -pattern DocumentSummary -element AccessionVersion,TaxId > {outdir}{outfile}"
+        f"cat {ftemp} | epost -db nuccore | esummary | xtract -pattern DocumentSummary -element AccessionVersion,TaxId >> {outdir}{outfile}"
     )
+
+
+def entrez_ncbi_taxid(file, outdir, outfile, nmax=500):
+    """get taxids from ncbi accessions in single column file. return both, using Entrez Utilities"""
+
+    Path(outfile).touch()
+
+    tempdir = os.path.dirname(outfile)
+    tempfile = os.path.join(tempdir, f"temp{randint(10000, 99999)}.txt")
+    current_batch = 0
+    lines = ""
+
+    with open(file, "r") as f:
+
+        line = f.readline()
+        while line:
+
+            lines += line
+            current_batch += 1
+
+            if current_batch == nmax:
+
+                entrez_ncbi_taxid_command(lines, tempfile, outdir, outfile)
+                lines = ""
+                current_batch = 0
+
+            line = f.readline()
+
+    if lines:
+        entrez_ncbi_taxid_command(lines, tempfile, outdir, outfile)
+
+    if os.path.exists(tempfile):
+        os.remove(tempfile)
 
 
 class setup_dl:
@@ -82,6 +121,7 @@ class setup_dl:
         :param filename:
         :return:
         """
+
         basename = os.path.splitext(filename)[0]
         subprocess.run(["gunzip", filename])
 
@@ -96,7 +136,7 @@ class setup_dl:
 
         for k, v in self.fastas.items():
             for kk, vv in v.items():
-                self.bgzip_file(vv)
+                # self.bgzip_file(vv)
 
                 if not os.path.isfile(vv + ".fai"):
                     logging.info(f"indexing {vv}")
