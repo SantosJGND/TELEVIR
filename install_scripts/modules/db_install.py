@@ -39,14 +39,14 @@ def entrez_ncbi_taxid_command(lines, tempfile, outdir, outfile):
         ftemp.write(lines)
 
     os.system(
-        f"cat {ftemp} | epost -db nuccore | esummary | xtract -pattern DocumentSummary -element AccessionVersion,TaxId >> {outdir}{outfile}"
+        f"cat {ftemp} | epost -db nuccore | esummary -db nuccore | xtract -pattern DocumentSummary -element AccessionVersion,TaxId >> {outdir}{outfile}"
     )
 
 
 def entrez_ncbi_taxid(file, outdir, outfile, nmax=500):
     """get taxids from ncbi accessions in single column file. return both, using Entrez Utilities"""
 
-    Path(outfile).touch()
+    Path(f"{outdir}{outfile}").touch()
 
     tempdir = os.path.dirname(outfile)
     tempfile = os.path.join(tempdir, f"temp{randint(10000, 99999)}.txt")
