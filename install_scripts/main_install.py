@@ -142,7 +142,6 @@ class main_setup:
 
     installed_software = []
     installed_dbs = []
-    wdir: setup_dl
 
     def __init__(
         self,
