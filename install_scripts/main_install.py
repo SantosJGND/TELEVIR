@@ -383,7 +383,7 @@ class main_setup:
                         )
                     )
 
-        # self.wdir.index_fasta_files()
+        self.wdir.index_fasta_files()
 
     def dl_metadata_prot(self):
         """
