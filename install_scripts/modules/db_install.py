@@ -43,6 +43,12 @@ def entrez_ncbi_taxid_command(lines, tempfile, outdir, outfile):
     )
 
 
+def entrez_fetch_sequence(accid, outfile):
+    """return fasta from ncbi nuccore db using accid"""
+
+    os.system(f"esearch -db nuccore -query {accid} | efetch -format fasta >> {outfile}")
+
+
 def entrez_ncbi_taxid(file, outdir, outfile, nmax=500):
     """get taxids from ncbi accessions in single column file. return both, using Entrez Utilities"""
 
@@ -99,6 +105,7 @@ class setup_dl:
 
         self.envs = INSTALL_PARAMS["ENVSDIR"]
         self.source = self.envs["SOURCE"]
+        self.requests = INSTALL_PARAMS["REQUEST_REFERENCES"]
         self.home = home
         self.bindr = bindir
         self.fastas = {"prot": {}, "nuc": {}, "host": {}}
@@ -186,6 +193,40 @@ class setup_dl:
             self.fastas["host"]["hg38"] = self.seqdir + f
             logging.info(f"{f} found.")
             return True
+
+    def install_requests(self):
+
+        references_file = os.path.join(self.seqdir, "request_references.fa")
+
+        if self.requests["ACCID"]:
+            acc_tsv = self.requests["ACCID"]
+            tempfile = os.path.join(self.metadir, "accession_requests.tsv")
+            if os.path.isfile(acc_tsv):
+                shutil.copy(acc_tsv, tempfile)
+            elif "https" in acc_tsv:
+                try:
+
+                    subprocess.run(["curl", "-o", tempfile, acc_tsv])
+
+                except subprocess.CalledProcessError:
+                    logging.error("accid request file not found")
+                    return False
+
+            accid_list = []
+            with open(tempfile, "r") as tf:
+                accid_list = tf.readlines()
+            accid_list = [x.strip() for x in accid_list]
+
+            for accid in accid_list:
+                entrez_fetch_sequence(accid, references_file)
+
+        if os.path.isfile(references_file) and os.path.getsize(references_file):
+            os.system(f"bgzip {references_file}")
+            self.fastas["nuc"]["requests"] = references_file
+            logging.info("request sequences prepped.")
+            return True
+        else:
+            return False
 
     def refseq_prot_dl(self):
         """

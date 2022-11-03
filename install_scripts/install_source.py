@@ -32,6 +32,9 @@ INSTALL_PARAMS = {
         "bwa": "remap/remap",
     },
     "BINDIR": {"deSAMBA": "classm_lc/deSAMBA"},
+    "REQUEST_REFERENCES": {
+        "ACCID": "",
+    },
 }
 
 #

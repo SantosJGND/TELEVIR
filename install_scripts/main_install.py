@@ -303,6 +303,18 @@ class main_setup:
         download prot sequences and get taxids.
         """
 
+        if self.layout.install_request_sequences:
+            request_success = self.wdir.install_requests()
+            if request_success:
+                self.installed_dbs.append("requests")
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        "requests",
+                        self.wdir.fastas["nuc"]["requests"],
+                        True,
+                    )
+                )
+
         if self.layout.install_refseq_prot:
             success_refprot = self.wdir.refseq_prot_dl()
             if success_refprot:

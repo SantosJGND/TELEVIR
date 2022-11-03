@@ -7,6 +7,7 @@ class Televir_Layout_full:
     install_rvdb = True
     install_virosaurus = True
     install_hg38 = False
+    install_request_sequences = True
 
     # classification software.
     install_centrifuge = True
@@ -43,6 +44,7 @@ class Televir_Layout_minimal:
     install_rvdb = False
     install_virosaurus = True
     install_hg38 = True
+    install_request_sequences = True
 
     # classification software.
     install_centrifuge = True
