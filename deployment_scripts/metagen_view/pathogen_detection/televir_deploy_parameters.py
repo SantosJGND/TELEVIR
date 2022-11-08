@@ -95,22 +95,22 @@ class Params_Illumina:
         "PREPROCESS": ["trimmomatic"],  # trimmomatic
         "ENRICHMENT": [
             "centrifuge",
-            "kraken2",
-            "fastviromeexplorer",
+            # "kraken2",
+            # "fastviromeexplorer",
         ],  # "virmet", "dvf", "minimap2", "centrifuge", "kaiju", "kuniq", "kraken2", "fve", "virmet"],
         "ASSEMBLY": ["spades"],  # "flye", "raven"],
         "CONTIG_CLASSIFICATION": [
             "blast",
-            "minimap2_asm",
+            # "minimap2_asm",
         ],  # ["blast", "minimap-asm", "diamond", "virsorter"],
         "READ_CLASSIFICATION": [
-            "kraken2",
-            "fastviromeexplorer",
+            # "kraken2",
+            # "fastviromeexplorer",
             "krakenuniq",
-            "clark",
+            # "clark",
             "kaiju",
             "centrifuge",
-            "diamond",
+            # "diamond",
         ],
         "REMAPPING": ["snippy"],  # snippy, rematch, bowtie, minimap-rem
     }

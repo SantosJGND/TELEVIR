@@ -135,17 +135,17 @@ class RunDetail_main:
         self.log_dir = config["directories"]["log_dir"]
 
         self.static_dir = config["static_dir"]
+        self.static_dir_igv = f"igv"
+
         self.full_static_dir = os.path.join(
             ConstantsSettings.static_directory, self.static_dir
         )
 
         self.static_dir_reads = f"depleted_reads"
-        self.media_dir_igv = (
-            os.path.join(
-                ConstantsSettings.static_directory,
-                self.static_dir,
-                self.static_dir_igv,
-            ),
+        self.media_dir_igv = os.path.join(
+            ConstantsSettings.static_directory,
+            self.static_dir,
+            self.static_dir_igv,
         )
 
         os.makedirs(
@@ -167,17 +167,17 @@ class RunDetail_main:
             exist_ok=True,
         )
 
-        self.static_dir_plots = f"plots"
+        self.static_dir_plots = os.path.join(
+            ConstantsSettings.static_directory,
+            self.static_dir,
+            "plots",
+        )
+
         os.makedirs(
-            os.path.join(
-                ConstantsSettings.static_directory,
-                self.static_dir,
-                self.static_dir_plots,
-            ),
+            self.static_dir_plots,
             exist_ok=True,
         )
 
-        self.static_dir_igv = f"igv"
         os.makedirs(
             os.path.join(
                 ConstantsSettings.static_directory,

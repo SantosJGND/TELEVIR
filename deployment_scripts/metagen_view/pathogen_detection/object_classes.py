@@ -33,14 +33,13 @@ class RunCMD:
         self.task = task
 
         self.logger = logging.getLogger(f"{prefix}_{task}")
-        self.logger.setLevel(logging.CRITICAL)
+        self.logger.setLevel(logging.INFO)
         self.logger.addHandler(logging.StreamHandler())
         self.logger.propagate = False
 
         self.logfile = os.path.join(logdir, f"{prefix}_{task}.log")
         self.logdir = logdir
         self.prefix = prefix
-        self.error_flags = ["[error]", "Killed", "process exited"]
 
     def temp_script_log(self):
         """
@@ -61,25 +60,15 @@ class RunCMD:
         """
 
         if subprocess_errorlog:
-            for error in self.error_flags:
-                try:
-                    subprocess_errorlog = subprocess_errorlog.decode("utf-8")
-                    if error in subprocess_errorlog:
-                        print(f"{error} in {cmd}")
-                        return True
-                    if error in subprocess_errorlog.lower():
-                        print(f"{error} in {cmd}")
-                        return True
-                except Exception as e:
-                    try:
-                        if error in subprocess_errorlog:
-                            print(f"{error} in {cmd}")
-                            return True
-                        if error in subprocess_errorlog.lower():
-                            print(f"{error} in {cmd}")
-                            return True
-                    except Exception as e:
-                        return False
+            try:
+                subprocess_errorlog = subprocess_errorlog.decode("utf-8")
+                if "Killed" in subprocess_errorlog:
+                    print(f"Killed {cmd}")
+                if "[error]" in subprocess_errorlog.lower():
+                    return True
+
+            except Exception as e:
+                return False
 
         return False
 
@@ -105,11 +94,12 @@ class RunCMD:
 
         return cmd_out
 
-    def output_disposal(self, cmd: str, err: str, out: str, exec_time: float):
+    def output_disposal(self, cmd: str, err: str, out: str, exec_time: float, bin: str):
         if self.logdir:
             with open(os.path.join(self.logdir, self.logfile), "a") as f:
                 software = cmd.split(" ")[0]
                 f.write(f"exec\t{software}\t{exec_time}\n")
+                f.write(f"bin\t{bin}\n")
                 f.write(f"{cmd}\n")
 
                 out = self.process_cmd_log(out)
@@ -122,18 +112,6 @@ class RunCMD:
             self.logs.append(cmd)
             self.logs.append(out)
 
-    def output_init(self, cmd):
-        """
-        Initialize output.
-        """
-
-        if self.logdir:
-            with open(os.path.join(self.logdir, self.logfile), "a") as f:
-                f.write(f"exec\t{cmd}\n")
-
-        else:
-            self.logs.append(cmd)
-
     def run(self, cmd):
         """
         Run software.
@@ -143,9 +121,8 @@ class RunCMD:
             cmd = " ".join(cmd)
 
         self.logger.info(f"running: {self.bin}{cmd}")
-        self.output_init(cmd)
-        start_time = time.perf_counter()
 
+        start_time = time.perf_counter()
         proc_prep = subprocess.Popen(
             f"{self.bin}{cmd}",
             shell=True,
@@ -160,7 +137,7 @@ class RunCMD:
             self.logger.error(f"errror in command: {self.bin}{cmd}")
             raise Exception(err.decode("utf-8"))
 
-        self.output_disposal(cmd, err, out, exec_time)
+        self.output_disposal(cmd, err, out, exec_time, self.bin)
 
     def run_python(self, cmd):
         """
@@ -188,7 +165,7 @@ class RunCMD:
             self.logger.error(f"errror in command: {self.bin}{cmd}")
             raise Exception(err.decode("utf-8"))
 
-        self.output_disposal(cmd, err, out, exec_time)
+        self.output_disposal(cmd, err, out, exec_time, self.bin)
 
     def run_java(self, cmd):
         """
@@ -216,7 +193,7 @@ class RunCMD:
             self.logger.error(f"errror in command: {self.bin}{cmd}")
             raise Exception(err.decode("utf-8"))
 
-        self.output_disposal(cmd, err, out, exec_time)
+        self.output_disposal(cmd, err, out, exec_time, self.bin)
 
     def run_bash(self, cmd):
         """
@@ -241,9 +218,11 @@ class RunCMD:
             self.logger.error(f"errror in command: {self.bin}{cmd}")
             raise Exception(err.decode("utf-8"))
 
-    def run_script(self, cmd):
+        self.output_disposal(cmd, err, out, exec_time, "")
+
+    def run_script_software(self, cmd):
         """
-        Run bash command.
+        Run bash script.
         """
 
         if isinstance(cmd, list):
@@ -252,7 +231,56 @@ class RunCMD:
         start_time = time.perf_counter()
 
         bash_script, bash_log, bash_flag = self.temp_script_log()
+        bash_script = os.path.join(self.logdir, bash_script)
+        bash_log = os.path.join(self.logdir, bash_log)
+        bash_flag = os.path.join(self.logdir, bash_flag)
 
+        with open(bash_script, "w") as f:
+            f.write("#!/bin/bash")
+            f.write("\n")
+            f.write(f"{self.bin}{cmd}")
+            f.write("\n")
+            f.write("touch " + bash_flag)
+
+        proc_prep = subprocess.Popen(
+            "bash " + bash_script + " &> " + bash_log,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+
+        out, err = proc_prep.communicate()
+
+        found_flag = False
+
+        while not found_flag:
+            time.sleep(1)
+            found_flag = os.path.exists(bash_flag)
+
+        err = open(bash_log).read()
+
+        exec_time = time.perf_counter() - start_time
+
+        if self.flag_error(err):
+            self.logger.error(f"errror in command: {self.bin}{cmd}")
+
+        os.remove(bash_script)
+        os.remove(bash_log)
+        os.remove(bash_flag)
+
+        self.output_disposal(cmd, err, out, exec_time, "")
+
+    def run_script(self, cmd):
+        """
+        Run bash script.
+        """
+
+        if isinstance(cmd, list):
+            cmd = " ".join(cmd)
+
+        start_time = time.perf_counter()
+
+        bash_script, bash_log, bash_flag = self.temp_script_log()
         bash_script = os.path.join(self.logdir, bash_script)
         bash_log = os.path.join(self.logdir, bash_log)
         bash_flag = os.path.join(self.logdir, bash_flag)
@@ -274,27 +302,77 @@ class RunCMD:
         out, err = proc_prep.communicate()
 
         found_flag = False
-        print("waiting for flag")
-        print(cmd)
-        print(bash_script)
-        print(bash_flag)
+
         while not found_flag:
             time.sleep(1)
             found_flag = os.path.exists(bash_flag)
 
         err = open(bash_log).read()
+        out = open(bash_log).read()
 
         exec_time = time.perf_counter() - start_time
 
         if self.flag_error(err):
             self.logger.error(f"errror in command: {self.bin}{cmd}")
-            self.logger.error(err)
 
         os.remove(bash_script)
         os.remove(bash_log)
         os.remove(bash_flag)
 
-        self.output_disposal(cmd, err, out, exec_time)
+        self.output_disposal(cmd, err, out, exec_time, "")
+
+    def run_script_return(self, cmd):
+        """
+        Run bash script.
+        """
+
+        if isinstance(cmd, list):
+            cmd = " ".join(cmd)
+
+        start_time = time.perf_counter()
+
+        bash_script, bash_log, bash_flag = self.temp_script_log()
+        bash_script = os.path.join(self.logdir, bash_script)
+        bash_log = os.path.join(self.logdir, bash_log)
+        bash_flag = os.path.join(self.logdir, bash_flag)
+
+        with open(bash_script, "w") as f:
+            f.write("#!/bin/bash")
+            f.write("\n")
+            f.write(cmd)
+            f.write("\n")
+            f.write("touch " + bash_flag)
+
+        proc_prep = subprocess.Popen(
+            "bash " + bash_script + " &> " + bash_log,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+
+        out, err = proc_prep.communicate()
+
+        found_flag = False
+
+        while not found_flag:
+            time.sleep(1)
+            found_flag = os.path.exists(bash_flag)
+
+        err = open(bash_log).read()
+        out = open(bash_log).read()
+
+        exec_time = time.perf_counter() - start_time
+
+        if self.flag_error(err):
+            self.logger.error(f"errror in command: {self.bin}{cmd}")
+
+        os.remove(bash_script)
+        os.remove(bash_log)
+        os.remove(bash_flag)
+
+        self.output_disposal(cmd, err, out, exec_time, "")
+
+        return out.strip()
 
     def run_bash_return(self, cmd):
         """
@@ -321,7 +399,7 @@ class RunCMD:
             self.logger.error(f"errror in command: {self.bin}{cmd}")
             raise Exception(err.decode("utf-8"))
 
-        self.output_disposal(cmd, err, "", exec_time)
+        self.output_disposal(cmd, err, "", exec_time, "")
 
         return out
 
