@@ -364,6 +364,11 @@ class Read_class:
             self.filepath,
         )
 
+        self.exists = os.path.isfile(filepath) and os.path.getsize(filepath) > 100
+        self.read_number_raw = self.get_current_fastq_read_number()
+        if self.read_number_raw == 0:
+            self.exists = False
+
         self.filepath = filepath
         self.current = self.filepath
         self.prefix = self.determine_read_name(filepath)
@@ -371,12 +376,11 @@ class Read_class:
         self.enriched = os.path.join(enriched_dir, self.prefix + ".enriched.fastq.gz")
         self.depleted = os.path.join(depleted_dir, self.prefix + ".depleted.fastq.gz")
         self.current_status = "raw"
-        self.read_number_raw = self.get_current_fastq_read_number()
+
         self.read_number_clean = 0
         self.read_number_enriched = 0
         self.read_number_depleted = 0
         self.read_number_filtered = 0
-        self.exists = os.path.isfile(filepath) and self.read_number_raw > 0
 
     def update(self, clean_dir: str, enriched_dir: str, depleted_dir: str):
         self.clean = os.path.join(clean_dir, self.prefix + ".clean.fastq.gz")
