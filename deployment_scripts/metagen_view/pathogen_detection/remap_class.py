@@ -575,7 +575,9 @@ class Remapping:
         open(self.reference_file, "w").close()
 
         for accid in self.target.accid_in_file:
-            cmd = f"samtools faidx {self.target.file} {accid} >> {self.reference_file}"
+            cmd = (
+                f"samtools faidx {self.target.file} '{accid}' >> {self.reference_file}"
+            )
             self.cmd.run(cmd)
 
         self.reference_file_exists = (

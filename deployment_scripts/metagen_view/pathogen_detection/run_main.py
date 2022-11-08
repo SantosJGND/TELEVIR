@@ -199,6 +199,15 @@ class RunDetail_main:
             bin=get_bindir_from_binaries(config["bin"], "PREPROCESS"),
         )
 
+        if self.r1.exists == False:
+            self.type = "SE"
+        if self.r2.exists == False:
+            self.type = "SE"
+
+        if not self.r1.exists and not self.r2.exists:
+            self.logger.error("No reads found")
+            raise FileNotFoundError
+
         self.sample = Sample_runClass(
             self.r1,
             self.r2,
@@ -636,8 +645,7 @@ class RunMain_class(Run_Deployment_Methods):
         self.logger.info(f"remapping: {self.remapping}")
 
         if self.quality_control:
-            # self.sample.clean_unique()
-            # self.sample.trimmomatic_sort()
+            import shutil
 
             self.deploy_QC()
             #

@@ -290,9 +290,9 @@ class RunCMD:
             self.logger.error(f"errror in command: {self.bin}{cmd}")
             self.logger.error(err)
 
-        # os.remove(bash_script)
-        # os.remove(bash_log)
-        # os.remove(bash_flag)
+        os.remove(bash_script)
+        os.remove(bash_log)
+        os.remove(bash_flag)
 
         self.output_disposal(cmd, err, out, exec_time)
 
@@ -355,11 +355,17 @@ class Read_class:
 
         """
         self.cmd = RunCMD(bin)
+        self.filepath = os.path.join(
+            os.path.dirname(clean_dir), os.path.basename(filepath)
+        )
 
-        self.exists = os.path.isfile(filepath)
+        shutil.copy(
+            filepath,
+            self.filepath,
+        )
 
         self.filepath = filepath
-        self.current = filepath
+        self.current = self.filepath
         self.prefix = self.determine_read_name(filepath)
         self.clean = os.path.join(clean_dir, self.prefix + ".clean.fastq.gz")
         self.enriched = os.path.join(enriched_dir, self.prefix + ".enriched.fastq.gz")
@@ -370,6 +376,7 @@ class Read_class:
         self.read_number_enriched = 0
         self.read_number_depleted = 0
         self.read_number_filtered = 0
+        self.exists = os.path.isfile(filepath) and self.read_number_raw > 0
 
     def update(self, clean_dir: str, enriched_dir: str, depleted_dir: str):
         self.clean = os.path.join(clean_dir, self.prefix + ".clean.fastq.gz")
