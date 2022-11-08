@@ -2,17 +2,16 @@ import logging
 import os
 import re
 import shutil
-from ast import Constant
 from random import randint
 from typing import List, Type
 
 import numpy as np
 import pandas as pd
 from Bio.SeqIO.FastaIO import SimpleFastaParser
-from product.constants_settings import ConstantsSettings
 from result_display.plot_coverage import Bedgraph, plot_dotplot
 from scipy.stats import kstest
 
+from pathogen_detection.constants_settings import ConstantsSettings
 from pathogen_detection.object_classes import (
     Read_class,
     Remap_Target,
@@ -257,16 +256,300 @@ class coverage_parse:
         self.report.to_csv(self.output, sep="\t", index=False)
 
 
+class RemapMethod_init:
+    def __init__(
+        self,
+        method: Software_detail,
+        r1,
+        r2,
+        args,
+        type,
+        prefix,
+        reference,
+        outdir,
+        threads,
+        force,
+        logdir,
+    ):
+        self.r1 = r1
+        self.r2 = r2
+        self.args = args
+        self.type = type
+        self.prefix = prefix
+        self.reference = reference
+        self.outdir = outdir
+        self.threads = threads
+        self.force = force
+
+        self.outbam = os.path.join(outdir, prefix + ".bam")
+        self.outsam = os.path.join(outdir, prefix + ".sam")
+
+        self.cmd = RunCMD(
+            method.bin, logdir=logdir, prefix=prefix, task="remap_software"
+        )
+
+
+class Remap_Snippy(RemapMethod_init):
+    def __init__(
+        self,
+        method: Software_detail,
+        r1,
+        r2,
+        args,
+        type,
+        prefix,
+        reference,
+        outdir,
+        threads,
+        force,
+        logdir,
+    ):
+        super().__init__(
+            method,
+            r1,
+            r2,
+            args,
+            type,
+            prefix,
+            reference,
+            outdir,
+            threads,
+            force,
+            logdir,
+        )
+
+        self.rundir = os.path.join(outdir, "snippy")
+        os.makedirs(self.rundir, exist_ok=True)
+        self.runbam = os.path.join(self.rundir, "snps.bam")
+
+    def export(self):
+        if os.path.exists(self.runbam):
+            shutil.copy(self.runbam, self.outbam)
+
+    def remap(self):
+        """
+        Remap reads to reference using snippy."""
+        if self.type == "SE":
+            self.remap_SE()
+        elif self.type == "PE":
+            self.remap_PE()
+        else:
+            raise ValueError
+
+    def remap_SE(self):
+        """
+        Remap reads to reference using snippy for single end reads."""
+        cmd = [
+            "snippy",
+            self.args,
+            "--cpus",
+            self.threads,
+            "--ref",
+            self.reference,
+            "--outdir",
+            self.rundir,
+            "--se",
+            self.r1,
+            "--force",
+        ]
+        self.cmd.run(cmd)
+        self.export()
+
+    def remap_PE(self):
+        """
+        Remap reads to reference using snippy for paired end reads."""
+        cmd = [
+            "snippy",
+            self.args,
+            "--cpus",
+            self.threads,
+            "--ref",
+            self.reference,
+            "--outdir",
+            self.rundir,
+            "--R1",
+            self.r1,
+            "--R2",
+            self.r2,
+            "--force",
+        ]
+        self.cmd.run(cmd)
+        self.export()
+
+
+class Remap_Bwa(RemapMethod_init):
+    def remap(self):
+        """
+        Remap reads to reference using bwa."""
+        if self.type == "SE":
+            self.remap_SE()
+        elif self.type == "PE":
+            self.remap_PE()
+        else:
+            raise ValueError
+
+    def remap_SE(self):
+        """
+
+        Remap reads to reference using bwa for single end reads."""
+        temp_sam = os.path.join(self.outdir, self.prefix + ".sam")
+        cmd_01 = [
+            "bwa",
+            "mem",
+            self.args,
+            "-t",
+            self.threads,
+            self.reference,
+            self.r1,
+            ">",
+            temp_sam,
+        ]
+        cmd_samtools = [
+            "samtools",
+            "view",
+            "-b",
+            "-o",
+            self.outbam,
+            temp_sam,
+        ]
+        self.cmd.run_script(cmd_01)
+        self.cmd.run_script(cmd_samtools)
+
+    def remap_PE(self):
+        """
+        Remap reads to reference using bwa for paired end reads."""
+        temp_sam = os.path.join(self.outdir, self.prefix + ".sam")
+        cmd = [
+            "bwa",
+            "mem",
+            self.args,
+            "-t",
+            self.threads,
+            self.reference,
+            self.r1,
+            self.r2,
+            ">",
+            temp_sam,
+        ]
+        cmd_samtools = [
+            "samtools",
+            "view",
+            "-b",
+            "-o",
+            self.outbam,
+            temp_sam,
+        ]
+        self.cmd.run_script(cmd)
+        self.cmd.run_script(cmd_samtools)
+
+
+class Remap_Minimap2(RemapMethod_init):
+    def remap(self):
+        """
+        Remap reads to reference using minimap2."""
+        if self.type == "SE":
+            self.remap_SE()
+        elif self.type == "PE":
+            self.remap_PE()
+        else:
+            raise ValueError
+
+    def remap_SE(self):
+        """
+        Remap reads to reference using minimap2 for single end reads."""
+        cmd = [
+            "minimap2",
+            self.args,
+            "-t",
+            self.threads,
+            "-ax",
+            "map-ont",
+            self.reference,
+            self.r1,
+            ">",
+            self.outsam,
+        ]
+        self.cmd.run(cmd)
+
+    def remap_PE(self):
+        """
+        Remap reads to reference using minimap2 for paired end reads."""
+        cmd = [
+            "minimap2",
+            self.args,
+            "-t",
+            self.threads,
+            "-ax",
+            "map-ont",
+            self.reference,
+            self.r1,
+            self.r2,
+            ">",
+            self.outsam,
+        ]
+        self.cmd.run(cmd)
+
+
+class Remap_Bowtie2(RemapMethod_init):
+    def remap(self):
+        """
+        Remap reads to reference using bowtie2."""
+        if self.type == "SE":
+            self.remap_SE()
+        elif self.type == "PE":
+            self.remap_PE()
+        else:
+            raise ValueError
+
+    def remap_SE(self):
+        """
+        Remap reads to reference using bowtie2 for single end reads."""
+        cmd = [
+            "bowtie2",
+            self.args,
+            "-p",
+            self.threads,
+            "-x",
+            self.reference,
+            "-U",
+            self.r1,
+            "-S",
+            self.outsam,
+        ]
+        self.cmd.run(cmd)
+
+    def remap_PE(self):
+        """
+        Remap reads to reference using bowtie2 for paired end reads."""
+        cmd = [
+            "bowtie2",
+            self.args,
+            "-p",
+            self.threads,
+            "-x",
+            self.reference,
+            "-1",
+            self.r1,
+            "-2",
+            self.r2,
+            "-S",
+            self.outsam,
+        ]
+        self.cmd.run(cmd)
+
+
 class Remapping:
+    remap_engine = RemapMethod_init
+
     def __init__(
         self,
         r1: str,
-        target: Type[Remap_Target],
-        method: Type[Software_detail],
+        target: Remap_Target,
+        method: Software_detail,
         assembly_path: str,
         type: str,
         prefix: str,
-        rdir,
+        rdir: str,
         threads: int = 3,
         r2: str = "",
         minimum_coverage: int = 1,
@@ -291,9 +574,10 @@ class Remapping:
         :param logging_level: logging level to use.
         """
         self.method = method.name
+        self.method_object = method
         self.args = method.args
         self.rdir = rdir
-        self.cleanup = cleanup
+        self.cleanup = False
 
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging_level)
@@ -309,8 +593,9 @@ class Remapping:
         self.r1 = r1
         self.r2 = r2
         self.minimum_coverage = minimum_coverage
+        self.logdir = log_dir
 
-        self.cmd = RunCMD(bin, logdir=log_dir, prefix=prefix, task="remapping")
+        self.cmd = RunCMD(bin, logdir=log_dir, prefix=prefix, task="remapping_main")
 
         os.makedirs(self.rdir, exist_ok=True)
 
@@ -333,6 +618,13 @@ class Remapping:
         self.mapped_subset_r1 = f"{self.rdir}/{self.prefix}.R1.kept.fastq.gz"
         self.mapped_subset_r2 = f"{self.rdir}/{self.prefix}.R2.kept.fastq.gz"
         self.read_map_sam_rmdup = f"{self.rdir}/{self.prefix}.rmdup.sam"
+        self.mapped_contigs_fasta = (
+            f"{self.rdir}/{self.prefix}_{target.acc_simple}_mapepd_contigs.fa"
+        )
+        self.mapped_contigs_fasta_index = (
+            f"{self.rdir}/{self.prefix}_{target.acc_simple}_ref.fa.fai"
+        )
+
         self.coverage_plot = (
             f"{self.rdir}/{self.prefix}.{target.acc_simple}.coverage.png"
         )
@@ -382,6 +674,44 @@ class Remapping:
         self.mapped_contigs = []
         self.number_of_contigs_mapped = 0
         self.remapping_successful = False
+
+    @staticmethod
+    def relocate_file(filepath, destination):
+        subdirectory = os.path.join(destination, "remapping")
+
+        os.makedirs(subdirectory, exist_ok=True)
+        final_file = os.path.join(subdirectory, os.path.basename(filepath))
+
+        if os.path.exists(filepath) and final_file != filepath:
+            print(f"PATH {filepath} exists")
+            if os.path.exists(final_file):
+                os.remove(final_file)
+
+            shutil.move(filepath, final_file)
+            return final_file
+
+        # else:
+        #    print(f"PATH {filepath} does not exist")
+
+    def relocate_mapping_files(self, destination):
+
+        self.reference_file = self.relocate_file(self.reference_file, destination)
+        self.reference_fasta_index = self.relocate_file(
+            self.reference_fasta_index, destination
+        )
+        self.read_map_sorted_bam = self.relocate_file(
+            self.read_map_sorted_bam, destination
+        )
+        self.read_map_sorted_bam_index = self.relocate_file(
+            self.read_map_sorted_bam_index, destination
+        )
+        self.assembly_map_paf = self.relocate_file(self.assembly_map_paf, destination)
+        self.mapped_contigs_fasta = self.relocate_file(
+            self.mapped_contigs_fasta, destination
+        )
+        self.mapped_contigs_fasta_index = self.relocate_file(
+            self.mapped_contigs_fasta_index, destination
+        )
 
     def cleanup_files(self):
         for file in [
@@ -442,6 +772,8 @@ class Remapping:
         self.plot_coverage()
         self.plot_dotplot_from_paf()
         self.remapping_successful = True
+        self.generate_mapped_contigs_fasta()
+        self.index_mapped_contigs_fasta()
 
         if self.cleanup:
             self.cleanup_files()
@@ -453,7 +785,7 @@ class Remapping:
             self.reference_file,
             "|",
             "sed",
-            "s/>//g",
+            "'s/>//g'",
         ]
         self.reference_fasta_string = self.cmd.run_bash_return(cmd)
 
@@ -468,6 +800,8 @@ class Remapping:
 
         if self.check_remap_performed():
             self.logger.info("Remapping already performed")
+            self.extract_reference_sequences()
+            self.index_reference()
             self.summarize()
 
             return self
@@ -493,6 +827,7 @@ class Remapping:
 
         self.remap_reads_post_process()
         self.assembly_to_reference_map()
+
         self.summarize()
 
     def remap_reads_post_process(self):
@@ -548,7 +883,7 @@ class Remapping:
 
         self.assembly_map_paf_exists = (
             os.path.isfile(self.assembly_map_paf)
-            and os.path.getsize(self.assembly_map_paf) > 0
+            and os.path.getsize(self.assembly_map_paf) > 100
         )
 
     def get_mapped_contig_names(self):
@@ -567,6 +902,25 @@ class Remapping:
 
         self.number_of_contigs_mapped = len(self.mapped_contigs)
 
+    def generate_mapped_contigs_fasta(self):
+        """
+        Generate fasta file of contigs that are mapped to reference."""
+        if not self.assembly_map_paf_exists or self.number_of_contigs_mapped == 0:
+            return
+
+        for accid in self.mapped_contigs:
+            cmd = f"samtools faidx {self.assembly_path} '{accid}' >> {self.mapped_contigs_fasta}"
+            self.cmd.run(cmd)
+
+    def index_mapped_contigs_fasta(self):
+        """
+        Index fasta file of contigs that are mapped to reference."""
+        if not self.assembly_map_paf_exists or self.number_of_contigs_mapped == 0:
+            return
+
+        cmd = f"samtools faidx {self.mapped_contigs_fasta} > {self.mapped_contigs_fasta_index}"
+        self.cmd.run(cmd)
+
     def extract_reference_sequences(self):
         """
         Extract reference sequences from respective database.
@@ -580,10 +934,19 @@ class Remapping:
             )
             self.cmd.run(cmd)
 
+        import sys
+
         self.reference_file_exists = (
             os.path.isfile(self.reference_file)
             and os.path.getsize(self.reference_file) > 0
         )
+
+        if not self.reference_file_exists:
+            self.logger.error(
+                f"Reference file {self.reference_file} does not exist or is empty"
+            )
+
+            sys.exit(1)
 
     def get_reference_fasta_length(self):
         """
@@ -595,113 +958,6 @@ class Remapping:
                 if line.startswith(">"):
                     continue
                 self.reference_fasta_length += len(line.strip())
-
-    def remap_bwa(self):
-        """
-        Remap reads to reference using bwa.
-        """
-        cmd = f"bwa mem -t {self.threads} {self.reference_file} {self.r1} {self.r2} > {self.read_map_sam}"
-        self.cmd.run(cmd)
-        self.logger.info("Finished remapping")
-
-    def remap_snippy(self):
-        """
-        Remap reads to reference using snippy."""
-        if self.type == "SE":
-            self.remap_snippy_SE()
-        elif self.type == "PE":
-            self.remap_snippy_PE()
-        else:
-            self.logger.error(f"Remap type {self.type} not available")
-            raise ValueError
-
-    def remap_snippy_SE(self):
-        """
-        Remap reads to reference using snippy for single end reads."""
-        cmd = [
-            "snippy",
-            self.args,
-            "--cpus",
-            self.threads,
-            "--ram",
-            "4",
-            "--ref",
-            self.reference_file,
-            "--outdir",
-            self.rdir,
-            "--prefix",
-            self.prefix,
-            "--se",
-            self.r1,
-            "--force",
-        ]
-        self.cmd.run(cmd)
-
-    def remap_snippy_PE(self):
-        """
-        Remap reads to reference using snippy for paired end reads."""
-        cmd = [
-            "snippy",
-            self.args,
-            "--cpus",
-            self.threads,
-            "--ram",
-            "4",
-            "--ref",
-            self.reference_file,
-            "--outdir",
-            self.rdir,
-            "--prefix",
-            self.prefix,
-            "--R1",
-            self.r1,
-            "--R2",
-            self.r2,
-            "--force",
-        ]
-        self.cmd.run(cmd)
-
-    def remap_minimap2(self):
-        """
-        Remap reads to reference using minimap2. ONT data."""
-        if self.type == "SE":
-            self.remap_minimap2_SE()
-        elif self.type == "PE":
-            self.remap_minimap2_PE()
-
-    def remap_minimap2_SE(self):
-
-        cmd = f"minimap2 -t {self.threads} -ax map-ont {self.reference_file} {self.r1} > {self.read_map_sam}"
-        self.cmd.run(cmd)
-
-    def remap_minimap2_PE(self):
-
-        cmd = f"minimap2 -t {self.threads} -ax map-ont {self.reference_file} {self.r1} {self.r2} > {self.read_map_sam}"
-        self.cmd.run(cmd)
-
-    def remap_minimap2_no_ref(self):
-        cmd = f"minimap2 -t {self.threads} {self.r1} {self.r2} > {self.read_map_sam}"
-        self.cmd.run(cmd)
-
-    def remap_bowtie(self):
-        if self.type == "SE":
-            self.remap_bowtie_SE()
-        elif self.type == "PE":
-            self.remap_bowtie_PE()
-
-    def remap_bowtie_SE(self):
-        """
-        Remap reads to reference using bowtie.
-        """
-        cmd = f"bowtie -p {self.threads} -x {self.reference_file} -U {self.r1} -S {self.read_map_sam}"
-        self.cmd.run(cmd)
-
-    def remap_bowtie_PE(self):
-        """
-        Remap reads to reference using bowtie.
-        """
-        cmd = f"bowtie2 -x {self.reference_file} -1 {self.r1} -2 {self.r2} -S {self.read_map_sam}"
-        self.cmd.run(cmd)
 
     def minimap2_assembly_map(self):
         """
@@ -721,26 +977,43 @@ class Remapping:
         cmd = f"minimap2 -t {self.threads} -cx asm10 {self.assembly_path} {self.reference_file} > {self.assembly_map_paf}"
         self.cmd.run(cmd)
 
-        if os.path.exists(tempfile):
-            os.remove(tempfile)
+        os.remove(tempfile)
 
     def remap_deploy(self):
         """
         Configure which remapping method to use."""
 
         available_methods = {
-            "bwa": self.remap_bwa,
-            "snippy": self.remap_snippy,
-            "minimap-rem": self.remap_minimap2,
-            "minimap2_no_ref": self.remap_minimap2_no_ref,
-            "bowtie": self.remap_bowtie,
+            "bwa": Remap_Bwa,
+            "snippy": Remap_Snippy,
+            "minimap2": Remap_Minimap2,
+            "bowtie": Remap_Bowtie2,
         }
 
-        try:
-            available_methods[self.method]()
-        except KeyError:
-            self.logger.error(f"Remap Method {self.method} not available")
-            raise KeyError
+        if self.method in available_methods:
+            self.logger.info(f"Remapping with {self.method}")
+            self.remap_engine = available_methods[self.method](
+                self.method_object,
+                self.r1,
+                self.r2,
+                self.args,
+                self.type,
+                self.prefix,
+                self.reference_file,
+                self.rdir,
+                self.threads,
+                False,
+                self.logdir,
+            )
+            try:
+                self.remap_engine.remap()
+            except Exception as e:
+                self.logger.error(f"Remapping failed with {e}")
+                raise e
+
+        else:
+            self.logger.error(f"Remapping method {self.method} not available")
+            raise ValueError
 
     def check_remap_status_sam(self):
         if os.path.exists(self.read_map_sam) and os.path.getsize(self.read_map_sam) > 0:
@@ -865,8 +1138,14 @@ class Remapping:
     def get_mapped_reads_no_header(self):
         """
         Get number of mapped reads without header, use samtools."""
-        cmd = f"samtools view -b -F 4 {self.read_map_sorted_bam} | samtools view -h | grep -v '^@' | cut -f1 | sort | uniq > {self.mapped_reads}"
+        temp_file = os.path.join(self.rdir, f"temp{randint(1,1999)}.bam")
+
+        cmd = f"samtools view -b -F 4 {self.read_map_sorted_bam} > {temp_file}"
         self.cmd.run(cmd)
+
+        cmd2 = f"samtools view -h {temp_file} | grep -v '^@' | cut -f1 | sort | uniq > {self.mapped_reads}"
+        self.cmd.run_script_software(cmd2)
+        os.remove(temp_file)
 
     def get_mapped_reads_number(self):
 
@@ -881,13 +1160,13 @@ class Remapping:
         Subset mapped reads to R1, use seqtk."""
 
         cmd = f"seqtk subseq {self.r1} {tempfile} | gzip > {self.mapped_subset_r1}"
-        self.cmd.run(cmd)
+        self.cmd.run_script_software(cmd)
 
     def subset_mapped_reads_r2(self, tempfile=""):
         """
         Subset mapped reads to R2, use seqtk."""
         cmd = f"seqtk subseq {self.r2} {tempfile} | gzip > {self.mapped_subset_r2}"
-        self.cmd.run(cmd)
+        self.cmd.run_script_software(cmd)
 
     def subset_mapped_reads(self):
         """
@@ -917,10 +1196,14 @@ class Remapping:
 
     def plot_coverage(self):
         if os.path.getsize(self.genome_coverage):
+            print("Plotting coverage")
+            print("bedgraph")
             bedgraph = Bedgraph(self.genome_coverage)
+            print(bedgraph)
             bedgraph.plot_coverage(self.coverage_plot, tlen=self.reference_fasta_length)
 
         self.coverage_plot_exists = os.path.exists(self.coverage_plot)
+        print("Coverage plot exists: {}".format(self.coverage_plot_exists))
 
     def plot_dotplot_from_paf(self):
         if os.path.getsize(self.assembly_map_paf):
@@ -929,56 +1212,52 @@ class Remapping:
             plot_dotplot(df, self.dotplot, "dotplot", xmax=self.reference_fasta_length)
             self.dotplot_exists = os.path.exists(self.dotplot)
 
-    def move_coverage_plot(self, main_static, static_dir):
+    def move_coverage_plot(self, static_dir_plots):
         """
         Move coverage plot to static directory."""
         new_coverage_plot = os.path.join(
-            main_static,
-            static_dir,
-            os.path.basename(self.coverage_plot),
+            static_dir_plots, os.path.basename(self.coverage_plot)
+        )
+
+        self.coverage_plot_exists = os.path.exists(self.coverage_plot)
+
+        self.full_path_coverage_plot = os.path.join(
+            ConstantsSettings.static_directory, new_coverage_plot
         )
 
         if self.coverage_plot_exists:
-
-            os.rename(
-                self.coverage_plot,
-                os.path.join(ConstantsSettings.static_directory, new_coverage_plot),
-            )
+            shutil.move(self.coverage_plot, self.full_path_coverage_plot)
             self.coverage_plot = new_coverage_plot
 
-    def move_dotplot(self, main_static, static_dir):
-        """
-        Move dotplot to static directory."""
+    def move_dotplot(self, static_dir_plots):
+        """Move dotplot to static directory."""
 
-        new_coverage_plot = os.path.join(
-            main_static,
-            static_dir,
-            os.path.basename(self.dotplot),
+        new_dotplot = os.path.join(static_dir_plots, os.path.basename(self.dotplot))
+
+        self.full_path_dotplot = os.path.join(
+            ConstantsSettings.static_directory, new_dotplot
         )
 
-        if self.dotplot_exists:
+        self.dotplot_exists = os.path.exists(self.dotplot)
 
-            os.rename(
-                self.dotplot,
-                os.path.join(ConstantsSettings.static_directory, new_coverage_plot),
-            )
-            self.dotplot = new_coverage_plot
+        if os.path.exists(self.dotplot):
+            shutil.move(self.dotplot, self.full_path_dotplot)
+            self.dotplot = new_dotplot
 
-    def move_igv_files(self, main_static, static_dir):
+    def move_igv_files(self, static_dir):
         """
         Move igv files to static directory."""
+        print("MOVING FILES")
         new_bam = os.path.join(
-            ConstantsSettings.static_directory,
-            main_static,
             static_dir,
             os.path.basename(self.read_map_sorted_bam),
         )
         shutil.move(self.read_map_sorted_bam, new_bam)
         self.read_map_sorted_bam = new_bam
 
+        print(self.read_map_sorted_bam)
+
         new_bai = os.path.join(
-            ConstantsSettings.static_directory,
-            main_static,
             static_dir,
             os.path.basename(self.read_map_sorted_bam + ".bai"),
         )
@@ -986,8 +1265,6 @@ class Remapping:
         self.read_map_sorted_bam_index = new_bai
 
         new_reference_file = os.path.join(
-            ConstantsSettings.static_directory,
-            main_static,
             static_dir,
             os.path.basename(self.reference_file),
         )
@@ -995,8 +1272,6 @@ class Remapping:
         self.reference_file = new_reference_file
 
         new_reference_fasta_index = os.path.join(
-            ConstantsSettings.static_directory,
-            main_static,
             static_dir,
             os.path.basename(self.reference_fasta_index),
         )
@@ -1007,8 +1282,8 @@ class Remapping:
 
 class Mapping_Instance:
     prefix: str
-    reference: Type[Remapping] = None
-    assembly: Type[Remapping] = None
+    reference: Remapping = None
+    assembly: Remapping = None
     apres: bool = False
     rpres: bool = False
     success: str = "none"
@@ -1018,8 +1293,8 @@ class Mapping_Instance:
 
     def __init__(
         self,
-        reference: Type[Remapping],
-        assembly: Type[Remapping],
+        reference: Remapping,
+        assembly: Remapping,
         prefix,
         mapped_reads: int = 0,
         original_reads: int = 0,
@@ -1092,6 +1367,17 @@ class Mapping_Instance:
 
         return success
 
+    def export_mapping_files(self, destination):
+        """move files to media directory"""
+
+        if self.classification_success is not "none":
+            # self.reference.move_igv_files(destination)
+            self.reference.relocate_mapping_files(destination)
+
+            if self.assembly:
+
+                self.assembly.relocate_mapping_files(destination)
+
     def generate_full_mapping_report_entry(self):
 
         ntax = pd.concat((self.mapping_main_info, self.reference.report), axis=1)
@@ -1139,8 +1425,10 @@ class Mapping_Instance:
         ntax["reference_assembly_paf"] = self.reference.assembly_map_paf
 
         if self.reference.number_of_contigs_mapped > 0:
-            ntax["mapped_scaffolds_path"] = self.assembly.reference_fasta_index
-            ntax["mapped_scaffolds_index_path"] = self.assembly.assembly_map_paf
+            ntax["mapped_scaffolds_path"] = self.assembly.mapped_contigs_fasta
+            ntax[
+                "mapped_scaffolds_index_path"
+            ] = self.assembly.mapped_contigs_fasta_index
         else:
             ntax["mapped_scaffolds_path"] = ""
             ntax["mapped_scaffolds_index_path"] = ""
@@ -1163,7 +1451,7 @@ class Tandem_Remap:
         self,
         r1,
         r2,
-        remapping_method: Type[Software_detail],
+        remapping_method: Software_detail,
         assembly_file: str,
         type: str,
         prefix,
@@ -1207,7 +1495,7 @@ class Tandem_Remap:
 
         return mapped_instance
 
-    def reference_map(self, remap_target: Type[Remap_Target]):
+    def reference_map(self, remap_target: Remap_Target):
         rdir = os.path.join(
             self.remapping_method.dir,
             remap_target.name,
@@ -1235,7 +1523,7 @@ class Tandem_Remap:
 
         return target_remap_drone
 
-    def assembly_map(self, reference_remap: Type[Remapping]):
+    def assembly_map(self, reference_remap: Remapping):
 
         if len(reference_remap.mapped_contigs) == 0:
             return None
@@ -1289,9 +1577,9 @@ class Mapping_Manager(Tandem_Remap):
     def __init__(
         self,
         remap_targets: List[Remap_Target],
-        r1: Type[Read_class],
-        r2: Type[Read_class],
-        remapping_method: Type[Software_detail],
+        r1: Read_class,
+        r2: Read_class,
+        remapping_method: Software_detail,
         assembly_file: str,
         type: str,
         prefix,
@@ -1362,7 +1650,7 @@ class Mapping_Manager(Tandem_Remap):
 
             self.mapped_instances.append(mapped_instance)
 
-    def run_mappings_move_clean(self, main_static, static__plots_dir, media_dir):
+    def run_mappings_move_clean(self, static_plots_dir, media_dir):
         for target in self.remap_targets:
             mapped_instance = self.reciprocal_map(target)
 
@@ -1370,33 +1658,37 @@ class Mapping_Manager(Tandem_Remap):
 
             apres = mapped_instance.reference.number_of_contigs_mapped > 0
             rpres = mapped_instance.reference.number_of_reads_mapped > 0
+            print("###########")
+            print("apres", apres)
+            print("rpres", rpres)
             if rpres:
-                mapped_instance.reference.move_coverage_plot(
-                    main_static, static__plots_dir
-                )
-
-            if apres:
-                mapped_instance.reference.move_dotplot(main_static, static__plots_dir)
-
-            if mapped_instance.reference.number_of_reads_mapped > 0:
-                mapped_instance.reference.move_igv_files(main_static, media_dir)
+                mapped_instance.reference.move_coverage_plot(static_plots_dir)
+                mapped_instance.export_mapping_files(media_dir)
             else:
                 mapped_instance.reference.cleanup_files()
 
-    def move_plots_to_static(self, main_static, static_dir):
+            if apres:
+                mapped_instance.reference.move_dotplot(static_plots_dir)
+
+    def move_plots_to_static(self, static_dir):
         for instance in self.mapped_instances:
             apres = instance.reference.number_of_contigs_mapped > 0
             rpres = instance.reference.number_of_reads_mapped > 0
             if rpres:
-                instance.reference.move_coverage_plot(main_static, static_dir)
+                instance.reference.move_coverage_plot(static_dir)
             if apres:
-                instance.reference.move_dotplot(main_static, static_dir)
+                instance.reference.move_dotplot(static_dir)
 
-    def move_igv_to_static(self, main_static, static_dir):
+    def move_igv_to_static(self, static_dir):
+        print("Moving IGV files to static")
         for instance in self.mapped_instances:
 
             if instance.reference.number_of_reads_mapped > 0:
-                instance.reference.move_igv_files(main_static, static_dir)
+                instance.reference.move_igv_files(static_dir)
+
+    def export_mapping_files(self, output_dir):
+        for instance in self.mapped_instances:
+            instance.export_mapping_files(output_dir)
 
     def merge_mapping_reports(self):
 
@@ -1412,13 +1704,12 @@ class Mapping_Manager(Tandem_Remap):
 
             self.report = pd.concat(full_report, axis=0)
             self.clean_final_report()
-            self.report = self.report.sort_values(
-                ["coverage", "Hdepth"], ascending=False
-            )
 
     def clean_final_report(self):
 
         self.report.ngaps = self.report.ngaps.fillna(0)
+        self.report = self.report[self.report.coverage > 0]
+        self.report = self.report.sort_values(["coverage", "Hdepth"], ascending=False)
 
     def collect_final_report_summary_statistics(self):
         if self.report.shape[0] > 0:
