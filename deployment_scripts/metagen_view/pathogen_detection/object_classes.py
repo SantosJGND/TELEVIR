@@ -252,6 +252,7 @@ class RunCMD:
         start_time = time.perf_counter()
 
         bash_script, bash_log, bash_flag = self.temp_script_log()
+
         bash_script = os.path.join(self.logdir, bash_script)
         bash_log = os.path.join(self.logdir, bash_log)
         bash_flag = os.path.join(self.logdir, bash_flag)
@@ -275,6 +276,7 @@ class RunCMD:
         found_flag = False
         print("waiting for flag")
         print(cmd)
+        print(bash_script)
         print(bash_flag)
         while not found_flag:
             time.sleep(1)
@@ -286,10 +288,11 @@ class RunCMD:
 
         if self.flag_error(err):
             self.logger.error(f"errror in command: {self.bin}{cmd}")
+            self.logger.error(err)
 
-        os.remove(bash_script)
-        os.remove(bash_log)
-        os.remove(bash_flag)
+        # os.remove(bash_script)
+        # os.remove(bash_log)
+        # os.remove(bash_flag)
 
         self.output_disposal(cmd, err, out, exec_time)
 

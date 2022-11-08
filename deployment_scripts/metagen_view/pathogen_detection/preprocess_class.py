@@ -6,14 +6,14 @@ import subprocess
 import sys
 from typing import Type
 
-from pathogen_detection.object_classes import RunCMD
+from pathogen_detection.object_classes import Read_class, RunCMD
 
 
 class Preprocess:
     def __init__(
         self,
-        r1,
-        r2,
+        r1: Read_class,
+        r2: Read_class,
         preprocess_dir,
         preprocess_type,
         preprocess_method,
