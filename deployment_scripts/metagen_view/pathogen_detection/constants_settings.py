@@ -6,13 +6,13 @@ Ceated on 06/05/2022
 import json
 import os
 
-from metagen_view.settings import STATICFILES_DIRS
+from metagen_view.settings import STATIC_URL, STATICFILES_DIRS
 
 
 class ConstantsSettings:
 
     project_directory = "/mnt/sdc/TELEVIR/projects/"
-    static_directory = STATICFILES_DIRS[0]
+    static_directory = STATIC_URL
     exclude_descriptions = ["phage", "Phage"]
 
 

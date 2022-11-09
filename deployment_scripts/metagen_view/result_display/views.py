@@ -183,6 +183,7 @@ def clean_filepath(filepath: str):
 
     if filepath.startswith("/mnt/sdc/field_studies/static"):
         filepath = filepath.replace("/mnt/sdc/field_studies/static", "")
+
     print(filepath)
     return filepath
 
@@ -205,6 +206,7 @@ def Sample_detail(requesdst, project="", sample="", name=""):
     home page
     """
     template_name = "result_display/sample_detail.html"
+
     project_main = Projects.objects.get(name=project)
     sample_main = Sample.objects.get(name=sample, project__name=project)
     #
@@ -214,7 +216,6 @@ def Sample_detail(requesdst, project="", sample="", name=""):
     #
     run_assembly = RunAssembly.objects.get(sample=sample_main, run=run_main)
     #
-
     run_remap = RunRemapMain.objects.get(sample=sample_main, run=run_main)
     #
     read_classification = ReadClassification.objects.get(
@@ -223,13 +224,12 @@ def Sample_detail(requesdst, project="", sample="", name=""):
     #
     final_report = FinalReport.objects.filter(sample=sample_main, run=run_main)
     final_report = clean_queryset_filepaths(final_report)
-    #
 
+    #
     contig_classification = ContigClassification.objects.get(
         sample=sample_main, run=run_main
     )
     #
-
     reference_remap_main = ReferenceMap_Main.objects.filter(
         sample=sample_main, run=run_main
     )
