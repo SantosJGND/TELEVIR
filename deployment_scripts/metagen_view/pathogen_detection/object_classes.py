@@ -555,8 +555,6 @@ class Read_class:
             for line in f_in:
 
                 if len(lines) == 4:
-                    print(lines[-1])
-                    print(lines[-1][0])
 
                     if lines[-1][0].decode() != "@":
                         for ln in lines:
@@ -582,6 +580,7 @@ class Read_class:
         temp_reads_keep = os.path.join(
             os.path.dirname(output), f"keep_temp_{randint(1,1999)}.lst"
         )
+
         with open(temp_reads_keep, "w") as f:
             f.write("\n".join(read_list))
 

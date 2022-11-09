@@ -297,9 +297,7 @@ class RunDetail(models.Model):
     name = models.CharField(
         max_length=100, db_index=True, blank=True, null=True
     )  # Create your models here.
-
     sample = models.ForeignKey(Sample, blank=True, null=True, on_delete=models.CASCADE)
-
     run = models.ForeignKey(RunMain, blank=True, null=True, on_delete=models.CASCADE)
 
     max_depth = models.FloatField(blank=True, null=True)
@@ -311,9 +309,9 @@ class RunDetail(models.Model):
     input = models.CharField(max_length=300, blank=True, null=True)
     processed = models.CharField(max_length=300, blank=True, null=True)
     processed_percent = models.FloatField(blank=True, null=True)
-
     sift_preproc = models.BooleanField(blank=True, null=True)
     sift_remap = models.BooleanField(blank=True, null=True)
+
     sift_removed_pprc = models.CharField(max_length=300, blank=True, null=True)
     processing_final = models.CharField(max_length=300, blank=True, null=True)
     processing_final_percent = models.FloatField(blank=True, null=True)
@@ -322,7 +320,6 @@ class RunDetail(models.Model):
     merged_files = models.CharField(max_length=300, blank=True, null=True)
 
     class Meta:
-
         ordering = [
             "name",
         ]

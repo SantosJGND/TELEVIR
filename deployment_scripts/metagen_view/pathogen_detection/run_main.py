@@ -649,6 +649,8 @@ class RunMain_class(Run_Deployment_Methods):
         self.logger.info(f"classification: {self.classification}")
         self.logger.info(f"sift: {self.sift}")
         self.logger.info(f"remapping: {self.remapping}")
+        print(self.sample.r1.current)
+        print(self.sample.r2.current)
 
         if self.quality_control:
             import shutil
@@ -667,6 +669,9 @@ class RunMain_class(Run_Deployment_Methods):
 
             self.sample.reads_after_processing = self.sample.current_total_read_number()
             self.sample.get_qc_data()
+
+            print(self.r1.current)
+            print(self.sample.reads_after_processing)
 
         else:
             self.deploy_QC(fake_run=True)
@@ -719,6 +724,7 @@ class RunMain_class(Run_Deployment_Methods):
                 self.max_remap,
                 self.taxid_limit,
             )
+
             self.aclass_summary = self.metadata_tool.aclass
             self.rclass_summary = self.metadata_tool.rclass
             self.merged_targets = self.metadata_tool.merged_targets
