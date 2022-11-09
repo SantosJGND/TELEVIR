@@ -168,13 +168,14 @@ class RunDetail_main:
         )
 
         self.static_dir_plots = os.path.join(
-            ConstantsSettings.static_directory,
             self.static_dir,
             "plots",
         )
 
+        print(self.static_dir_plots)
+
         os.makedirs(
-            self.static_dir_plots,
+            os.path.join(ConstantsSettings.static_directory, self.static_dir_plots),
             exist_ok=True,
         )
 
@@ -187,7 +188,7 @@ class RunDetail_main:
             exist_ok=True,
         )
 
-        # input
+        # input #
         self.sample_name = config["sample_name"]
         self.type = config["type"]
 

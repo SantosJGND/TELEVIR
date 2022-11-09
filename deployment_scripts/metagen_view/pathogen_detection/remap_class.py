@@ -1213,8 +1213,7 @@ class Remapping:
             self.dotplot_exists = os.path.exists(self.dotplot)
 
     def move_coverage_plot(self, static_dir_plots):
-        """
-        Move coverage plot to static directory."""
+        """Move coverage plot to static directory."""
         new_coverage_plot = os.path.join(
             static_dir_plots, os.path.basename(self.coverage_plot)
         )
