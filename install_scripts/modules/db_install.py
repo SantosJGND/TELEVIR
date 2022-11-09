@@ -140,10 +140,9 @@ class setup_dl:
         index fasta files.
         :return:
         """
-
         for k, v in self.fastas.items():
             for kk, vv in v.items():
-                # self.bgzip_file(vv)
+                self.bgzip_file(vv)
 
                 if not os.path.isfile(vv + ".fai"):
                     logging.info(f"indexing {vv}")
