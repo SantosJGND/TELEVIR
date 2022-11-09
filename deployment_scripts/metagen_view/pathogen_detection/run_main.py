@@ -687,11 +687,17 @@ class RunMain_class(Run_Deployment_Methods):
                 self.preprocess_drone.processed_qc_report
             )
 
-            self.sample.r1.is_clean()
-            self.sample.r2.is_clean()
+            if self.sample.r1.current_status == "raw":
 
-            self.sample.reads_after_processing = self.sample.current_total_read_number()
-            self.sample.get_fake_qc_data()
+                self.sample.r1.is_clean()
+                self.sample.r2.is_clean()
+
+                self.sample.reads_after_processing = (
+                    self.sample.current_total_read_number()
+                )
+
+                self.sample.get_fake_qc_data()
+
             print(self.r1.current)
             print(self.sample.reads_after_processing)
 
