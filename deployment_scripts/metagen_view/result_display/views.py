@@ -284,9 +284,8 @@ def IGV_display(requestdst):
             )
 
             def remove_pre_static(path, pattern):
-                path = path.split(pattern)[1]
-                path = f"/{pattern}{path}"
-                print(path)
+                BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                path = os.path.join(BASE_DIR, path)
                 return path
 
             path_name_bam = remove_pre_static(ref_map.bam_file_path, "igv")
@@ -363,7 +362,7 @@ def download_file_igv(requestdst):
 
             BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             DLDIR = os.path.join(BASE_DIR, STATICFILES_DIRS[0], "igv_files")
-            filepath = os.path.join(DLDIR, filepath)
+            filepath = os.path.join(BASE_DIR, filepath)
 
             if not os.path.exists(filepath):
                 return HttpResponseNotFound(f"file {filepath} not found")
@@ -389,6 +388,8 @@ def download_file(requestdst):
         if form.is_valid():
             filepath = form.cleaned_data.get("file_path")
             # filepath = clean_filepath(filepath)
+            BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            filepath = os.path.join(BASE_DIR, filepath)
 
             if not os.path.isfile(filepath):
                 return HttpResponseNotFound(
