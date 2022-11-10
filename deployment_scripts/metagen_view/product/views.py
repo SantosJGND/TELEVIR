@@ -513,7 +513,7 @@ def Sample_detail(requesdst, project="", sample="", name=""):
     final_report = FinalReport.objects.filter(sample=sample_main, run=run_main)
 
     final_report = remove_unwanted_runs(final_report)
-    final_report = clean_queryset_filepaths(final_report)
+    # final_report = clean_queryset_filepaths(final_report)
 
     #
     contig_classification = ContigClassification.objects.get(
