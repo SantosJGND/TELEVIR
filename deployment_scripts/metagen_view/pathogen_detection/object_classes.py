@@ -412,11 +412,11 @@ class Read_class:
     enriched: str
     depleted: str
     current_status: str
-    read_number_raw: int
-    read_number_clean: int
-    read_number_enriched: int
-    read_number_depleted: int
-    read_number_current: int
+    read_number_raw: int = 0
+    read_number_clean: int = 0
+    read_number_enriched: int = 0
+    read_number_depleted: int = 0
+    read_number_current: int = 0
 
     def __init__(
         self, filepath, clean_dir: str, enriched_dir: str, depleted_dir: str, bin: str
@@ -436,19 +436,23 @@ class Read_class:
         self.filepath = os.path.join(
             os.path.dirname(clean_dir), os.path.basename(filepath)
         )
-
-        shutil.copy(
-            filepath,
-            self.filepath,
-        )
-
-        self.filepath = filepath
         self.current = self.filepath
 
         self.exists = os.path.isfile(filepath) and os.path.getsize(filepath) > 100
-        self.read_number_raw = self.get_current_fastq_read_number()
-        if self.read_number_raw == 0:
-            self.exists = False
+
+        if self.exists:
+
+            shutil.copy(
+                filepath,
+                self.filepath,
+            )
+
+            self.filepath = filepath
+
+            self.read_number_raw = self.get_current_fastq_read_number()
+
+            if self.read_number_raw == 0:
+                self.exists = False
 
         self.prefix = self.determine_read_name(filepath)
         self.clean = os.path.join(clean_dir, self.prefix + ".clean.fastq.gz")
