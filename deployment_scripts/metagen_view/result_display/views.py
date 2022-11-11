@@ -364,7 +364,7 @@ def download_file_igv(requestdst):
             DLDIR = os.path.join(BASE_DIR, STATICFILES_DIRS[0], "igv_files")
             filepath = os.path.join(BASE_DIR, filepath)
 
-            if not os.path.exists(filepath):
+            if not os.path.isfile(filepath):
                 return HttpResponseNotFound(f"file {filepath} not found")
 
             path = open(filepath, "rb")

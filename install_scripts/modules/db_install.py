@@ -458,9 +458,9 @@ class setup_dl:
         download virossaurus from viralzone.
         :return:
         """
-        fl = "https://viralzone.expasy.org/resources/Virosaurus/2020_4/virosaurus90_vertebrate%2D20200330.fas.gz"
+        fl = "https://viralzone.expasy.org/resources/Virosaurus/2020_4/virosaurus98_vertebrate-20200330.fas.gz"
 
-        if not os.path.isfile(self.seqdir + os.path.basename(fl).replace("%2D", "-")):
+        if not os.path.isfile(self.seqdir + os.path.basename(fl)):
             if self.test:
                 logging.info("virosaurus90_vertebrate%2D20200330.fas not found.")
                 return False
