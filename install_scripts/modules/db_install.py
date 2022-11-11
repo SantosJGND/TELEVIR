@@ -468,7 +468,9 @@ class setup_dl:
                 logging.info(
                     "virosaurus90_vertebrate%2D20200330.fas not found. downloading..."
                 )
-                subprocess.run(["wget", fl, "-P", self.seqdir])
+                subprocess.run(
+                    ["wget", "--no-check-certificate", fl, "-P", self.seqdir]
+                )
         else:
             logging.info("virosaurus90_vertebrate%2D20200330.fas found.")
 
