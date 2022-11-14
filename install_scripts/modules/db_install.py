@@ -462,17 +462,17 @@ class setup_dl:
 
         if not os.path.isfile(self.seqdir + os.path.basename(fl)):
             if self.test:
-                logging.info("virosaurus90_vertebrate%2D20200330.fas not found.")
+                logging.info("virosaurus90_vertebrate_20200330.fas not found.")
                 return False
             else:
                 logging.info(
-                    "virosaurus90_vertebrate%2D20200330.fas not found. downloading..."
+                    "virosaurus90_vertebrate_20200330.fas not found. downloading..."
                 )
                 subprocess.run(
                     ["wget", "--no-check-certificate", fl, "-P", self.seqdir]
                 )
         else:
-            logging.info("virosaurus90_vertebrate%2D20200330.fas found.")
+            logging.info("virosaurus90_vertebrate_20200330.fas found.")
 
         self.fastas["nuc"]["virosaurus"] = self.seqdir + os.path.basename(fl).replace(
             "%2D", "-"
@@ -1215,7 +1215,7 @@ class setup_install(setup_dl):
 
             if not os.path.isfile(f"{self.metadir}/protein_acc2protid.tsv"):
                 seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
-                seqmap.columns = ["acc", "protid"]
+                seqmap.columns = ["acc", "protid", "genid", "description"]
                 seqmap.to_csv(
                     f"{self.metadir}/protein_acc2protid.tsv",
                     sep="\t",
