@@ -357,7 +357,7 @@ class Params_Nanopore:
             # "centrifuge",
             "diamond",
         ],
-        "REMAPPING": ["minimap-rem"],  # snippy, rematch, bowtie, minimap-rem
+        "REMAPPING": ["minimap2"],  # snippy, rematch, bowtie, minimap-rem
     }
 
     ################################## PARAMS
@@ -575,7 +575,7 @@ class Params_Nanopore:
             "BOWTIE_ARGS": ["--sensitive-local"],
             "REMAP_REF": ["refseq_viral.genome.fna.gz"],
         },
-        "minimap-rem": {
+        "minimap2": {
             "MINIMAP_THREADS": ["-t 4"],
             "MINIMAP_ARGS": ["-t 4 --secondary=no"],
             "MINIMAP_DB": ["refseq_viral.genome.fna.gz"],

@@ -38,7 +38,7 @@ class Televir_Layout_full:
 class Televir_Layout_minimal:
 
     # databases. chose at least one.
-    install_refseq_prot = True
+    install_refseq_prot = False
     install_refseq_gen = True
     install_swissprot = True
     install_rvdb = True
@@ -51,7 +51,7 @@ class Televir_Layout_minimal:
     install_kraken2 = True
     install_krakenuniq = True
     install_kaiju = True
-    install_diamond = True
+    install_diamond = False
     install_minimap2 = False
     install_fastviromeexplorer = True
     install_clark = False
