@@ -129,11 +129,21 @@ class setup_dl:
         :return:
         """
 
+        if os.path.isfile(filename + ".bgzipped"):
+            logging.info(f"{filename} already compressed.")
+            return
+
         basename = os.path.splitext(filename)[0]
+
+        if os.path.isfile(basename):
+            os.remove(basename)
+
         subprocess.run(["gunzip", filename])
 
         logging.info(f"bgzipping {filename}")
         subprocess.run(["bgzip", basename])
+
+        check = open(basename + ".bgzipped", "w").close()
 
     def index_fasta_files(self):
         """
