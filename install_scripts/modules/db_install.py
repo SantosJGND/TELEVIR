@@ -140,7 +140,9 @@ class setup_dl:
         index fasta files.
         :return:
         """
+        print(self.fastas.items())
         for k, v in self.fastas.items():
+            print(k, v)
             for kk, vv in v.items():
                 self.bgzip_file(vv)
 

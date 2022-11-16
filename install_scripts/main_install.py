@@ -700,6 +700,7 @@ class main_setup:
 
             # repdl = self.setup_dir(self.INSTALL_PARAMS)
             self.prep_dl()
+            logging.INFO("Downloading databases and software")
             self.dl_metadata_prot()
 
             if self.soft:
