@@ -559,11 +559,17 @@ class run_centrifuge(Classifier_init):
         if check_report_empty(self.report_path):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
-        report = pd.read_csv(
-            self.full_report_path, sep="\t", header=None, usecols=[0, 6]
-        ).rename(columns={0: "qseqid", 6: "acc"})
+        try:
 
-        report = report[report.acc != "unclassified"][["qseqid", "acc"]]
+            report = pd.read_csv(
+                self.full_report_path, sep="\t", header=None, usecols=[0, 6]
+            ).rename(columns={0: "qseqid", 6: "acc"})
+
+            report = report[report.acc != "unclassified"][["qseqid", "acc"]]
+
+        except:
+            report = pd.DataFrame(columns=["qseqid", "acc"])
+
         return pd.DataFrame(report)
 
 

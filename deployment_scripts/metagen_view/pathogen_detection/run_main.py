@@ -141,7 +141,7 @@ class RunDetail_main:
             ConstantsSettings.static_directory, self.static_dir
         )
 
-        self.static_dir_reads = f"depleted_reads"
+        self.static_dir_reads = f"{self.prefix}/depleted_reads"
         self.media_dir_igv = os.path.join(
             ConstantsSettings.static_directory,
             self.static_dir,
@@ -157,7 +157,7 @@ class RunDetail_main:
             exist_ok=True,
         )
 
-        self.static_dir_classification = f"classification_reports"
+        self.static_dir_classification = f"{self.prefix}/classification_reports"
         os.makedirs(
             os.path.join(
                 ConstantsSettings.static_directory,
@@ -391,6 +391,53 @@ class RunDetail_main:
             config["directories"]["PREPROCESS"],
             config["directories"]["reads_enriched_dir"],
             config["directories"]["reads_depleted_dir"],
+        )
+
+        self.static_dir_reads = f"{self.prefix}/depleted_reads"
+        self.media_dir_igv = os.path.join(
+            ConstantsSettings.static_directory,
+            self.static_dir,
+            self.static_dir_igv,
+        )
+
+        os.makedirs(
+            os.path.join(
+                ConstantsSettings.static_directory,
+                self.static_dir,
+                self.static_dir_reads,
+            ),
+            exist_ok=True,
+        )
+
+        self.static_dir_classification = f"{self.prefix}/classification_reports"
+        os.makedirs(
+            os.path.join(
+                ConstantsSettings.static_directory,
+                self.static_dir,
+                self.static_dir_classification,
+            ),
+            exist_ok=True,
+        )
+
+        self.static_dir_plots = os.path.join(
+            self.static_dir,
+            "plots",
+        )
+
+        print(self.static_dir_plots)
+
+        os.makedirs(
+            os.path.join(ConstantsSettings.static_directory, self.static_dir_plots),
+            exist_ok=True,
+        )
+
+        os.makedirs(
+            os.path.join(
+                ConstantsSettings.static_directory,
+                self.static_dir,
+                self.static_dir_igv,
+            ),
+            exist_ok=True,
         )
 
         ### actions
