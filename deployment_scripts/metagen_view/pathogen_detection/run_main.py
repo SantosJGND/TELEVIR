@@ -726,10 +726,6 @@ class RunMain_class(Run_Deployment_Methods):
             self.deploy_QC(fake_run=True)
             import shutil
 
-            shutil.copy(self.sample.r1.current, self.sample.r1.clean)
-            if self.sample.r2.exists:
-                shutil.copy(self.sample.r2.current, self.sample.r2.clean)
-
             self.sample.qc_soft = "none"
             self.sample.input_fastqc_report = self.preprocess_drone.input_qc_report
             self.sample.processed_fastqc_report = (
