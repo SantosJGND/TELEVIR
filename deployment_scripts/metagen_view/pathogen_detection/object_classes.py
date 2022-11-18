@@ -486,9 +486,8 @@ class Read_class:
 
         filename = os.path.basename(filepath)
 
-        filename = filename.replace(".gz", "")
-
-        filename = filename.replace(".fasta", "").replace(".fa", "")
+        filename = os.path.splitext(filename)[0]
+        filename = os.path.splitext(filename)[0]
 
         return filename
 
