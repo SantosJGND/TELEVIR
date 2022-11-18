@@ -33,7 +33,7 @@ class RunCMD:
         self.task = task
 
         self.logger = logging.getLogger(f"{prefix}_{task}")
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging.ERROR)
         self.logger.addHandler(logging.StreamHandler())
         self.logger.propagate = False
 

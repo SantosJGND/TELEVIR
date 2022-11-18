@@ -762,9 +762,9 @@ class RunMain_class(Run_Deployment_Methods):
             self.sample.r1.deplete(self.depletion_drone.classified_reads_list)
             self.sample.r2.deplete(self.depletion_drone.classified_reads_list)
 
-        if self.enrichment or self.depletion or self.assembly:
-            self.sample.clean_unique()
-            self.sample.trimmomatic_sort()
+        # if self.enrichment or self.depletion or self.assembly:
+        #    self.sample.clean_unique()
+        #    self.sample.trimmomatic_sort()
 
         self.logger.info(
             f"r1 reads after sort: {self.sample.r1.get_current_fastq_read_number()}"
