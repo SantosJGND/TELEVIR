@@ -466,9 +466,18 @@ class Read_class:
         self.read_number_filtered = 0
 
     def update(self, clean_dir: str, enriched_dir: str, depleted_dir: str):
+
         self.clean = os.path.join(clean_dir, self.prefix + ".clean.fastq.gz")
         self.enriched = os.path.join(enriched_dir, self.prefix + ".enriched.fastq.gz")
         self.depleted = os.path.join(depleted_dir, self.prefix + ".depleted.fastq.gz")
+
+        if os.path.isfile(self.current):
+            if self.current_status == "clean":
+                shutil.move(self.current, self.clean)
+            if self.current_status == "enriched":
+                shutil.move(self.current, self.enriched)
+            if self.current_status == "depleted":
+                shutil.move(self.current, self.depleted)
 
     def copy(self, filepath):
         """
