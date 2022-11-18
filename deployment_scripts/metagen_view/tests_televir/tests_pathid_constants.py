@@ -17,7 +17,6 @@ from pathogen_detection.object_classes import (
 )
 from pathogen_detection.preprocess_class import Preprocess
 from pathogen_detection.run_main import RunMain_class, get_bindir_from_binaries
-from this import d
 
 
 class AttrDict(dict):

@@ -14,7 +14,6 @@ from pathogen_detection.update_DBs import (
     Update_Sample,
     Update_Sample_Runs,
 )
-from this import d
 
 from product.constants_settings import ConstantsSettings
 from product.models import Fastq_Input, Processed, Submitted

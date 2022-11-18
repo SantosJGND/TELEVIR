@@ -194,6 +194,7 @@ class RunDetail_main:
 
         self.r1 = Read_class(
             config["r1"],
+            self.prefix,
             config["directories"]["PREPROCESS"],
             config["directories"]["reads_enriched_dir"],
             config["directories"]["reads_depleted_dir"],
@@ -202,6 +203,7 @@ class RunDetail_main:
 
         self.r2 = Read_class(
             config["r2"],
+            self.prefix,
             config["directories"]["PREPROCESS"],
             config["directories"]["reads_enriched_dir"],
             config["directories"]["reads_depleted_dir"],

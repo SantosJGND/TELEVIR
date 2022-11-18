@@ -419,7 +419,13 @@ class Read_class:
     read_number_current: int = 0
 
     def __init__(
-        self, filepath, clean_dir: str, enriched_dir: str, depleted_dir: str, bin: str
+        self,
+        filepath,
+        prefix,
+        clean_dir: str,
+        enriched_dir: str,
+        depleted_dir: str,
+        bin: str,
     ):
         """
         Initialize.
@@ -433,10 +439,10 @@ class Read_class:
 
         """
         self.cmd = RunCMD(bin)
+
         self.filepath = os.path.join(
-            os.path.dirname(clean_dir), os.path.basename(filepath)
+            os.path.dirname(clean_dir), prefix + ".input.fastq.gz"
         )
-        self.current = self.filepath
 
         self.exists = os.path.isfile(filepath) and os.path.getsize(filepath) > 100
 
@@ -446,7 +452,7 @@ class Read_class:
                 filepath,
                 self.filepath,
             )
-
+            self.current = self.filepath
             self.filepath = filepath
 
             self.read_number_raw = self.get_current_fastq_read_number()
@@ -470,14 +476,6 @@ class Read_class:
         self.clean = os.path.join(clean_dir, self.prefix + ".clean.fastq.gz")
         self.enriched = os.path.join(enriched_dir, self.prefix + ".enriched.fastq.gz")
         self.depleted = os.path.join(depleted_dir, self.prefix + ".depleted.fastq.gz")
-
-        if os.path.isfile(self.current):
-            if self.current_status == "clean":
-                shutil.move(self.current, self.clean)
-            if self.current_status == "enriched":
-                shutil.move(self.current, self.enriched)
-            if self.current_status == "depleted":
-                shutil.move(self.current, self.depleted)
 
     def copy(self, filepath):
         """
@@ -618,7 +616,6 @@ class Read_class:
         """
         filter read file using exisiting lsit of reads.
         Args:
-
             input: path to input file.
             output: path to output file.
             read_list: path to file containing read list.
