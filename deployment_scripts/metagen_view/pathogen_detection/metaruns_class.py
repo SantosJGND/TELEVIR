@@ -355,6 +355,7 @@ class metaclass_run:
         Generate run summary dataclasses, update database.
         :return:
         """
+        self.RunMain.move_reads_to_static()
         self.RunMain.generate_output_data_classes()
 
         Update_Sample_Runs(self.RunMain)

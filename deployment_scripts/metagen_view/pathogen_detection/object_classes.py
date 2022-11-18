@@ -620,7 +620,7 @@ class Read_class:
 
         cmd = "seqtk subseq %s %s | gzip > %s" % (input, read_list, output)
 
-        self.cmd.run(cmd)
+        self.cmd.run_script(cmd)
 
     def enrich(self, read_list):
         """
@@ -852,7 +852,7 @@ class Sample_runClass:
             unique_reads,
         ]
 
-        self.cmd.run_bash(cmd)
+        self.cmd.run_script(cmd)
         if not os.path.exists(unique_reads) or os.path.getsize(unique_reads) == 0:
             print(
                 f"No unique reads found in {self.r1.current}, skipping unique read cleaning"
@@ -864,13 +864,13 @@ class Sample_runClass:
     def clean_unique_PE(self):
 
         WHERETO = os.path.dirname(self.r1.current)
-        common_reads = os.path.join(WHERETO, "common_reads.lst")
+        common_reads = os.path.join(WHERETO, f"common_reads_{randint(0,10000)}.lst")
 
         cmd_find_common = [
             f"seqkit common -n -i {self.r1.current} {self.r1.current} | paste - - - - | cut -f1 | sort | uniq | sed 's/^@//g' > {common_reads}"
         ]
 
-        self.cmd.run(cmd_find_common)
+        self.cmd.run_script(cmd_find_common)
 
         if os.path.getsize(common_reads) == 0:
             return

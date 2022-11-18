@@ -381,6 +381,8 @@ class RunDetail_main:
         self.filtered_reads_dir = config["directories"]["PREPROCESS"]
         self.log_dir = config["directories"]["log_dir"]
 
+        logging.info("updating directories root: {}".format(self.root))
+
         self.sample.r1.update(
             config["directories"]["PREPROCESS"],
             config["directories"]["reads_enriched_dir"],
@@ -764,6 +766,13 @@ class RunMain_class(Run_Deployment_Methods):
             self.sample.clean_unique()
             self.sample.trimmomatic_sort()
 
+        self.logger.info(
+            f"r1 reads after sort: {self.sample.r1.get_current_fastq_read_number()}"
+        )
+        self.logger.info(
+            f"r2 reads after sort: {self.sample.r2.get_current_fastq_read_number()}"
+        )
+
         if self.assembly:
             self.deploy_ASSEMBLY()
 
@@ -789,7 +798,7 @@ class RunMain_class(Run_Deployment_Methods):
             self.report = self.remap_manager.report
             self.export_final_reports()
 
-        self.move_reads_to_static()
+        # self.move_reads_to_static()
         self.Update_exec_time()
 
     #### SUMMARY FUNCTIONS ####
