@@ -471,11 +471,36 @@ class Read_class:
         self.read_number_depleted = 0
         self.read_number_filtered = 0
 
-    def update(self, clean_dir: str, enriched_dir: str, depleted_dir: str):
+    def update(self, prefix, clean_dir: str, enriched_dir: str, depleted_dir: str):
 
         self.clean = os.path.join(clean_dir, self.prefix + ".clean.fastq.gz")
         self.enriched = os.path.join(enriched_dir, self.prefix + ".enriched.fastq.gz")
         self.depleted = os.path.join(depleted_dir, self.prefix + ".depleted.fastq.gz")
+
+        if self.exists:
+            self.read_number_raw = self.get_current_fastq_read_number()
+            run_filepath = os.path.join(
+                os.path.dirname(clean_dir), self.prefix + ".input.fastq.gz"
+            )
+
+            if self.current != run_filepath:
+                shutil.copy(
+                    self.current,
+                    run_filepath,
+                )
+                self.current = run_filepath
+                self.filepath = run_filepath
+
+            if self.current_status == "clean":
+                self.clean = self.current
+            if self.current_status == "enriched":
+                self.enriched = self.current
+            if self.current_status == "depleted":
+                self.depleted = self.current
+
+        else:
+            print(self.current, self.current_status, prefix, "does not exist")
+            # raise Exception("File does not exist")
 
     def copy(self, filepath):
         """
@@ -718,9 +743,12 @@ class Read_class:
         new_file = os.path.join(
             ConstantsSettings.static_directory, main_static, sub_static, new_file
         )
+        if self.exists and not os.path.isfile(self.current):
+            print("File does not exist: %s" % self.current)
+            print(self.clean, self.enriched, self.depleted)
 
-        if not os.path.exists(new_file) and self.exists:
-            os.rename(self.current, new_file)
+        if not os.path.exists(new_file) and os.path.isfile(self.current):
+            shutil.copy(self.current, new_file)
 
         self.current = new_file
 

@@ -386,12 +386,14 @@ class RunDetail_main:
         logging.info("updating directories root: {}".format(self.root))
 
         self.sample.r1.update(
+            self.prefix,
             config["directories"]["PREPROCESS"],
             config["directories"]["reads_enriched_dir"],
             config["directories"]["reads_depleted_dir"],
         )
 
         self.sample.r2.update(
+            self.prefix,
             config["directories"]["PREPROCESS"],
             config["directories"]["reads_enriched_dir"],
             config["directories"]["reads_depleted_dir"],
