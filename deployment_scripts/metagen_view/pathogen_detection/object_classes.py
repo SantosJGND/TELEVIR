@@ -439,21 +439,21 @@ class Read_class:
 
         """
         self.cmd = RunCMD(bin)
-
-        self.filepath = os.path.join(
-            os.path.dirname(clean_dir), prefix + ".input.fastq.gz"
-        )
+        self.filepath = filepath
+        self.current = filepath
 
         self.exists = os.path.isfile(filepath) and os.path.getsize(filepath) > 100
 
         if self.exists:
-
-            shutil.copy(
-                filepath,
-                self.filepath,
+            run_filepath = os.path.join(
+                os.path.dirname(clean_dir), prefix + ".input.fastq.gz"
             )
-            self.current = self.filepath
-            self.filepath = filepath
+            shutil.copy(
+                self.current,
+                run_filepath,
+            )
+            self.current = run_filepath
+            self.filepath = run_filepath
 
             self.read_number_raw = self.get_current_fastq_read_number()
 
@@ -649,6 +649,9 @@ class Read_class:
         """
         Set current status to clean.
         """
+        if not self.exists:
+            return
+        shutil.copy(self.current, self.clean)
         self.current = self.clean
         self.read_number_clean = self.get_current_fastq_read_number()
         self.current_status = "clean"
@@ -658,6 +661,9 @@ class Read_class:
         """
         Set current status to enriched.
         """
+        if not self.exists:
+            return
+        shutil.copy(self.current, self.enriched)
         self.current = self.enriched
         self.read_number_enriched = self.get_current_fastq_read_number()
         self.current_status = "enriched"
@@ -668,6 +674,9 @@ class Read_class:
         """
         Set current status to depleted.
         """
+        if not self.exists:
+            return
+        shutil.copy(self.current, self.depleted)
         self.current = self.depleted
         self.read_number_depleted = self.get_current_fastq_read_number()
         self.current_status = "depleted"

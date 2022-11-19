@@ -11,14 +11,14 @@ class Televir_Layout_full:
 
     # classification software.
     install_centrifuge = True
-    install_kraken2 = True
+    install_kraken2 = False
     install_krakenuniq = True
     install_kaiju = True
     install_diamond = True
     install_minimap2 = True
     install_fastviromeexplorer = True
     install_clark = False
-    install_desamba = True
+    install_desamba = False
     install_blast = True
 
     # assemblers.
@@ -48,7 +48,7 @@ class Televir_Layout_minimal:
 
     # classification software.
     install_centrifuge = True
-    install_kraken2 = True
+    install_kraken2 = False
     install_krakenuniq = True
     install_kaiju = True
     install_diamond = False

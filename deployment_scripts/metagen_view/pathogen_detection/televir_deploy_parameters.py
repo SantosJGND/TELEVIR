@@ -341,7 +341,7 @@ class Params_Nanopore:
     SOFTWARE = {
         "PREPROCESS": ["nanofilt"],  # "nanofilt", trimmomatic
         "ENRICHMENT": [
-            # "",
+            "",
             # "kaiju",
             # "krakenuniq",
             "centrifuge",
@@ -350,12 +350,12 @@ class Params_Nanopore:
         "CONTIG_CLASSIFICATION": ["blast", "minimap2_asm"],  # , "minimap-asm"],
         "READ_CLASSIFICATION": [
             # "krakenuniq",
-            "fastviromeexplorer",
+            # "fastviromeexplorer",
             # "clark",
             # "desamba",
-            # "kaiju",
-            # "centrifuge",
-            "diamond",
+            "kaiju",
+            "centrifuge",
+            # "diamond",
         ],
         "REMAPPING": ["minimap2"],  # snippy, rematch, bowtie, minimap-rem
     }
