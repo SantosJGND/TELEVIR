@@ -527,6 +527,7 @@ def Update_Sample_Runs_DB(run_class: Type[RunMain_class]):
                 description=row["description"],
                 ref_db=row["refdb"],
                 coverage=row["coverage"],
+                windows_covered=row["windows_covered"],
                 depth=row["Hdepth"],
                 depthR=row["HdepthR"],
                 ngaps=row["ngaps"],

@@ -61,7 +61,7 @@ class coverage_parse:
 
         self.ctgl = ctg_lens
         self.report = pd.DataFrame(
-            [[x, 0, 0, 0, 0, 0, 0, 0, 0] for x in ctg_lens.keys()],
+            [[x, 0, 0, 0, 0, 0, 0, 0, 0, 0] for x in ctg_lens.keys()],
             columns=[
                 "ID",
                 "Hdepth",
@@ -69,6 +69,7 @@ class coverage_parse:
                 "coverage",
                 "nregions",
                 "Rsize",
+                "windows_covered",
                 "ngaps",
                 "Gdist",
                 "Gsize",
@@ -126,7 +127,18 @@ class coverage_parse:
 
         return nbed
 
-    def bedstats(self, bedm, nwindows=50):
+    def calculate_windows(self, ctgsize, minw=3, maxw=10, wsize=2000):
+        """calculate number of windows to use for coverage calculation."""
+        ratio = ctgsize / wsize
+
+        if ratio < minw:
+            return minw
+        elif ratio > maxw:
+            return maxw
+        else:
+            return int(ratio)
+
+    def bedstats(self, bedm, nwindows=10):
         """
         calculate average depth, % over self.Xm coverage, and gap number, size and distance.
         :param bedm: bedmap df to calculate stats on.
@@ -141,7 +153,7 @@ class coverage_parse:
         ### region operations
         bedp = bedm[bedm.x >= self.Xm].reset_index(drop=True)
         if bedp.shape[0] == 0:
-            results.extend([0, 0])
+            results.extend([0, 0, 0])
         else:
             savg = sum(bedp.s) / bedp.shape[0]
             if len(bedp) > 1:
@@ -152,9 +164,15 @@ class coverage_parse:
 
                     bp = bedp[bedp.contig == ctg].copy()
                     ctgsize = self.ctgl[ctg]
-                    tdrange = list(np.linspace(0, ctgsize, nwindows, dtype=int))
+
+                    nwindows = self.calculate_windows(ctgsize)
+
+                    tdrange = list(np.linspace(0, ctgsize, nwindows + 1, dtype=int))
                     td_windows = [
-                        [tdrange[x], tdrange[x + 1] - 1]
+                        [
+                            tdrange[x],
+                            tdrange[x + 1] - 1 if tdrange[x + 1] < ctgsize else ctgsize,
+                        ]
                         for x in range(len(tdrange) - 1)
                     ]
 
@@ -166,12 +184,14 @@ class coverage_parse:
                         if sum(cmp) > 0:
                             present.append(i)
 
+                    windows_covered = f"{len(present)}/{nwindows}"
+
                     ks, pval = kstest(present, "uniform")
                     pvals.append(pval)
 
                 pvals = sum(pvals) / len(pvals)
                 savg = np.median(bedp.s)
-                results.extend([bedp.shape[0], savg])
+                results.extend([bedp.shape[0], savg, windows_covered])
 
             else:
                 results.extend([1, savg])
@@ -242,10 +262,12 @@ class coverage_parse:
             "coverage",
             "nregions",
             "Rsize",
+            "windows_covered",
             "ngaps",
             "Gdist",
             "Gsize",
         ]
+
         report.columns = new_columns
 
         self.report = report

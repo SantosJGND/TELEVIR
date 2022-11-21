@@ -528,6 +528,7 @@ class FinalReport(models.Model):
     ngaps = models.IntegerField(blank=True, null=True)
     mapping_success = models.CharField(max_length=20, blank=True, null=True)
     classification_success = models.CharField(max_length=20, blank=True, null=True)
+    windows_covered = models.CharField(max_length=20, blank=True, null=True)
 
     refa_dotplot = models.CharField(max_length=350, blank=True, null=True)
     refa_dotplot_exists = models.BooleanField(default=False)
