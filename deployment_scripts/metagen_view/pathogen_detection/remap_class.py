@@ -150,6 +150,7 @@ class coverage_parse:
         depthR = sum(overX.s * overX.x)
         overX = sum(overX.s)
         results = [depth, depthR, overX]
+        windows_covered = "NA"
         ### region operations
         bedp = bedm[bedm.x >= self.Xm].reset_index(drop=True)
         if bedp.shape[0] == 0:
@@ -476,6 +477,26 @@ class Remap_Minimap2(RemapMethod_init):
         else:
             raise ValueError
 
+    def filter_secondary(self):
+        """
+        Filter secondary alignments from bam file."""
+        cmd = [
+            "samtools",
+            "view",
+            "-F0x900",
+            self.outsam,
+            ">",
+            self.outsam + ".filtered",
+        ]
+
+        try:
+            shutil.copy(self.outsam, self.outsam + ".intermediate")
+            self.cmd.run_script(cmd)
+            # os.remove(self.outsam)
+            shutil.copy(self.outsam + ".filtered", self.outsam)
+        except:
+            pass
+
     def remap_SE(self):
         """
         Remap reads to reference using minimap2 for single end reads."""
@@ -492,6 +513,7 @@ class Remap_Minimap2(RemapMethod_init):
             self.outsam,
         ]
         self.cmd.run(cmd)
+        self.filter_secondary()
 
     def remap_PE(self):
         """
@@ -510,6 +532,7 @@ class Remap_Minimap2(RemapMethod_init):
             self.outsam,
         ]
         self.cmd.run(cmd)
+        self.filter_secondary()
 
 
 class Remap_Bowtie2(RemapMethod_init):

@@ -41,10 +41,10 @@ class Televir_Layout_minimal:
     install_refseq_prot = False
     install_refseq_gen = True
     install_swissprot = True
-    install_rvdb = True
+    install_rvdb = False
     install_virosaurus = True
     install_hg38 = True
-    install_request_sequences = True
+    install_request_sequences = False
 
     # classification software.
     install_centrifuge = True
