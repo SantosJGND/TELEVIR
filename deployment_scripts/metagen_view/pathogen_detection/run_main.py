@@ -228,9 +228,7 @@ class RunDetail_main:
             self.config["technology"],
             self.type,
             0,
-            ",".join(
-                [os.path.basename(self.r1.current), os.path.basename(self.r2.current)]
-            ),
+            ",".join([os.path.basename(config["r1"]), os.path.basename(config["r2"])]),
             bin=get_bindir_from_binaries(config["bin"], "PREPROCESS"),
             threads=self.threads,
         )
