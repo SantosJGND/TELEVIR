@@ -477,26 +477,6 @@ class Remap_Minimap2(RemapMethod_init):
         else:
             raise ValueError
 
-    def filter_secondary(self):
-        """
-        Filter secondary alignments from bam file."""
-        cmd = [
-            "samtools",
-            "view",
-            "-F0x900",
-            self.outsam,
-            ">",
-            self.outsam + ".filtered",
-        ]
-
-        try:
-            shutil.copy(self.outsam, self.outsam + ".intermediate")
-            self.cmd.run_script(cmd)
-            # os.remove(self.outsam)
-            shutil.copy(self.outsam + ".filtered", self.outsam)
-        except:
-            pass
-
     def remap_SE(self):
         """
         Remap reads to reference using minimap2 for single end reads."""
@@ -513,7 +493,6 @@ class Remap_Minimap2(RemapMethod_init):
             self.outsam,
         ]
         self.cmd.run(cmd)
-        self.filter_secondary()
 
     def remap_PE(self):
         """
@@ -532,7 +511,6 @@ class Remap_Minimap2(RemapMethod_init):
             self.outsam,
         ]
         self.cmd.run(cmd)
-        self.filter_secondary()
 
 
 class Remap_Bowtie2(RemapMethod_init):
@@ -820,9 +798,6 @@ class Remapping:
         self.generate_mapped_contigs_fasta()
         self.index_mapped_contigs_fasta()
 
-        if self.cleanup:
-            self.cleanup_files()
-
     def get_reference_contig_name(self):
         cmd = [
             "grep",
@@ -1081,6 +1056,21 @@ class Remapping:
         else:
             return False
 
+    def filter_secondary_alignments_samfile(self):
+        """
+        Filter secondary alignments from sam file.
+        """
+        if not self.check_remap_status_sam():
+            return
+
+        tempfile = os.path.join(self.rdir, f"temp{randint(1,2000)}.sam")
+        cmd = f"samtools view -F 256 {self.read_map_sam} > {tempfile}"
+
+        self.cmd.run(cmd)
+
+        # if os.path.exists(tempfile) and os.path.getsize(tempfile) > 0:
+        #    os.rename(tempfile, self.read_map_sam)
+
     def filter_samfile_read_names(self, same=True, output_sam=""):
 
         if not output_sam:
@@ -1126,6 +1116,7 @@ class Remapping:
             self.convert_bam_to_sam()
 
         self.filter_samfile_read_names()
+        # self.filter_secondary_alignments_samfile()
 
         self.convert_sam_to_bam()
 

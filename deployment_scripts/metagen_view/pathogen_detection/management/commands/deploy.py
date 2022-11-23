@@ -145,7 +145,8 @@ class Command(BaseCommand):
             event.low_deploy()
             event.record_runs()
 
-            # event.clean(delete=args.clean)
+            if options["fdel"]:
+                event.clean(delete=options["fdel"])
 
         elif options["fdir"]:
             if options["fdir"][-1] != "/":
@@ -182,5 +183,5 @@ class Command(BaseCommand):
                 event.low_deploy()
                 event.record_runs()
 
-                if options["clean"] or options["fdel"]:
+                if options["fdel"]:
                     event.clean(delete=options["fdel"])
