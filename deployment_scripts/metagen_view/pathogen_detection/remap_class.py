@@ -195,7 +195,7 @@ class coverage_parse:
                 results.extend([bedp.shape[0], savg, windows_covered])
 
             else:
-                results.extend([1, savg])
+                results.extend([1, savg, "NA"])
         ### gap operations.
         bedg = bedm[bedm.x < self.Xm].reset_index(drop=True)
 
