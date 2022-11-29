@@ -584,8 +584,8 @@ class main_setup:
             self.utilities.add_software(
                 self.utilities.software_item(
                     "minimap2",
-                    fname,
-                    fname,
+                    fpath,
+                    fpath,
                     True,
                     sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                 )
