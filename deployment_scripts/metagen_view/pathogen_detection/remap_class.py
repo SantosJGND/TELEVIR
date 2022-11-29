@@ -483,6 +483,7 @@ class Remap_Minimap2(RemapMethod_init):
         cmd = [
             "minimap2",
             self.args,
+            "--secondary=no",
             "-t",
             self.threads,
             "-ax",
@@ -500,6 +501,7 @@ class Remap_Minimap2(RemapMethod_init):
         cmd = [
             "minimap2",
             self.args,
+            "--secondary=no",
             "-t",
             self.threads,
             "-ax",
@@ -1063,13 +1065,15 @@ class Remapping:
         if not self.check_remap_status_sam():
             return
 
-        tempfile = os.path.join(self.rdir, f"temp{randint(1,2000)}.sam")
+        tempfile = os.path.join(
+            self.rdir, os.path.splitext(self.read_map_sam)[0] + ".filtered.sam"
+        )
         cmd = f"samtools view -F 256 {self.read_map_sam} > {tempfile}"
 
         self.cmd.run(cmd)
 
-        # if os.path.exists(tempfile) and os.path.getsize(tempfile) > 0:
-        #    os.rename(tempfile, self.read_map_sam)
+        if os.path.exists(tempfile) and os.path.getsize(tempfile) > 0:
+            os.rename(tempfile, self.read_map_sam)
 
     def filter_samfile_read_names(self, same=True, output_sam=""):
 
@@ -1105,6 +1109,22 @@ class Remapping:
 
         self.cmd.run(cmd)
 
+    def filter_supplementary_alignments_sam(self):
+        """filter supplementary alignments from sam file"""
+
+        filtered_file = os.path.splitext(self.read_map_sam)[0] + "_filtered.sam"
+        cmd = [
+            "samtools",
+            "view",
+            "-F0x900",
+            filtered_file,
+            self.read_map_sam,
+        ]
+
+        self.cmd.run(cmd)
+
+        return filtered_file
+
     def filter_bamfile_read_names(self):
         """
         convert bam file to samfile,
@@ -1116,7 +1136,7 @@ class Remapping:
             self.convert_bam_to_sam()
 
         self.filter_samfile_read_names()
-        # self.filter_secondary_alignments_samfile()
+        self.read_map_sam = self.filter_supplementary_alignments_sam()
 
         self.convert_sam_to_bam()
 

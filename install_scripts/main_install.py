@@ -581,6 +581,16 @@ class main_setup:
                     )
                 )
 
+            self.utilities.add_software(
+                self.utilities.software_item(
+                    "minimap2",
+                    fname,
+                    fname,
+                    True,
+                    sofprep.envs["ROOT"] + sofprep.envs["bwa"],
+                )
+            )
+
         ### install prot databases using local files.
         for fname, fdb in prepdl.fastas["prot"].items():
 
