@@ -31,6 +31,7 @@ INSTALL_PARAMS = {
         "desamba": "classm_lc/deSAMBA",
         "clark": "classification/Clark",
         "bwa": "remap/remap",
+        "bowtie2": "remap/remap",
     },
     "BINDIR": {"deSAMBA": "classm_lc/deSAMBA"},
     "REQUEST_REFERENCES": {

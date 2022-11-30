@@ -574,12 +574,26 @@ class main_setup:
                 self.utilities.add_software(
                     self.utilities.software_item(
                         "bwa",
-                        sofprep.dbs["bwa"]["db"],
+                        sofprep.dbs["bwa"]["fasta"],
                         fname,
                         True,
                         sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                     )
                 )
+
+            if self.layout.install_bowtie2:
+                bowtie2_install = sofprep.bowtie2_index(dbname=fname, reference=fpath)
+                if bowtie2_install:
+                    self.installed_software.append("bowtie2")
+                    self.utilities.add_software(
+                        self.utilities.software_item(
+                            "bowtie2",
+                            sofprep.dbs["bowtie2"]["db"],
+                            fname,
+                            True,
+                            sofprep.envs["ROOT"] + sofprep.envs["bowtie2"],
+                        )
+                    )
 
             self.utilities.add_software(
                 self.utilities.software_item(
