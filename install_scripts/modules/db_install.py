@@ -1444,6 +1444,66 @@ class setup_install(setup_dl):
         except subprocess.CalledProcessError:
             logging.info(f"failed to download blast db {dbname}")
             return False
+        
+    
+    def bowtie2_index(
+        self,
+        id="bowtie2",
+        dbdir="bowtie2",
+        reference="",
+        dbname="viral",
+        args="",
+        title="viral db",
+    ):
+
+        odir = self.dbdir + dbdir + "/"
+        bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
+        db = odir + dbname
+        if os.path.isfile(db + ".1.bt2"):
+            logging.info(f"bowtie2 index for {dbname} is installed.")
+            self.dbs[id] = {"dir": odir, "dbname": dbname, "db": db}
+            return True
+        else:
+            if self.test:
+                logging.info(f"bowtie2 index for {dbname} is not installed.")
+                return False
+            else:
+                logging.info(
+                    f"bowtie2 index for {dbname} is not installed. Installing..."
+                )
+
+        try:
+            subprocess.run(["mkdir", "-p", odir])
+
+            gzipped = False
+            if reference[-3:] == ".gz":
+                gzipped = True
+                subprocess.run(["gunzip", reference])
+                reference = os.path.splitext(reference)[0]
+
+            commands = [
+                bin + "bowtie2-build",
+                reference,
+                db,
+            ]
+
+            print(" ".join(commands))
+
+            try:
+                subprocess.run(commands)
+            finally:
+                if gzipped:
+                    subprocess.run(["bgzip", reference])
+                    reference = reference + ".gz"
+
+            self.dbs[id] = {"dir": odir, "dbname": dbname, "db": db}
+
+            return True
+
+        except subprocess.CalledProcessError:
+            logging.info(f"failed to download bowtie2 index {dbname}")
+            return False
+    )
 
     def bwa_install(
         self,
@@ -1497,6 +1557,7 @@ class setup_install(setup_dl):
 
         try:
             subprocess.run(command)
+            shutil.copy(reference, f"{odir}{dbname}/{dbname}.fa")
             self.dbs[id] = {
                 "dir": odir,
                 "dbname": dbname,
