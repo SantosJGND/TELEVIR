@@ -1444,8 +1444,7 @@ class setup_install(setup_dl):
         except subprocess.CalledProcessError:
             logging.info(f"failed to download blast db {dbname}")
             return False
-        
-    
+
     def bowtie2_index(
         self,
         id="bowtie2",
@@ -1503,7 +1502,6 @@ class setup_install(setup_dl):
         except subprocess.CalledProcessError:
             logging.info(f"failed to download bowtie2 index {dbname}")
             return False
-    )
 
     def bwa_install(
         self,
