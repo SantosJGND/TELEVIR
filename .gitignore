@@ -4,3 +4,6 @@ SANDBOX_nanopore/
 .cenv/
 .git/
 deployment_scripts/metagen_view/static/tests/
+devcontainer.json
+.devcontainer/
+.vscode
