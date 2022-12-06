@@ -12,7 +12,7 @@ Documentation (latest) for each INSaFLU-TELEVir module is provided at [http://in
 
 TELE-Vir is a pipeline that uses a combination of tools to identify viral sequences in metagenomic data.
 
-It is composed of five main steps:
+It is composed of six main steps:
 
 1. Quality control of the raw reads.
 2. Viral Enrichment [optional].
