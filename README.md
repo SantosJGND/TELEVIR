@@ -85,7 +85,7 @@ If you use TELE-Vir in your research, please cite the following paper:
 
 ## Authors
 
-João Dourado Santos, Miguel Pinheiro, Daniel Sobral, Miguel Pinto, João Paulo Gomes and Vítor Borges
+João Dourado Santos, Miguel Pinheiro, Daniel Sobral, Joana Isidro, Miguel Pinto, João Paulo Gomes and Vítor Borges
 
 ## Funding
 
