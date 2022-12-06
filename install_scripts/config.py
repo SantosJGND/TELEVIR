@@ -56,7 +56,7 @@ class Televir_Layout_minimal:
 
     # classification software.
     install_centrifuge = True
-    install_kraken2 = False
+    install_kraken2 = True
     install_krakenuniq = True
     install_kaiju = True
     install_diamond = False
