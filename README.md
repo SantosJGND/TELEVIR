@@ -148,7 +148,7 @@ python main.py --envs --seqdl
 To install all the software and databases, run:
 
 ```
-python main.py --envs --seqdl --soft --taxdump
+python main.py
 ```
 
 NOTE: when choosing `--nanopore`, installation of the software deSAMBA requires the installation of some dependencies using sudo. Verify that you have root priviledges.
