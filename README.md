@@ -85,12 +85,18 @@ If you use TELE-Vir in your research, please cite the following paper:
 
 ## Authors
 
-Joao Dourado,
-Miguel Borges,
-Daniel Sobral,
-Joana Isidro
+João Dourado Santos, Miguel Pinheiro, Daniel Sobral, Miguel Pinto, João Paulo Gomes and Vítor Borges
 
-## Installation
+## Funding
+
+INSaFLU development is being co-funded by the European Commission on behalf of OneHealth EJP TELE-Vir project.
+https://onehealthejp.eu/jrp-tele-vir/
+
+## Acknowledgments
+
+We thank the Infraestrutura Nacional de Computação Distribuída (INCD) for providing computational resources for testing the INSaFLU platform. INCD was funded by FCT and FEDER under the project 22153-01/SAICT/2016
+
+# Installation
 
 For an easy and rapid installation using docker see here [https://github.com/INSaFLU/docker](https://github.com/INSaFLU/docker).
 
