@@ -49,7 +49,7 @@ class Televir_Layout_minimal:
     install_rvdb = False
     install_virosaurus = True
     install_hg38 = True
-    install_grc38 = True
+    install_grc38 = False
     install_request_sequences = False
 
     # host mappers
