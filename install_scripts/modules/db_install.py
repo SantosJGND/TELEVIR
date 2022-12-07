@@ -167,7 +167,6 @@ class setup_dl:
         """
         host = "hgdownload.soe.ucsc.edu"
         source = "goldenPath/hg38/bigZips/"
-
         f = "hg38.fa.gz"
 
         if os.path.isfile(self.seqdir + f):
@@ -177,7 +176,7 @@ class setup_dl:
 
         try:
             ftp = FTP(host)
-        except:
+        except Exception as e:
             logging.info("hg38 ftp attempt failed. Check internet connection.")
             return False
 
@@ -202,6 +201,55 @@ class setup_dl:
 
         else:
             self.fastas["host"]["hg38"] = self.seqdir + f
+            logging.info(f"{f} found.")
+            return True
+
+    def download_grc38(self):
+        """
+        download grc38 fasta from ucsc.
+        :return:
+        """
+        # host = "hgdownload.soe.ucsc.edu"
+        # source = "goldenPath/hg38/bigZips/"
+        # f = "hg38.fa.gz"
+
+        host = "ftp.ncbi.nlm.nih.gov"
+        source = "genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/"
+        f = "GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz"
+        fname = "grc38"
+
+        if os.path.isfile(self.seqdir + f):
+            self.fastas["host"][fname] = self.seqdir + f
+            logging.info(f"{f} found.")
+            return True
+
+        try:
+            ftp = FTP(host)
+        except Exception as e:
+            logging.info(f"{fname} ftp attempt failed. Check internet connection.")
+            return False
+
+        ftp.login()
+        ftp.cwd(source)
+        files = ftp.nlst()
+        ftp.quit()
+
+        if f not in files:
+            logging.info(f"{f} not found.")
+            return False
+
+        if not os.path.isfile(self.seqdir + f):
+            if self.test:
+                logging.info(f"{f} not found.")
+                return False
+            else:
+                logging.info(f"{f} not found. downloading...")
+                subprocess.run(["wget", f"ftp://{host}/{source}{f}", "-P", self.seqdir])
+                self.fastas["host"][fname] = self.seqdir + f
+                return True
+
+        else:
+            self.fastas["host"][fname] = self.seqdir + f
             logging.info(f"{f} found.")
             return True
 

@@ -367,6 +367,19 @@ class main_setup:
                     )
                 )
 
+        if self.layout.install_grc38:
+
+            success_hg38 = self.wdir.download_grc38()
+            if success_hg38:
+                self.installed_dbs.append("grc38")
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        "grc38",
+                        self.wdir.fastas["host"]["grc38"],
+                        True,
+                    )
+                )
+
         if self.organism == "viral":
 
             if self.layout.install_virosaurus:
