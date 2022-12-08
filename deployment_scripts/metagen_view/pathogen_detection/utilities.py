@@ -131,7 +131,7 @@ def process_class(r2, maxt=6):
     """
     r2 = r2.drop_duplicates(subset=["taxid"], keep="first")
     r2 = r2.reset_index(drop=True)
-    r2 = r2.sort_values("counts", ascending=False)
+    # r2 = r2.sort_values("counts", ascending=False)
 
     taxids_tokeep = []
     nr2 = []
