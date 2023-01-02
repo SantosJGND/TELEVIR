@@ -36,9 +36,6 @@ class Televir_Layout_full:
     install_illumina = True
     install_nanopore = True
 
-    # additional.
-    install_virsorter = True
-
 
 class Televir_Layout_minimal:
 
@@ -76,6 +73,3 @@ class Televir_Layout_minimal:
     # technology setup (exclusive technologies. overrides info above).
     install_illumina = True
     install_nanopore = True
-
-    # additional.
-    install_virsorter = True

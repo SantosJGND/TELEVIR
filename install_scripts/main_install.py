@@ -117,7 +117,6 @@ class main_setup:
         "blastp",
         "kaiju",
         "kuniq",
-        # "virsorter",
         "desamba",
         "clark",
         "fastviromeexplorer",
@@ -512,24 +511,24 @@ class main_setup:
                 )
             else:
                 if not os.path.isfile(f"{prepdl.seqdir}{krlib}"):
-                    logging.info("kraken2 database not found.")
+                    logging.info("kraken2 database fasta not found.")
 
             if os.path.isfile(f"{prepdl.seqdir}{krlib}"):
                 prepdl.fastas["nuc"]["kraken2"] = f"{prepdl.seqdir}{krlib}"
 
-                if success_install:
+            if success_install:
 
-                    self.installed_software.append("kraken2")
+                self.installed_software.append("kraken2")
 
-                    self.utilities.add_software(
-                        self.utilities.software_item(
-                            "kraken2",
-                            sofprep.dbs["kraken2"]["db"],
-                            "default",
-                            True,
-                            sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
-                        )
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "kraken2",
+                        sofprep.dbs["kraken2"]["db"],
+                        "default",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
                     )
+                )
 
         ########################## krakenuniq ###############################
         if self.layout.install_krakenuniq:
@@ -562,21 +561,6 @@ class main_setup:
                         sofprep.envs["ROOT"] + sofprep.envs["kaiju"],
                     )
                 )
-
-            if self.layout.install_virsorter:
-                success_install = sofprep.virsorter_install()
-                if success_install:
-                    self.installed_software.append("virsorter")
-
-                    self.utilities.add_software(
-                        self.utilities.software_item(
-                            "virsorter",
-                            sofprep.dbdir + "virsorter",
-                            "default",
-                            True,
-                            sofprep.envs["ROOT"] + sofprep.envs["virsorter"],
-                        )
-                    )
 
         ### install host dbs.
 

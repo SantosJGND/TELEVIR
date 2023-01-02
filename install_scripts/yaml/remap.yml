@@ -1,8 +1,8 @@
 name: remap_env
 
 channels:
-  - bioconda
   - conda-forge
+  - bioconda
   - defaults
 
 dependencies:
