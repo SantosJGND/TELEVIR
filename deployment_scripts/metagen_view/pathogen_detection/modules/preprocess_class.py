@@ -6,7 +6,7 @@ import subprocess
 import sys
 from typing import Type
 
-from pathogen_detection.object_classes import Read_class, RunCMD
+from pathogen_detection.modules.object_classes import Read_class, RunCMD
 
 
 class Preprocess:

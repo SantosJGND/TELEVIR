@@ -1,4 +1,4 @@
-import gzip
+import itertools as it
 import logging
 import os
 import shutil
@@ -8,11 +8,142 @@ from dataclasses import dataclass, field
 from random import randint
 from typing import Type
 
+import matplotlib
 import pandas as pd
 from numpy import ERR_CALL
+from pathogen_detection.utilities.utilities_general import fastqc_parse
 
-from pathogen_detection.constants_settings import ConstantsSettings
-from pathogen_detection.utilities import fastqc_parse
+matplotlib.use("Agg")
+import gzip
+import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from pathogen_detection.constants_settings import (
+    Televir_Metadata_Constants as Televir_Metadata,
+)
+
+
+class Temp_File:
+    """
+    Temporary file.
+    """
+
+    def __init__(self, temp_dir: str, prefix: str = "temp", suffix: str = ""):
+        """
+        Initialize.
+        """
+
+        self.temp_dir = temp_dir
+        self.prefix = prefix
+        self.suffix = suffix
+
+        self.temp_file = os.path.join(
+            self.temp_dir, f"{self.prefix}_{randint(1000000, 9999999)}{self.suffix}"
+        )
+
+    def __enter__(self):
+        """
+        Enter.
+        """
+
+        return self.temp_file
+
+    def __exit__(self):
+        """
+        Exit.
+        """
+
+        if os.path.exists(self.temp_file):
+            os.remove(self.temp_file)
+
+
+class Operation_Temp_Files:
+    """
+    Operation on temporary files.
+    """
+
+    def __init__(self, temp_dir: str, prefix: str = "temp"):
+        """
+        Initialize.
+        """
+
+        self.temp_dir = temp_dir
+        self.prefix = prefix
+        seed = randint(1000000, 9999999)
+
+        self.script = os.path.join(self.temp_dir, f"{self.prefix}_{seed}.sh")
+
+        self.log = os.path.join(self.temp_dir, f"{self.prefix}_{seed}.log")
+
+        self.flag = os.path.join(self.temp_dir, f"{self.prefix}_{seed}.flag")
+
+    def __enter__(self):
+        """
+        Enter.
+        """
+
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Type[BaseException],
+        exc_value: BaseException,
+        traceback,
+    ):
+        """
+        Exit.
+        """
+
+        if os.path.exists(self.script):
+            os.remove(self.script)
+
+        if os.path.exists(self.log):
+            os.remove(self.log)
+
+        if os.path.exists(self.flag):
+            os.remove(self.flag)
+
+    def write_bash_script(self, cmd: str):
+        """
+        Write bash script.
+        """
+
+        with open(self.script, "w") as f:
+            f.write("#!/bin/bash")
+            f.write("\n")
+            f.write(cmd)
+            f.write("\n")
+            f.write("touch " + self.flag)
+
+    def run_bash_script(self):
+        """
+        Run bash script.
+        """
+
+        start_time = time.perf_counter()
+
+        proc_prep = subprocess.Popen(
+            "bash " + self.script + " &> " + self.log,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+
+        out, err = proc_prep.communicate()
+
+        found_flag = False
+
+        while not found_flag:
+            time.sleep(1)
+            found_flag = os.path.exists(self.flag)
+
+        err = open(self.log).read()
+
+        exec_time = time.perf_counter() - start_time
+
+        return out, err, exec_time
 
 
 class RunCMD:
@@ -40,19 +171,6 @@ class RunCMD:
         self.logfile = os.path.join(logdir, f"{prefix}_{task}.log")
         self.logdir = logdir
         self.prefix = prefix
-
-    def temp_script_log(self):
-        """
-        Create temporary script.
-        """
-
-        seed = str(randint(1000000, 9999999))
-
-        bash_script = f"temp_{self.task}_{seed}.sh"
-        bash_log = f"temp_{self.task}_{seed}.log"
-        bash_flag = f"temp_{self.task}_{seed}.flag"
-
-        return bash_script, bash_log, bash_flag
 
     def flag_error(self, subprocess_errorlog, cmd: str = ""):
         """
@@ -94,6 +212,52 @@ class RunCMD:
 
         return cmd_out
 
+    def system_deploy(self, cmd: str):
+
+        start_time = time.perf_counter()
+
+        proc_prep = subprocess.Popen(
+            cmd,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        out, err = proc_prep.communicate()
+
+        exec_time = time.perf_counter() - start_time
+
+        return out, err, exec_time
+
+    def dispose_output_carefully(self, cmd, out, err, exec_time):
+        """
+        Dispose output carefully.
+        """
+
+        if self.flag_error(err, cmd):
+            self.logger.error(f"errror in command: {self.bin}{cmd}")
+            raise Exception(err.decode("utf-8"))
+
+        self.output_disposal(cmd, err, out, exec_time, self.bin)
+
+    def bash_cmd_string(self, cmd: str):
+        return f"{cmd}"
+
+    def bash_software_cmd_string(self, cmd: str):
+        return f"{self.bin}{cmd}"
+
+    def python_cmd_string(self, cmd: str):
+        return f"python {self.bin}{cmd}"
+
+    def java_cmd_string(self, cmd: str):
+        java_bin = os.path.join(
+            Televir_Metadata.BINARIES["ROOT"],
+            Televir_Metadata.BINARIES["software"]["java"],
+            "bin",
+            "java",
+        )
+
+        return f"{java_bin} -cp {self.bin} {cmd}"
+
     def output_disposal(self, cmd: str, err: str, out: str, exec_time: float, bin: str):
         if self.logdir:
             with open(os.path.join(self.logdir, self.logfile), "a") as f:
@@ -122,22 +286,9 @@ class RunCMD:
 
         self.logger.info(f"running: {self.bin}{cmd}")
 
-        start_time = time.perf_counter()
-        proc_prep = subprocess.Popen(
-            f"{self.bin}{cmd}",
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        out, err = proc_prep.communicate()
-
-        exec_time = time.perf_counter() - start_time
-
-        if self.flag_error(err, cmd):
-            self.logger.error(f"errror in command: {self.bin}{cmd}")
-            raise Exception(err.decode("utf-8"))
-
-        self.output_disposal(cmd, err, out, exec_time, self.bin)
+        cmd_string = self.bash_software_cmd_string(cmd)
+        out, err, exec_time = self.system_deploy(cmd_string)
+        self.dispose_output_carefully(cmd, out, err, exec_time)
 
     def run_python(self, cmd):
         """
@@ -149,23 +300,9 @@ class RunCMD:
 
         self.logger.info(f"running command: python {self.bin}{cmd}")
 
-        start_time = time.perf_counter()
-
-        proc_prep = subprocess.Popen(
-            f"python {self.bin}{cmd}",
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        out, err = proc_prep.communicate()
-
-        exec_time = time.perf_counter() - start_time
-
-        if self.flag_error(err):
-            self.logger.error(f"errror in command: {self.bin}{cmd}")
-            raise Exception(err.decode("utf-8"))
-
-        self.output_disposal(cmd, err, out, exec_time, self.bin)
+        cmd_string = self.python_cmd_string(cmd)
+        out, err, exec_time = self.system_deploy(cmd_string)
+        self.dispose_output_carefully(cmd, out, err, exec_time)
 
     def run_java(self, cmd):
         """
@@ -175,25 +312,11 @@ class RunCMD:
         if isinstance(cmd, list):
             cmd = " ".join(cmd)
 
-        # print(f"running command: java -cp {self.bin} {cmd}")
+        self.logger.info(f"running command: java {self.bin}{cmd}")
 
-        start_time = time.perf_counter()
-
-        proc_prep = subprocess.Popen(
-            f"java -cp {self.bin} {cmd}",
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        out, err = proc_prep.communicate()
-
-        exec_time = time.perf_counter() - start_time
-
-        if self.flag_error(err):
-            self.logger.error(f"errror in command: {self.bin}{cmd}")
-            raise Exception(err.decode("utf-8"))
-
-        self.output_disposal(cmd, err, out, exec_time, self.bin)
+        cmd_string = self.java_cmd_string(cmd)
+        out, err, exec_time = self.system_deploy(cmd_string)
+        self.dispose_output_carefully(cmd, out, err, exec_time)
 
     def run_bash(self, cmd):
         """
@@ -203,22 +326,27 @@ class RunCMD:
         if isinstance(cmd, list):
             cmd = " ".join(cmd)
 
-        start_time = time.perf_counter()
-        proc_prep = subprocess.Popen(
-            f"{cmd}",
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        )
-        out, err = proc_prep.communicate()
+        self.logger.info(f"running command: {cmd}")
 
-        exec_time = time.perf_counter() - start_time
+        cmd_string = self.bash_cmd_string(cmd)
+        out, err, exec_time = self.system_deploy(cmd_string)
+        self.dispose_output_carefully(cmd, out, err, exec_time)
 
-        if self.flag_error(err):
-            self.logger.error(f"errror in command: {self.bin}{cmd}")
-            raise Exception(err.decode("utf-8"))
+    def run_bash_return(self, cmd):
+        """
+        Run bash command and return stdout.
+        """
 
-        self.output_disposal(cmd, err, out, exec_time, "")
+        if isinstance(cmd, list):
+            cmd = " ".join(cmd)
+
+        self.logger.info(f"running command: {cmd}")
+
+        cmd_string = self.bash_cmd_string(cmd)
+        out, err, exec_time = self.system_deploy(cmd_string)
+        self.dispose_output_carefully(cmd, out, err, exec_time)
+
+        return out
 
     def run_script_software(self, cmd):
         """
@@ -228,45 +356,18 @@ class RunCMD:
         if isinstance(cmd, list):
             cmd = " ".join(cmd)
 
-        start_time = time.perf_counter()
+        operation_files = Operation_Temp_Files(self.logdir)
 
-        bash_script, bash_log, bash_flag = self.temp_script_log()
-        bash_script = os.path.join(self.logdir, bash_script)
-        bash_log = os.path.join(self.logdir, bash_log)
-        bash_flag = os.path.join(self.logdir, bash_flag)
+        with operation_files as op_files:
 
-        with open(bash_script, "w") as f:
-            f.write("#!/bin/bash")
-            f.write("\n")
-            f.write(f"{self.bin}{cmd}")
-            f.write("\n")
-            f.write("touch " + bash_flag)
+            cmd_string = self.bash_software_cmd_string(cmd)
 
-        proc_prep = subprocess.Popen(
-            "bash " + bash_script + " &> " + bash_log,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        )
+            op_files.write_bash_script(cmd_string)
 
-        out, err = proc_prep.communicate()
+            out, err, exec_time = op_files.run_bash_script()
 
-        found_flag = False
-
-        while not found_flag:
-            time.sleep(1)
-            found_flag = os.path.exists(bash_flag)
-
-        err = open(bash_log).read()
-
-        exec_time = time.perf_counter() - start_time
-
-        if self.flag_error(err):
-            self.logger.error(f"errror in command: {self.bin}{cmd}")
-
-        os.remove(bash_script)
-        os.remove(bash_log)
-        os.remove(bash_flag)
+            if self.flag_error(err):
+                self.logger.error(f"errror in command: {self.bin}{cmd}")
 
         self.output_disposal(cmd, err, out, exec_time, "")
 
@@ -278,46 +379,18 @@ class RunCMD:
         if isinstance(cmd, list):
             cmd = " ".join(cmd)
 
-        start_time = time.perf_counter()
+        operation_files = Operation_Temp_Files(self.logdir)
 
-        bash_script, bash_log, bash_flag = self.temp_script_log()
-        bash_script = os.path.join(self.logdir, bash_script)
-        bash_log = os.path.join(self.logdir, bash_log)
-        bash_flag = os.path.join(self.logdir, bash_flag)
+        with operation_files as op_files:
 
-        with open(bash_script, "w") as f:
-            f.write("#!/bin/bash")
-            f.write("\n")
-            f.write(cmd)
-            f.write("\n")
-            f.write("touch " + bash_flag)
+            cmd_string = self.bash_cmd_string(cmd)
 
-        proc_prep = subprocess.Popen(
-            "bash " + bash_script + " &> " + bash_log,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        )
+            op_files.write_bash_script(cmd_string)
 
-        out, err = proc_prep.communicate()
+            out, err, exec_time = op_files.run_bash_script()
 
-        found_flag = False
-
-        while not found_flag:
-            time.sleep(1)
-            found_flag = os.path.exists(bash_flag)
-
-        err = open(bash_log).read()
-        out = open(bash_log).read()
-
-        exec_time = time.perf_counter() - start_time
-
-        if self.flag_error(err):
-            self.logger.error(f"errror in command: {self.bin}{cmd}")
-
-        os.remove(bash_script)
-        os.remove(bash_log)
-        os.remove(bash_flag)
+            if self.flag_error(err):
+                self.logger.error(f"errror in command: {self.bin}{cmd}")
 
         self.output_disposal(cmd, err, out, exec_time, "")
 
@@ -329,103 +402,27 @@ class RunCMD:
         if isinstance(cmd, list):
             cmd = " ".join(cmd)
 
-        start_time = time.perf_counter()
+        operation_files = Operation_Temp_Files(self.logdir)
 
-        bash_script, bash_log, bash_flag = self.temp_script_log()
-        bash_script = os.path.join(self.logdir, bash_script)
-        bash_log = os.path.join(self.logdir, bash_log)
-        bash_flag = os.path.join(self.logdir, bash_flag)
+        with operation_files as op_files:
 
-        with open(bash_script, "w") as f:
-            f.write("#!/bin/bash")
-            f.write("\n")
-            f.write(cmd)
-            f.write("\n")
-            f.write("touch " + bash_flag)
+            cmd_string = self.bash_cmd_string(cmd)
 
-        proc_prep = subprocess.Popen(
-            "bash " + bash_script + " &> " + bash_log,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        )
+            op_files.write_bash_script(cmd_string)
 
-        out, err = proc_prep.communicate()
+            out, err, exec_time = op_files.run_bash_script()
 
-        found_flag = False
-
-        while not found_flag:
-            time.sleep(1)
-            found_flag = os.path.exists(bash_flag)
-
-        err = open(bash_log).read()
-        out = open(bash_log).read()
-
-        exec_time = time.perf_counter() - start_time
-
-        if self.flag_error(err):
-            self.logger.error(f"errror in command: {self.bin}{cmd}")
-
-        os.remove(bash_script)
-        os.remove(bash_log)
-        os.remove(bash_flag)
+            if self.flag_error(err):
+                self.logger.error(f"errror in command: {self.bin}{cmd}")
 
         self.output_disposal(cmd, err, out, exec_time, "")
 
         return out.strip()
 
-    def run_bash_return(self, cmd):
-        """
-        Run bash command and return stdout.
-        """
-
-        if isinstance(cmd, list):
-            cmd = " ".join(cmd)
-
-        start_time = time.perf_counter()
-
-        proc_prep = subprocess.Popen(
-            f"{cmd}", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        out, err = proc_prep.communicate()
-
-        if self.flag_error(err):
-            self.logger.error(f"errror in command: {cmd}")
-            raise Exception(err.decode("utf-8"))
-
-        exec_time = time.perf_counter() - start_time
-
-        if self.flag_error(err):
-            self.logger.error(f"errror in command: {self.bin}{cmd}")
-            raise Exception(err.decode("utf-8"))
-
-        self.output_disposal(cmd, err, "", exec_time, "")
-
-        return out
-
 
 class Read_class:
-    filepath: str
-    current: str
-    prefix: str
-    clean: str
-    enriched: str
-    depleted: str
-    current_status: str
-    read_number_raw: int = 0
-    read_number_clean: int = 0
-    read_number_enriched: int = 0
-    read_number_depleted: int = 0
-    read_number_current: int = 0
-
     def __init__(
-        self,
-        filepath,
-        prefix,
-        clean_dir: str,
-        enriched_dir: str,
-        depleted_dir: str,
-        bin: str,
+        self, filepath, clean_dir: str, enriched_dir: str, depleted_dir: str, bin: str
     ):
         """
         Initialize.
@@ -438,75 +435,42 @@ class Read_class:
             bin: path to bin directory.
 
         """
-        self.cmd = RunCMD(bin)
+        self.cmd = RunCMD(bin, prefix="read", task="housekeeping")
+
+        self.exists = os.path.isfile(filepath)
+
         self.filepath = filepath
         self.current = filepath
-
-        self.exists = os.path.isfile(filepath) and os.path.getsize(filepath) > 100
-
-        if self.exists:
-            run_filepath = os.path.join(
-                os.path.dirname(clean_dir), prefix + ".input.fastq.gz"
-            )
-            shutil.copy(
-                self.current,
-                run_filepath,
-            )
-            self.current = run_filepath
-            self.filepath = run_filepath
-
-            self.read_number_raw = self.get_current_fastq_read_number()
-
-            if self.read_number_raw == 0:
-                self.exists = False
-
         self.prefix = self.determine_read_name(filepath)
         self.clean = os.path.join(clean_dir, self.prefix + ".clean.fastq.gz")
         self.enriched = os.path.join(enriched_dir, self.prefix + ".enriched.fastq.gz")
         self.depleted = os.path.join(depleted_dir, self.prefix + ".depleted.fastq.gz")
         self.current_status = "raw"
-
+        self.read_number_raw = self.get_current_fastq_read_number()
         self.read_number_clean = 0
         self.read_number_enriched = 0
         self.read_number_depleted = 0
         self.read_number_filtered = 0
 
-    def update(self, prefix, clean_dir: str, enriched_dir: str, depleted_dir: str):
-
+    def update(self, clean_dir: str, enriched_dir: str, depleted_dir: str):
         self.clean = os.path.join(clean_dir, self.prefix + ".clean.fastq.gz")
         self.enriched = os.path.join(enriched_dir, self.prefix + ".enriched.fastq.gz")
         self.depleted = os.path.join(depleted_dir, self.prefix + ".depleted.fastq.gz")
 
+    def get_read_names_fastq(self, filepath):
+        """
+        Get read names from fastq file.
+        """
+
+        read_names = []
+
         if self.exists:
-            self.read_number_raw = self.get_current_fastq_read_number()
-            run_filepath = os.path.join(
-                os.path.dirname(clean_dir), self.prefix + ".input.fastq.gz"
-            )
+            with gzip.open(filepath, "rt") as f:
+                for line in f:
+                    if line.startswith("@"):
+                        read_names.append(line.split()[0][1:])
 
-            if self.current != run_filepath:
-                shutil.copy(
-                    self.current,
-                    run_filepath,
-                )
-                self.current = run_filepath
-                self.filepath = run_filepath
-
-            if self.current_status == "clean":
-                self.clean = self.current
-            if self.current_status == "enriched":
-                self.enriched = self.current
-            if self.current_status == "depleted":
-                self.depleted = self.current
-
-        else:
-            print(self.current, self.current_status, prefix, "does not exist")
-            # raise Exception("File does not exist")
-
-    def copy(self, filepath):
-        """
-        Copy file.
-        """
-        shutil.copy(self.filepath, filepath)
+        return read_names
 
     def determine_read_name(self, filepath):
 
@@ -518,94 +482,11 @@ class Read_class:
 
         filename = os.path.basename(filepath)
 
-        filename = os.path.splitext(filename)[0]
-        filename = os.path.splitext(filename)[0]
+        filename = filename.replace(".gz", "")
+
+        filename = filename.replace(".fasta", "").replace(".fa", "")
 
         return filename
-
-    def get_read_list(self) -> str:
-        """
-        Get list of reads.
-        """
-
-        if not self.exists:
-            return []
-
-        read_grep_cmd = [
-            "zcat",
-            self.current,
-            "|",
-            "sed",
-            "-n",
-            "1~4p",
-            "|",
-            "awk",
-            "'{ print $1 }'",
-            "|",
-            "sed",
-            "-e",
-            "'s/^@'//g",
-        ]
-
-        read_list = self.cmd.run_bash_return(read_grep_cmd).decode().split("\n")
-        read_list = [x for x in read_list if x]
-        return read_list
-
-    def fake_quality(self, quality: str = "30"):
-
-        if not self.exists:
-            return
-
-        tempf = os.path.join(os.path.dirname(self.current), "temp.fq.gz")
-
-        cmd = [
-            "seqtk",
-            "seq",
-            "-F",
-            quality,
-            self.current,
-            "|",
-            "gzip",
-            "-c",
-            ">",
-            tempf,
-        ]
-        self.cmd.run(cmd)
-
-        if os.path.isfile(tempf):
-            os.remove(self.current)
-
-            shutil.copy(tempf, self.current)
-
-    def filter_cigar_strings(self):
-
-        if not self.exists:
-            return
-
-        tempf = os.path.join(os.path.dirname(self.current), "temp.fq.gz")
-
-        with gzip.open(self.current, "rb") as f_in, gzip.open(tempf, "wb") as f_out:
-            counter = 0
-            lines = []
-            for line in f_in:
-
-                if len(lines) == 4:
-
-                    if lines[-1][0].decode() != "@":
-                        for ln in lines:
-                            f_out.write(ln)
-
-                    else:
-                        print(lines)
-                    counter = 0
-                    lines = []
-
-                lines.append(line)
-                counter += 1
-
-        if os.path.isfile(tempf):
-            os.remove(self.current)
-            os.rename(tempf, self.current)
 
     def read_filter_move(self, input: str, read_list: list, output: str = ""):
 
@@ -615,13 +496,12 @@ class Read_class:
         temp_reads_keep = os.path.join(
             os.path.dirname(output), f"keep_temp_{randint(1,1999)}.lst"
         )
-
         with open(temp_reads_keep, "w") as f:
             f.write("\n".join(read_list))
 
         self.read_filter(input, output, temp_reads_keep)
 
-        os.remove(temp_reads_keep)
+        # os.remove(temp_reads_keep)
 
     def read_filter_inplace(self, input: str, read_list: str):
 
@@ -641,6 +521,7 @@ class Read_class:
         """
         filter read file using exisiting lsit of reads.
         Args:
+
             input: path to input file.
             output: path to output file.
             read_list: path to file containing read list.
@@ -650,7 +531,7 @@ class Read_class:
 
         cmd = "seqtk subseq %s %s | gzip > %s" % (input, read_list, output)
 
-        self.cmd.run_script(cmd)
+        self.cmd.run(cmd)
 
     def enrich(self, read_list):
         """
@@ -666,17 +547,18 @@ class Read_class:
         filter reads and aset current status to depleted.
         """
 
+        current_reads = self.get_read_names_fastq(self.current)
+
+        read_list_to_keep = list(set(current_reads) - set(read_list))
+
         if len(read_list) > 0:
-            self.read_filter_move(self.current, read_list, self.depleted)
+            self.read_filter_move(self.current, read_list_to_keep, self.depleted)
             self.is_depleted()
 
     def is_clean(self):
         """
         Set current status to clean.
         """
-        if not self.exists:
-            return
-        shutil.copy(self.current, self.clean)
         self.current = self.clean
         self.read_number_clean = self.get_current_fastq_read_number()
         self.current_status = "clean"
@@ -686,9 +568,6 @@ class Read_class:
         """
         Set current status to enriched.
         """
-        if not self.exists:
-            return
-        shutil.copy(self.current, self.enriched)
         self.current = self.enriched
         self.read_number_enriched = self.get_current_fastq_read_number()
         self.current_status = "enriched"
@@ -699,9 +578,6 @@ class Read_class:
         """
         Set current status to depleted.
         """
-        if not self.exists:
-            return
-        shutil.copy(self.current, self.depleted)
         self.current = self.depleted
         self.read_number_depleted = self.get_current_fastq_read_number()
         self.current_status = "depleted"
@@ -719,6 +595,58 @@ class Read_class:
         rnumber = self.cmd.run_bash_return(cmd).decode("utf-8")
         return int(rnumber) // 4
 
+    def clean_read_names(self):
+        """
+        Clean read names in current fastq file.
+        """
+
+        if not self.exists:
+            return
+
+        temp_fq = os.path.join(
+            os.path.dirname(self.current), f"temp_clean_{randint(1,1000)}.fastq"
+        )
+        temp_fq_gz = temp_fq + ".gz"
+
+        cmd_unzip = "gunzip -c %s > %s" % (self.current, temp_fq)
+
+        cmd = [
+            "sed",
+            "-i",
+            "'/^[@+]/ s/\/[12]$//g'",
+            temp_fq,
+        ]
+
+        cmd_zip = "bgzip %s" % temp_fq
+
+        self.cmd.run_bash(cmd_unzip)
+        self.cmd.run_bash(cmd)
+        self.cmd.run(cmd_zip)
+
+        if os.path.isfile(temp_fq_gz) and os.path.getsize(temp_fq_gz) > 100:
+            os.remove(self.current)
+            os.rename(temp_fq_gz, self.current)
+
+    def remove_duplicate_reads(self):
+        """
+        Remove duplicate reads from current fastq file.
+        """
+
+        if not self.exists:
+            return
+
+        temp = os.path.join(
+            os.path.dirname(self.current), f"temp_rmdup_{randint(1,1000)}.fq.gz"
+        )
+
+        cmd = "seqkit rmdup -n %s -o %s" % (self.current, temp)
+
+        self.cmd.run(cmd)
+
+        if os.path.isfile(temp) and os.path.getsize(temp):
+            os.remove(self.current)
+            os.rename(temp, self.current)
+
     def current_fastq_read_number(self):
         """
         Get cached number of reads in current fastq file."""
@@ -734,23 +662,21 @@ class Read_class:
         else:
             return 0
 
-    def move_to_static(self, main_static, sub_static):
+    def export_reads(self, directory):
         """
-        Move current fastq file to static folder.
+        Export reads to directory.
         """
+        if not self.exists:
+            return
 
-        new_file = os.path.basename(self.current)
-        new_file = os.path.join(
-            ConstantsSettings.static_directory, main_static, sub_static, new_file
-        )
-        if self.exists and not os.path.isfile(self.current):
-            print("File does not exist: %s" % self.current)
-            print(self.clean, self.enriched, self.depleted)
+        if not os.path.isdir(directory):
+            os.makedirs(directory)
 
-        if not os.path.exists(new_file) and os.path.isfile(self.current):
-            shutil.copy(self.current, new_file)
+        if os.path.exists(os.path.join(directory, os.path.basename(self.current))):
+            os.remove(os.path.join(directory, os.path.basename(self.current)))
 
-        self.current = new_file
+        shutil.move(self.current, directory)
+        self.current = os.path.join(directory, os.path.basename(self.current))
 
     def __str__(self):
         return self.filepath
@@ -758,8 +684,8 @@ class Read_class:
 
 class Sample_runClass:
 
-    r1: Type[Read_class]
-    r2: Type[Read_class]
+    r1: Read_class
+    r2: Read_class
     report: str
     qcdata: dict
     reads_before_processing: int = 0
@@ -770,11 +696,12 @@ class Sample_runClass:
     processed_fastqc_report: os.PathLike
     threads: int = 1
     user_name: str
+    reads_subdirectory: str = "reads"
 
     def __init__(
         self,
-        r1: Type[Read_class],
-        r2: Type[Read_class],
+        r1: Read_class,
+        r2: Read_class,
         sample_name: str,
         project_name: str,
         user_name: str,
@@ -802,6 +729,9 @@ class Sample_runClass:
         self.reads_before_processing = self.r1.read_number_raw + self.r2.read_number_raw
 
     def current_total_read_number(self):
+        print("current total")
+        print(self.r1.get_current_fastq_read_number())
+        print(self.r2.get_current_fastq_read_number())
         return (
             self.r1.get_current_fastq_read_number()
             + self.r2.get_current_fastq_read_number()
@@ -852,19 +782,9 @@ class Sample_runClass:
             "processed": fake_df,
         }
 
-    def fake_quality_strings(self):
-        """
-        Fake quality strings for fastqc.
-        """
-        self.r1.fake_quality()
-        self.r2.fake_quality()
-
-    def filter_cigar_strings(self):
-        """
-        Filter reads with cigar strings.
-        """
-        self.r1.filter_cigar_strings()
-        self.r2.filter_cigar_strings()
+    def remove_duplicates(self):
+        self.r1.remove_duplicate_reads()
+        self.r2.remove_duplicate_reads()
 
     def clean_unique(self):
         if self.type == "SE":
@@ -881,8 +801,15 @@ class Sample_runClass:
             "'^@'",
             self.r1.current,
             "|",
-            "awk",
-            "'{print $1}'",
+            "cut",
+            "-f1",
+            "-d",
+            " ",
+            "|",
+            'grep -v "+|/*|/&"',
+            "|",
+            "sed",
+            r"'s/\s.*$//'",
             "|",
             "sed",
             "'s/^@//g'",
@@ -894,7 +821,7 @@ class Sample_runClass:
             unique_reads,
         ]
 
-        self.cmd.run_script(cmd)
+        self.cmd.run_bash(cmd)
         if not os.path.exists(unique_reads) or os.path.getsize(unique_reads) == 0:
             print(
                 f"No unique reads found in {self.r1.current}, skipping unique read cleaning"
@@ -906,7 +833,7 @@ class Sample_runClass:
     def clean_unique_PE(self):
 
         WHERETO = os.path.dirname(self.r1.current)
-        common_reads = os.path.join(WHERETO, f"common_reads_{randint(0,10000)}.lst")
+        common_reads = os.path.join(WHERETO, "common_reads.lst")
 
         cmd_find_common = [
             f"seqkit common -n -i {self.r1.current} {self.r1.current} | paste - - - - | cut -f1 | sort | uniq | sed 's/^@//g' > {common_reads}"
@@ -944,8 +871,9 @@ class Sample_runClass:
         self.cmd.run(cmd_trimsort)
 
         if tempfq in os.listdir(tempdir):
-            os.remove(self.r1.current)
-            os.rename(tempfq, self.r1.current)
+            if os.path.getsize(tempfq) > 100:
+                os.remove(self.r1.current)
+                os.rename(tempfq, self.r1.current)
 
     def trimmomatic_sort_PE(self):
         if self.type == "SE":
@@ -965,6 +893,18 @@ class Sample_runClass:
             os.remove(self.r2.current)
             os.rename(tempfq + "_1P.fastq.gz", self.r1.current)
             os.rename(tempfq + "_2P.fastq.gz", self.r2.current)
+
+    def export_reads(self, reads_dir: str = "reads/clean/"):
+        """export reads to reads_dir
+
+        :param reads_dir:
+        :return: None
+        """
+        if self.type == "SE":
+            self.r1.export_reads(reads_dir)
+        else:
+            self.r1.export_reads(reads_dir)
+            self.r2.export_reads(reads_dir)
 
 
 class Software_detail:
@@ -992,15 +932,21 @@ class Software_detail:
             self.name = method_details.software.values[0]
 
             try:
-                self.args = method_details[
-                    method_details.param.str.contains("ARGS")
+                args_string = method_details[
+                    method_details.parameter.str.contains("ARGS")
                 ].value.values[0]
+
+                self.args, self.db = self.excise_db_from_args(args_string)
+                self.db_name = self.db.split("/")[-1]
+
             except IndexError:
                 self.args = ""
+                self.db = ""
+                self.db_name = ""
 
             try:
                 db_name = method_details[
-                    method_details.param.str.contains("DB")
+                    method_details.parameter.str.contains("DB")
                 ].value.values[0]
                 if ".gz" in db_name:
                     self.db = os.path.join(config["source"]["REF_FASTA"], db_name)
@@ -1010,7 +956,7 @@ class Software_detail:
                     self.db_name = db_name
 
             except IndexError:
-                self.db = ""
+                pass
 
             try:
                 self.bin = os.path.join(
@@ -1029,10 +975,163 @@ class Software_detail:
             except KeyError:
                 self.dir = ""
 
+            print(
+                f"Module: {self.module}, Software: {self.name}, Args: {self.args}, DB: {self.db}, Bin: {self.bin}, Dir: {self.dir}"
+            )
+
             self.output_dir = os.path.join(self.dir, f"{self.name}.{prefix}")
+
+    def excise_db_from_args(self, args: str):
+        """replace db name in args with db path
+
+        :param args: string of args
+        :return: string of args with db path
+        """
+        args_list = args.split(" ")
+        db_idx = None
+        db = ""
+
+        for i in range(len(args_list)):
+            if "--db" in args_list[i]:
+                db_idx = i
+                db = args_list[i + 1]
+                break
+
+        if db_idx is not None:
+            args_list = args_list[:db_idx] + args_list[db_idx + 2 :]
+            args_list = " ".join(args_list)
+
+            return args_list, db
+
+        else:
+            args_list = " ".join(args_list)
+            return args_list, db
 
     def __str__(self):
         return f"{self.module}:{self.name}:{self.args}:{self.db}:{self.bin}"
+
+
+class Bedgraph:
+    """Class to store and work with bedgraph files
+
+
+    Methods:
+    read_bedgraph: reads bedgraph wiith coverage column.
+    get_coverage_array: returns numpy array of coverage column
+    get_bins: generates unzipped bins from start & end positions.
+    plot_coverage: barplot of coverage by window in bdgraph.
+    """
+
+    def __init__(self, bedgraph_file, max_bars=7000, nbins=300):
+        self.max_bars = max_bars
+        self.nbins = nbins
+        self.bedgraph = self.read_bedgraph(bedgraph_file)
+        self.reduce_number_bars()
+        self.bar_to_histogram()
+
+    def read_bedgraph(self, coverage_file) -> pd.DataFrame:
+        coverage = pd.read_csv(coverage_file, sep="\t", header=None).rename(
+            columns={0: "read_id", 1: "start", 2: "end", 3: "coverage"}
+        )
+
+        return coverage
+
+    def get_bins(self) -> np.ndarray:
+        """
+        Get the bins.
+
+        :param coverage_file: The coverage file.
+        """
+        self.bedgraph["width"] = self.bedgraph.end - self.bedgraph.start
+
+    def get_coverage_array(self, coverage: pd.DataFrame) -> np.ndarray:
+        """
+        Get the coverage of the remapping.
+
+        :param coverage_file: The coverage file.
+        """
+        coverage_values = np.array(coverage.coverage.to_list())
+
+        return coverage_values
+
+    def get_bar_coordinates(self):
+        """
+        Get the bar coordinates.
+        """
+        self.bedgraph["width"] = self.bedgraph.end - self.bedgraph.start
+
+        self.bedgraph["x"] = self.bedgraph.start + self.bedgraph.end / 2
+        self.bedgraph["y"] = self.bedgraph.coverage
+
+        return self.bedgraph
+
+    def reduce_number_bars(self):
+        """
+        Reduce the number of bars.
+        """
+        self.bedgraph = self.bedgraph[self.bedgraph.coverage > 0]
+
+        if self.bedgraph.shape[0] > self.max_bars:
+
+            self.bedgraph = self.bedgraph.sample(self.max_bars)
+
+    def merge_bedgraph_rows(self):
+        """
+        Merge the rows of the bedgraph.
+        """
+
+        for ix in range(1, self.bedgraph.shape[0]):
+            if self.bedgraph.iloc[ix - 1].end < (self.bedgraph.iloc[ix].start - 1):
+                self.bedgraph.iloc[ix].end = self.bedgraph.iloc[ix].start - 1
+
+    def bar_to_histogram(self):
+        """
+        Bar to histogram.
+        """
+
+        self.bedgraph["coord"] = (self.bedgraph.start + self.bedgraph.end) / 2
+        self.coverage = [
+            [self.bedgraph.iloc[x]["coord"]] * self.bedgraph.iloc[x]["coverage"]
+            for x in range(self.bedgraph.shape[0])
+        ]
+        self.coverage = list(it.chain.from_iterable(self.coverage))
+
+    def plot_coverage(self, output_file, borders=50, tlen=0):
+        """
+        Plot the coverage of the remapping.
+
+        :param coverage_file: The coverage file. bedgraph produced with samtools.
+        :param output_file: The output file.
+        """
+
+        fig, ax = plt.subplots(figsize=(11, 3))
+
+        if len(self.coverage) <= 1:
+            return
+
+        start_time = time.perf_counter()
+
+        ax.hist(
+            self.coverage,
+            bins=self.nbins,
+            color="skyblue",
+            edgecolor="none",
+        )
+
+        ax.set_xlabel("Reference")
+        ax.set_ylabel("Coverage")
+
+        ##
+        xmax = self.bedgraph.end.max()
+        if tlen:
+            xmax = tlen
+        ax.set_xlim(0 - borders, xmax + borders)
+        ##
+
+        fig.savefig(output_file, bbox_inches="tight")
+        ax.cla()
+        fig.clf()
+        plt.close("all")
 
 
 @dataclass
@@ -1059,6 +1158,10 @@ class Run_detail_report:
     max_prop: int
     max_mapped: int
     input: str
+    enriched_reads: int
+    enriched_reads_percent: float
+    depleted_reads: int
+    depleted_reads_percent: float
     processed: str
     processed_percent: str
     sift_preproc: bool
