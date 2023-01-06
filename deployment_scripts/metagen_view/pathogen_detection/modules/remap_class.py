@@ -20,10 +20,11 @@ from pathogen_detection.utilities.utilities_general import (
     plot_dotplot,
     read_paf_coordinates,
 )
-from scipy.stats import kstest
+
+# from scipy.stats import kstest
 
 pd.options.mode.chained_assignment = None
-np.warnings.filterwarnings("ignore")
+# np.warnings.filterwarnings("ignore")
 
 
 class coverage_parse:
@@ -193,10 +194,10 @@ class coverage_parse:
 
                     windows_covered = f"{len(present)}/{nwindows}"
 
-                    ks, pval = kstest(present, "uniform")
-                    pvals.append(pval)
+                    # ks, pval = kstest(present, "uniform")
+                    # pvals.append(pval)
 
-                pvals = sum(pvals) / len(pvals)
+                # pvals = sum(pvals) / len(pvals)
                 savg = np.median(bedp.s)
                 results.extend([bedp.shape[0], savg, windows_covered])
 

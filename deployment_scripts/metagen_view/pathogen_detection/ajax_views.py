@@ -4,8 +4,7 @@ import os
 
 from django.http import JsonResponse
 from django.utils.safestring import mark_safe
-
-from result_display.models import ReferenceMap_Main, RunMain, Sample
+from pathogen_detection.models import ReferenceMap_Main, RunMain, Sample
 
 
 def show_igv(request, sample_name, run_name, reference):

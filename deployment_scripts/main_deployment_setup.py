@@ -78,7 +78,6 @@ class main_deploy_prep:
         self.pdir = pdir
         self.bindir = self.pdir + "scripts/"
         self.module = self.pdir + "modules/metaruns_class.py"
-        self.mainpy = self.pdir + "main/main.py"
         self.django_dir = self.pdir + "metagen_view/"
 
     def user_input(self):
@@ -129,16 +128,14 @@ class main_deploy_prep:
 
     def export(self):
         # self.paramf = self.pdir + f"params_files/params_{self.tech}.py"
-        self.paramf = self.pdir + f"pathogen_detection/televir_deploy_parameters.py"
+        self.paramf = self.app_dir + "constants_settings.py"
+
         self.mainsh = self.pdir + f"main/main_{self.tech}.sh"
         new_params = self.app_dir + "televir_deploy_parameters.py"
         test_params_ont_json = os.path.join(self.dir, "product") + "/ont_params.json"
         test_params_illumina_json = (
             os.path.join(self.dir, "product") + "/illumina_params.json"
         )
-
-        # os.system(f"cp {self.paramf} {new_params}")
-        os.system(f"cp {self.mainpy} {self.app_dir}")
 
         mods_dict = {
             "$ENVDIR": self.envd,
@@ -151,11 +148,13 @@ class main_deploy_prep:
         for tag, repl in mods_dict.items():
             if repl[-1] != "/":
                 repl += "/"
+            os.system(f"sed -i 's#{tag}#{repl}#g' {self.paramf}")
             os.system(f"sed -i 's#{tag}#{repl}#g' {new_params}")
             os.system(f"sed -i 's#{tag}#{repl}#g' {test_params_ont_json}")
             os.system(f"sed -i 's#{tag}#{repl}#g' {test_params_illumina_json}")
 
         os.system(f"sed -i 's#$SOURCE#{self.source}#g' {new_params}")
+        os.system(f"sed -i 's#$SOURCE#{self.source}#g' {self.paramf}")
 
         os.system(f"cp {self.pdir}metadata/taxid2desc.tsv {self.metad}")
         os.system(f"cp {self.pdir}README.md {self.fmain}")

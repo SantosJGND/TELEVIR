@@ -2,7 +2,7 @@ import os
 from typing import Type
 
 from django.contrib.auth.models import User
-from result_display.models import Projects
+from pathogen_detection.models import Projects
 
 
 def Update_project(project_directory_path, user: str = "admin", submit_index: int = 1):

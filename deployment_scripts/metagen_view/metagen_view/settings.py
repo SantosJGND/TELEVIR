@@ -46,9 +46,6 @@ INSTALLED_APPS = [
     "crispy_forms",
     "metagen_view",
     "pathogen_detection",
-    "django_plotly_dash.apps.DjangoPlotlyDashConfig",
-    "dpd_static_support",
-    "view_breadcrumbs",
     "product",
 ]
 
@@ -60,8 +57,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django_plotly_dash.middleware.BaseMiddleware",
-    "django_plotly_dash.middleware.ExternalRedirectionMiddleware",
 ]
 
 ROOT_URLCONF = "metagen_view.urls"
@@ -144,18 +139,9 @@ STATIC_URL = "static/"
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-    "django_plotly_dash.finders.DashAssetFinder",
-    "django_plotly_dash.finders.DashComponentFinder",
 ]
 
 # Plotly Components
-PLOTLY_COMPONENTS = [
-    "dash_core_components",
-    "dash_html_components",
-    "dash_renderer",
-    "dpd_components",
-    "dpd_static_support",
-]
 
 # Media files
 

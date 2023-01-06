@@ -14,11 +14,12 @@ from typing import Type
 import numpy as np
 import pandas as pd
 from metagen_view.settings import STATICFILES_DIRS
-from product.constants_settings import ConstantsSettings
-
-from pathogen_detection.run_main import RunMain_class
+from pathogen_detection.constants_settings import (
+    Televir_Directory_Constants,
+    Televir_Metadata_Constants,
+)
+from pathogen_detection.modules.run_main import RunMain_class
 from pathogen_detection.televir_deploy_parameters import (
-    Deployment_Params,
     Params_Illumina,
     Params_Nanopore,
 )
@@ -30,6 +31,8 @@ from pathogen_detection.update_DBs import (
     Update_Sample_Runs,
     retrieve_number_of_runs,
 )
+from product.constants_settings import ConstantsSettings
+from settings.constants_settings import ConstantsSettings as CS
 
 
 class metaclass_run:
@@ -38,6 +41,10 @@ class metaclass_run:
     """
 
     qcrun: Type[RunMain_class]
+
+    deployment_root: str
+    dir: str
+    sub_directory: str
 
     def __init__(
         self,
@@ -56,7 +63,7 @@ class metaclass_run:
         self.sample_name = sample_name
         self.project_name = project_name
         self.username = username
-        self.base_params = Deployment_Params
+        self.base_params = Televir_Metadata_Constants
 
         self.r1 = ""
         self.r2 = ""
@@ -72,16 +79,27 @@ class metaclass_run:
 
     def prep_actions_default(self):
         self.actions = {
-            "CLEAN": self.base_params.ACTIONS["CLEAN"],
+            CS.PIPELINE_NAME_read_quality_analysis: self.base_params.ACTIONS[
+                CS.PIPELINE_NAME_read_quality_analysis
+            ],
             "SIFT": self.base_params.ACTIONS["PHAGE_DEPL"],
             "VIRSORT": self.base_params.ACTIONS["VIRSORT"],
-            "QCONTROL": False,
-            "ASSEMBLE": self.base_params.ACTIONS["ASSEMBLE"],
-            "DEPLETE": self.base_params.ACTIONS["DEPLETE"],
-            "ENRICH": self.base_params.ACTIONS["ENRICH"],
-            "CLASSIFY": False,
-            "REMAP": False,
+            "CLEAN": self.base_params.ACTIONS["CLEAN"],
+            CS.PIPELINE_NAME_assembly: self.base_params.ACTIONS[
+                CS.PIPELINE_NAME_assembly
+            ],
+            CS.PIPELINE_NAME_host_depletion: self.base_params.ACTIONS[
+                CS.PIPELINE_NAME_host_depletion
+            ],
+            CS.PIPELINE_NAME_viral_enrichment: self.base_params.ACTIONS[
+                CS.PIPELINE_NAME_viral_enrichment
+            ],
+            CS.PIPELINE_NAME_read_classification: False,
+            CS.PIPELINE_NAME_contig_classification: False,
+            CS.PIPELINE_NAME_remapping: False,
         }
+
+        print(self.actions)
 
     def import_params(self):
         if self.technology == "illumina":
@@ -168,14 +186,14 @@ class metaclass_run:
 
         self.config = config_frame
 
-        if "DEPLETION" in self.config.columns:
-            if len(self.config["DEPLETION"][0]) == 0:
-                self.actions["DEPLETE"] = False
+        if CS.PIPELINE_NAME_host_depletion in self.config.columns:
+            if len(self.config[CS.PIPELINE_NAME_host_depletion][0]) == 0:
+                self.actions[CS.PIPELINE_NAME_host_depletion] = False
 
-        if "ENRICHMENT" in self.config.columns:
+        if CS.PIPELINE_NAME_viral_enrichment in self.config.columns:
 
-            if len(self.config["ENRICHMENT"][0]) == 0:
-                self.actions["ENRICH"] = False
+            if len(self.config[CS.PIPELINE_NAME_viral_enrichment][0]) == 0:
+                self.actions[CS.PIPELINE_NAME_viral_enrichment] = False
 
     def params_get(self, param_frame):
         """
@@ -225,7 +243,9 @@ class metaclass_run:
         lines.append("## PARAMS")
         #
         for dr in range(self.params.shape[0]):
-            lines.append('{}="{}"'.format(self.params.param[dr], self.params.value[dr]))
+            lines.append(
+                '{}="{}"'.format(self.params.parameter[dr], self.params.value[dr])
+            )
         lines.append("##")
         #
         lines.append('SUFFIX="{}"'.format(self.id))
@@ -242,15 +262,18 @@ class metaclass_run:
         """
         print(self.params_conf.DATA_TYPE)
 
+        print(self.dir)
+
         config = {
             "project": os.getcwd(),
             "source": self.base_params.SOURCE,
+            "deployment_root_dir": self.deployment_root_dir,
+            "sub_directory": self.sub_directory,
             "directories": {
                 "root": self.dir,
             },
             "static_dir": self.static_dir,
             "actions": {},
-            "bin": {},
             "threads": 6,
             "prefix": self.id,
             "type": ["SE", "PE"][int(os.path.isfile(self.r2))],
@@ -285,6 +308,9 @@ class metaclass_run:
         #
         if not rdir:
             rdir = os.getcwd()
+
+        self.deployment_root_dir = rdir
+        self.sub_directory = self.id
 
         self.dir = rdir + "{}/".format(self.id)
 
@@ -336,7 +362,7 @@ class metaclass_run:
         self.prep_config_dict()
         self.RunMain = RunMain_class(self.config_dict, self.params, self.username)
 
-        self.RunMain.Run()
+        self.RunMain.Run_Full_Pipeline()
         self.RunMain.Summarize()
 
     def continue_main_run(self):
@@ -347,7 +373,7 @@ class metaclass_run:
         self.prep_config_dict()
         self.RunMain.Update(self.config_dict, self.params)
 
-        self.RunMain.Run()
+        self.RunMain.Run_Full_Pipeline()
         self.RunMain.Summarize()
 
     def report_run_status_save(self):
@@ -355,7 +381,6 @@ class metaclass_run:
         Generate run summary dataclasses, update database.
         :return:
         """
-        self.RunMain.move_reads_to_static()
         self.RunMain.generate_output_data_classes()
 
         Update_Sample_Runs(self.RunMain)
@@ -404,16 +429,16 @@ class meta_orchestra:
         self.technology = technology
 
         self.import_params()
-        self.base_params = Deployment_Params()
+        self.base_params = Televir_Metadata_Constants
 
         ###
         self.modules_to_stores = {
-            "PREPROCESS": self.params_conf.ARGS_QC,
-            "ENRICHMENT": self.params_conf.ARGS_ENRICH,
-            "ASSEMBLY": self.params_conf.ARGS_ASS,
-            "CONTIG_CLASSIFICATION": self.params_conf.ARGS_CLASS,
-            "READ_CLASSIFICATION": self.params_conf.ARGS_CLASS,
-            "REMAPPING": self.params_conf.ARGS_REMAP,
+            CS.PIPELINE_NAME_read_quality_analysis: self.params_conf.ARGS_QC,
+            CS.PIPELINE_NAME_viral_enrichment: self.params_conf.ARGS_ENRICH,
+            CS.PIPELINE_NAME_assembly: self.params_conf.ARGS_ASS,
+            CS.PIPELINE_NAME_contig_classification: self.params_conf.ARGS_CLASS,
+            CS.PIPELINE_NAME_read_classification: self.params_conf.ARGS_CLASS,
+            CS.PIPELINE_NAME_remapping: self.params_conf.ARGS_REMAP,
         }
 
         if estimate_only:
@@ -480,7 +505,11 @@ class meta_orchestra:
     def sample_main(
         self,
         sample=1,
-        cols=["PREPROCESS", "ENRICHMENT", "ASSEMBLY", "CONTIG_CLASSIFICATION"],
+        cols=[
+            CS.PIPELINE_NAME_read_quality_analysis,
+            CS.PIPELINE_NAME_viral_enrichment,
+            CS.PIPELINE_NAME_assembly,
+        ],
     ):
         """
         sample module / software combinations from dictionaries in params.py. random.
@@ -493,6 +522,8 @@ class meta_orchestra:
 
         venue = [self.params_conf.SOFTWARE[x] for x in cols]
         venues = list(it.product(*venue))
+
+        print("venue", venue)
 
         if sample > 0 and sample < len(venues):
 
@@ -568,7 +599,7 @@ class meta_orchestra:
         params = pd.concat(
             (linked_db_list[common_index[0]], params), axis=1
         ).reset_index(drop=True)
-        params.columns = ["module", "software", "param", "value"]
+        params.columns = ["module", "software", "parameter", "value"]
 
         return params
 
@@ -632,14 +663,21 @@ class meta_orchestra:
 
         child.id = run_prefix
 
-        child.actions["QCONTROL"] = False
-        child.actions["DEPLETE"] = False
-        child.actions["ENRICH"] = False
-        child.actions["ASSEMBLE"] = False
+        child.actions[CS.PIPELINE_NAME_read_quality_analysis] = False
+        child.actions[CS.PIPELINE_NAME_host_depletion] = False
+        child.actions[CS.PIPELINE_NAME_viral_enrichment] = False
+        child.actions[CS.PIPELINE_NAME_assembly] = False
         child.actions["SIFT"] = self.base_params.ACTIONS["PHAGE_DEPL"]
         child.actions["VIRSORT"] = self.base_params.ACTIONS["VIRSORT"]
-        child.actions["CLASSIFY"] = self.base_params.ACTIONS["CLASSIFY"]
-        child.actions["REMAP"] = self.base_params.ACTIONS["REMAP"]
+        child.actions[
+            CS.PIPELINE_NAME_contig_classification
+        ] = self.base_params.ACTIONS[CS.PIPELINE_NAME_contig_classification]
+        child.actions[CS.PIPELINE_NAME_read_classification] = self.base_params.ACTIONS[
+            CS.PIPELINE_NAME_read_classification
+        ]
+        child.actions[CS.PIPELINE_NAME_remapping] = self.base_params.ACTIONS[
+            CS.PIPELINE_NAME_remapping
+        ]
 
         if len(paramCombs[srun[0]]) == 0:
             return self
@@ -693,7 +731,11 @@ class meta_orchestra:
         :param prj: metaclass_run instance.
         :return: None
         """
-        modules = ["CONTIG_CLASSIFICATION", "READ_CLASSIFICATION", "REMAPPING"]
+        modules = [
+            CS.PIPELINE_NAME_contig_classification,
+            CS.PIPELINE_NAME_read_classification,
+            CS.PIPELINE_NAME_remapping,
+        ]
 
         hdconf, linked_dbs, paramCombs = self.generate_combinations(self.down, modules)
 
@@ -770,7 +812,10 @@ class meta_orchestra:
         deploy metaclass runs.
         :return: self
         """
-        modules = ["PREPROCESS", "ENRICHMENT", "ASSEMBLY"]
+        modules = [
+            CS.PIPELINE_NAME_viral_enrichment,
+            CS.PIPELINE_NAME_assembly,
+        ]
 
         conf, linked_dbs, paramCombs = self.generate_combinations(self.sup, modules)
 
@@ -841,13 +886,15 @@ class meta_orchestra:
         run quality control on input data, so only have to do it once.
         :return: self
         """
-        modules = ["PREPROCESS"]
+        modules = [CS.PIPELINE_NAME_read_quality_analysis]
         paramsqc = {**self.params_conf.ARGS_QC}
         conf = self.sample_main(sample=1, cols=modules)
 
         params = self.params_extract(conf.iloc[0], paramsqc, modules=modules, sample=1)
         softdb = params[1]
         params = params[0]
+
+        print(params)
 
         qcrun = metaclass_run(
             self.project_name,
@@ -858,13 +905,18 @@ class meta_orchestra:
             technology=self.technology,
         )
         qcrun.actions = {x: False for x in qcrun.actions.keys()}
-        qcrun.actions["QCONTROL"] = self.base_params.ACTIONS["QCONTROL"]
+        qcrun.actions[
+            CS.PIPELINE_NAME_read_quality_analysis
+        ] = self.base_params.ACTIONS[CS.PIPELINE_NAME_read_quality_analysis]
 
         qcrun.config_get(conf)
 
         params = pd.DataFrame([params.columns, params.loc[0]]).T
         params = pd.concat((softdb, params), axis=1).reset_index(drop=True)
-        params.columns = ["module", "software", "param", "value"]
+        params.columns = ["module", "software", "parameter", "value"]
+        print("###")
+        print(params)
+        print(params.columns)
 
         qcrun.params_get(params)
         qcrun.prep_env(rdir=self.rdir)

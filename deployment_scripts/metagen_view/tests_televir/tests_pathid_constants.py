@@ -9,14 +9,14 @@ import numpy as np
 import pandas as pd
 from django.test import TestCase
 from pathogen_detection.constants_settings import TestConstants
-from pathogen_detection.object_classes import (
+from pathogen_detection.modules.object_classes import (
     Read_class,
     RunCMD,
     Sample_runClass,
     Software_detail,
 )
-from pathogen_detection.preprocess_class import Preprocess
-from pathogen_detection.run_main import RunMain_class, get_bindir_from_binaries
+from pathogen_detection.modules.preprocess_class import Preprocess
+from pathogen_detection.modules.run_main import RunMain_class, get_bindir_from_binaries
 
 
 class AttrDict(dict):

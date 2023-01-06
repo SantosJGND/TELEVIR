@@ -4,10 +4,9 @@ Created on Jan 7, 2018
 @author: joao santos
 """
 
-import result_display.views as result_views
+import pathogen_detection.views as result_views
 from django.urls import path, re_path
-from result_display import ajax_views
-
+from pathogen_detection import ajax_views
 from product import views
 
 urlpatterns = [

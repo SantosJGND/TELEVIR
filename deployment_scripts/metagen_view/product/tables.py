@@ -1,7 +1,7 @@
 from typing import DefaultDict
 
 import django_tables2 as tables
-from result_display.models import RunMain, Sample
+from pathogen_detection.models import RunMain, Sample
 
 
 class SampleTable(tables.Table):

@@ -7,7 +7,7 @@ import json
 import os
 from enum import Enum
 
-from metagen_view.settings import STATIC_URL, STATICFILES_DIRS
+from metagen_view.settings import MEDIA_ROOT, STATIC_URL, STATICFILES_DIRS
 from settings.constants_settings import ConstantsSettings as CS
 
 
@@ -24,27 +24,27 @@ class Televir_Directory_Constants:
 class Televir_Metadata_Constants:
 
     SOURCE = {
-        "ENVSDIR": "/televir/mngs_benchmark/mngs_environments/",
-        "CONDA": "/opt/conda/",
-        "DBDIR_MAIN": "/televir/mngs_benchmark/ref_db/",
-        "REF_FASTA": "/televir/mngs_benchmark/ref_fasta/",
-        "METAD": "/televir/mngs_benchmark/metadata/",
-        "BIN": "/insaflu_web/TELEVIR/deployment_scripts/scripts/",
+        "ENVSDIR": "$ENVDIR",
+        "CONDA": "$SOURCE",
+        "DBDIR_MAIN": "$DBDIR",
+        "REF_FASTA": "$FDIR",
+        "METAD": "$METADIR",
+        "BIN": "$BINDIR",
     }
 
     METADATA = {
-        "ROOT": "/televir/mngs_benchmark/metadata/",
+        "ROOT": "$METADIR",
         "input_accession_to_taxid_path": "acc2taxid.tsv",
         "input_taxonomy_to_descriptor_path": "taxid2desc.tsv",
         "input_protein_accession_to_protid_path": "protein_acc2protid.tsv",
         "input_protein_accession_to_taxid_path": "protein_acc2taxid.tsv",
     }
 
-    REFERENCE_MAIN = "/televir/mngs_benchmark/ref_fasta/"
+    REFERENCE_MAIN = "$FDIR"
 
     BINARIES = {
-        "SOURCE": "/opt/conda/",
-        "ROOT": "/televir/mngs_benchmark/mngs_environments/",
+        "SOURCE": "$SOURCE",
+        "ROOT": "$ENVDIR",
         "software": {
             CS.PIPELINE_NAME_contig_classification: "hostDepletion/hostdep_env",
             CS.PIPELINE_NAME_read_classification: "hostDepletion/hostdep_env",
@@ -70,6 +70,8 @@ class Televir_Metadata_Constants:
             "snippy": "/software/snippy",
             "bwa": "remap/remap",
             "bowtie2": "remap/remap",
+            "nanofilt": "preprocess/preproc",
+            "trimmomatic": "preprocess/preproc",
         },
         CS.PIPELINE_NAME_remapping: {"default": "remap/remap"},
         CS.PIPELINE_NAME_read_quality_analysis: {"default": "preprocess/preproc"},
@@ -90,9 +92,24 @@ class Televir_Metadata_Constants:
         "OUTD": "output/",
     }
 
+    ACTIONS = {
+        "CLEAN": False,
+        CS.PIPELINE_NAME_read_quality_analysis: True,
+        CS.PIPELINE_NAME_viral_enrichment: True,
+        CS.PIPELINE_NAME_host_depletion: False,
+        CS.PIPELINE_NAME_assembly: True,
+        CS.PIPELINE_NAME_read_classification: True,
+        CS.PIPELINE_NAME_contig_classification: True,
+        CS.PIPELINE_NAME_remapping: True,
+        "PHAGE_DEPL": True,
+        "VIRSORT": False,
+        "SIFT": True,
+    }
+
 
 class ConstantsSettings:
-
+    media_directory = MEDIA_ROOT
+    static_directory = STATICFILES_DIRS[0]
     project_directory = "/mnt/sdc/TELEVIR/projects/"
     static_directory = STATIC_URL
     exclude_descriptions = ["phage", "Phage"]

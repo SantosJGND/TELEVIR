@@ -15,8 +15,7 @@ from django_tables2 import RequestConfig
 from pathogen_detection.constants_settings import (
     ConstantsSettings as PathogenConstantsSettings,
 )
-from result_display.constants_settings import ConstantsSettings
-from result_display.models import (
+from pathogen_detection.models import (
     QC_REPORT,
     ContigClassification,
     FinalReport,
@@ -31,8 +30,8 @@ from result_display.models import (
     Sample,
     SampleQC,
 )
-from result_display.tables import ContigTable, SampleQCTable
-
+from pathogen_detection.tables import ContigTable, SampleQCTable
+from product.constants_settings import ConstantsSettings
 from product.file_management import Ephemeral_Project_Manager
 from product.forms import UploadFileForm
 from product.models import Fastq_Input, Processed, Submitted

@@ -171,6 +171,7 @@ class Preprocess:
             )
             return
 
+        print("subsample: {}".format(self.subsample))
         if self.subsample:
             self.subsample_reads()
 

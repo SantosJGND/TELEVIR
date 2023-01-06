@@ -4,10 +4,10 @@ from datetime import date
 import pandas as pd
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
+from pathogen_detection.models import FinalReport, Projects, RunDetail, RunMain, Sample
+from pathogen_detection.utilities.eda_class_native import Validator, run_eda
+from pathogen_detection.utilities.graph_utils import pipeline_tree, tree_plot
 from product.utils import Run_Main_from_Fastq_Input
-from result_display.eda_class_native import Validator, run_eda
-from result_display.graph_utils import pipeline_tree, tree_plot
-from result_display.models import FinalReport, Projects, RunDetail, RunMain, Sample
 
 
 def read_parameters(row):

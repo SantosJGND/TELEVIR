@@ -1,8 +1,13 @@
 from typing import DefaultDict
 
 import django_tables2 as tables
-
-from result_display.models import Projects, ReferenceContigs, RunMain, Sample, SampleQC
+from pathogen_detection.models import (
+    Projects,
+    ReferenceContigs,
+    RunMain,
+    Sample,
+    SampleQC,
+)
 
 
 class SampleTable(tables.Table):

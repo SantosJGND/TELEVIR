@@ -1164,7 +1164,7 @@ class Classifier:
     """
 
     available_software: dict = {
-        "blastn": run_blast,
+        "blast": run_blast,
         "blastp": run_blast_p,
         "centrifuge": run_centrifuge,
         "desamba": run_deSamba,

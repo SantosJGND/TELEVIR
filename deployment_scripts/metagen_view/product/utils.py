@@ -8,13 +8,12 @@ import numpy as np
 import pandas as pd
 from background_task import background
 from pathogen_detection.constants_settings import TestConstants
-from pathogen_detection.run_main import RunMain_class
+from pathogen_detection.modules.run_main import RunMain_class
 from pathogen_detection.update_DBs import (
     Update_QC_report,
     Update_Sample,
     Update_Sample_Runs,
 )
-
 from product.constants_settings import ConstantsSettings
 from product.models import Fastq_Input, Processed, Submitted
 from product.update_DBs import Update_project

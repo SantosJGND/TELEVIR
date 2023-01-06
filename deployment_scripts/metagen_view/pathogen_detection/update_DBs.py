@@ -4,7 +4,7 @@ from typing import Type
 
 from django.contrib.auth.models import User
 from django.core.files import File
-from result_display.models import (
+from pathogen_detection.models import (
     QC_REPORT,
     ContigClassification,
     FinalReport,
@@ -20,10 +20,9 @@ from result_display.models import (
     Sample,
     SampleQC,
 )
-
-from pathogen_detection.object_classes import Sample_runClass
-from pathogen_detection.remap_class import Mapping_Instance
-from pathogen_detection.run_main import RunMain_class
+from pathogen_detection.modules.object_classes import Sample_runClass
+from pathogen_detection.modules.remap_class import Mapping_Instance
+from pathogen_detection.modules.run_main import RunMain_class
 
 
 ####################################################################################################################

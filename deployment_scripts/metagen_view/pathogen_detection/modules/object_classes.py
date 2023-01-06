@@ -15,11 +15,9 @@ from pathogen_detection.utilities.utilities_general import fastqc_parse
 
 matplotlib.use("Agg")
 import gzip
-import time
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from pathogen_detection.constants_settings import (
     Televir_Metadata_Constants as Televir_Metadata,
 )

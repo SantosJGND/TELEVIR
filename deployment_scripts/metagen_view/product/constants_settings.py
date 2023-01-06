@@ -19,6 +19,7 @@ class ConstantsSettings:
     ont_params_json = os.path.join(BASE_DIR, "product", "ont_params.json")
     illumina_params_json = os.path.join(BASE_DIR, "product", "illumina_params.json")
     django_env: str
+    PAGINATE_NUMBER = 50
 
     def __init__(self):
 

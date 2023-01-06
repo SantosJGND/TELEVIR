@@ -85,6 +85,7 @@ def main():
     args = get_args()
     ###
     if not args.partial:
+        args.setup_conda = True
         args.envs = True
         args.soft = True
         args.seqdl = True
@@ -166,7 +167,7 @@ def main():
         organism=ORGANISM,
         test=args.test,
     )
-
+    print(args.setup_conda)
     if args.setup_conda:
         metagen_prep.setup_envs_conda()
 

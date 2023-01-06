@@ -5,8 +5,7 @@ Created on Jan 7, 2018
 """
 
 from django.urls import path
-
-from result_display import ajax_views, views
+from pathogen_detection import ajax_views, views
 
 urlpatterns = [
     path("", views.Project_page.as_view(), name="projects_main"),

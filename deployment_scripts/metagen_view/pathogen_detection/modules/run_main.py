@@ -312,14 +312,14 @@ class RunDetail_main:
 
         ### actions
         self.subsample = False
-        self.quality_control = config["actions"]["QCONTROL"]
+        self.quality_control = config["actions"][CS.PIPELINE_NAME_read_quality_analysis]
         self.sift = config["actions"]["SIFT"]
         self.depletion = bool(self.depletion_method.name != "None")
         self.depletion = bool(self.depletion_method.name != "None")
         self.enrichment = bool(self.enrichment_method.name != "None")
         self.assembly = bool(self.assembly_method.name != "None")
-        self.classification = config["actions"]["CLASSIFY"]
-        self.remapping = config["actions"]["REMAP"]
+        self.classification = bool(self.read_classification_method.name != "None")
+        self.remapping = bool(self.remapping_method.name != "None")
         self.house_cleaning = config["actions"]["CLEAN"]
 
         ### drones
@@ -384,14 +384,12 @@ class RunDetail_main:
         self.log_dir = config["directories"]["log_dir"]
 
         self.sample.r1.update(
-            self.sample.r1,
             clean_dir=config["directories"][CS.PIPELINE_NAME_read_quality_analysis],
             enriched_dir=config["directories"]["reads_enriched_dir"],
             depleted_dir=config["directories"]["reads_depleted_dir"],
         )
 
         self.sample.r2.update(
-            self.sample.r2,
             clean_dir=config["directories"][CS.PIPELINE_NAME_read_quality_analysis],
             enriched_dir=config["directories"]["reads_enriched_dir"],
             depleted_dir=config["directories"]["reads_depleted_dir"],
@@ -399,14 +397,14 @@ class RunDetail_main:
 
         ### actions
         self.subsample = False
-        self.quality_control = config["actions"]["QCONTROL"]
+        self.quality_control = config["actions"][CS.PIPELINE_NAME_read_quality_analysis]
         self.sift = config["actions"]["SIFT"]
-        self.depletion = config["actions"]["DEPLETE"]
-        self.enrichment = config["actions"]["ENRICH"]
-        self.assembly = config["actions"]["ASSEMBLY"]
-        self.classification = config["actions"]["CLASSIFY"]
-        self.remapping = config["actions"]["REMAPPING"]
-        self.house_cleaning = config["actions"]["CLEANING"]
+        self.depletion = config["actions"][CS.PIPELINE_NAME_host_depletion]
+        self.enrichment = config["actions"][CS.PIPELINE_NAME_viral_enrichment]
+        self.assembly = config["actions"][CS.PIPELINE_NAME_assembly]
+        self.classification = config["actions"][CS.PIPELINE_NAME_read_classification]
+        self.remapping = config["actions"][CS.PIPELINE_NAME_remapping]
+        self.house_cleaning = config["actions"]["CLEAN"]
 
         ### methods
 
@@ -772,10 +770,12 @@ class RunMain_class(Run_Deployment_Methods):
         else:
             self.deploy_QC(fake_run=True)
 
-            shutil.copy(self.sample.r1.current, self.sample.r1.clean)
+            if self.sample.r1.current != self.sample.r1.clean:
+                shutil.copy(self.sample.r1.current, self.sample.r1.clean)
 
             if self.sample.r2.exists:
-                shutil.copy(self.sample.r2.current, self.sample.r2.clean)
+                if self.sample.r2.current != self.sample.r2.clean:
+                    shutil.copy(self.sample.r2.current, self.sample.r2.clean)
 
             self.sample.qc_soft = "none"
             self.sample.input_fastqc_report = self.preprocess_drone.input_qc_report
@@ -947,7 +947,6 @@ class RunMain_class(Run_Deployment_Methods):
         final_processing_percent = (final_processing_reads / processed_reads) * 100
 
         ### transfer to assembly class / drone.
-        print(self.aclass_summary)
         minhit_assembly = self.aclass_summary["counts"].min()
         if not minhit_assembly or not self.aclass_summary.shape[0]:
             minhit_assembly = 0

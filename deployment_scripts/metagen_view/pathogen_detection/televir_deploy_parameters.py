@@ -1,78 +1,4 @@
-class Deployment_Params:
-
-    SOURCE = {
-        "ENVSDIR": "$ENVDIR",
-        "CONDA": "$SOURCE",
-        "DBDIR_MAIN": "$DBDIR",
-        "REF_FASTA": "$FDIR",
-        "METAD": "$METADIR",
-        "BIN": "$BINDIR",
-    }
-
-    METADATA = {
-        "ROOT": "$METADIR",
-        "input_accession_to_taxid_path": "acc2taxid.tsv",
-        "input_taxonomy_to_descriptor_path": "taxid2desc.tsv",
-        "input_protein_accession_to_protid_path": "protein_acc2protid.tsv",
-        "input_protein_accession_to_taxid_path": "protein_acc2taxid.tsv",
-    }
-
-    REFERENCE_MAIN = "$FDIR"
-
-    BINARIES = {
-        "SOURCE": "$SOURCE",
-        "ROOT": "$ENVDIR",
-        "software": {
-            "classification": "hostDepletion/hostdep_env",
-            "centrifuge": "hostDepletion/hostdep_env",
-            "diamond": "hostDepletion/hostdep_env",
-            "kaiju": "hostDepletion/hostdep_env",
-            "krakenuniq": "hostDepletion/hostdep_env",
-            "blast": "hostDepletion/hostdep_env",
-            "kraken2": "kraken2/kraken_env",
-            "fastviromeexplorer": "FastViromeExplorer/FastViromeExplorer",
-            "kallisto": "FastViromeExplorer/fve",
-            "virsorter": "hostDepletion/vs2",
-            "desamba": "classm_lc/deSAMBA",
-            "minimap-rem": "hostDepletion/hostdep_env",
-            "flye": "assembly/Flye",
-            "clark": "classification/Clark",
-            "minimap2_ONT": "hostDepletion/hostdep_env",
-            "minimap2_asm": "hostDepletion/hostdep_env",
-        },
-        "REMAPPING": {"default": "remap/remap"},
-        "PREPROCESS": {"default": "preprocess/preproc"},
-        "ASSEMBLY": {"default": "assembly/assembly"},
-    }
-
-    DIRS = {
-        "PREPROCESS": "reads/clean/",
-        "reads_depleted_dir": "reads/hd_filtered/",
-        "reads_enriched_dir": "reads/enriched/",
-        "DEPLETION": "host_depletion/",
-        "ENRICHMENT": "enrichment/",
-        "ASSEMBLY": "assembly/",
-        "CONTIG_CLASSIFICATION": "classification/assembly/",
-        "READ_CLASSIFICATION": "classification/reads/",
-        "REMAPPING": "remap/",
-        "log_dir": "logs/",
-        "OUTD": "output/",
-    }
-
-    ################################## MODULES
-
-    ACTIONS = {
-        "CLEAN": False,
-        "QCONTROL": True,
-        "ENRICH": True,
-        "DEPLETE": False,
-        "ASSEMBLE": True,
-        "CLASSIFY": True,
-        "REMAP": True,
-        "PHAGE_DEPL": True,
-        "VIRSORT": False,
-        "SIFT": True,
-    }
+from settings.constants_settings import ConstantsSettings as CS
 
 
 class Params_Illumina:
@@ -92,18 +18,18 @@ class Params_Illumina:
     ################################## SOFTWARE
 
     SOFTWARE = {
-        "PREPROCESS": ["trimmomatic"],  # trimmomatic
-        "ENRICHMENT": [
+        CS.PIPELINE_NAME_read_quality_analysis: ["trimmomatic"],  # trimmomatic
+        CS.PIPELINE_NAME_viral_enrichment: [
             "centrifuge",
             # "kraken2",
             # "fastviromeexplorer",
         ],  # "virmet", "dvf", "minimap2", "centrifuge", "kaiju", "kuniq", "kraken2", "fve", "virmet"],
-        "ASSEMBLY": ["spades"],  # "flye", "raven"],
-        "CONTIG_CLASSIFICATION": [
+        CS.PIPELINE_NAME_assembly: ["spades"],  # "flye", "raven"],
+        CS.PIPELINE_NAME_contig_classification: [
             "blast",
             # "minimap2_asm",
         ],  # ["blast", "minimap-asm", "diamond", "virsorter"],
-        "READ_CLASSIFICATION": [
+        CS.PIPELINE_NAME_read_classification: [
             # "kraken2",
             # "fastviromeexplorer",
             "krakenuniq",
@@ -112,7 +38,7 @@ class Params_Illumina:
             "centrifuge",
             # "diamond",
         ],
-        "REMAPPING": ["snippy"],  # snippy, rematch, bowtie, minimap-rem
+        CS.PIPELINE_NAME_remapping: ["snippy"],  # snippy, rematch, bowtie, minimap-rem
     }
 
     ################################## PARAMS
@@ -339,25 +265,30 @@ class Params_Nanopore:
     ################################## SOFTWARE
 
     SOFTWARE = {
-        "PREPROCESS": ["nanofilt"],  # "nanofilt", trimmomatic
-        "ENRICHMENT": [
+        CS.PIPELINE_NAME_read_quality_analysis: ["nanofilt"],  # "nanofilt", trimmomatic
+        CS.PIPELINE_NAME_viral_enrichment: [
             "",
             # "kaiju",
             # "krakenuniq",
             "centrifuge",
         ],
-        "ASSEMBLY": ["flye", "raven"],  # spades, velvet,
-        "CONTIG_CLASSIFICATION": ["blast", "minimap2_asm"],  # , "minimap-asm"],
-        "READ_CLASSIFICATION": [
+        CS.PIPELINE_NAME_assembly: ["flye", "raven"],  # spades, velvet,
+        CS.PIPELINE_NAME_contig_classification: [
+            "blast",
+            "minimap2_asm",
+        ],  # , "minimap-asm"],
+        CS.PIPELINE_NAME_read_classification: [
             # "krakenuniq",
             # "fastviromeexplorer",
-            # "clark",
+            "clark",
             # "desamba",
-            "kaiju",
-            "centrifuge",
+            # "kaiju",
+            # "centrifuge",
             # "diamond",
         ],
-        "REMAPPING": ["minimap2"],  # snippy, rematch, bowtie, minimap-rem
+        CS.PIPELINE_NAME_remapping: [
+            "minimap2"
+        ],  # snippy, rematch, bowtie, minimap-rem
     }
 
     ################################## PARAMS
