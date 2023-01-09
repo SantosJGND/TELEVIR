@@ -13,20 +13,121 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import os
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+from decouple import config
 
+## define APP version
+APP_VERSION_NUMBER = "2.0.0"
+
+### running tests in command line
+RUN_TEST_IN_COMMAND_LINE = False
+
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+print(BASE_DIR)
+####	if the tests are running
+RUNNING_TEST = False
 
 # Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
+# See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-fe*pdrj-=blq*zq&&#fv80ndc$dj&3+a1%y!=4v784(&8_^m&x"
+SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = ["194.210.120.32", "127.0.0.1", "www.televir.com"]
+ALLOWED_HOSTS = config(
+    "ALLOWED_HOSTS", cast=lambda v: [s.strip() for s in v.split(",")]
+)
+
+## google recaptcha
+GOOGLE_RECAPTCHA_SECRET_KEY = config("GOOGLE_RECAPTCHA_SECRET_KEY", default="")
+SITE_KEY = config("SITE_KEY")
+
+### crispy template
+CRISPY_TEMPLATE_PACK = "bootstrap4"
+BREADCRUMBS_TEMPLATE = "django_bootstrap_breadcrumbs/bootstrap4.html"
+
+CSRF_COOKIE_AGE = None
+CSRF_COOKIE_DOMAIN = ".min-saude.pt"
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SECURE = True
+CSRF_USE_SESSIONS = True
+
+################### If you
+### ADMIN  disable/disable django
+ADMIN_ENABLED = True  # config("ADMIN_ENABLED", default=True, cast=bool)
+
+### threads to use in several software
+THREADS_TO_RUN_FASTQC = config(
+    "THREADS_TO_RUN_FASTQC", default=3, cast=int
+)  ## don't increase this because of the heap memory
+THREADS_TO_RUN_FAST = config("THREADS_TO_RUN_FAST", default=3, cast=int)
+THREADS_TO_RUN_SLOW = config("THREADS_TO_RUN_SLOW", default=3, cast=int)
+
+## MAX LENGTH_SEQUENCE_FROM_FASTA - REFERENCE
+MAX_LENGTH_SEQUENCE_TOTAL_FROM_FASTA = config(
+    "MAX_LENGTH_SEQUENCE_TOTAL_FROM_FASTA", default=50000, cast=int
+)
+## MAX LENGTH_SEQUENCE_FROM_FASTA - CONSENSUS
+MAX_LENGTH_SEQUENCE_TOTAL_FROM_CONSENSUS_FASTA = config(
+    "MAX_LENGTH_SEQUENCE_TOTAL_FROM_CONSENSUS_FASTA", default=50000, cast=int
+)
+MAX_REF_FASTA_FILE = config("MAX_REF_FASTA_FILE", default=100000, cast=int)  ## 100k
+MAX_CONSENSUS_FASTA_FILE = config(
+    "MAX_CONSENSUS_FASTA_FILE", default=400000, cast=int
+)  ## 100k
+MAX_REF_GENBANK_FILE = config("MAX_REF_GENBANK_FILE", default=150000, cast=int)  ## 150k
+
+MAX_FASTQ_FILE_UPLOAD = config(
+    "MAX_FASTQ_FILE_UPLOAD", default=50971520, cast=int
+)  ### 50M
+
+## make the down size of the fastq files to 50MB
+## if the DOWN_SIZE_FASTQ_FILES is false the maximum fastq input files is 250MB by default,
+##   you can change the value in .env file
+DOWN_SIZE_FASTQ_FILES = config("DOWN_SIZE_FASTQ_FILES", default=True, cast=bool)
+## If DOWN_SIZE_FASTQ_FILES is True it's possible to upload till this value but it makes the down size to MAX_FASTQ_FILE_UPLOAD
+MAX_FASTQ_FILE_WITH_DOWNSIZE = config(
+    "MAX_FASTQ_FILE_WITH_DOWNSIZE", default=250971520, cast=int
+)  ### 250M
+
+### if NanoFilt runs on MEDAKA ENV, because of old < python3.5
+RUN_NANOFILT_AND_NANOSTAT_IN_MEDAKA_ENV = config(
+    "RUN_NANOFILT_AND_NANOSTAT_IN_MEDAKA_ENV", default=False, cast=bool
+)  ### 250M
+
+# https://www.digitalocean.com/community/tutorials/how-to-create-an-ssl-certificate-on-apache-for-centos-7
+# https://gist.github.com/bradmontgomery/6487319
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+if config("SECURE_SSL_REDIRECT", default=False, cast=bool):
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+## add google analytics
+ADD_GOOGLE_ANALYTICS = config("ADD_GOOGLE_ANALYTICS", default=False, cast=bool)
+
+## True to show video tutorial
+SHOW_VIDEO_TUTORIAL = config("SHOW_VIDEO_TUTORIAL", default=False, cast=bool)
+
+## to show login anonymous
+SHOW_LOGIN_ANONYMOUS = config("SHOW_LOGIN_ANONYMOUS", default=False, cast=bool)
+
+SHOW_IMAGES_MAIN_PAGE = config("SHOW_IMAGES_MAIN_PAGE", default=False, cast=bool)
+INSTITUTION_NAME = config("INSTITUTION_NAME", default="")
+INSTITUTION_WEB_SITE = config("INSTITUTION_WEB_SITE", default="")
+
+## true if show NextClade link for covid projects. Need to have https domain name
+## https://clades.nextstrain.org/?input-fasta=https://insaflu.insa.pt/media/projects/result/user_38/project_868/main_result/AllConsensus.fasta
+SHOW_NEXTCLADE_LINK = config("SHOW_NEXTCLADE_LINK", default=False, cast=bool)
+WEB_SITE_HTTP_NAME = config("WEB_SITE_HTTP_NAME", default="http")
+
+## run process in SGE, otherwise run in qcluster
+RUN_SGE = config("RUN_SGE", default=False, cast=bool)
+SGE_ROOT = config("SGE_ROOT")
+
+
+ALLOWED_HOSTS = ["194.210.120.32", "127.0.0.1"]
 
 
 # Application definition
@@ -39,7 +140,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "background_task",
-    "result_display.apps.ResultDisplayConfig",
+    "managing_files.apps.ManagingFilesConfig",
+    "settings.apps.SettingsConfig",
     "django_bootstrap_breadcrumbs",
     "django_tables2",
     "file_upload",
@@ -81,6 +183,14 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "metagen_view.wsgi.application"
+
+
+# Name of cache backend to cache user agents. If it not specified default
+# cache alias will be used. Set to `None` to disable caching.
+USER_AGENTS_CACHE = "default"
+
+### software directory
+DIR_SOFTWARE = config("DIR_SOFTWARE", default="/usr/local/software/insaflu")
 
 
 # Database

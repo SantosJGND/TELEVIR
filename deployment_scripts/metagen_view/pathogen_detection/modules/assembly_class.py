@@ -269,6 +269,8 @@ class Assembly_class:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging_level)
         self.logger.addHandler(logging.StreamHandler())
+        self.logger.propagate = False
+
         self.logger.info("Assembly class initialized")
         self.logger.info("Assembly method: {}".format(self.assembly_method.name))
         self.logger.info("Assembly directory: {}".format(self.assembly_dir))

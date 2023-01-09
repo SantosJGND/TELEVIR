@@ -61,7 +61,7 @@ class Televir_Layout_minimal:
     install_diamond = False
     install_minimap2 = False
     install_fastviromeexplorer = True
-    install_clark = False
+    install_clark = True
     install_desamba = True
     install_blast = True
 

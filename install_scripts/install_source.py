@@ -69,6 +69,7 @@ ENVS_PARAMS = {
         "classm_lc/deSAMBA": "https://github.com/hitbc/deSAMBA.git",
         "preprocess/RabbitQC": "https://github.com/ZekunYin/RabbitQC.git",
         "assembly/Flye": "https://github.com/fenderglass/Flye.git",
+        "trimmomatic": "https://github.com/usadellab/Trimmomatic.git",
     },
     "TAR": {
         "classification/Clark": "http://clark.cs.ucr.edu/Download/CLARKV1.2.6.1.tar.gz",

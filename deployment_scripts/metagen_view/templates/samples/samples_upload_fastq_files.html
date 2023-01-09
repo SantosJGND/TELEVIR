@@ -1,0 +1,96 @@
+{% extends '_layouts/base.html' %}
+
+{% load crispy_forms_tags %}
+{% load django_bootstrap_breadcrumbs %}
+
+{% block css %}
+{% endblock css %}
+
+{% block breadcrumbs %}
+	{{ block.super }}
+	{% breadcrumb "Samples" "samples" %}
+	{% breadcrumb "Add fastq files" "sample-add-fastq" %}
+	{% breadcrumb "Upload 'fastq' files" "sample-upload-fastq" %}
+{% endblock %}
+
+{% block content %}
+
+    <div class="well text-muted text-center" style="padding-top: 2rem; padding-bottom: 2rem;">
+	  	<span class="fa fa-arrow-down" style="font-size: 3rem;"></span>
+ 			<h3>Drop fastq.gz here...</h3>
+	</div>
+	
+	<a href="#" data-title="Open a multi-select dialog to upload files" class="btn btn-small btn-primary dark js-upload-files"><span class="hidden-phone"><i class="fa fa-upload"></i> Or upload fastq.gz files from here</span></a>
+
+	<p> </p>
+	{{ message_note_1 }}
+	<!-- Note for file size -->
+	{% if show_note_message_down_size %}
+		<p> 
+			<strong>NOTE:</strong> {{ message_note_2 }}
+		</p>
+	{% endif %}
+	<!-- Note for type of sequencing Illumina or Minion-->
+	{% if message_note_3 %}
+		<p> 
+			<strong>NOTE:</strong> {{ message_note_3 }}
+		</p>
+	{% endif %}
+	<p> </p>
+	
+	{# 2. FILE INPUT TO BE USED BY THE PLUG-IN #}
+	<input id="fileupload" type="file" name="path_name" multiple
+	       style="display: none;"
+	       data-url="{% url 'sample-upload-fastq' %}"
+	       data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
+	
+	<p> </p>
+	{# 3. TABLE TO DISPLAY THE UPLOADED PHOTOS #}
+	<table id="gallery" class="table table-bordered">
+	  <thead>
+	    <tr>
+	      <th>Files uploaded</th>
+	      <th>Status</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+	  </tbody>
+	</table>
+	
+	<hr>
+	<a id="id_go_back_button" href="{% url 'sample-add-fastq' %}" class="btn btn-small btn-primary dark"><i class="fa fa-arrow-left"></i> Go back</a>
+	
+	<!--  -->
+	<div class="modal fade" id="modal-progress" data-backdrop="static" data-keyboard="false">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header alert alert-primary">
+	        <h4 class="modal-title">Uploading...</h4>
+	      </div>
+	      <div class="modal-body">
+	        <div class="progress">
+	          <div class="progress-bar" role="progressbar" style="width: 0%;">0%</div>
+	        </div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+{% endblock %}
+
+ {% block js %}
+ 	 {% load static from staticfiles %}
+ 	 	<script type="text/javascript" src="{% static 'jQuery_File_Upload/js/vendor/jquery.ui.widget.js' %}"></script>
+		<script type="text/javascript" src="{% static 'jQuery_File_Upload/js/jquery.iframe-transport.js' %}"></script>
+		<script type="text/javascript" src="{% static 'jQuery_File_Upload/js/jquery.fileupload.js' %}"></script>
+	 	
+	 	<!-- Custom scripts for all pages-->
+    	<script type="text/javascript" src="{% static 'js/upload-fastq-files.js' %}"></script>
+
+    <script>
+		/// set wait screen
+		$('#id_go_back_button').on('click', function(){
+			wait_screen();
+		});
+	</script>
+ {% endblock %}
+

@@ -149,7 +149,9 @@ class RunCMD:
     Run command line commands.
     """
 
-    def __init__(self, bin, logdir: str = "", prefix: str = "run", task: str = "NONE"):
+    def __init__(
+        self, bin: str, logdir: str = "", prefix: str = "run", task: str = "NONE"
+    ):
         """
         Initialize.
         """
@@ -511,7 +513,7 @@ class Read_class:
 
         self.read_filter(input, tempreads, read_list)
 
-        if os.path.isfile(tempreads) and os.path.getsize(tempreads):
+        if os.path.isfile(tempreads) and os.path.getsize(tempreads) > 100:
             os.remove(input)
             os.rename(tempreads, input)
 
@@ -641,7 +643,7 @@ class Read_class:
 
         self.cmd.run(cmd)
 
-        if os.path.isfile(temp) and os.path.getsize(temp):
+        if os.path.isfile(temp) and os.path.getsize(temp) > 100:
             os.remove(self.current)
             os.rename(temp, self.current)
 
@@ -710,7 +712,9 @@ class Sample_runClass:
         bin: str,
         threads: int = 1,
     ) -> None:
-        self.cmd = RunCMD(bin)
+        self.cmd = RunCMD(
+            bin, prefix=r1.prefix, logdir=r1.cmd.logdir, task="sample_housekeep"
+        )
         self.r1 = r1
         self.r2 = r2
         self.sample_name = sample_name
@@ -819,12 +823,14 @@ class Sample_runClass:
             unique_reads,
         ]
 
-        self.cmd.run_bash(cmd)
+        self.cmd.run_script(cmd)
         if not os.path.exists(unique_reads) or os.path.getsize(unique_reads) == 0:
             print(
                 f"No unique reads found in {self.r1.current}, skipping unique read cleaning"
             )
             return
+
+        print(f"Removing {unique_reads} unique reads from {self.r1.current}")
 
         self.r1.read_filter_inplace(self.r1.current, unique_reads)
 
@@ -854,11 +860,12 @@ class Sample_runClass:
     def trimmomatic_sort_SE(self):
 
         tempdir = os.path.dirname(self.r1.current)
-        tempfq = os.path.join(tempdir, f"temp{randint(1,1999)}")
+        tempfq = os.path.join(tempdir, f"temp{randint(1,1999)}.fq")
 
         cmd_trimsort = [
             "trimmomatic",
             "SE",
+            "-phred33",
             "-threads",
             f"{self.threads}",
             self.r1.current,
@@ -866,12 +873,18 @@ class Sample_runClass:
             "MINLEN:20",
         ]
 
-        self.cmd.run(cmd_trimsort)
+        self.cmd.run_script_software(cmd_trimsort)
 
         if tempfq in os.listdir(tempdir):
             if os.path.getsize(tempfq) > 100:
+                bgzip_cmd = [
+                    "bgzip",
+                    tempfq,
+                ]
+                self.cmd.run_script_software(bgzip_cmd)
+
                 os.remove(self.r1.current)
-                os.rename(tempfq, self.r1.current)
+                os.rename(tempfq + ".gz", self.r1.current)
 
     def trimmomatic_sort_PE(self):
         if self.type == "SE":

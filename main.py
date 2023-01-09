@@ -171,7 +171,7 @@ def main():
     if args.setup_conda:
         metagen_prep.setup_envs_conda()
 
-    else:
+    if args.envs:
         metagen_prep.setup_envs()
 
     os.system(

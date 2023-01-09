@@ -1,0 +1,13 @@
+{% autoescape off %}
+<p>Dear {{ user.first_name }} {{ user.last_name }},</p>
+<p>Welcome to INSaFLU website.</p>
+
+<p>Please, click on the link below to change your password:
+<a href="https://{{ domain }}{% url 'reset_password_key' uidb64=uid token=token %}">https://{{ domain }}{% url 'reset_password_key' uidb64=uid token=token %}</a></p>
+
+<p>All the best,</p>
+<p><strong>InsaFlu team.</strong></p>
+<p><a href="https://{{ domain }}">{{ domain }}</a></p>
+{% endautoescape %}
+
+

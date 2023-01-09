@@ -509,6 +509,7 @@ class Run_Deployment_Methods(RunDetail_main):
             self.subsample,
             logging_level=self.logger_level_detail,
             log_dir=self.log_dir,
+            prefix=self.prefix,
         )
 
         self.depletion_drone = Classifier(
@@ -827,9 +828,13 @@ class RunMain_class(Run_Deployment_Methods):
                 + str(self.sample.r1.get_current_fastq_read_number())
             )
             self.sample.trimmomatic_sort()
-            self.sample.remove_duplicates()
             self.logger.info(
                 "r1 current after trim: "
+                + str(self.sample.r1.get_current_fastq_read_number())
+            )
+            self.sample.remove_duplicates()
+            self.logger.info(
+                "r1 current after removing duplicates: "
                 + str(self.sample.r1.get_current_fastq_read_number())
             )
 

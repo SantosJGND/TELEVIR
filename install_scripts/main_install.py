@@ -254,7 +254,6 @@ class main_setup:
         envprep = self.env_install_class()
 
         envprep.prep_dir(ENVS_PARAMS)
-        # envprep.rabbitqc_install()
         if self.layout.install_flye:
             envprep.flye_install()
 
@@ -486,7 +485,7 @@ class main_setup:
 
         ########################## clark ##################################
         if self.layout.install_clark:
-            success_install = sofprep.install_clark(dbname=self.organism)
+            success_install = sofprep.clark_install(dbname=self.organism)
             if success_install:
                 self.installed_software.append("clark")
 

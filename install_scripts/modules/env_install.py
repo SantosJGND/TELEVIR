@@ -284,3 +284,95 @@ class env_install:
             os.system("rm " + tmpsh)
 
         os.chdir(CWD)
+
+    def trimmomatic_install(self):
+        """
+        Trimmomatic installation.
+        """
+
+        ### GIT CLONE
+        soft = "trimmomatic"
+        sdir = self.envsdir + soft.split("/")[0]
+
+        try:
+            git = self.git[soft]
+        except KeyError:
+            print("No git repo for %s" % soft)
+            return
+
+        CWD = os.getcwd()
+        os.chdir(self.envsdir)
+
+        idir = sdir + "/" + git.split("/")[-1].strip(".git")
+        exists = os.path.isdir(sdir)
+        if not exists:
+            os.mkdir(sdir)
+            os.mkdir(sdir + "classes")
+            os.mkdir(sdir + "adapters")
+
+        os.chdir(sdir)
+        exists = os.path.isdir(idir)
+
+        get_cmd = "wget -O trimmomatic-0.39.zip http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.39.zip"
+        unzip_cmd = "unzip trimmomatic-0.39.zip"
+        rm_cmd = "rm trimmomatic-0.39.zip"
+
+        if not exists:
+            os.system(get_cmd)
+            os.system(unzip_cmd)
+            os.system(rm_cmd)
+
+        ln_target = sdir + "classes/trimmomatic.jar"
+        ln_cmd = "ln -s " + idir + "/trimmomatic-0.39.jar " + ln_target
+
+        os.system(ln_cmd)
+        os.chdir(CWD)
+
+    def fastqc_install(self):
+        """
+        FastQC installation.
+        """
+
+        ### GIT CLONE
+        soft = "fastqc"
+        sdir = self.envsdir + soft.split("/")[0]
+
+        try:
+            git = self.git[soft]
+        except KeyError:
+            print("No git repo for %s" % soft)
+            return
+
+        CWD = os.getcwd()
+        os.chdir(self.envsdir)
+
+        idir = sdir + "/" + git.split("/")[-1].strip(".git")
+        exists = os.path.isdir(sdir)
+        if not exists:
+            os.mkdir(sdir)
+
+        os.chdir(sdir)
+        exists = os.path.isdir(idir)
+
+        get_cmd = "wget -O fastqc_v0.11.9.zip https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.9.zip"
+        unzip_cmd = "unzip fastqc_v0.11.9.zip"
+        rm_cmd = "rm fastqc_v0.11.9.zip"
+
+        if not exists:
+            os.system(get_cmd)
+            os.system(unzip_cmd)
+            os.system(rm_cmd)
+
+        ln_target = sdir + "fastqc"
+        ln_cmd = "ln -s " + idir + "/fastqc " + ln_target
+
+        os.system(ln_cmd)
+        os.chdir(CWD)
+
+    def install_deployment_software(self):
+        """Install deployment software: fastqc, trimmomatic, abricate, etc.
+        INSAFLU specific.
+        """
+
+        self.fastqc_install()
+        self.trimmomatic_install()

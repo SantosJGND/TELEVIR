@@ -1,0 +1,346 @@
+{% extends '_layouts/base.html' %}
+
+{% load static from staticfiles %}
+{% load embed_video_tags %}
+
+{% block css %}
+	{% load static from staticfiles %}
+		<!-- pre-define in-house css for main page-->
+		<link rel="stylesheet" href="{% static 'css/main-page.css' %}" type="text/css" />
+{% endblock css %}
+
+{% block headline %}
+{% endblock headline %}
+
+{% block content %}
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-sm-8">
+				<div class="insa-header">
+					<h1 class="insa-title" style="margin:10px">From “reads” to viral metagenomics detection and routine genomic surveillance</h1>
+					<div class="insa-description bg-insa-fixed-top" style="">INSaFLU (“INSide the FLU”) is a free bioinformatics web-based (also locally installable) suite that deals
+							with primary sequencing data (Illumina, Ion Torrent and Oxford Nanopore Technologies reads) towards:
+						<ul>
+							<li><strong>metagenomics virus detection </strong> (from reads to virus detection).</li>
+							<li><strong>routine genomic surveillance </strong> (from reads to mutation detection, consensus generation, virus classification, alignments, “genotype-phenotype”, screening, phylogenetics, integrative Nextstrain phylogeographical and temporal analysis etc).</li>
+						</ul>
+
+						INSaFLU-TELEVIR versatility and functionality is expected to supply public health laboratories and researchers with a user-oriented “start-to-end” bioinformatics framework that can potentiate a strengthened and timely detection and monitoring of viral (emerging) threats.
+					</div>	
+			    </div>
+			    
+				<style>
+
+					.img-index {
+						width: 100%;
+						object-fit: cover;
+						border: 1px solid #ddd;
+					}
+				
+					.col-md {
+						max-width: 300px;
+					}
+				
+				</style>
+
+				<div class="row">
+					<div class="col-md">
+						<div class="card mb-2">
+							<img class="img-index" src="{% static "img/Logo_TELEVIR_INSaFlu.png" %}">
+							<div class="card-body">
+								<h5 class="card-title">{{ 'Virus Detection' }}</h5>
+								<p class="card-text">{{ 'From Reads to viral detection' }} </p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md">
+						<div class="card mb-2">
+							<img class="img-index" src="{% static "img/Logo_insaflu.png" %}">
+							<div class="card-body">
+								<h5 class="card-title">{{ 'Reference-based genome assembly' }}</h5>
+								<p class="card-text">{{ 'From reads to consensus sequence, mutations list, alignments, Pango lineage classification, etc.' }}</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md">
+						<div class="card mb-2">
+							<img class="img-index" src="{% static "img/Logo_NEXTSTRAIN_INSaFlu.png" %}">
+							<div class="card-body">
+								<h5 class="card-title">{{ 'Nextstrain' }}</h5>
+									<p class="card-text">{{ 'From consensus sequences to phylogeographic and temporal analysis and metadatada navigation' }}</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md">
+						<div class="card mb-2">
+							<div class="card-footer">
+								<a href="{% url 'PIprojects_main' %}" class="btn btn-primary">
+									Projects
+								</a>
+							</div>
+						</div>
+					</div>
+					<div class="col-md">
+						<div class="card mb-2">
+							<div class="card-footer">
+								<a href="{% url 'projects' %}" class="btn btn-primary">
+									Projects
+								</a>
+							</div>
+						</div>
+					</div>
+					<div class="col-md">
+						<div class="card mb-2">
+							<div class="card-footer">
+								<a href="{% url 'datasets' %}" class="btn btn-primary">
+									Datasets
+								</a>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<p> </p>
+
+			    {% if not is_authenticated %}
+			    	<a href="{% url 'login' %}"><p class="login-demo-account">Walkthrough INSaFLU by logging into the "demo" account</p></a>
+			    {% endif %}
+	
+				<!-- Video Tutorial -->
+				{% if video_tutorial %}
+				    <div class="card">
+						<div class="card-block">
+							<h4 class="card-title">Video Tutorial</h4>
+							<div class="card-block">
+							    {% video video_tutorial as my_video %}
+								    {% video my_video 'small' %}
+								{% endvideo %}
+							</div>
+						</div>
+					</div>
+					<p> </p>
+				{% endif %}
+				
+				<div class="card">
+					<div class="card-block">
+						<h4 class="card-title">More information</h4>
+						<ul>
+						<li><p class="card-text"><strong>Documentation: </strong>
+						<a href="https://insaflu.readthedocs.io/en/latest" target="_blank" class="card-link">https://insaflu.readthedocs.io/en/latest</a></p></li>
+						<li><p class="card-text"><strong>Code: </strong>
+						<a href="https://github.com/INSaFLU/INSaFLU/" target="_blank" class="card-link">https://github.com/INSaFLU/INSaFLU</a></p></li>
+						<li><p class="card-text"><strong>Local installation: </strong>
+						<a href="https://github.com/INSaFLU/docker" target="_blank" class="card-link">https://github.com/INSaFLU/docker</a></p></li>
+						</ul>
+					</div>
+				</div>
+				<p> </p>
+												
+			    <div class="card">
+					<div class="card-block">
+						<h4 class="card-title">Future Directions</h4>
+						<p class="card-text">INSaFLU is under active development in order to have additional features, such as modules to automatically 
+						detect virus reassortment and to perform temporal and geographical data integration and visualization.</p>
+					</div>
+				</div>
+				<p> </p>
+				
+				<div class="card">
+					<div class="card-block">
+						<h4 class="card-title">How to cite</h4>
+						<p class="card-text">If you use INSaFLU in your work, please cite this publication:</p>
+						<p class="card-text">Borges V, Pinheiro M et al. Genome Medicine (2018) 10:46</p>
+					 	<a href="https://doi.org/10.1186/s13073-018-0555-0" target="_blank" class="card-link">https://doi.org/10.1186/s13073-018-0555-0</a>
+					</div>
+				</div>
+				
+				<p> </p>
+				<div class="card">
+					<div class="card-block">
+						<h4 class="card-title">Funding</h4>
+						<p class="card-text">INSaFLU development is being co-funded by the European Commission on behalf of OneHealth EJP TELE-Vir project.</p>
+						<a href="https://onehealthejp.eu/jrp-tele-vir/" target="_blank" class="card-link">https://onehealthejp.eu/jrp-tele-vir/</a>
+					</div>
+				</div>
+
+				<p> </p>
+				<div class="card">
+					<div class="card-block">
+						<h4 class="card-title">Acknowledgments</h4>
+						<p class="card-text">We thank the <a href="https://www.incd.pt/" target="_blank" class="card-link">Infraestrutura Nacional de Computação Distribuída (INCD)</a>
+						for providing computational resources for testing 
+						the INSaFLU platform. INCD was funded by FCT and FEDER under the project 22153-01/SAICT/2016</p>
+					</div>
+				</div>
+				<p> </p>
+
+				<div class="card">
+					<div class="card-block">
+						<h4 class="card-title">Contacts</h4>
+						<p class="card-text">If you have any questions, comments or suggestions, please contact us:</p>
+					 	<a href="mailto:vitor.borges@insa.min-saude.pt?subject=InsaFlu" class="card-link">vitor.borges at insa.min-saude.pt</a>
+					 	<a href="mailto:j.paulo.gomes@insa.min-saude.pt?subject=InsaFlu" class="card-link">j.paulo.gomes at insa.min-saude.pt</a>
+					</div>
+				</div>
+				<!-- Show or not the log image in the main page -->
+  				{% if show_info_main_page and show_info_main_page.show_images_main_page%}
+					<p> </p>
+					<div class="imagesMain">
+						<img src="{% static 'insa/Republica_Portuguesa_logo.svg' %}" style="width:210px; padding-right:30px; padding-top:15px" id='rep_portuguese_logo_id'>
+						<img src="{% static 'insa/SNS_logo.svg' %}" style="width:210px; padding-right:10px" id='sns_logo_id'>
+					</div>
+					<div class="imagesMain">
+						<a href="https://www.insa.min-saude.pt/" target="_blank"><img src="{% static 'insa/insa_logo.png' %}" style="width:250px; height:75px; padding-right:12px; padding-top:35px" id='insa_logo_id'></a>
+						<a href="https://onehealthejp.eu/jrp-tele-vir/" target="_blank"><img src="{% static 'insa/televir_logo.png' %}" style="width:150px; padding-right:10px" id='televir_logo_id'></a>
+					</div>
+				{% endif %}
+			</div>
+			
+			<div class="col-sm-3 offset-sm-1 insa-sidebar">
+				<a href="{% url 'dashboard' %}"><img src="{% static 'insa/logo_insaflu_new.png' %}" style="width:250px; padding-right:25px; padding-top:15px; padding-bottom:15px" id='main_logo_id'></a>
+          		
+				<div class="sidebar-module">
+					<h4 class="insa-h4">News</h4>
+					<div class="insa-post">
+						<h2 class="insa-post-title-news" style="padding-bottom:5px;">INSaFLU now also includes a pathogen detection module.</h2>
+		            	<p class="insa-post-meta">December 21, 2022 by João Santos</p>
+		            	<p class="text-align-justify">This upgrade is available both in INSaFLU free online and locally installable 
+		            	(<a href="https://github.com/INSaFLU/docker" target="_blank" class="card-link">https://github.com/INSaFLU/docker</a>)
+		            	versions. Please check all details in INSaFLU documentation 
+		            	(<a href="https://insaflu.readthedocs.io/en/latest/" target="_blank" class="card-link">https://insaflu.readthedocs.io/en/latest/</a>)</p>
+		            	<hr>
+
+						<h2 class="insa-post-title-news" style="padding-bottom:5px;">INSaFLU now also enables <a href="https://nextstrain.org/" target="_blank" class="card-link">Nextstrain</a> phylogenetic and geotemporal analysis.</h2>
+		            	<p class="insa-post-meta">October 27, 2022 by Daniel Sobral</p>
+		            	<p class="text-align-justify">This upgrade is available both in INSaFLU free online and locally installable 
+		            	(<a href="https://github.com/INSaFLU/docker" target="_blank" class="card-link">https://github.com/INSaFLU/docker</a>)
+		            	versions. Please check all details in INSaFLU documentation 
+		            	(<a href="https://insaflu.readthedocs.io/en/latest/" target="_blank" class="card-link">https://insaflu.readthedocs.io/en/latest/</a>)</p>
+		            	<hr>
+
+						<h2 class="insa-post-title-news" style="padding-bottom:5px;">INSaFLU now also handles Oxford Nanopore Technologies (ONT) data.</h2>
+		            	<p class="insa-post-meta">March 25, 2021 by Vitor Borges</p>
+		            	<p class="text-align-justify">This upgrade is available both in INSaFLU free online and locally installable 
+		            	(<a href="https://github.com/INSaFLU/docker" target="_blank" class="card-link">https://github.com/INSaFLU/docker</a>)
+		            	versions. Please check all details in INSaFLU documentation 
+		            	(<a href="https://insaflu.readthedocs.io/en/latest/" target="_blank" class="card-link">https://insaflu.readthedocs.io/en/latest/</a>)</p>
+		            	<hr>
+		            	
+						<h2 class="insa-post-title-news" style="padding-bottom:5px;">INSaFLU can now be locally installed using Docker.</h2>
+		            	<p class="insa-post-meta">May 6, 2020 by Miguel Pinheiro</p>
+		            	<p class="text-align-justify">A Docker-compose version of INSaFLU, which eases the manual installation process, is now available 
+		            	(<a href="https://github.com/INSaFLU/docker" target="_blank" class="card-link">https://github.com/INSaFLU/docker</a>)</p>
+		            	<hr>
+					
+						<h2 class="insa-post-title-news" style="padding-bottom:5px;">INSaFLU performs rapid assignment of the novel coronavirus (SARS-CoV-2).</h2>
+		            	<p class="insa-post-meta">March 10, 2020 by <a href="mailto:vitor.borges@insa.min-saude.pt?subject=InsaFlu" target="_blank">Vitor Borges</a></p>
+		            	<p class="text-align-justify">INSaFLU now performs rapid assignment of five Human Betacoronavirus (BetaCoV), including the novel coronavirus (SARS-CoV-2/hCoV-19) and
+		            	includes default SARS-CoV-2 reference sequences for mapping/variant calling within “Projects”. See documentation for details.</p>
+		            	<hr>
+						
+		            </div>
+          		</div>
+				<div class="sidebar-module">
+					<h4 class="insa-h4">Useful links</h4>
+					<ol class="list-unstyled">
+					<li><a href="https://www.fludb.org" target="_blank">Influenza Research Database/Fludb</a></li>
+					<li><a href="https://www.gisaid.org/" target="_blank">EpiFLU/GISAID</a></li>
+					<li><a href="https://www.ncbi.nlm.nih.gov/genomes/FLU/Database/nph-select.cgi?go=database" target="_blank">NCBI Influenza Virus Resource</a></li>
+					<li><a href="https://ecdc.europa.eu/en/seasonal-influenza" target="_blank">ECDC</a></li>
+					<li><a href="https://www.cdc.gov/flu/index.htm" target="_blank">CDC</a></li>
+					<li><a href="http://openflu.vital-it.ch/browse.php" target="_blank">OpenFluDB</a></li>
+					<li><a href="https://nextflu.org" target="_blank">Nextflu</a></li>
+					<li><a href="https://microreact.org/showcase" target="_blank">Microreact</a></li>
+					<li><a href="https://jameshadfield.github.io/phandango/#/" target="_blank">Phandango</a></li>
+					<li><a href="http://www.phyloviz.net/" target="_blank">PHYLOViZ</a></li>
+					</ol>
+				</div>
+				
+				<div class="sidebar-module sidebar-module-inset">
+					<h6>INSaFLU version {{version}}</h6>
+					<p class="insa-authors">Pipeline developed by Vítor Borges, Miguel Pinheiro, Daniel Sobral and João Santos.</p>
+					<p class="insa-authors">Website by Miguel Pinheiro, Daniel Sobral and João Santos.</p>
+				</div>
+				
+				<div class="disclaimer_main_page">
+					<a href="#id_disclaimer_modal" id="id_data_set_add_modal" data-toggle="modal">Disclaimer</a>
+				</div>
+			</div><!-- /.blog-sidebar -->
+		</div> <!-- row -->
+	</div>
+	
+	
+	<!-- The Modal -->
+	<div class="modal fade" id="id_disclaimer_modal" >
+		<div class="modal-dialog modal-dialog-disclaimer modal-lg">
+			<div class="modal-content">
+   
+     					<!-- Modal Header -->
+     					<div class="modal-header">
+     						<img src="{% static 'insa/logo_insaflu_new.png' %}" class="remove_box_sizing" style="width:80px;" id='main_insaflu_logo_id'>
+       						<h5 class="modal-title"><strong>Disclaimer</strong></h5>
+       						<button type="button" class="close" data-dismiss="modal">&times;</button>
+     					</div>
+     
+     					<!-- Modal body -->
+     					<div class="modal-body modal-body-disclaimer mx-auto mw-100">
+     						<p class="insa-description-read-more-header"><strong>General statement</strong></p>
+							<p class="insa-description-read-more">The INSaFLU portal and its associated resources and outputs are for research, 
+							educational and informational purposes only, not for commercial use. It is a non-profit service to the scientific community.</p>
+							<p class="insa-description-read-more">In any case, the name of INSaFLU and its logo shall not be associated with 
+							business promotion without prior written approval.</p>
+							
+							<p class="insa-description-read-more-header"><strong>Warranties</strong></p>
+							<p class="insa-description-read-more">In no event is the access to this portal guaranteed.</p>
+							<p class="insa-description-read-more">This portal contains links to external third-party websites. INSaFLU team has not 
+							reviewed the contents of these third-party websites and makes no warranty of any kind, expressed or implied, 
+							regarding these websites. INSaFLU does not own, monitor, operate or moderate these third-party websites.</p>
+							<p class="insa-description-read-more">The User represents and warrants that he/she/it shall not violate or circumvent any 
+							safety program or introduce advertisements containing codes or malware, spyware, data corruption, viruses, data infections 
+							or other harmful codes, hacking mechanisms, data crash codes and the like.</p>
+							<p class="insa-description-read-more">INSaFLU team will not use any data submitted to INSaFLU for research, educational, 
+							informational, clinical, commercial or any other purpose.</p>
+							<p class="insa-description-read-more">INSaFLU makes no warranties of any kind regarding the accuracy of any data, 
+							software and/or database.</p>
+							
+							<p class="insa-description-read-more-header"><strong>Liability</strong></p>
+							<p class="insa-description-read-more">The INSaFLU team is responsible for maintaining and updating the content of INSaFLU.
+							However,  INSaFLU team makes no representation or warranty regarding results obtained from using any information, tools or
+							services offered by INSaFLU.</p>
+							<p class="insa-description-read-more">In case of unexpected issues, unexpected disruption, force majeure and similar events,
+							such as: unauthorized or accidental destruction of data; accidental loss; technical faults; forgery, theft or unlawful 
+							use; unauthorized alteration, copying, access or other unauthorized processing and the like; violation or circumvention
+							of any safety program or the introduction of advertisements containing codes or malware, spyware, data corruption, 
+							viruses, data infections or other harmful codes, hacking mechanisms, data crash codes and the like, by any third 
+							party or by any user, the INSaFLU team shall not be held liable for, including but not limited to, any liabilities,
+							losses, loss of profits, data loss, damages, claims, costs and expenses (including legal fees) resulting from such
+							circumstances.</p>
+							
+							<p class="insa-description-read-more-header"><strong>Personal data</strong></p>
+							<p class="insa-description-read-more">While providing us your e-mail upon log into INSaFLU, the INSaFLU team can contact
+							you if you are experiencing any problems with your INSaFLU runs and inform you about INSaFLU updates.</p>
+							<p class="insa-description-read-more">The user is entirely responsible for maintaining the confidentiality of his/her 
+							password and account and for all activities that occur under your account. The user agrees to notify the INSaFLU team 
+							immediately of any unauthorized use of his/her personal data or of any other breach of security that she/he becomes aware of. 
+							The INSaFLU team is not be liable for any loss that you may incur as a result of someone else using your personal account, 
+							either with or without your knowledge. The INSaFLU team reserves the right, solely for security reasons to suspend or delete 
+							a user account.</p>
+							<p class="insa-description-read-more"><strong>The INSaFLU team will neither use any data submitted to INSaFLU for any purpose, 
+							nor claim ownership of any data stored by users in their personal space.</strong> The INSaFLU team will respect the privacy of the 
+							information stored in the private space of the users.</p>
+							<p class="insa-description-read-more">The INSaFLU reserves the right to disable a query if it causing technical problems 
+							to its computational infrastructure. Such disabled queries will be reported to the users.</p>
+							<p class="insa-description-read-more">If you would like to delete your account or any associated sequence or metadata,
+							then contact us via <a href="mailto:insaflu@insa.min-saude.pt?subject=InsaFlu" target="_blank">insaflu@insa.min-saude.pt</a></p>
+     					</div>
+     					<!-- Modal footer -->
+     					<div class="modal-footer">
+       					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+     					</div>
+			</div>
+ 		</div>
+	</div>
+ 			
+{% endblock %}
