@@ -79,7 +79,7 @@ class main_deploy_prep:
         self.pdir = pdir
         self.bindir = self.pdir + "scripts/"
         self.module = self.pdir + "modules/metaruns_class.py"
-        self.django_dir = self.pdir + "INSaFLU/"
+        self.django_dir = self.pdir + "insaflu_local/"
 
     def user_input(self):
         args = get_args_deployment()

@@ -1,0 +1,92 @@
+
+# ALTER ROLE fluwebvirus SET client_encoding TO 'utf8';
+# ALTER ROLE fluwebvirus SET default_transaction_isolation TO 'read committed';
+# ALTER ROLE fluwebvirus SET timezone TO 'utc';
+
+#### 
+# NOT THIS ONE grant all privileges to database 
+# GRANT ALL PRIVILEGES ON DATABASE fluwebvirus TO fluwebvirususer;
+
+# GRANT select, insert, update, delete on all tables in schema public to insafluuser;
+# GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO insafluuser;
+
+### ubuntu flave:
+## $ sudo apt install binutils libproj-dev gdal-bin
+## $ sudo apt install postgis*
+## $ sudo apt install bioperl
+## $ sudo apt install libdatetime-perl libxml-simple-perl libdigest-md5-perl git default-jre bioperl
+
+### Centos flave:
+## $ sudo yum install gdal gdal-devel 
+## $ sudo yum install postgis
+## $ sudo yum install perl-Time-Piece perl-XML-Simple perl-Digest-MD5 git java perl-CPAN perl-Module-Build
+## $ sudo cpan -i Bio::Perl
+
+
+## $ sudo pip3 install django-ipware
+## $ sudo pip3 install pyyaml ua-parser user-agents
+## $ sudo pip3 install django-user-agents
+## $ sudo pip3 install scipy
+## $ sudo pip3 install django-crispy-forms
+## $ sudo pip3 install django-braces
+## $ sudo pip3 install django-tables2
+## $ sudo pip3 install crispy-forms-foundation
+## $ sudo pip3 install NumPy
+## $ sudo pip3 install biopython
+## $ sudo pip3 install django-nose
+## $ sudo pip3 install django-bootstrap-datepicker
+## $ sudo pip3 install plotly
+## $ sudo pip3 install Pillow
+## $ sudo pip3 install django-bootstrap4
+## $ sudo pip3 install psycopg2
+## $ sudo pip3 install pysam
+## $ sudo pip3 install portalocker
+## $ sudo pip3 install python-decouple
+## $ sudo pip3 install django-crequest
+## $ sudo pip3 install django-embed-video
+
+
+
+## 
+## $ sudo mkdir -p /usr/local/software
+## $ cd /usr/local/software
+## $ git clone https://github.com/tseemann/prokka.git
+## $ prokka/bin/prokka --setupdb
+
+1) Install Spades (http://bioinf.spbau.ru/en/node/362/done?sid=22181)
+2) Install Abricate (https://github.com/tseemann/abricate)
+	$ cd /usr/local/software/flu/abricate/db
+	$ mkdir influenza
+    $ cp ~/db_influenza_typing.fasta influenza/sequences
+    $ cd ../bin
+    $ ./abricate --setupdb
+    $ ./abricate --list
+
+
+###### install mod_wsgi in Centos
+$ sudo pip3 install mod_wsgi
+$ sudo ln -s /usr/lib64/python3.4/site-packages/mod_wsgi/server/mod_wsgi-py34.cpython-34m.so /usr/lib64/httpd/modules/
+
+$ sudo vi /etc/httpd/conf.modules.d/10-wsgi-python3.5.conf and add next line
+LoadModule wsgi_module modules/mod_wsgi-py34.cpython-34m.so
+
+## $ mkdir /var/log/insaflu			and set the user of apache
+## $ mkdir /usr/local/insaflu		and set the user of apache
+
+## Create superUser
+## $ python3 manage.py migrate
+## $ python3 manage.py createsuperuser
+
+    
+
+
+
+##########################
+##########################  TESTS...
+ To keep db: python3 manage.py test --keepdb
+ to stop tests after first error: python3 manage.py test --failfast
+
+# to open in all ips and in a port 
+$ python3 manage.py runserver 0.0.0.0:8000
+ 
+ 

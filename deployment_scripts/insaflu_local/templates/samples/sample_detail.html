@@ -1,0 +1,333 @@
+{% extends '_layouts/base.html' %}
+
+{% load crispy_forms_tags %}
+{% load django_bootstrap_breadcrumbs %}
+{% load static from staticfiles %}
+
+{% block css %}
+	{% load static from staticfiles %}
+		<!-- pre-define in-house css for main page-->
+		<link rel="stylesheet" href="{% static 'css/main-page.css' %}" type="text/css" />
+{% endblock css %}
+
+<!-- Breadcrumbs-->
+{% block breadcrumbs %}
+	{{ block.super }}
+	{% breadcrumb "Samples" "samples" %}
+	{% breadcrumb "Sample details" "sample-description" %}
+{% endblock %}
+
+<!-- https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django/Generic_views -->
+{% block content %}
+	{% if error_cant_see %}
+		<hr>
+		<p><strong>Sample not available</strong></p>
+	{% else %}
+		<div class="container-fluid">
+			<hr>
+			<div class="row">
+				<div class="col-lg-3"><strong>Name:</strong> {{ sample.name }}</div>
+			  	<div class="col-lg-3"><strong>Onset Date:</strong> {{ sample.date_of_onset|date }}</div>
+			  	<div class="col-lg-3"><strong>Collection Date:</strong> {{ sample.date_of_collection|date }}</div>
+			  	<div class="col-lg-3"><strong>Reception Date:</strong> {{ sample.date_of_receipt_lab|date }}</div>
+			</div>
+			<hr>
+			<div class="row">
+				<div class="col-lg-3"><strong>Week:</strong> {{ sample.week }}</div> <!-- author detail link not yet defined -->
+			  	<div class="col-lg-3"><strong>Vaccine status:</strong> {{ sample.vaccine_status.name }}</div>
+			  	<div class="col-lg-3"><strong>Data set:</strong> {{ sample.data_set.name }}</div>
+			  	<div class="col-lg-3"><strong>Alerts:</strong> {{ sample.number_alerts }}</div>
+			</div>
+			<hr>
+			<div class="row">
+				<div class="col-lg-3"><strong>Upload date:</strong> {{ sample.creation_date|date }}</div>
+			  	<div class="col-lg-3"><strong>Geolocation pos.(Lat, Lng):</strong> {{ sample.geo_local.coords }}</div>
+			  	<div class="col-lg-3"><strong>Type and subtype/lineage:</strong> {{ sample.type_subtype }}</div>
+			  	<div class="col-lg-3"><strong>Owner:</strong> {{ sample.owner.username }}</div>
+			</div>
+			
+			{% if extra_data_sample_expand %}
+				<hr>
+				<p class="insa-center-text"><a class="btn btn-primary" data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample">Extra sample tags</a></p>
+				<div class="collapse" id="collapseExample">
+			{% endif %}
+			
+				{% for group in extra_data_sample %}
+						<hr>
+						<div class="row">
+							{% for tag_names in group %}
+								<div class="col-lg-3"><strong>{{ tag_names.tag_name.name }}:</strong> {{ tag_names.value }}</div>
+							{% endfor %}	
+						</div>
+				{% endfor %}	
+			
+			{% if extra_data_sample_expand %}
+				</div>
+			{% endif %}
+			<hr>
+			
+			<!--
+				<p class="insa-title"><a class="btn btn-primary" data-toggle="modal" href="#id_edit_sample_modal" aria-expanded="false" aria-controls="id_edit_sample_modal">Edit sample data</a></p>
+				<hr>
+			-->
+			
+			<!-- NAV tabs -->
+			<div class="container">
+				<ul id="main_tab" class="nav nav-tabs" role="tablist">
+					<li class="nav-item"><a class="nav-link fa fa-align-justify" href="#original_fastq" role="tab" data-toggle="tab" > Original fastq</a></li>
+					<li class="nav-item"><a class="nav-link fa fa-align-center" href="#trimmomatic" role="tab" data-toggle="tab"> Quality processed reads</a></li>
+					{% if data_illuminastat or data_nanostat %}
+						<li class="nav-item"><a class="nav-link fa fa-bar-chart" href="#nanostat" role="tab" data-toggle="tab"> Filter Stat.</a></li>
+					{% endif %}
+					<li class="nav-item"><a class="nav-link fa fa-list" href="#virus_identification" role="tab" data-toggle="tab"> Type and subtype/lineage</a></li>
+					<li class="nav-item"><a class="nav-link fa fa-warning" href="#alerts" role="tab" data-toggle="tab"> Alerts</a></li>
+				</ul>
+	
+				<div class="tab-content">
+					{% if href_trimmonatic_2 %}	<!-- has always info for illumina, in single end has "Not available" -->
+						<div id="original_fastq" role="tabpanel" class="tab-pane fade box-blue">
+							<p class="title-box">Original fastq files and quality result</p>
+							{% if candidate_file_name_1 %}
+								<div class="row">
+									<div class="col-lg-6"><strong>Candidate fastq 1:</strong> {{ candidate_file_name_1 }}</div>
+						  			<div class="col-lg-6"><strong>Candidate fastq 2:</strong> {{ candidate_file_name_2 }}</div>
+						  		</div>
+						  		<hr>
+							{% endif %}
+							<div class="row">
+								<div class="col-lg-6"><strong>Original fastq 1:</strong> {{ href_fastq_1 }}</div>
+					  			<div class="col-lg-6"><strong>Original fastq 2:</strong> {{ href_fastq_2 }}</div>
+					  		</div>
+					  		<hr>
+					  		<div class="row">
+								<div class="col-lg-6"><strong>Original fastq quality 1:</strong> {{ href_fastq_quality_1 }}</div> 
+					  			<div class="col-lg-6"><strong>Original fastq quality 2:</strong> {{ href_fastq_quality_2 }}</div>
+					  		</div>
+					  		<hr>
+					  		<p class="software"><strong>Software version: </strong>{{ fastq_software }}</p>
+						</div>
+						<div id="trimmomatic" role="tabpanel" class="tab-pane fade box-blue">
+				    		<p class="title-box">Processed reads and quality results</p>
+				    		<div class="row">
+								<div class="col-lg-6"><strong>Trimmomatic fastq 1:</strong> {{ href_trimmonatic_1 }}</div>
+					  			<div class="col-lg-6"><strong>Trimmomatic fastq 2:</strong> {{ href_trimmonatic_2 }}</div>
+					  		</div>
+					  		<hr>
+					  		<div class="row">
+								<div class="col-lg-6"><strong>Trimmomatic fastq quality 1:</strong> {{ href_trimmonatic_quality_1 }}</div>
+								<hr>
+					  			<div class="col-lg-6"><strong>Trimmomatic fastq quality 2:</strong> {{ href_trimmonatic_quality_2 }}</div>
+					  		</div>
+					  		<hr>
+					  		<p class="software"><strong>Software version: </strong> {% if trimmomatic_software %} {{ trimmomatic_software }}/{{ fastq_software }} {% endif %}</p>
+				  		</div>
+				  		{% if data_illuminastat %}
+					  		<div id="nanostat" role="tabpanel" class="tab-pane fade box-blue">
+					    		<p class="title-box">Reads Statistics</p>
+					    		<div class="row">
+					    			<div class="col-lg-4"></div>
+									<div class="col-lg-2 text-align-center"><strong>Original</strong></div>
+									<div class="col-lg-2 text-align-center"><strong>Trimmomatic</strong></div>
+									<div class="col-lg-2 text-align-center"><strong>Difference</strong></div>
+									<div class="col-lg-2 text-align-center"><strong>Remain %</strong></div>
+						  		</div>
+						  		{% for name, value_1, value_2, value_3, value_4 in data_illuminastat %}
+							  		<div class="row">
+					    				<div class="col-lg-4"><strong>{{ name }}</strong></div>
+					    				<div class="col-lg-2 text-align-center">{{ value_1 }}</div>
+					    				<div class="col-lg-2 text-align-center">{{ value_2 }}</div>
+					    				<div class="col-lg-2 text-align-center">{{ value_3 }}</div>
+					    				<div class="col-lg-2 text-align-center">{{ value_4 }}</div>
+							  		</div>
+							  	{% endfor %}
+						  		<hr>
+						  		<p class="software"><strong>Software version: </strong> {% if trimmomatic_software %} {{ trimmomatic_software }}/{{ fastq_software }} {% endif %}</p>
+					  		</div>
+					  	{% endif %}
+					{% else %}	<!-- data for Minion -->
+						<div id="original_fastq" role="tabpanel" class="tab-pane fade active box-blue">
+							<p class="title-box">Original fastq files and quality result</p>
+							{% if candidate_file_name_1 %}
+								<div class="row">
+									<div class="col-lg-6"><strong>Candidate fastq:</strong> {{ candidate_file_name_1 }}</div>
+						  		</div>
+						  		<hr>
+							{% endif %}
+							<div class="row">
+								<div class="col-lg-6"><strong>Original fastq:</strong> {{ href_fastq_1 }}</div>
+					  			<div class="col-lg-6"><strong>Original fastq quality:</strong> {{ href_fastq_quality_1 }}</div>
+					  		</div>
+					  		<hr>
+					  		<p class="software"><strong>Software version: </strong>{{ fastq_software }}</p>
+						</div>
+						<div id="trimmomatic" role="tabpanel" class="tab-pane fade box-blue">
+				    		<p class="title-box">Processed reads and quality results</p>
+				    		<div class="row">
+								<div class="col-lg-6"><strong>NanoFilt fastq:</strong> {{ href_trimmonatic_1 }}</div>
+								<div class="col-lg-6"><strong>RabbitQC fastq quality:</strong> {{ href_trimmonatic_quality_1 }}</div>
+					  		</div>
+					  		<hr>
+					  		<p class="software"><strong>Software version: </strong> {% if trimmomatic_software %} {{ trimmomatic_software }}/{{ fastq_software }} {% endif %}</p>
+				  		</div>
+				  		{% if data_nanostat %}
+					  		<div id="nanostat" role="tabpanel" class="tab-pane fade box-blue">
+					    		<p class="title-box">NanoStat results</p>
+					    		<div class="row">
+					    			<div class="col-lg-4"></div>
+									<div class="col-lg-2 text-align-center"><strong>Original</strong></div>
+									<div class="col-lg-2 text-align-center"><strong>Processed</strong></div>
+									<div class="col-lg-2 text-align-center"><strong>Difference</strong></div>
+									<div class="col-lg-2 text-align-center"><strong>Remain %</strong></div>
+						  		</div>
+						  		{% for name, value_1, value_2, value_3, value_4 in data_nanostat %}
+							  		<div class="row">
+					    				<div class="col-lg-4"><strong>{{ name }}</strong></div>
+					    				<div class="col-lg-2 text-align-center">{{ value_1 }}</div>
+					    				<div class="col-lg-2 text-align-center">{{ value_2 }}</div>
+					    				<div class="col-lg-2 text-align-center">{{ value_3 }}</div>
+					    				<div class="col-lg-2 text-align-center">{{ value_4 }}</div>
+							  		</div>
+							  	{% endfor %}
+						  		<hr>
+						  		<p class="software"><strong>Software version: </strong> {% if trimmomatic_software %} {{ trimmomatic_software }}/{{ fastq_software }} {% endif %}</p>
+					  		</div>
+				  		{% endif %}
+					 {% endif %}	<!--  Last </div> stops after this endif -->
+				 
+					<div id="virus_identification" role="tabpanel" class="tab-pane fade box-blue">
+						<p class="title-box">Type and subtype/lineage </p>
+						
+						{% if has_type_subtype %}
+							{% for identify_virus in vect_identify_virus %}
+								<div class="row">
+									<div class="col-lg-3"><strong>Type:</strong> {{ identify_virus.seq_virus.kind_type.name }}</div>
+					  				<div class="col-lg-5"><strong>Name:</strong> {{ identify_virus.seq_virus.name }}</div>
+					  				<!-- <div class="col-lg-2"><strong>Coverage:</strong> {{ identify_virus.coverage }}</div>
+					  				<div class="col-lg-2"><strong>Identity:</strong> {{ identify_virus.identity }}</div>
+					  				<div class="col-lg-3"><strong>Accession:</strong> {{ identify_virus.seq_virus.accession }}</div> -->
+					  			</div>
+					  			<hr>
+							{% endfor %}
+							<div class="row draft_assembly">
+								<div class="col-lg-6"><strong>Draft assembly:</strong> {{ file_draft_contigs }}</div>
+								{% if file_draft_contigs_abricate %} 
+									<div class="col-lg-6"><strong>Seg./Ref. to contigs:</strong> {{ file_draft_contigs_abricate }}</div>
+								{% elif file_draft_reads_abricate %}
+									<div class="col-lg-6"><strong>Seg./Ref. to reads:</strong> {{ file_draft_reads_abricate }}</div>
+								{% endif %}
+							</div>
+							<p></p>
+							<div class="container h-100">
+										<div class="row h-100 justify-content-center">
+									<p class="insa-title"><a class="btn btn-primary" data-toggle="modal" href="#id_assemblies_modal" aria-expanded="false" aria-controls="id_assemblies_modal">How to take advantage of draft assemblies</a></p>
+								</div>
+							</div>
+							<hr>
+							
+							<p class="software"><strong>Software version: </strong> {% if spades_software %} {{ spades_software }}/{{ abricate_software }} \
+									{% elif abricate_software %} {{ abricate_software }} {% endif %}</p>
+					    {% else %}
+							<p class="software">No type/subtype has been assigned.</p>
+							
+							{% if has_draft_contigs %}
+								<hr>
+								<div class="row draft_assembly">
+									<div class="col-lg-6"><strong>Draft assembly:</strong> {{ file_draft_contigs }}</div>
+									<div class="col-lg-6"><strong>Seg./Ref. to contigs:</strong> {{ file_draft_contigs_abricate }}</div>
+								</div>
+								<p></p>
+								<div class="container h-100">
+	 									<div class="row h-100 justify-content-center">
+										<p class="insa-title"><a class="btn btn-primary" data-toggle="modal" href="#id_assemblies_modal" aria-expanded="false" aria-controls="id_assemblies_modal">How to take advantage of draft assemblies</a></p>
+									</div>
+								</div>
+								<hr>
+							{% endif %}
+						{% endif %}
+					</div>
+					<div id="alerts" role="tabpanel" class="tab-pane fade box-blue">
+			    		<p class="title-box">Alerts for sample: '{{ sample.name }}'</p>
+			    		{% if alerts  %}
+				    		{% for alert in alerts  %}
+				    			<div class="row">
+									<div class="col-lg-12 .alert-limit-text">{{ alert }}</div>
+					  			</div>
+					  			<hr>
+					  		{% endfor %}
+					  	{% else %}
+					  		<p class="software">There's no alerts.</p>
+						{% endif %}
+			  		</div>
+			  	</div>	<!-- tab-content -->
+			</div> <!-- container -->
+		</div> <!-- container-fluid -->
+		  
+		<a id="id_go_back_button" href="{% url 'samples' %}" class="btn btn-small btn-primary dark"><span class="hidden-phone"><i class="fa fa-arrow-left"></i> Go back</span></a>
+		
+		
+		<!-- The Modal Message  -->
+		<div class="modal fade" id="id_assemblies_modal" >
+			<div class="modal-dialog modal-dialog-disclaimer modal-lg">
+				<div class="modal-content">
+   
+     					<!-- Modal Header -->
+     					<div class="modal-header alert alert-primary">
+     						<img src="{% static 'insa/logo_insaflu_new.png' %}" class="remove_box_sizing" style="width:80px;" id='main_insaflu_logo_id'>
+       						<h5 class="modal-title"><strong>How to take advantage of draft assemblies</strong></h5>
+       						<button type="button" class="close" data-dismiss="modal">&times;</button>
+     					</div>
+     
+     					<!-- Modal body -->
+     					<div class="modal-body modal-body-disclaimer mx-auto mw-100">
+							<p class="insa-description-read-more">INSaFLU now provides a draft de novo assembly (FASTA format) of the influenza virus genome immediately after 
+							reads submission. Also in this tab, you can find a table (tsv format) where assembled contigs are automatically assigned both to the corresponding 
+							viral segments and to a close related reference influenza virus.</p>
+							<p class="insa-description-read-more">You may now use these outputs at your description for multiple applications (see examples below). For some 
+							purposes (e.g., to detect reassortments or to infer the closest reference sequence of each segment), you may need to use more refined tools, such as BLAST.</p>
+							
+							<p class="insa-description-read-more-header"><strong>This new feature reinforces the application of INSaFLU to:</strong></p>
+							<p class="insa-description-read-more"><strong>1)</strong>  analyze viruses for which a close related whole-genome sequence is not available
+							(e.g., avian influenza) at the INSaFLU or other databases (NICBI, GISAID, etc);</p>
+							<p class="insa-description-read-more"><strong>2)</strong>  investigate reassortments (e.g., inspect the table to find if different reference 
+							viruses are assigned to different viral segments; look at both potential inter- or intra-subtype reassortments);</p>
+							<p class="insa-description-read-more"><strong>3)</strong>  disclose mixed infections (e.g.,  inspect the table to find if two contigs assigned 
+							with same segment are flagged with distinct reference viruses).</p>
+							
+							<p class="insa-description-read-more"><strong>Brief guide to change the draft contigs at your convenience</strong> (e.g., to map reads against its own draft 
+							assembly, which can be useful for building up consensus sequences for viruses for which a close related sequence is not available or to fine-tune 
+							the detection of intra-host minor variants):</p>
+							<p class="insa-description-read-more"><strong>1)</strong>  modify the draft assembly by joining or filtering out some contigs (e.g., 
+							not-infleunza specific contigs) and adjust theirs ends to capture the target sequence;</p>
+							<p class="insa-description-read-more"><strong>2)</strong>  upload the modified file as a Reference;</p>
+							<p class="insa-description-read-more"><strong>3)</strong>  create a project to map the quality processed reads of a sample against its own modified assembly;</p>
+							<p class="insa-description-read-more"><strong>4)</strong>  explore the outputs (e.g., refined consensus sequences, list of  intra-host minor variants).</p>
+     					</div>
+     					<!-- Modal footer -->
+     					<div class="modal-footer">
+       						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+     					</div>
+				</div>
+	 		</div>
+		</div>
+		
+		<!-- The Modal to edit samples  -->
+	{% endif %}
+	
+{% endblock %}
+
+
+{% block js %}
+
+	<script>
+		/// set wait screen
+		$('#id_go_back_button').on('click', function(){
+			wait_screen();
+		});
+		
+		/// made a click in the nav tab, this is a caveat
+		$(document).ready(function(){
+			$('#main_tab li:first-child a').tab('show') // Select first tab
+		});	
+	</script>
+
+{% endblock js %}
