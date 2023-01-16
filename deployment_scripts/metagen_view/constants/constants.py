@@ -4,6 +4,7 @@ Created on Oct 13, 2017
 @author: mmp
 """
 from enum import Enum
+
 from settings.constants_settings import ConstantsSettings as CS
 
 

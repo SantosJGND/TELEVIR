@@ -10,13 +10,10 @@ from constants.meta_key_and_values import MetaKeyAndValue
 from constants.software_names import SoftwareNames
 from django.conf import settings
 from pathogen_identification.utilities.utilities_pipeline import (
-    Parameter_DB_Utility,
-    Utility_Pipeline_Manager,
-)
-from utils.lock_atomic_transaction import LockedAtomicTransaction
-
+    Parameter_DB_Utility, Utility_Pipeline_Manager)
 from settings.constants_settings import ConstantsSettings
 from settings.models import Parameter, PipelineStep, Software, Technology
+from utils.lock_atomic_transaction import LockedAtomicTransaction
 
 
 class DefaultParameters(object):
@@ -240,7 +237,7 @@ class DefaultParameters(object):
             )
 
         else:
-            print("HII")
+
             software = self.get_software_global(
                 user,
                 software_name,
@@ -248,11 +245,7 @@ class DefaultParameters(object):
                 type_of_use,
                 televir_project=televir_project,
             )
-        print(self.get_software_parameters_version(software_name))
-        print("software: {}".format(software))
-        print("type of use:: {}".format(type_of_use))
-        print("technology name: {}".format(technology_name))
-        print(user)
+
 
         if software is None:
             return software

@@ -162,7 +162,7 @@ class main_setup:
         self.ENVS_PARAMS = ENVS_PARAMS
         self.INSTALL_PARAMS = INSTALL_PARAMS
         self.wdir = setup_dl(INSTALL_PARAMS)
-        self.env_install_class = env_install
+        self.env_install_class = env_install(ENVS_PARAMS)
         self.setup_install_class = setup_install
         self.install_config = install_config
 
@@ -240,8 +240,8 @@ class main_setup:
         :type ENVS_PARAMS: dict
         :return: None
         """
-        envprep = self.env_install_class()
-        envprep.prep_dir(ENVS_PARAMS)
+        envprep = self.env_install_class
+        envprep.prep_dir()
         envprep.conda_install()
 
     def env_prepare(self, ENVS_PARAMS):
@@ -251,9 +251,8 @@ class main_setup:
         :type ENVS_PARAMS: dict
         :return: None
         """
-        envprep = self.env_install_class()
-
-        envprep.prep_dir(ENVS_PARAMS)
+        envprep = self.env_install_class
+        envprep.prep_dir()
         if self.layout.install_flye:
             envprep.flye_install()
 
@@ -733,6 +732,13 @@ class main_setup:
                 )
 
                 self.dl_metadata_nuc()
+
+    def setup_deploy(self):
+
+        envprep = self.env_install_class
+        envprep.prep_dir()
+
+        envprep.install_deployment_software()
 
 
 if __name__ == "__main__":

@@ -6,11 +6,7 @@ import subprocess
 
 
 class env_install:
-    def __init__(self) -> None:
-        pass
-
-    def prep_dir(self, ENVDICT):
-
+    def __init__(self, ENVDICT) -> None:
         self.envsdir = ENVDICT["ENVSDIR"]
         self.ymld = ENVDICT["YMLDIR"]
         self.envs = ENVDICT["ENVS"]
@@ -19,6 +15,7 @@ class env_install:
         self.source = ENVDICT["SOURCE"]
         self.bin = ENVDICT["BIN"]
 
+    def prep_dir(self):
         os.makedirs(self.envsdir, exist_ok=True)
 
     def conda_install(self, force_install=False):
@@ -285,94 +282,138 @@ class env_install:
 
         os.chdir(CWD)
 
-    def trimmomatic_install(self):
+    def trimmomatic_insaflu_install(self):
         """
         Trimmomatic installation.
         """
 
         ### GIT CLONE
         soft = "trimmomatic"
-        sdir = self.envsdir + soft.split("/")[0]
-
-        try:
-            git = self.git[soft]
-        except KeyError:
-            print("No git repo for %s" % soft)
-            return
+        sdir = self.envsdir + soft.split("/")[0] + "/"
 
         CWD = os.getcwd()
         os.chdir(self.envsdir)
 
-        idir = sdir + "/" + git.split("/")[-1].strip(".git")
-        exists = os.path.isdir(sdir)
-        if not exists:
-            os.mkdir(sdir)
-            os.mkdir(sdir + "classes")
-            os.mkdir(sdir + "adapters")
+        ln_target = sdir + "classes/trimmomatic.jar"
+        exists = os.path.exists(ln_target)
+        if exists:
+            return True
+
+        os.mkdir(sdir)
+        os.mkdir(sdir + "classes")
+        os.mkdir(sdir + "adapters")
 
         os.chdir(sdir)
-        exists = os.path.isdir(idir)
+        zip_source = "http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.39.zip"
+        zip_name = os.path.basename(zip_source).strip(".zip")
 
-        get_cmd = "wget -O trimmomatic-0.39.zip http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.39.zip"
+        get_cmd = f"wget -O trimmomatic-0.39.zip {zip_source}"
         unzip_cmd = "unzip trimmomatic-0.39.zip"
         rm_cmd = "rm trimmomatic-0.39.zip"
 
-        if not exists:
-            os.system(get_cmd)
-            os.system(unzip_cmd)
-            os.system(rm_cmd)
+        os.system(get_cmd)
+        os.system(unzip_cmd)
+        os.system(rm_cmd)
+        print((f"{sdir}{zip_name}/trimmomatic-0.39.jar"))
+
+        print(os.path.exists(f"{sdir}{zip_name}/trimmomatic-0.39.jar"))
 
         ln_target = sdir + "classes/trimmomatic.jar"
-        ln_cmd = "ln -s " + idir + "/trimmomatic-0.39.jar " + ln_target
+        ln_cmd = f"ln -s {sdir}{zip_name}/trimmomatic-0.39.jar " + ln_target
+        ln_targets_cmd = f"ln -s {sdir}{zip_name}/adapters/* " + sdir + "adapters/"
+        print(ln_targets_cmd)
 
         os.system(ln_cmd)
+        os.system(ln_targets_cmd)
         os.chdir(CWD)
+        return True
 
-    def fastqc_install(self):
+    def fastqc_insaflu_install(self):
         """
         FastQC installation.
         """
 
         ### GIT CLONE
         soft = "fastqc"
-        sdir = self.envsdir + soft.split("/")[0]
-
-        try:
-            git = self.git[soft]
-        except KeyError:
-            print("No git repo for %s" % soft)
-            return
+        sdir = self.envsdir + soft.split("/")[0] + "/"
 
         CWD = os.getcwd()
         os.chdir(self.envsdir)
 
-        idir = sdir + "/" + git.split("/")[-1].strip(".git")
         exists = os.path.isdir(sdir)
         if not exists:
             os.mkdir(sdir)
 
         os.chdir(sdir)
-        exists = os.path.isdir(idir)
 
-        get_cmd = "wget -O fastqc_v0.11.9.zip https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.9.zip"
+        zip_source = "https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.9.zip"
+        zip_name = os.path.basename(zip_source).strip(".zip")
+        exec_target = sdir + "/FastQC/fastqc"
+
+        exists = os.path.exists(exec_target)
+        if exists:
+            return True
+
+        get_cmd = f"wget -O fastqc_v0.11.9.zip {zip_source}"
         unzip_cmd = "unzip fastqc_v0.11.9.zip"
         rm_cmd = "rm fastqc_v0.11.9.zip"
 
-        if not exists:
-            os.system(get_cmd)
+        os.system(get_cmd)
+        os.system(unzip_cmd)
+        os.system(rm_cmd)
+
+        os.system(f"chmod +x {exec_target}")
+
+        os.chdir(CWD)
+        return True
+
+    def rabbitqc_insaflu_install(self):
+
+        ### GIT CLONE
+        soft = "RabbitQC"
+        sdir = self.envsdir + soft.split("/")[0] + "/"
+
+        CWD = os.getcwd()
+        os.chdir(self.envsdir)
+
+        zip_source = "https://github.com/ZekunYin/RabbitQC/archive/v0.0.1.zip"
+        zip_name = os.path.basename(zip_source).strip(".zip")
+        exec_target = sdir + "rabbit_qc"
+
+        if os.path.exists(exec_target):
+            return True
+
+        try:
+
+            wget_cmd = f"wget -O v0.0.1.zip {zip_source}"
+            unzip_cmd = "unzip v0.0.1.zip"
+            rm_cmd = "rm v0.0.1.zip"
+
+            os.system(wget_cmd)
             os.system(unzip_cmd)
             os.system(rm_cmd)
 
-        ln_target = sdir + "fastqc"
-        ln_cmd = "ln -s " + idir + "/fastqc " + ln_target
+            os.rename("RabbitQC-0.0.1", "RabbitQC")
+            os.chdir(sdir)
 
-        os.system(ln_cmd)
-        os.chdir(CWD)
+            sed_make_cmd = (
+                "sed 's/ -static//' Makefile > temp.txt; mv temp.txt Makefile"
+            )
+            os.system(sed_make_cmd)
+
+            make_cmd = "make"
+            os.system(make_cmd)
+
+            return True
+
+        except:
+            return False
 
     def install_deployment_software(self):
         """Install deployment software: fastqc, trimmomatic, abricate, etc.
         INSAFLU specific.
         """
 
-        self.fastqc_install()
-        self.trimmomatic_install()
+        success_fastqc = self.fastqc_insaflu_install()
+        success_trimmomatic = self.trimmomatic_insaflu_install()
+        success_rabbitqc = self.rabbitqc_insaflu_install()

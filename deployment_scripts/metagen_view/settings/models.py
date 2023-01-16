@@ -2,7 +2,7 @@ from datasets.models import Dataset
 from django.contrib.auth.models import User
 from django.db import models
 from managing_files.models import Project, ProjectSample, Sample
-from pathogen_identification.models import Projects as TelevirProject
+from pathogen_detection.models import Projects as TelevirProject
 
 # Create your models here.
 

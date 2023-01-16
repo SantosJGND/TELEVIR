@@ -1,3 +1,12 @@
+six
+pysam
+networkx
+plotly
+bcbio-gff
+ete3
+scipy
+crispy_forms_foundation
+datasets
 python-decouple
 scipy
 matplotlib

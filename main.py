@@ -190,6 +190,9 @@ def main():
     if args.deploy:
         from deployment_scripts.main_deployment_setup import main_deploy_prep
 
+        ### begin by installing televir deployment requirements
+        metagen_prep.setup_deploy()
+
         deploy_prep = main_deploy_prep(pdir=CWD + "/deployment_scripts/")
         deploy_prep.object_input(
             DEPLOYMENT_DIR,
@@ -199,13 +202,11 @@ def main():
             metagen_prep.wdir.metadir,
             SOURCE_DIR,
             tech=TECH,
+            docker_home=HOME,
         )
 
         deploy_prep.dir_prep()
         deploy_prep.export()
-
-        with open(DEPLOYMENT_DIR + ".env", "w") as f:
-            f.write(ENV)
 
 
 if __name__ == "__main__":

@@ -141,6 +141,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "background_task",
     "managing_files.apps.ManagingFilesConfig",
+    "manage_virus.apps.ManageVirusConfig",
     "settings.apps.SettingsConfig",
     "django_bootstrap_breadcrumbs",
     "django_tables2",

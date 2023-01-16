@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import os
+import shutil
 from distutils.dir_util import copy_tree
 
 
@@ -78,7 +79,7 @@ class main_deploy_prep:
         self.pdir = pdir
         self.bindir = self.pdir + "scripts/"
         self.module = self.pdir + "modules/metaruns_class.py"
-        self.django_dir = self.pdir + "metagen_view/"
+        self.django_dir = self.pdir + "INSaFLU/"
 
     def user_input(self):
         args = get_args_deployment()
@@ -92,7 +93,16 @@ class main_deploy_prep:
         self.paramf = args.paramf
 
     def object_input(
-        self, depdir, envd, dbdir, fdir, metad, source, tech="illumina", paramf=""
+        self,
+        depdir,
+        envd,
+        dbdir,
+        fdir,
+        metad,
+        source,
+        tech="illumina",
+        paramf="",
+        docker_home="",
     ):
         self.envd = envd
         self.dir = depdir
@@ -102,6 +112,7 @@ class main_deploy_prep:
         self.source = source
         self.metad = metad
         self.paramf = paramf
+        self.docker_home = docker_home
 
     def read_available_software(self):
         """
@@ -123,12 +134,13 @@ class main_deploy_prep:
         print("dir: ", self.dir)
         copy_tree(self.django_dir, self.dir)
 
-        self.app_dir = os.path.join(self.dir, "pathogen_detection") + "/"
+        self.app_dir = os.path.join(self.dir, "pathogen_identification") + "/"
         # os.makedirs(self.dir)
 
     def export(self):
         # self.paramf = self.pdir + f"params_files/params_{self.tech}.py"
-        self.paramf = self.app_dir + "constants_settings.py"
+        self.paramf = os.path.join(self.dir + "constants") + "/constants.py"
+        env_file = self.dir + ".env_model"
 
         self.mainsh = self.pdir + f"main/main_{self.tech}.sh"
         new_params = self.app_dir + "televir_deploy_parameters.py"
@@ -143,21 +155,24 @@ class main_deploy_prep:
             "$FDIR": self.fmain,
             "$BINDIR": self.pdir + "scripts/",
             "$METADIR": self.metad,
+            "$INSTALL_HOME": self.docker_home,
         }
 
         for tag, repl in mods_dict.items():
             if repl[-1] != "/":
                 repl += "/"
             os.system(f"sed -i 's#{tag}#{repl}#g' {self.paramf}")
+            os.system(f"sed -i 's#{tag}#{repl}#g' {env_file}")
             os.system(f"sed -i 's#{tag}#{repl}#g' {new_params}")
-            os.system(f"sed -i 's#{tag}#{repl}#g' {test_params_ont_json}")
-            os.system(f"sed -i 's#{tag}#{repl}#g' {test_params_illumina_json}")
+            # os.system(f"sed -i 's#{tag}#{repl}#g' {test_params_ont_json}")
+            # os.system(f"sed -i 's#{tag}#{repl}#g' {test_params_illumina_json}")
 
         os.system(f"sed -i 's#$SOURCE#{self.source}#g' {new_params}")
         os.system(f"sed -i 's#$SOURCE#{self.source}#g' {self.paramf}")
 
         os.system(f"cp {self.pdir}metadata/taxid2desc.tsv {self.metad}")
         os.system(f"cp {self.pdir}README.md {self.fmain}")
+        shutil.copy(env_file, self.dir + ".env")
 
 
 if __name__ == "__main__":
