@@ -266,7 +266,7 @@ class Assembly_class:
         self.assembly_mean = 0
         self.assembly_number = 0
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(f"{__name__}_{prefix}")
         self.logger.setLevel(logging_level)
         self.logger.addHandler(logging.StreamHandler())
         self.logger.info("Assembly class initialized")

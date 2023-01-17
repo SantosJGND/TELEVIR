@@ -30,7 +30,7 @@ class Televir_Metadata_Constants:
     }
 
     METADATA = {
-        "ROOT": "/televir/mngs_benchmark/metadata/",
+        "ROOT": "$METADIR",
         "input_accession_to_taxid_path": "acc2taxid.tsv",
         "input_taxonomy_to_descriptor_path": "taxid2desc.tsv",
         "input_protein_accession_to_protid_path": "protein_acc2protid.tsv",

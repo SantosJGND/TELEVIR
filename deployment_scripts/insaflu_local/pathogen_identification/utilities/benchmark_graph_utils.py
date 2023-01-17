@@ -47,7 +47,7 @@ class pipeline_tree:
             CS.PIPELINE_NAME_read_quality_analysis: self.mod.ARGS_QC,
             CS.PIPELINE_NAME_viral_enrichment: self.mod.ARGS_ENRICH,
             CS.PIPELINE_NAME_assembly: self.mod.ARGS_ASS,
-            CS.PIPELINE_NAME_contig_classification: self.mod.ARGS_ASS,
+            CS.PIPELINE_NAME_contig_classification: self.mod.ARGS_CLASS,
             CS.PIPELINE_NAME_read_classification: self.mod.ARGS_CLASS,
             CS.PIPELINE_NAME_remapping: self.mod.ARGS_REMAP,
         }

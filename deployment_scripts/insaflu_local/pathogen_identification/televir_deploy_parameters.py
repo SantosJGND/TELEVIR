@@ -267,23 +267,23 @@ class Params_Nanopore:
     SOFTWARE = {
         CS.PIPELINE_NAME_read_quality_analysis: ["nanofilt"],  # "nanofilt", trimmomatic
         CS.PIPELINE_NAME_viral_enrichment: [
-            "",
+            # "",
             # "kaiju",
             # "krakenuniq",
             "centrifuge",
         ],
-        CS.PIPELINE_NAME_assembly: ["flye", "raven"],  # spades, velvet,
+        CS.PIPELINE_NAME_assembly: ["raven"],  # spades, velvet,
         CS.PIPELINE_NAME_contig_classification: [
-            "blast",
-            "minimap2_asm",
+            # "blast",
+            "minimap2",
         ],  # , "minimap-asm"],
         CS.PIPELINE_NAME_read_classification: [
             # "krakenuniq",
             # "fastviromeexplorer",
-            "clark",
+            # "clark",
             # "desamba",
             # "kaiju",
-            # "centrifuge",
+            "centrifuge",
             # "diamond",
         ],
         CS.PIPELINE_NAME_remapping: [
@@ -409,7 +409,7 @@ class Params_Nanopore:
 
     ARGS_CLASS = {
         "clark": {
-            "CLARK_ARGS": ["-m 1"],
+            "CLARK_ARGS": ["-m 1 --light"],
             "CLARK_THREADS": [8],
             "CLARK_DB": ["clark/viruses"],
         },
@@ -457,10 +457,10 @@ class Params_Nanopore:
                 "virosaurus90_vertebrate-20200330.fas.gz",
             ],
         },
-        "minimap2_asm": {
-            "MINIMAP_ARGS": [""],
-            "MINIMAP_QCF": [20],  # filter for alignment score
-            "MINIMAP_DB": [
+        "minimap2": {
+            "MINIMAP2_ARGS": [""],
+            "MINIMAP2_QCF": [20],  # filter for alignment score
+            "MINIMAP2_DB": [
                 "refseq_viral.genome.fna.gz",
                 "virosaurus90_vertebrate-20200330.fas.gz",
             ],

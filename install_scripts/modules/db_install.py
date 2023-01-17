@@ -518,6 +518,7 @@ class setup_dl:
         download virossaurus from viralzone.
         :return:
         """
+
         fl = "https://viralzone.expasy.org/resources/Virosaurus/2020_4/virosaurus90_vertebrate-20200330.fas.gz"
 
         if not os.path.isfile(self.seqdir + os.path.basename(fl)):
@@ -525,18 +526,20 @@ class setup_dl:
                 logging.info("virosaurus90_vertebrate_20200330.fas not found.")
                 return False
             else:
-                logging.info(
-                    "virosaurus90_vertebrate_20200330.fas not found. downloading..."
-                )
-                subprocess.run(
-                    ["wget", "--no-check-certificate", fl, "-P", self.seqdir]
-                )
+                try:
+                    logging.info(
+                        "virosaurus90_vertebrate_20200330.fas not found. downloading..."
+                    )
+                    subprocess.run(
+                        ["wget", "--no-check-certificate", fl, "-P", self.seqdir]
+                    )
+                except subprocess.CalledProcessError:
+                    logging.info("wget failed. trying curl...")
+                    return False
         else:
             logging.info("virosaurus90_vertebrate_20200330.fas found.")
 
-        self.fastas["nuc"]["virosaurus"] = self.seqdir + os.path.basename(fl).replace(
-            "%2D", "-"
-        )
+        self.fastas["nuc"]["virosaurus"] = self.seqdir + os.path.basename(fl)
 
         return True
 

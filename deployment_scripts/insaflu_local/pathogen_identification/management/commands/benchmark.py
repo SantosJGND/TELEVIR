@@ -1,13 +1,17 @@
 #####
 ### generate tree
 #####
+import copy
 import logging
 import os
+import shutil
 import sys
 from datetime import date
 from tkinter.tix import Tree
 
 import pandas as pd
+from constants.constants import Televir_Metadata_Constants as Televir_Metadata
+from constants.constants import TypePath
 from constants.meta_key_and_values import MetaKeyAndValue
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -21,6 +25,7 @@ from pathogen_identification.models import (
     SoftwareTree,
     SoftwareTreeNode,
 )
+from pathogen_identification.modules.run_main import RunMain_class
 from pathogen_identification.utilities.benchmark_graph_utils import pipeline_tree
 from pathogen_identification.utilities.utilities_pipeline import (
     Parameter_DB_Utility,
@@ -33,6 +38,162 @@ from utils.process_SGE import ProcessSGE
 from utils.utils import Utils
 
 
+class PathogenIdentification_Deployment_Manager:
+
+    project: str
+    prefix: str
+    rdir: str
+    threads: int
+    run_engine: RunMain_class
+    params = dict
+    run_params_db = pd.DataFrame()
+    pk: int = 0
+    username: str
+    prepped: bool = False
+
+    def __init__(
+        self,
+        sample: PIProject_Sample,  # sample name
+        project: Projects,
+        username: str = "admin",
+        technology: str = "ONT",
+        deployment_root_dir: str = "/tmp/insaflu/insaflu_something",
+        dir_branch: str = "deployment",
+        threads: int = 3,
+    ) -> None:
+
+        self.username = username
+        self.project = project.name
+        self.sample = sample.name
+
+        self.deployment_root_dir = deployment_root_dir
+        self.dir_branch = dir_branch
+        self.dir = os.path.join(self.deployment_root_dir, dir_branch)
+
+        self.technology = technology
+        self.install_registry = Televir_Metadata
+
+        self.threads = threads
+        self.file_r1 = sample.sample.get_fastq_available(TypePath.MEDIA_ROOT, True)
+        if sample.sample.exist_file_2():
+            self.file_r2 = sample.sample.get_fastq_available(TypePath.MEDIA_ROOT, False)
+        else:
+            self.file_r2 = ""
+
+    def input_read_project_path(self, filepath) -> str:
+        """copy input reads to project directory and return new path"""
+
+        if not os.path.isfile(filepath):
+            return ""
+
+        rname = os.path.basename(filepath)
+        new_rpath = os.path.join(self.dir, "reads") + "/" + rname
+        shutil.copy(filepath, new_rpath)
+        return new_rpath
+
+    def configure(self) -> bool:
+        """generate config dictionary for run_main, and copy input reads to project directory."""
+        self.get_constants()
+
+        self.generate_config_file()
+        self.prep_test_env()
+
+        new_r1_path = self.input_read_project_path(self.file_r1)
+        new_r2_path = self.input_read_project_path(self.file_r2)
+
+        self.config["sample_name"] = self.sample
+        self.config["r1"] = new_r1_path
+        self.config["r2"] = new_r2_path
+        self.config["type"] = ["SE", "PE"][int(os.path.isfile(self.config["r2"]))]
+
+        return True
+
+    def get_constants(self):
+        """set constants for technology"""
+        if self.technology == ConstantsSettings.TECHNOLOGY_illumina:
+            self.constants = PIConstants.CONSTANTS_ILLUMINA
+        if self.technology == ConstantsSettings.TECHNOLOGY_minion:
+            self.constants = PIConstants.CONSTANTS_ONT
+
+    def generate_config_file(self):
+
+        self.config = {
+            "project": self.project,
+            "source": self.install_registry.SOURCE,
+            "deployment_root_dir": self.deployment_root_dir,
+            "sub_directory": self.dir_branch,
+            "directories": {},
+            "threads": self.threads,
+            "prefix": self.prefix,
+            "project_name": self.project,
+            "metadata": {
+                x: os.path.join(self.install_registry.METADATA["ROOT"], g)
+                for x, g in self.install_registry.METADATA.items()
+            },
+            "technology": self.technology,
+            "bin": self.install_registry.BINARIES,
+            "actions": {},
+        }
+
+        for dr, g in PIConstants.DIRS.items():
+            self.config["directories"][dr] = os.path.join(self.dir, g)
+
+        for dr, g in PIConstants.ACTIONS.items():
+            self.config["actions"][dr] = g
+
+        self.config.update(self.constants)
+
+    def update_config(self):
+        self.config["prefix"] = self.prefix
+
+    def prep_test_env(self):
+        """
+        from main directory bearing scripts, params.py and main.sh, create metagenome run directory
+
+        :return:
+        """
+        os.makedirs(self.dir, exist_ok=True)
+        os.makedirs(
+            os.path.join(PIConstants.media_directory, self.dir_branch),
+            exist_ok=True,
+        )
+        os.makedirs(
+            os.path.join(PIConstants.static_directory, self.dir_branch),
+            exist_ok=True,
+        )
+
+        for directory in self.config["directories"].values():
+            os.makedirs(directory, exist_ok=True)
+
+    def close(self):
+        if os.path.exists(self.dir):
+            shutil.rmtree(self.dir)
+
+    def import_params(self, run_params_db: pd.DataFrame):
+        self.run_params_db = run_params_db
+
+    def run_main_prep(self):
+
+        if self.prepped:
+            return
+
+        self.run_engine = RunMain_class(self.config, self.run_params_db, self.username)
+        self.run_engine.Prep_deploy()
+        self.prepped = True
+
+    def run_main(self):
+        self.run_engine.Run_QC()
+        self.run_engine.Run_PreProcess()
+        self.run_engine.Sanitize_reads()
+        self.run_engine.Run_Assembly()
+        self.run_engine.Run_Classification()
+        self.run_engine.Run_Remapping()
+
+    def update_engine(self):
+        self.update_config()
+        self.run_engine.Update(self.config, self.run_params_db)
+
+
 class Tree_Node:
     module: str
     name: str
@@ -40,18 +201,32 @@ class Tree_Node:
     children: list
     parameters: pd.DataFrame
     software_tree_pk: int
+    run_manager: PathogenIdentification_Deployment_Manager
 
     def __init__(self, pipe_tree, node_index, software_tree_pk: int):
         node_metadata = pipe_tree.node_index.loc[node_index].node
 
         self.module = node_metadata[0]
         self.node_index = node_index
+        print(pipe_tree.nodes_df)
         self.branch = pipe_tree.nodes_df.loc[node_index].branch
         self.children = pipe_tree.edge_df[
             pipe_tree.edge_df.parent == node_index
         ].child.tolist()
         self.parameters = self.determine_params(pipe_tree)
         self.software_tree_pk = software_tree_pk
+
+    def receive_run_manager(
+        self, run_manager: PathogenIdentification_Deployment_Manager
+    ):
+        run_manager.prefix = f"run_leaf_{self.node_index}"
+        run_manager.configure()
+        run_manager.import_params(self.parameters)
+
+        if self.node_index == 0:
+            run_manager.run_main_prep()
+
+        self.run_manager = run_manager
 
     def _is_node_leaf(self):
         return len(self.children) == 0
@@ -91,8 +266,6 @@ class Tree_Node:
             parameter_set.status = ParameterSet.STATUS_FINISHED
             parameter_set.save()
 
-            parameter_set.save()
-
         return parameter_set
 
     def determine_params(self, pipe_tree):
@@ -102,9 +275,17 @@ class Tree_Node:
             arguments_list.append(node_metadata)
 
         arguments_df = pd.DataFrame(
-            arguments_list, columns=["module", "software", "parameter"]
+            arguments_list, columns=["parameter", "value", "flag"]
         )
-        return arguments_df
+
+        module_df = arguments_df[arguments_df.flag == "module"]
+        module = module_df.parameter.values[0]
+        software = module_df.value.values[0]
+        parameters_df = arguments_df[arguments_df.flag == "param"]
+        parameters_df["software"] = software
+        parameters_df["module"] = module
+
+        return parameters_df
 
 
 class Tree_Progress:
@@ -125,16 +306,51 @@ class Tree_Progress:
             pipe_tree.edge_compress, columns=["parent", "child"]
         )
 
+        self.logger = logging.getLogger(__name__)
+
         self.tree = pipe_tree
-        self.current_nodes = [
-            Tree_Node(pipe_tree, 0, software_tree_pk=pipe_tree.software_tree_pk)
-        ]
-        self.current_module = ""
-        self.determine_current_module()
         self.sample = sample
         self.project = project
 
-        self.logger = logging.getLogger(__name__)
+        self.initialize_nodes()
+        self.determine_current_module()
+
+    def setup_deployment_manager(self):
+        utils = Utils()
+        temp_dir = utils.get_temp_dir()
+
+        prefix = f"{self.sample.sample.pk}_{self.sample.sample.name}"
+
+        deployment_directory_structure = os.path.join(
+            PIConstants.televir_subdirectory,
+            f"{self.project.owner.pk}",
+            f"{self.project.pk}",
+            f"{self.sample.sample.pk}",
+            prefix,
+        )
+
+        deployment_manager = PathogenIdentification_Deployment_Manager(
+            self.sample,
+            self.project,
+            self.project.owner.username,
+            self.project.technology,
+            temp_dir,
+            deployment_directory_structure,
+            PIConstants.DEPLOYMENT_THREADS,
+        )
+
+        return deployment_manager
+
+    def initialize_nodes(self):
+        origin_node = Tree_Node(
+            self.tree, 0, software_tree_pk=self.tree.software_tree_pk
+        )
+
+        run_manager = self.setup_deployment_manager()
+
+        origin_node.receive_run_manager(run_manager)
+
+        self.current_nodes = [origin_node]
 
     def get_current_module(self):
         return self.current_module
@@ -142,18 +358,38 @@ class Tree_Progress:
     def determine_current_module(self):
         self.current_module = self.current_nodes[0].module
 
+    def spawn_node_child(self, node: Tree_Node, child: int):
+
+        new_node = Tree_Node(self.tree, child, node.software_tree_pk)
+        run_manager_copy = copy.deepcopy(node.run_manager)
+        new_node.receive_run_manager(run_manager_copy)
+        new_node.run_manager.update_engine()
+
+        return new_node
+
     def update_nodes(self):
         new_nodes = []
         for node in self.current_nodes:
             children = node.children
             for child in children:
-                new_nodes.append(Tree_Node(self.tree, child, node.software_tree_pk))
+                new_node = self.spawn_node_child(node, child)
+                new_nodes.append(new_node)
 
         if len(new_nodes) == 0:
             self.current_module = "end"
         else:
             self.current_nodes = new_nodes
         self.determine_current_module()
+
+    def run_current_nodes(self):
+        for node in self.current_nodes:
+            print("##############################")
+            print(node.node_index)
+            print(node.run_manager.run_engine.sample.r1.current)
+            print(node.run_manager.run_engine.sample.r1.current_status)
+            print(node.run_manager.run_params_db)
+
+            node.run_manager.run_main()
 
 
 class Insaflu_Cli:
@@ -204,8 +440,6 @@ class Insaflu_Cli:
 
     def sample_save(self, name, user, r1, r2, technology):
         utils = Utils()
-        print(technology)
-
         if not os.path.exists(r1):
             raise FileNotFoundError(f"File {r1} does not exist")
 
@@ -541,28 +775,37 @@ class Command(BaseCommand):
         project_sample = insaflu_cli.piproject_sample_from_sample(sample, project, user)
 
         software_tree = self.generate_modular_software_tree(technology)
-        run_manager = Tree_Progress(software_tree, project_sample, project)
 
-        print(len(run_manager.current_nodes))
-        print(run_manager.get_current_module())
-        run_manager.update_nodes()
-        print(len(run_manager.current_nodes))
-        print(run_manager.get_current_module())
-        run_manager.update_nodes()
-        print(len(run_manager.current_nodes))
-        print(run_manager.get_current_module())
-        run_manager.update_nodes()
-        print(len(run_manager.current_nodes))
-        print(run_manager.get_current_module())
-        run_manager.update_nodes()
-        print(len(run_manager.current_nodes))
-        print(run_manager.get_current_module())
-        run_manager.update_nodes()
-        print(len(run_manager.current_nodes))
-        print(run_manager.get_current_module())
-        run_manager.update_nodes()
-        print(len(run_manager.current_nodes))
-        print(run_manager.get_current_module())
-        run_manager.update_nodes()
-        print(len(run_manager.current_nodes))
-        print(run_manager.get_current_module())
+        deployment_tree = Tree_Progress(software_tree, project_sample, project)
+
+        print("FIRST")
+        print(len(deployment_tree.current_nodes))
+        print(deployment_tree.get_current_module())
+        # deployment_tree.run_current_nodes()
+        deployment_tree.update_nodes()
+        print("SECOND")
+        print(len(deployment_tree.current_nodes))
+        print(deployment_tree.get_current_module())
+        deployment_tree.run_current_nodes()
+        deployment_tree.update_nodes()
+        print("THIRD")
+        print(len(deployment_tree.current_nodes))
+        print(deployment_tree.get_current_module())
+        deployment_tree.run_current_nodes()
+        deployment_tree.update_nodes()
+        print("FOURTH")
+        print(len(deployment_tree.current_nodes))
+        print(deployment_tree.get_current_module())
+        deployment_tree.run_current_nodes()
+        deployment_tree.update_nodes()
+        print("FIFTH")
+        print(len(deployment_tree.current_nodes))
+        print(deployment_tree.get_current_module())
+        deployment_tree.run_current_nodes()
+        deployment_tree.update_nodes()
+
+        print("SIXTH")
+        print(len(deployment_tree.current_nodes))
+        print(deployment_tree.get_current_module())
+        deployment_tree.run_current_nodes()
+        # deployment_tree.update_nodes()

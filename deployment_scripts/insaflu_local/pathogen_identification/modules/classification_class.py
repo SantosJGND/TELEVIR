@@ -1165,6 +1165,7 @@ class Classifier:
 
     available_software: dict = {
         "blastn": run_blast,
+        "blast": run_blast,
         "blastp": run_blast_p,
         "centrifuge": run_centrifuge,
         "desamba": run_deSamba,
@@ -1183,7 +1184,7 @@ class Classifier:
 
     def __init__(
         self,
-        classifier_method: Type[Software_detail],
+        classifier_method: Software_detail,
         query_path: str = "",
         type: str = "SE",
         r2: str = "",
@@ -1205,7 +1206,7 @@ class Classifier:
         :param bin: bin path
         :param logging_level: logging level
         """
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(f"{__name__}_{classifier_method.name}_{prefix}")
         if self.logger.hasHandlers():
             self.logger.handlers.clear()
         self.logger.propagate = False
@@ -1213,7 +1214,10 @@ class Classifier:
         self.logger.addHandler(logging.StreamHandler())
         self.log_dir = log_dir
         self.cmd = RunCMD(
-            bin, logdir=self.log_dir, prefix=prefix, task="classification"
+            bin,
+            logdir=self.log_dir,
+            prefix=prefix,
+            task=f"classification_{classifier_method.name}",
         )
         self.prefix = prefix
         self.classifier_method = classifier_method

@@ -237,7 +237,8 @@ class PipelineTree:
         edge_compress = self.edge_compress
 
         new_nodes = []
-        new_edges = []
+        print("fixing nodes")
+        print(edge_compress)
 
         for node in nodes_compress:
             internal_nodes = []
@@ -254,6 +255,8 @@ class PipelineTree:
 
             if len(internal_splits) > 1:
                 internal_splits.append(len(node[1]))
+                node_connections = [x for x in edge_compress if x[0] == node[0]]
+                node_children = [x[1] for x in node_connections]
                 for ix, split in enumerate(internal_splits[:-1]):
                     internal_nodes.append(
                         [node[1][split], (node[1][split : internal_splits[ix + 1]])]
@@ -262,12 +265,18 @@ class PipelineTree:
                 for ix, split in enumerate(internal_nodes[:-1]):
                     internal_edges.append([split[0], internal_nodes[ix + 1][0]])
 
+                edge_compress = [x for x in edge_compress if x not in node_connections]
                 new_nodes.extend(internal_nodes)
                 edge_compress.extend(internal_edges)
+                edge_compress.extend(
+                    [[new_nodes[-1][0], child] for child in node_children]
+                )
+
             else:
                 new_nodes.append(node)
 
         self.nodes_compress = new_nodes
+        self.edge_compress = edge_compress
 
         self.compress_dag_dict = {
             z: [
@@ -303,10 +312,6 @@ class PipelineTree:
 
         if self.nodes_compress is None:
             self.compress_tree()
-
-            nodes_compress = self.nodes_compress
-            edge_compress = self.edge_compress
-
             self.split_modules()
 
         nodes_df = pd.DataFrame(self.nodes_compress, columns=["node", "branch"])
@@ -348,6 +353,7 @@ class PipelineTree:
 
             if len(parent_node) == 0:
                 parent_node = [0]
+
             parent_node = parent_node[0]
 
             same_module_branches = self.same_module_children(
@@ -840,6 +846,7 @@ class Utility_Pipeline_Manager:
     def compress_software_tree(self, software_tree: PipelineTree):
         software_tree.compress_tree()
         software_tree.split_modules()
+
         software_tree.get_module_tree()
 
         return software_tree

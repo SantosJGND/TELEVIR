@@ -420,7 +420,13 @@ class RunCMD:
 
 class Read_class:
     def __init__(
-        self, filepath, clean_dir: str, enriched_dir: str, depleted_dir: str, bin: str
+        self,
+        filepath,
+        clean_dir: str,
+        enriched_dir: str,
+        depleted_dir: str,
+        bin: str,
+        prefix: str = "r0",
     ):
         """
         Initialize.
@@ -439,7 +445,8 @@ class Read_class:
 
         self.filepath = filepath
         self.current = filepath
-        self.prefix = self.determine_read_name(filepath)
+        self.suffix = prefix
+        self.prefix = f"{self.determine_read_name(filepath)}_{prefix}"
         self.clean = os.path.join(clean_dir, self.prefix + ".clean.fastq.gz")
         self.enriched = os.path.join(enriched_dir, self.prefix + ".enriched.fastq.gz")
         self.depleted = os.path.join(depleted_dir, self.prefix + ".depleted.fastq.gz")
@@ -450,10 +457,26 @@ class Read_class:
         self.read_number_depleted = 0
         self.read_number_filtered = 0
 
-    def update(self, clean_dir: str, enriched_dir: str, depleted_dir: str):
-        self.clean = os.path.join(clean_dir, self.prefix + ".clean.fastq.gz")
-        self.enriched = os.path.join(enriched_dir, self.prefix + ".enriched.fastq.gz")
-        self.depleted = os.path.join(depleted_dir, self.prefix + ".depleted.fastq.gz")
+    def update(self, new_suffix, clean_dir: str, enriched_dir: str, depleted_dir: str):
+        self.prefix = self.prefix.replace(self.suffix, new_suffix)
+        self.suffix = new_suffix
+        new_clean = os.path.join(clean_dir, self.prefix + ".clean.fastq.gz")
+        if os.path.isfile(self.clean):
+            if new_clean != self.clean:
+                shutil.copy(self.clean, new_clean)
+        self.clean = new_clean
+
+        new_enriched = os.path.join(enriched_dir, self.prefix + ".enriched.fastq.gz")
+        if os.path.isfile(self.enriched):
+            if new_enriched != self.enriched:
+                shutil.copy(self.enriched, new_enriched)
+        self.enriched = new_enriched
+
+        new_depleted = os.path.join(depleted_dir, self.prefix + ".depleted.fastq.gz")
+        if os.path.isfile(self.depleted):
+            if new_depleted != self.depleted:
+                shutil.copy(self.depleted, new_depleted)
+        self.depleted = new_depleted
 
     def get_read_names_fastq(self, filepath):
         """
@@ -593,6 +616,28 @@ class Read_class:
         rnumber = self.cmd.run_bash_return(cmd).decode("utf-8")
         return int(rnumber) // 4
 
+    def clean_fastq_headers_python(self, fastq, temp_fq):
+        """
+        Clean fastq header using python.
+        """
+
+        if not self.exists:
+            return
+
+        counter = 0  # counter to keep track of headers
+        with open(temp_fq, "w") as f:
+            for line in open(fastq):
+                line = line.strip()
+                if line.startswith("@") and counter == 0:
+                    if line[-2:] == "/1" or line[-2:] == "/2":
+                        line = line[:-2]
+
+                f.write(line + "\n")
+
+                counter += 1
+                if counter == 4:
+                    counter = 0
+
     def clean_read_names(self):
         """
         Clean read names in current fastq file.
@@ -604,22 +649,19 @@ class Read_class:
         temp_fq = os.path.join(
             os.path.dirname(self.current), f"temp_clean_{randint(1,1000)}.fastq"
         )
-        temp_fq_gz = temp_fq + ".gz"
+        final_temp = os.path.join(
+            os.path.dirname(self.current), f"temp_clean_{randint(1,1000)}.fastq"
+        )
+
+        temp_fq_gz = final_temp + ".gz"
 
         cmd_unzip = "gunzip -c %s > %s" % (self.current, temp_fq)
-
-        cmd = [
-            "sed",
-            "-i",
-            "'/^[@+]/ s/\/[12]$//g'",
-            temp_fq,
-        ]
-
-        cmd_zip = "bgzip %s" % temp_fq
+        cmd_zip = "bgzip %s" % final_temp
 
         self.cmd.run_bash(cmd_unzip)
-        self.cmd.run_bash(cmd)
+        self.clean_fastq_headers_python(temp_fq, final_temp)
         self.cmd.run(cmd_zip)
+        os.remove(temp_fq)
 
         if os.path.isfile(temp_fq_gz) and os.path.getsize(temp_fq_gz) > 100:
             os.remove(self.current)
@@ -641,7 +683,7 @@ class Read_class:
 
         self.cmd.run(cmd)
 
-        if os.path.isfile(temp) and os.path.getsize(temp):
+        if os.path.isfile(temp) and os.path.getsize(temp) > 100:
             os.remove(self.current)
             os.rename(temp, self.current)
 
@@ -859,6 +901,7 @@ class Sample_runClass:
         cmd_trimsort = [
             "trimmomatic",
             "SE",
+            "-phred33",
             "-threads",
             f"{self.threads}",
             self.r1.current,
@@ -866,10 +909,15 @@ class Sample_runClass:
             "MINLEN:20",
         ]
 
-        self.cmd.run(cmd_trimsort)
+        self.cmd.run_script_software(cmd_trimsort)
 
         if tempfq in os.listdir(tempdir):
             if os.path.getsize(tempfq) > 100:
+                bgzip_cmd = [
+                    "bgzip",
+                    tempfq,
+                ]
+                self.cmd.run_script_software(bgzip_cmd)
                 os.remove(self.r1.current)
                 os.rename(tempfq, self.r1.current)
 

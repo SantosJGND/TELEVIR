@@ -629,7 +629,7 @@ class Remapping:
         self.rdir = rdir
         self.cleanup = cleanup
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(f"{__name__}_{prefix}")
         if self.logger.hasHandlers():
             self.logger.handlers.clear()
         self.logger.propagate = False
@@ -1527,7 +1527,7 @@ class Mapping_Instance:
     def export_mapping_files(self, destination):
         """move files to media directory"""
 
-        if self.classification_success is not "none":
+        if self.classification_success != "none":
             # self.reference.move_igv_files(destination)
             self.reference.relocate_mapping_files(destination)
 
