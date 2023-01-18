@@ -214,7 +214,9 @@ class Tree_Node:
     parameter_set: ParameterSet
 
     def __init__(self, pipe_tree: PipelineTree, node_index: int, software_tree_pk: int):
+
         node_metadata = pipe_tree.node_index.loc[node_index].node
+        print(node_metadata)
 
         self.module = node_metadata[0]
         self.node_index = node_index
@@ -223,6 +225,7 @@ class Tree_Node:
         self.children = pipe_tree.edge_df[
             pipe_tree.edge_df.parent == node_index
         ].child.tolist()
+
         self.parameters = self.determine_params(pipe_tree)
         self.software_tree_pk = software_tree_pk
         self.leaves = pipe_tree.leaves_from_node(node_index)
@@ -301,6 +304,7 @@ class Tree_Node:
     def determine_params(self, pipe_tree):
         arguments_list = []
         for node in self.branch:
+
             node_metadata = pipe_tree.node_index.loc[node].node
             arguments_list.append(node_metadata)
 
@@ -529,6 +533,21 @@ class Insaflu_Cli:
 
         return r1, r2
 
+    def temp_reads(self, fofn):
+        utils = Utils()
+        r1, r2 = self.read_fofn(fofn)
+        temp_dir = utils.get_temp_dir()
+
+        new_r1 = os.path.join(temp_dir, os.path.basename(r1))
+
+        shutil.copy(r1, new_r1)
+
+        if r2:
+            new_r2 = os.path.join(temp_dir, os.path.basename(r2))
+            shutil.copy(r2, new_r2)
+
+        return new_r1, new_r2
+
     def create_sample_from_fofn(self, fofn, user: User, technology: str):
 
         r1, r2 = self.read_fofn(fofn)
@@ -538,8 +557,8 @@ class Insaflu_Cli:
             sample = Sample.objects.get(name=name, owner=user)
 
         except Sample.DoesNotExist:
-
-            sample = self.sample_save(name, user, r1, r2, technology)
+            tmp_r1, tmp_r2 = self.temp_reads(fofn)
+            sample = self.sample_save(name, user, tmp_r1, tmp_r2, technology)
             self.move_sample(sample, user)
             self.sample_preprocess(sample, user)
 
@@ -884,6 +903,9 @@ class Command(BaseCommand):
         software_tree = self.generate_modular_software_tree(technology)
 
         deployment_tree = Tree_Progress(software_tree, project_sample, project)
+
+        print(software_tree.nodes_compress)
+        print(software_tree.edge_compress)
 
         print("FIRST")
         print(len(deployment_tree.current_nodes))

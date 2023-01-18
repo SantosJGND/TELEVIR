@@ -659,7 +659,7 @@ class Read_class:
             os.path.dirname(self.current), f"temp_clean_{randint(1,1000)}.fastq"
         )
         final_temp = os.path.join(
-            os.path.dirname(self.current), f"temp_clean_{randint(1,1000)}.fastq"
+            os.path.dirname(self.current), f"temp_second_{randint(1,1000)}.fastq"
         )
 
         temp_fq_gz = final_temp + ".gz"

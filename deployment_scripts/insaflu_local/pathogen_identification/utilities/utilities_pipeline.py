@@ -374,8 +374,8 @@ class PipelineTree:
                 new_nodes, new_edges, nodes_df, edge_df
             )
 
-        self.nodes_compress = nodes_df.to_numpy().tolist()
-        self.edge_compress = edge_df.to_numpy().tolist()
+        self.nodes_compress = nodes_df.drop_duplicates().to_numpy().tolist()
+        self.edge_compress = edge_df.drop_duplicates().to_numpy().tolist()
 
 
 class Utility_Pipeline_Manager:

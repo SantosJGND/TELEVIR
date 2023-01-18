@@ -282,7 +282,7 @@ class Params_Nanopore:
             # "fastviromeexplorer",
             # "clark",
             # "desamba",
-            # "kaiju",
+            "kaiju",
             "centrifuge",
             # "diamond",
         ],
