@@ -108,7 +108,7 @@ class RunDetail_main:
     depletion_performed: bool = False
     assembly_performed: bool = False
     read_classification_performed: bool = False
-    assembly_classification_performed: bool = False
+    contig_classification_performed: bool = False
     remapping_performed: bool = False
 
     def __init__(self, config: dict, method_args: pd.DataFrame, username: str):
@@ -411,17 +411,6 @@ class RunDetail_main:
             depleted_dir=config["directories"]["reads_depleted_dir"],
         )
 
-        ### actions
-        self.subsample = False
-        self.quality_control = bool(self.preprocess_method.name != "None")
-        self.sift = config["actions"]["SIFT"]
-        self.depletion = bool(self.depletion_method.name != "None")
-        self.enrichment = bool(self.enrichment_method.name != "None")
-        self.assembly = bool(self.assembly_method.name != "None")
-        self.classification = config["actions"]["CLASSIFY"]
-        self.remapping = config["actions"]["REMAP"]
-        self.house_cleaning = config["actions"]["CLEAN"]
-
         ### methods
 
         self.preprocess_method = Software_detail(
@@ -485,6 +474,9 @@ class RunDetail_main:
         self.remapping = bool(self.remapping_method.name != "None")
         self.classification = self.read_classification or self.contig_classification
         self.house_cleaning = config["actions"]["CLEAN"]
+
+        ###
+        print("PERFORM ASSEMBLY: ", self.assembly)
 
         ### output files
         self.params_file_path = os.path.join(
@@ -685,6 +677,7 @@ class Run_Deployment_Methods(RunDetail_main):
         self.enrichment_drone.run()
 
     def deploy_ASSEMBLY(self, fake_run: bool = False):
+        print(self.assembly_method)
         self.assembly_drone = Assembly_class(
             self.sample.r1.current,
             self.assembly_method,
@@ -890,11 +883,16 @@ class RunMain_class(Run_Deployment_Methods):
 
     def Run_Assembly(self):
 
+        print("###################### ASSEMBLY 1 ######################")
+        print(self.assembly, self.assembly_performed)
+
         if self.assembly:
+            print("###################### ASSEMBLY ######################")
+
             self.deploy_ASSEMBLY()
             self.assembly_performed = True
 
-        elif self.assembly_performed == False:
+        elif self.assembly_performed is False:
             self.deploy_ASSEMBLY(fake_run=True)
             self.assembly_performed = True
 
@@ -917,11 +915,6 @@ class RunMain_class(Run_Deployment_Methods):
     def Run_Remapping(self):
 
         if self.remapping:
-            print("############## merging targets ##############")
-            print("reads classification report")
-            print(self.read_classification_drone.classification_report)
-            print("contigs classification report")
-            print(self.contig_classification_drone.classification_report)
 
             self.metadata_tool.match_and_select_targets(
                 self.read_classification_drone.classification_report,
@@ -940,6 +933,8 @@ class RunMain_class(Run_Deployment_Methods):
             self.deploy_REMAPPING()
             self.report = self.remap_manager.report
             self.export_final_reports()
+
+            self.remapping_performed = True
 
         self.Update_exec_time()
         self.generate_output_data_classes()
@@ -1088,7 +1083,7 @@ class RunMain_class(Run_Deployment_Methods):
         )
 
         self.assembly_report = Assembly_results(
-            self.assembly,
+            self.assembly_performed,
             self.assembly_drone.assembly_method.name,
             self.assembly_drone.assembly_method.args,
             self.assembly_drone.assembly_number,

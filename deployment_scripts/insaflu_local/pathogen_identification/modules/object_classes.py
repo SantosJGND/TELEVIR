@@ -478,6 +478,15 @@ class Read_class:
                 shutil.copy(self.depleted, new_depleted)
         self.depleted = new_depleted
 
+        if self.current_status == "raw":
+            self.current = self.filepath
+        elif self.current_status == "clean":
+            self.current = self.clean
+        elif self.current_status == "enriched":
+            self.current = self.enriched
+        elif self.current_status == "depleted":
+            self.current = self.depleted
+
     def get_read_names_fastq(self, filepath):
         """
         Get read names from fastq file.
@@ -712,11 +721,15 @@ class Read_class:
         if not os.path.isdir(directory):
             os.makedirs(directory)
 
-        if os.path.exists(os.path.join(directory, os.path.basename(self.current))):
-            os.remove(os.path.join(directory, os.path.basename(self.current)))
+        final_file = os.path.join(directory, os.path.basename(self.current))
 
-        shutil.move(self.current, directory)
-        self.current = os.path.join(directory, os.path.basename(self.current))
+        if os.path.exists(self.current):
+            if os.path.exists(final_file):
+                os.remove(final_file)
+
+            shutil.move(self.current, directory)
+
+        self.current = final_file
 
     def __str__(self):
         return self.filepath

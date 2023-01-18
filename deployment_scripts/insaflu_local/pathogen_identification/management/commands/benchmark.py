@@ -27,6 +27,13 @@ from pathogen_identification.models import (
 )
 from pathogen_identification.modules.run_main import RunMain_class
 from pathogen_identification.utilities.benchmark_graph_utils import pipeline_tree
+from pathogen_identification.utilities.update_DBs import (
+    Update_Assembly,
+    Update_Classification,
+    Update_Remap,
+    Update_RunMain_Initial,
+    Update_RunMain_Secondary,
+)
 from pathogen_identification.utilities.utilities_pipeline import (
     Parameter_DB_Utility,
     PipelineTree,
@@ -50,6 +57,7 @@ class PathogenIdentification_Deployment_Manager:
     pk: int = 0
     username: str
     prepped: bool = False
+    sent: bool = False
 
     def __init__(
         self,
@@ -202,19 +210,22 @@ class Tree_Node:
     parameters: pd.DataFrame
     software_tree_pk: int
     run_manager: PathogenIdentification_Deployment_Manager
+    tree_node: SoftwareTreeNode
+    parameter_set: ParameterSet
 
-    def __init__(self, pipe_tree, node_index, software_tree_pk: int):
+    def __init__(self, pipe_tree: PipelineTree, node_index: int, software_tree_pk: int):
         node_metadata = pipe_tree.node_index.loc[node_index].node
 
         self.module = node_metadata[0]
         self.node_index = node_index
-        print(pipe_tree.nodes_df)
+
         self.branch = pipe_tree.nodes_df.loc[node_index].branch
         self.children = pipe_tree.edge_df[
             pipe_tree.edge_df.parent == node_index
         ].child.tolist()
         self.parameters = self.determine_params(pipe_tree)
         self.software_tree_pk = software_tree_pk
+        self.leaves = pipe_tree.leaves_from_node(node_index)
 
     def receive_run_manager(
         self, run_manager: PathogenIdentification_Deployment_Manager
@@ -231,28 +242,30 @@ class Tree_Node:
     def _is_node_leaf(self):
         return len(self.children) == 0
 
-    def generate_software_tree_node_entry(self, pipe_tree):
+    def generate_software_tree_node_entry(self, pipe_tree: PipelineTree):
 
         if not self._is_node_leaf():
             return
+
         node_metadata = pipe_tree.node_index.loc[self.node_index].node
-        software_tree = SoftwareTree.objects.get(name=self.software_tree_pk).pk
+        software_tree = SoftwareTree.objects.get(pk=self.software_tree_pk)
 
         try:
-            node = SoftwareTreeNode.objects.get(
+            tree_node = SoftwareTreeNode.objects.get(
                 software_tree=software_tree,
                 index=self.node_index,
                 name=node_metadata[0],
                 value=node_metadata[1],
                 node_type=node_metadata[2],
-                node_place=1,
             )
         except SoftwareTreeNode.DoesNotExist:
-            node = None
+            tree_node = None
 
-        return node
+        return tree_node
 
-    def setup_parameterset(self, project, sample):
+    def setup_parameterset(
+        self, project: Projects, sample: PIProject_Sample, node: SoftwareTreeNode
+    ):
 
         try:
             parameter_set = ParameterSet.objects.get(
@@ -264,9 +277,26 @@ class Tree_Node:
             parameter_set.project = project
             parameter_set.sample = sample
             parameter_set.status = ParameterSet.STATUS_FINISHED
+            parameter_set.leaf = node
             parameter_set.save()
 
         return parameter_set
+
+    def register(self, project: Projects, sample: PIProject_Sample, tree: PipelineTree):
+
+        tree_node = self.generate_software_tree_node_entry(tree)
+        if tree_node is None:
+            return False
+
+        parameter_set = self.setup_parameterset(project, sample, tree_node)
+
+        if parameter_set is None:
+            return False
+
+        self.tree_node = tree_node
+        self.parameter_set = parameter_set
+
+        return True
 
     def determine_params(self, pipe_tree):
         arguments_list = []
@@ -341,6 +371,11 @@ class Tree_Progress:
 
         return deployment_manager
 
+    def register_node_leaves(self, node: Tree_Node):
+        for leaf in node.leaves:
+            leaf_node = self.spawn_node_child(node, leaf)
+            self.submit_node_run(leaf_node)
+
     def initialize_nodes(self):
         origin_node = Tree_Node(
             self.tree, 0, software_tree_pk=self.tree.software_tree_pk
@@ -349,6 +384,8 @@ class Tree_Progress:
         run_manager = self.setup_deployment_manager()
 
         origin_node.receive_run_manager(run_manager)
+
+        self.register_node_leaves(origin_node)
 
         self.current_nodes = [origin_node]
 
@@ -367,6 +404,79 @@ class Tree_Progress:
 
         return new_node
 
+    def register_node(self, node: Tree_Node):
+
+        if node.run_manager.sent:
+            return False
+
+        registraction_success = node.register(self.project, self.sample, self.tree)
+
+        return registraction_success
+
+    def update_node_dbs(self, node: Tree_Node):
+
+        try:
+            db_updated = Update_RunMain_Initial(
+                node.run_manager.run_engine, node.parameter_set
+            )
+            if not db_updated:
+                return False
+
+            if (
+                node.run_manager.run_engine.enrichment_performed
+                or node.run_manager.run_engine.depletion_performed
+            ):
+                db_updated = Update_RunMain_Secondary(
+                    node.run_manager.run_engine, node.parameter_set
+                )
+                if not db_updated:
+                    return False
+
+            if node.run_manager.run_engine.assembly_performed:
+                db_updated = Update_Assembly(
+                    node.run_manager.run_engine, node.parameter_set
+                )
+                if not db_updated:
+                    return False
+
+            if (
+                node.run_manager.run_engine.read_classification_performed
+                or node.run_manager.run_engine.contig_classification_performed
+            ):
+                db_updated = Update_Classification(
+                    node.run_manager.run_engine, node.parameter_set
+                )
+                if not db_updated:
+                    return False
+
+            if node.run_manager.run_engine.remapping_performed:
+                print("##### EXPORTING SEQUENCES #####")
+                node.run_manager.run_engine.export_sequences()
+                node.run_manager.run_engine.Summarize()
+                node.run_manager.run_engine.generate_output_data_classes()
+                node.run_manager.run_engine.export_logdir()
+                db_updated = Update_Remap(
+                    node.run_manager.run_engine, node.parameter_set
+                )
+                if not db_updated:
+                    return False
+
+            return True
+        except Exception as e:
+            self.logger.error(e)
+            return False
+
+    def submit_node_run(self, node: Tree_Node):
+
+        print("Submitting node run: " + str(node.node_index))
+
+        registration_success = self.register_node(node)
+        print("Registration success: " + str(registration_success))
+        if not registration_success:
+            return
+
+        self.update_node_dbs(node)
+
     def update_nodes(self):
         new_nodes = []
         for node in self.current_nodes:
@@ -383,13 +493,10 @@ class Tree_Progress:
 
     def run_current_nodes(self):
         for node in self.current_nodes:
-            print("##############################")
-            print(node.node_index)
-            print(node.run_manager.run_engine.sample.r1.current)
-            print(node.run_manager.run_engine.sample.r1.current_status)
-            print(node.run_manager.run_params_db)
 
             node.run_manager.run_main()
+
+            self.register_node_leaves(node)
 
 
 class Insaflu_Cli:

@@ -481,9 +481,10 @@ class Assembly_class:
         )
 
         if self.assembly_exists:
-            if os.path.exists(final_file):
-                os.remove(final_file)
+            if os.path.exists(self.assembly_file_fasta_gz):
+                if os.path.exists(final_file):
+                    os.remove(final_file)
 
-            shutil.move(self.assembly_file_fasta_gz, subdirectory)
+                shutil.copy(self.assembly_file_fasta_gz, subdirectory)
 
         self.assembly_file_fasta_gz = final_file

@@ -765,6 +765,17 @@ def Update_Run_Assembly(run_class: RunMain_class, parameter_set: ParameterSet):
 
     try:
         run_assembly = RunAssembly.objects.get(run=runmain, sample=sample)
+        run_assembly.performed = run_class.assembly_report.performed
+        run_assembly.method = run_class.assembly_report.assembly_soft
+        run_assembly.args = run_class.assembly_report.assembly_args
+        run_assembly.contig_number = run_class.assembly_report.assembly_number
+        run_assembly.contig_max = run_class.assembly_report.assembly_max
+        run_assembly.contig_min = run_class.assembly_report.assembly_min
+        run_assembly.contig_mean = run_class.assembly_report.assembly_mean
+        run_assembly.contig_trim = run_class.assembly_report.assembly_trim
+        run_assembly.assembly_contigs = run_class.assembly_drone.assembly_file_fasta_gz
+        run_assembly.save()
+
     except RunAssembly.DoesNotExist:
 
         run_assembly = RunAssembly(
@@ -805,6 +816,23 @@ def Update_Run_Classification(run_class: RunMain_class, parameter_set: Parameter
 
     try:
         read_classification = ReadClassification.objects.get(run=runmain, sample=sample)
+
+        read_classification.read_classification_report = (
+            run_class.read_classification_summary
+        )
+        read_classification.performed = run_class.read_classification_results.performed
+        read_classification.method = run_class.read_classification_results.method
+        read_classification.args = run_class.read_classification_results.args
+        read_classification.db = run_class.read_classification_results.db
+        read_classification.classification_number = (
+            run_class.read_classification_results.classification_number
+        )
+        read_classification.classification_minhit = (
+            run_class.read_classification_results.classification_minhit
+        )
+        read_classification.success = run_class.read_classification_results.success
+        read_classification.save()
+
     except ReadClassification.DoesNotExist:
 
         read_classification = ReadClassification(
@@ -826,6 +854,23 @@ def Update_Run_Classification(run_class: RunMain_class, parameter_set: Parameter
             run=runmain, sample=sample
         )
 
+        contig_classification.contig_classification_report = (
+            run_class.assembly_classification_summary
+        )
+        contig_classification.performed = (
+            run_class.contig_classification_results.performed
+        )
+        contig_classification.method = run_class.contig_classification_results.method
+        contig_classification.args = run_class.contig_classification_results.args
+        contig_classification.db = run_class.contig_classification_results.db
+        contig_classification.classification_number = (
+            run_class.contig_classification_results.classification_number
+        )
+        contig_classification.classification_minhit = (
+            run_class.contig_classification_results.classification_minhit
+        )
+        contig_classification.save()
+
     except ContigClassification.DoesNotExist:
 
         contig_classification = ContigClassification(
@@ -844,6 +889,15 @@ def Update_Run_Classification(run_class: RunMain_class, parameter_set: Parameter
 
     try:
         remap_main = RunRemapMain.objects.get(run=runmain, sample=sample)
+        remap_main.merged_log = run_class.merged_classification_summary
+        remap_main.remap_plan = run_class.remap_plan_path
+        remap_main.performed = run_class.remap_main.performed
+        remap_main.method = run_class.remap_main.method
+        remap_main.found_total = run_class.remap_main.found_total
+        remap_main.coverage_maximum = run_class.remap_main.coverage_max
+        remap_main.coverage_minimum = run_class.remap_main.coverage_min
+        remap_main.success = run_class.remap_main.success
+        remap_main.save()
 
     except RunRemapMain.DoesNotExist:
         remap_main = RunRemapMain(

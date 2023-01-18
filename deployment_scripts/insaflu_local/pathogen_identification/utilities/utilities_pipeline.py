@@ -188,6 +188,17 @@ class PipelineTree:
 
         return df
 
+    def leaves_from_node(self, node):
+        """ """
+        leaves = []
+        if len(self.compress_dag_dict[node]) == 0:
+            return [node]
+
+        for n in self.compress_dag_dict[node]:
+            leaves.extend(self.leaves_from_node(n))
+
+        return leaves
+
     def simplify_tree(self, links, root, party: list, nodes_compress=[], edge_keep=[]):
         """ """
         party.append(root)
@@ -237,9 +248,6 @@ class PipelineTree:
         edge_compress = self.edge_compress
 
         new_nodes = []
-        print("fixing nodes")
-        print(edge_compress)
-
         for node in nodes_compress:
             internal_nodes = []
             internal_edges = []

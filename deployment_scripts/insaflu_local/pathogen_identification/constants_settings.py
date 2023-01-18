@@ -189,7 +189,7 @@ class ConstantsSettings:
     static_directory_product = "product"
     job_directory = "/mnt/sdc/TELEVIR/jobs/"
     media_directory = MEDIA_ROOT
-    static_directory = STATIC_ROOT
+    # static_directory = STATIC_ROOT
     televir_subdirectory = "televir_projects"
     PAGINATE_NUMBER = 10
 
@@ -253,7 +253,7 @@ class ConstantsSettings:
     CONSTANTS_ONT = {
         "minimum_coverage_threshold": 1,
         "max_output_number": 12,
-        "taxid_limit": 15,
+        "taxid_limit": 4,
         "sift_query": "phage",
         "assembly_contig_min_length": 500,
     }

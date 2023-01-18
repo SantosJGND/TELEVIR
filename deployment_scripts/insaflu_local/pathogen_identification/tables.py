@@ -7,20 +7,21 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from managing_files.manage_database import ManageDatabase
-from settings.models import Technology, Parameter
-
 from pathogen_identification.models import (
+    ContigClassification,
     FinalReport,
     ParameterSet,
     PIProject_Sample,
     Projects,
     RawReference,
+    ReadClassification,
     ReferenceContigs,
-    RunMain,
     RunAssembly,
+    RunMain,
+    RunRemapMain,
     SampleQC,
-    ContigClassification,
 )
+from settings.models import Parameter, Technology
 
 
 class ProjectTable(tables.Table):
@@ -522,7 +523,8 @@ class RunMainTable(tables.Table):
         finished_preprocessing = record.report != "initial"
         finished_assembly = RunAssembly.objects.filter(run=record).count() > 0
         finished_classification = (
-            ContigClassification.objects.filter(run=record).count() > 0
+            ContigClassification.objects.filter(run=record).exists()
+            and ReadClassification.objects.filter(run=record).exists()
         )
         finished_processing = FinalReport.objects.filter(run=record).count() > 0
         finished_remapping = record.report == "finished"
