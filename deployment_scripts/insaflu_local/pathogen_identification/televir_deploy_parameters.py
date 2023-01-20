@@ -281,9 +281,9 @@ class Params_Nanopore:
             # "krakenuniq",
             # "fastviromeexplorer",
             # "clark",
-            # "desamba",
-            "kaiju",
-            "centrifuge",
+            "desamba",
+            # "kaiju",
+            # "centrifuge",
             # "diamond",
         ],
         CS.PIPELINE_NAME_remapping: [
@@ -476,8 +476,8 @@ class Params_Nanopore:
         "desamba": {
             "DESAMBA_ARGS": [""],
             "DESAMBA_DB": [
-                "deSAMBA/refseq",
-                "deSAMBA/virosaurus",
+                "desamba/refseq",
+                "desamba/virosaurus",
             ],
             "DESAMBA_QFC": [20],
         },

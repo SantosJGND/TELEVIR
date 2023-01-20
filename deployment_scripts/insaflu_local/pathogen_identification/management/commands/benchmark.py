@@ -7,6 +7,7 @@ import os
 import shutil
 import sys
 from datetime import date
+from threading import Thread
 from tkinter.tix import Tree
 
 import pandas as pd
@@ -496,11 +497,37 @@ class Tree_Progress:
         self.determine_current_module()
 
     def run_current_nodes(self):
+
         for node in self.current_nodes:
 
             node.run_manager.run_main()
 
             self.register_node_leaves(node)
+
+    def run_current_nodes_batch_parallel(self, batch=2):
+
+        import multiprocessing as mp
+
+        node_batches = [
+            self.current_nodes[i : i + batch]
+            for i in range(0, len(self.current_nodes), batch)
+        ]
+
+        for node_batch in node_batches:
+            nproc = len(node_batch)
+            pool = mp.Pool(nproc)
+            drones = [
+                pool.apply_async(node.run_manager.run_main) for node in node_batch
+            ]
+
+            for drone in drones:
+                drone.get()
+
+            for node in node_batch:
+                self.register_node_leaves(node)
+
+            pool.close()
+            pool.join()
 
 
 class Insaflu_Cli:
@@ -904,9 +931,6 @@ class Command(BaseCommand):
 
         deployment_tree = Tree_Progress(software_tree, project_sample, project)
 
-        print(software_tree.nodes_compress)
-        print(software_tree.edge_compress)
-
         print("FIRST")
         print(len(deployment_tree.current_nodes))
         print(deployment_tree.get_current_module())
@@ -936,5 +960,5 @@ class Command(BaseCommand):
         print("SIXTH")
         print(len(deployment_tree.current_nodes))
         print(deployment_tree.get_current_module())
-        deployment_tree.run_current_nodes()
+        deployment_tree.run_current_nodes_batch_parallel()
         # deployment_tree.update_nodes()

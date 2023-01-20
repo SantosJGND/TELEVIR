@@ -517,6 +517,8 @@ class Utility_Pipeline_Manager:
         old_tree_list = old_tree.nodes
         new_tree_list = new_tree.nodes
 
+        new_tree_list = [tuple([str(x) for x in y]) for y in new_tree_list]
+
         old_tree_set = set(old_tree_list)
         new_tree_set = set(new_tree_list)
 
