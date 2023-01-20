@@ -566,6 +566,7 @@ class Insaflu_Cli:
         temp_dir = utils.get_temp_dir()
 
         new_r1 = os.path.join(temp_dir, os.path.basename(r1))
+        new_r2 = None
 
         shutil.copy(r1, new_r1)
 
