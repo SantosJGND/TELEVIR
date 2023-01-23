@@ -21,6 +21,7 @@ from pathogen_identification.models import (
     RunRemapMain,
     SampleQC,
 )
+from settings.constants_settings import ConstantsSettings
 from settings.models import Parameter, Technology
 
 
@@ -526,6 +527,11 @@ class RunMainTable(tables.Table):
             ContigClassification.objects.filter(run=record).exists()
             and ReadClassification.objects.filter(run=record).exists()
         )
+
+        finished_classification = (
+            record.report == ConstantsSettings.PIPELINE_NAME_remapping
+        )
+
         finished_processing = FinalReport.objects.filter(run=record).count() > 0
         finished_remapping = record.report == "finished"
 

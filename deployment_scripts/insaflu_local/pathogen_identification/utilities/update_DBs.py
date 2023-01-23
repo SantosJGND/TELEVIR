@@ -317,7 +317,9 @@ def Update_Assembly(run_class: RunMain_class, parameter_set: ParameterSet):
 
 
 @transaction.atomic
-def Update_Classification(run_class: RunMain_class, parameter_set: ParameterSet):
+def Update_Classification(
+    run_class: RunMain_class, parameter_set: ParameterSet, tag="secondary"
+):
     """get run data
     Update TABLES:
     - RunMain,
@@ -330,7 +332,7 @@ def Update_Classification(run_class: RunMain_class, parameter_set: ParameterSet)
 
     try:
         with transaction.atomic():
-            Update_RunMain_noCheck(run_class, parameter_set)
+            Update_RunMain_noCheck(run_class, parameter_set, tag=tag)
             Update_Run_Classification(run_class, parameter_set)
 
         return True
@@ -593,7 +595,6 @@ def Update_RunMain_noCheck(
     )
     runmain.runtime = f"{run_class.exec_time / 60:.2f} m"
     runmain.report = tag
-    # static_dir=run_class.static_dir,
 
     runmain.save()
 

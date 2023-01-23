@@ -11,6 +11,9 @@ from pathogen_identification.utilities.utilities_general import (
 
 
 class Metadata_handler:
+
+    remap_targets: List[Remap_Target] = []
+
     def __init__(self, config, sift_query: str = "phage", prefix: str = ""):
         """
         Initialize metadata handler.

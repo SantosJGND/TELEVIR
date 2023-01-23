@@ -3,7 +3,7 @@ import os
 import shutil
 import time
 from random import randint
-from typing import Type
+from typing import List, Type
 
 import numpy as np
 import pandas as pd
@@ -23,7 +23,10 @@ from pathogen_identification.modules.object_classes import (
     Software_detail,
 )
 from pathogen_identification.modules.preprocess_class import Preprocess
-from pathogen_identification.modules.remap_class import Mapping_Manager
+from pathogen_identification.modules.remap_class import (
+    Mapping_Instance,
+    Mapping_Manager,
+)
 from settings.constants_settings import ConstantsSettings as CS
 
 
@@ -212,7 +215,7 @@ class RunDetail_main:
         self.merged_targets = pd.DataFrame(columns=["taxid"])
         self.raw_targets = pd.DataFrame(columns=["taxid"])
         self.remap_plan = pd.DataFrame()
-        self.report = pd.DataFrame()
+        self.report = pd.DataFrame(columns=["ngaps", "coverage", "Hdepth"])
 
         self.r1 = Read_class(
             config["r1"],
@@ -504,11 +507,20 @@ class RunDetail_main:
             f"{self.prefix}_mclass_summary.tsv",
         )
 
+    def update_merged_targets(self, targets_df: pd.DataFrame):
+        """
+        Update the merged classification summary file.
+        """
+
+        if "taxid" in targets_df.columns:
+            targets_df["taxid"] = targets_df["taxid"].astype(str)
+            self.merged_targets = targets_df
+
     def Update_exec_time(self):
         """
         Update the execution time of the pipeline.
         """
-        self.exec_time = self.exec_time + time.perf_counter() - self.start_time
+        self.exec_time = self.exec_time + time.perf_counter() - self.exec_time
 
 
 class Run_Deployment_Methods(RunDetail_main):
@@ -677,7 +689,6 @@ class Run_Deployment_Methods(RunDetail_main):
         self.enrichment_drone.run()
 
     def deploy_ASSEMBLY(self, fake_run: bool = False):
-        print(self.assembly_method)
         self.assembly_drone = Assembly_class(
             self.sample.r1.current,
             self.assembly_method,
@@ -729,7 +740,7 @@ class Run_Deployment_Methods(RunDetail_main):
         )
         self.read_classification_drone.run()
 
-    def deploy_REMAPPING(self):
+    def prep_REMAPPING(self):
 
         self.remap_manager = Mapping_Manager(
             self.metadata_tool.remap_targets,
@@ -747,6 +758,8 @@ class Run_Deployment_Methods(RunDetail_main):
             logdir=self.config["directories"]["log_dir"],
         )
 
+    def deploy_REMAPPING(self):
+
         self.logger.info(
             f"{self.prefix} remapping # targets: {len(self.metadata_tool.remap_targets)}"
         )
@@ -754,9 +767,6 @@ class Run_Deployment_Methods(RunDetail_main):
         self.remap_manager.run_mappings_move_clean(
             self.static_dir_plots, self.media_dir_igv
         )
-
-        self.remap_manager.merge_mapping_reports()
-        self.remap_manager.collect_final_report_summary_statistics()
 
 
 class RunMain_class(Run_Deployment_Methods):
@@ -883,12 +893,7 @@ class RunMain_class(Run_Deployment_Methods):
 
     def Run_Assembly(self):
 
-        print("###################### ASSEMBLY 1 ######################")
-        print(self.assembly, self.assembly_performed)
-
         if self.assembly:
-            print("###################### ASSEMBLY ######################")
-
             self.deploy_ASSEMBLY()
             self.assembly_performed = True
 
@@ -912,9 +917,9 @@ class RunMain_class(Run_Deployment_Methods):
         self.Update_exec_time()
         self.generate_output_data_classes()
 
-    def Run_Remapping(self):
+    def plan_remap_prep(self):
 
-        if self.remapping:
+        if len(self.metadata_tool.remap_targets) == 0:
 
             self.metadata_tool.match_and_select_targets(
                 self.read_classification_drone.classification_report,
@@ -922,17 +927,22 @@ class RunMain_class(Run_Deployment_Methods):
                 self.max_remap,
                 self.taxid_limit,
             )
-            self.aclass_summary = self.metadata_tool.aclass
-            self.rclass_summary = self.metadata_tool.rclass
-            self.merged_targets = self.metadata_tool.merged_targets
-            self.raw_targets = self.metadata_tool.raw_targets
-            self.remap_plan = self.metadata_tool.remap_plan
 
+        self.aclass_summary = self.metadata_tool.aclass
+        self.rclass_summary = self.metadata_tool.rclass
+        self.merged_targets = self.metadata_tool.merged_targets
+        self.raw_targets = self.metadata_tool.raw_targets
+        self.remap_plan = self.metadata_tool.remap_plan
+
+    def Run_Remapping(self):
+
+        if self.remapping:
+
+            self.plan_remap_prep()
             self.export_intermediate_reports()
 
+            self.prep_REMAPPING()
             self.deploy_REMAPPING()
-            self.report = self.remap_manager.report
-            self.export_final_reports()
 
             self.remapping_performed = True
 
@@ -940,6 +950,17 @@ class RunMain_class(Run_Deployment_Methods):
         self.generate_output_data_classes()
 
     #### SUMMARY FUNCTIONS ####
+
+    def update_mapped_instances(self, mapped_instance: List[Mapping_Instance]):
+        """Update the remap manager with the new mapped instances, register."""
+        self.prep_REMAPPING()
+        print("updating mapped instances, run", self.prefix)
+        self.remap_manager.update_mapped_instances(mapped_instance)
+        print("updating mapped instances done")
+        print(self.prefix, len(self.remap_manager.mapped_instances))
+        self.remapping_performed = True
+        self.generate_output_data_classes()
+        self.Update_exec_time()
 
     def export_logdir(self):
 
@@ -994,6 +1015,11 @@ class RunMain_class(Run_Deployment_Methods):
             f.write(f"ENRICHED\t{self.sample.r1.read_number_enriched}\n")
 
     def generate_output_data_classes(self):
+
+        ### merge mapping results if exist.
+        self.remap_manager.merge_mapping_reports()
+        self.remap_manager.collect_final_report_summary_statistics()
+        self.report = self.remap_manager.report
         ### transfer to sample class
         processed_reads = self.sample.reads_after_processing
 
@@ -1010,7 +1036,7 @@ class RunMain_class(Run_Deployment_Methods):
         final_processing_percent = (final_processing_reads / processed_reads) * 100
 
         ### transfer to assembly class / drone.
-        print(self.aclass_summary)
+
         minhit_assembly = self.aclass_summary["counts"].min()
         if not minhit_assembly or not self.aclass_summary.shape[0]:
             minhit_assembly = 0

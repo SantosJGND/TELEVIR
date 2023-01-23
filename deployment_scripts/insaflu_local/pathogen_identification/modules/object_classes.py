@@ -419,6 +419,9 @@ class RunCMD:
 
 
 class Read_class:
+
+    history: list = []
+
     def __init__(
         self,
         filepath,
@@ -456,6 +459,8 @@ class Read_class:
         self.read_number_enriched = 0
         self.read_number_depleted = 0
         self.read_number_filtered = 0
+
+        self.history = [self.current]
 
     def update(self, new_suffix, clean_dir: str, enriched_dir: str, depleted_dir: str):
         self.prefix = self.prefix.replace(self.suffix, new_suffix)
@@ -563,6 +568,12 @@ class Read_class:
 
         self.cmd.run(cmd)
 
+    def update_history(self):
+        """
+        Update history of read file.
+        """
+        self.history.append(self.current)
+
     def enrich(self, read_list):
         """
         filter reads and set current status to enriched.
@@ -585,33 +596,38 @@ class Read_class:
             self.read_filter_move(self.current, read_list_to_keep, self.depleted)
             self.is_depleted()
 
+    def update_current(self, filepath):
+        """
+        Update current file.
+        """
+        self.current = filepath
+        self.filepath = os.path.dirname(self.current)
+        self.update_history()
+
     def is_clean(self):
         """
         Set current status to clean.
         """
-        self.current = self.clean
+        self.update_current(self.clean)
         self.read_number_clean = self.get_current_fastq_read_number()
         self.current_status = "clean"
-        self.filepath = os.path.dirname(self.current)
 
     def is_enriched(self):
         """
         Set current status to enriched.
         """
-        self.current = self.enriched
+        self.update_current(self.enriched)
         self.read_number_enriched = self.get_current_fastq_read_number()
         self.current_status = "enriched"
-        self.filepath = os.path.dirname(self.current)
         self.read_number_filtered = self.read_number_enriched
 
     def is_depleted(self):
         """
         Set current status to depleted.
         """
-        self.current = self.depleted
+        self.update_current(self.depleted)
         self.read_number_depleted = self.get_current_fastq_read_number()
         self.current_status = "depleted"
-        self.filepath = os.path.dirname(self.current)
         self.read_number_filtered = self.read_number_depleted
 
     def get_current_fastq_read_number(self):
@@ -780,6 +796,14 @@ class Sample_runClass:
         self.QCdir = os.path.dirname(self.r1.clean)
 
         self.reads_before_processing = self.r1.read_number_raw + self.r2.read_number_raw
+
+    def sources_list(self):
+        return tuple(
+            [
+                self.r1.history[-1],
+                self.r2.history[-1],
+            ]
+        )
 
     def current_total_read_number(self):
         print("current total")

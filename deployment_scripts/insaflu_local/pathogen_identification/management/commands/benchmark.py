@@ -9,6 +9,7 @@ import sys
 from datetime import date
 from threading import Thread
 from tkinter.tix import Tree
+from typing import List
 
 import pandas as pd
 from constants.constants import Televir_Metadata_Constants as Televir_Metadata
@@ -26,6 +27,7 @@ from pathogen_identification.models import (
     SoftwareTree,
     SoftwareTreeNode,
 )
+from pathogen_identification.modules.remap_class import Mapping_Instance
 from pathogen_identification.modules.run_main import RunMain_class
 from pathogen_identification.utilities.benchmark_graph_utils import pipeline_tree
 from pathogen_identification.utilities.update_DBs import (
@@ -202,6 +204,9 @@ class PathogenIdentification_Deployment_Manager:
         self.update_config()
         self.run_engine.Update(self.config, self.run_params_db)
 
+    def update_merged_targets(self, merged_targets: pd.DataFrame):
+        self.run_engine.update_merged_targets(merged_targets)
+
 
 class Tree_Node:
     module: str
@@ -323,9 +328,37 @@ class Tree_Node:
         return parameters_df
 
 
+class PathogenDeployment_Iterator:
+    def __init__(self):
+        self.deplyment_list = []
+
+    def add_deployment(self, deployment: PathogenIdentification_Deployment_Manager):
+        self.deplyment_list.append(deployment)
+
+    def __getitem__(self, index):
+        return self.deplyment_list[index]
+
+    def __len__(self):
+        return len(self.deplyment_list)
+
+
+class TreeNode_Iterator:
+    def __init__(self):
+        self.node_list = []
+
+    def add_node(self, node: Tree_Node):
+        self.node_list.append(node)
+
+    def __getitem__(self, index) -> Tree_Node:
+        return self.node_list[index]
+
+    def __len__(self):
+        return len(self.node_list)
+
+
 class Tree_Progress:
     tree: PipelineTree
-    current_nodes: list
+    current_nodes: List[Tree_Node]
     current_module: str
 
     sample: PIProject_Sample
@@ -377,6 +410,12 @@ class Tree_Progress:
         return deployment_manager
 
     def register_node_leaves(self, node: Tree_Node):
+
+        if len(node.leaves) == 0:
+            print("leaf node")
+            print(node.node_index)
+            self.submit_node_run(node)
+
         for leaf in node.leaves:
             leaf_node = self.spawn_node_child(node, leaf)
             self.submit_node_run(leaf_node)
@@ -393,6 +432,7 @@ class Tree_Progress:
         self.register_node_leaves(origin_node)
 
         self.current_nodes = [origin_node]
+        # self.current_nodes.add_node(origin_node)
 
     def get_current_module(self):
         return self.current_module
@@ -418,7 +458,7 @@ class Tree_Progress:
 
         return registraction_success
 
-    def update_node_dbs(self, node: Tree_Node):
+    def update_node_dbs(self, node: Tree_Node, step="initial"):
 
         try:
             db_updated = Update_RunMain_Initial(
@@ -449,7 +489,7 @@ class Tree_Progress:
                 or node.run_manager.run_engine.contig_classification_performed
             ):
                 db_updated = Update_Classification(
-                    node.run_manager.run_engine, node.parameter_set
+                    node.run_manager.run_engine, node.parameter_set, tag=step
                 )
                 if not db_updated:
                     return False
@@ -457,6 +497,7 @@ class Tree_Progress:
             if node.run_manager.run_engine.remapping_performed:
                 print("##### EXPORTING SEQUENCES #####")
                 node.run_manager.run_engine.export_sequences()
+                node.run_manager.run_engine.export_final_reports()
                 node.run_manager.run_engine.Summarize()
                 node.run_manager.run_engine.generate_output_data_classes()
                 node.run_manager.run_engine.export_logdir()
@@ -480,7 +521,197 @@ class Tree_Progress:
         if not registration_success:
             return
 
-        self.update_node_dbs(node)
+        self.update_node_dbs(node, step=node.module)
+
+    def merge_node_targets(self):
+        node_merged_targets = [
+            n.run_manager.run_engine.merged_targets for n in self.current_nodes
+        ]
+        node_merged_targets = pd.concat(node_merged_targets, axis=0)
+        node_merged_targets = node_merged_targets.drop_duplicates(subset=["taxid"])
+
+        return node_merged_targets
+
+    @staticmethod
+    def get_remap_plans(nodes: List[Tree_Node]):
+
+        for n in nodes:
+            n.run_manager.run_engine.plan_remap_prep()
+
+        return nodes
+
+    def merge_node_targets_list(self, targetdf_list: List[Tree_Node]):
+
+        node_merged_targets = [
+            n.run_manager.run_engine.merged_targets for n in targetdf_list
+        ]
+
+        print("Merging node targets: " + str(len(node_merged_targets)))
+        print(node_merged_targets)
+        node_merged_targets = pd.concat(node_merged_targets, axis=0).reset_index()
+        print(node_merged_targets)
+
+        return node_merged_targets
+
+    def get_node_node_targets(self, nodes_list: List[Tree_Node]):
+
+        node_merged_targets = self.merge_node_targets_list(nodes_list)
+
+        node_merged_targets = self.process_mapping_managerdf(node_merged_targets)
+
+        return node_merged_targets
+
+    @staticmethod
+    def process_mapping_managerdf(df: pd.DataFrame):
+        if "accid" in df.columns:
+            df = df.drop_duplicates(subset=["accid"])
+        if "protein_id" in df.columns:
+            df = df.drop_duplicates(subset=["protein_id"])
+        if "accession_id" in df.columns:
+            df = df.drop_duplicates(subset=["accession_id"])
+
+        return df
+
+    def group_nodes_by_sample_sources(self):
+        nodes_by_sample_sources = {}
+        for node in self.current_nodes:
+            sample_source = node.run_manager.run_engine.sample.sources_list()
+            if sample_source not in nodes_by_sample_sources.keys():
+                nodes_by_sample_sources[sample_source] = []
+            nodes_by_sample_sources[sample_source].append(node)
+        return nodes_by_sample_sources
+
+    def group_nodes_by_source_and_parameters(self) -> List[List[Tree_Node]]:
+
+        source_paramaters_combinations = {}
+
+        def check_node_in_combination_dict(node: Tree_Node):
+            sample_source = node.run_manager.run_engine.sample.sources_list()
+            parameters = node.parameters
+            for source, register in source_paramaters_combinations.items():
+                if sample_source == register["source"] and parameters.equals(
+                    register["parameters"]
+                ):
+                    return source
+
+            return None
+
+        def combination_dict_new_entry(node, sample_source, parameters):
+            new_entry_idx = len(source_paramaters_combinations)
+            source_paramaters_combinations[new_entry_idx] = {
+                "source": sample_source,
+                "parameters": parameters,
+                "nodes": [node],
+            }
+
+        def update_combination_dict(node: Tree_Node):
+            sample_source = node.run_manager.run_engine.sample.sources_list()
+            parameters = node.parameters
+            source = check_node_in_combination_dict(node)
+
+            if source is None:
+                combination_dict_new_entry(node, sample_source, parameters)
+            else:
+                source_paramaters_combinations[source]["nodes"].append(node)
+
+        for node in self.current_nodes:
+            update_combination_dict(node)
+
+        print("####### GROUPED NODES #######")
+        print(source_paramaters_combinations)
+
+        grouped_nodes = [
+            register["nodes"]
+            for source, register in source_paramaters_combinations.items()
+        ]
+
+        return grouped_nodes
+
+    def group_nodes_by_module(self):
+        nodes_by_module = {}
+        for node in self.current_nodes:
+            if node.module not in nodes_by_module:
+                nodes_by_module[node.module] = []
+            nodes_by_module[node.module].append(node)
+        return nodes_by_module
+
+    def process_subject(self, volonteer: Tree_Node, group_targets: pd.DataFrame):
+        original_targets = copy.deepcopy(
+            volonteer.run_manager.run_engine.merged_targets
+        )
+        print("volonteer: " + str(volonteer.node_index))
+        print("original targets:")
+        print(original_targets)
+        print(original_targets.shape)
+
+        volonteer.run_manager.update_merged_targets(group_targets)
+        print("updated targets:")
+        print(volonteer.run_manager.run_engine.merged_targets.shape)
+
+        volonteer.run_manager.run_main()
+
+        volonteer.run_manager.update_merged_targets(original_targets)
+        print("final_targets:")
+        print(volonteer.run_manager.run_engine.merged_targets.shape)
+
+        mapped_instances_shared = (
+            volonteer.run_manager.run_engine.remap_manager.mapped_instances
+        )
+
+        return mapped_instances_shared
+
+    def stacked_deployement(self, nodes_by_sample_sources: List[List[Tree_Node]]):
+
+        current_nodes = []
+
+        for nodes in nodes_by_sample_sources:
+
+            if len(nodes) == 0:
+                continue
+
+            nodes = self.get_remap_plans(nodes)
+
+            group_targets = self.get_node_node_targets(nodes)
+            volonteer = nodes[0]
+
+            print("################## PROCESSING SUBJECT ##################")
+            print(nodes)
+            print(group_targets)
+
+            mapped_instances_shared = self.process_subject(volonteer, group_targets)
+
+            print("################## PROCESSING SUBJECT DONE ##################")
+            print("################## UPDATING MAPPED INSTANCES ##################")
+            print(f"mapped_instances_shared: {len(mapped_instances_shared)}")
+
+            nodes = self.update_mapped_instances(nodes, mapped_instances_shared)
+
+            print("### mapped_instances_shared ###")
+            print(
+                [n.run_manager.run_engine.remap_manager.mapped_instances for n in nodes]
+            )
+
+            current_nodes.extend(nodes)
+
+        if len(current_nodes) > 0:
+            self.current_nodes = current_nodes
+
+    @staticmethod
+    def update_mapped_instances(
+        nodes_to_update: List[Tree_Node],
+        mapped_instances_shared: List[Mapping_Instance],
+    ):
+        new_nodes = []
+
+        for node in nodes_to_update:
+            node.run_manager.run_engine.update_mapped_instances(mapped_instances_shared)
+            new_nodes.append(node)
+        return new_nodes
+
+    def run_simplified_mapping(self):
+        nodes_by_sample_sources = self.group_nodes_by_source_and_parameters()
+        print(nodes_by_sample_sources)
+        self.stacked_deployement(nodes_by_sample_sources)
 
     def update_nodes(self):
         new_nodes = []
@@ -499,10 +730,34 @@ class Tree_Progress:
     def run_current_nodes(self):
 
         for node in self.current_nodes:
+            self.run_node(node)
 
-            node.run_manager.run_main()
+    def run_node(self, node: Tree_Node):
+        node.run_manager.run_main()
+
+    def run_nodes_sequential(self):
+        self.run_current_nodes()
+        self.register_current_nodes()
+        self.update_nodes()
+
+    def run_nodes_simply(self):
+        self.run_simplified_mapping()
+        self.register_current_nodes()
+        self.update_nodes()
+
+    def register_current_nodes(self):
+        for node in self.current_nodes:
 
             self.register_node_leaves(node)
+
+    def deploy_nodes(self):
+        if self.current_module == "end":
+            return
+
+        if self.current_module == ConstantsSettings.PIPELINE_NAME_remapping:
+            self.run_nodes_simply()
+        else:
+            self.run_nodes_sequential()
 
     def run_current_nodes_batch_parallel(self, batch=2):
 
@@ -932,6 +1187,8 @@ class Command(BaseCommand):
 
         deployment_tree = Tree_Progress(software_tree, project_sample, project)
 
+        print("leaves: ", software_tree.compress_dag_dict)
+
         print("FIRST")
         print(len(deployment_tree.current_nodes))
         print(deployment_tree.get_current_module())
@@ -940,26 +1197,22 @@ class Command(BaseCommand):
         print("SECOND")
         print(len(deployment_tree.current_nodes))
         print(deployment_tree.get_current_module())
-        deployment_tree.run_current_nodes()
-        deployment_tree.update_nodes()
+        deployment_tree.deploy_nodes()
         print("THIRD")
         print(len(deployment_tree.current_nodes))
         print(deployment_tree.get_current_module())
-        deployment_tree.run_current_nodes()
-        deployment_tree.update_nodes()
+        deployment_tree.deploy_nodes()
         print("FOURTH")
         print(len(deployment_tree.current_nodes))
         print(deployment_tree.get_current_module())
-        deployment_tree.run_current_nodes()
-        deployment_tree.update_nodes()
+        deployment_tree.deploy_nodes()
         print("FIFTH")
         print(len(deployment_tree.current_nodes))
         print(deployment_tree.get_current_module())
-        deployment_tree.run_current_nodes()
-        deployment_tree.update_nodes()
+        deployment_tree.deploy_nodes()
 
         print("SIXTH")
         print(len(deployment_tree.current_nodes))
         print(deployment_tree.get_current_module())
-        deployment_tree.run_current_nodes_batch_parallel()
+        deployment_tree.deploy_nodes()
         # deployment_tree.update_nodes()
