@@ -130,7 +130,10 @@
 {% load static from staticfiles %}
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 <script>
+    
     $("#deploypi_btn").click(function(){
+        console.log("Hello");
+        console.log($('#deploypi_btn').attr("deploy-url"))
         $.ajax({
             url: $('#deploypi_btn').attr("deploy-url"),
             type: "POST",
@@ -156,7 +159,8 @@
 </script>
 
 <script type="text/javascript" src="{% static 'js/televir_projects/remove_project_sample.js' %}"></script>
-<script>
+
+<script  src="http://malsup.github.io/jquery.blockUI.js">
 	$(document).ready(function () {
 		$('#id-cancel-button').click(function () {
 			$.unblockUI();
@@ -168,6 +172,7 @@
 
 	/// set wait screen
 	$(document).on("click", "a", function (e) {
+        console.log("clicked")
 		var id_ = $(this).attr('id');
 		var href = $(this).attr('href');
 		var onclick = $(this).attr('onclick');

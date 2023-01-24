@@ -199,6 +199,36 @@ class PipelineTree:
 
         return leaves
 
+    def reduced_tree(self, leaves_list: list):
+        """trims paths not leading to provided leaves"""
+        if len(leaves_list) == 0:
+            return self.dag_dict
+
+        for n in leaves_list:
+            if n not in self.leaves:
+                self.logger.info(f"Node {n} is not a leaf")
+                return self.dag_dict
+
+        paths = self.get_all_graph_paths_explicit()
+        compressed_paths = {z: paths[z] for z in leaves_list}
+
+        new_nodes = it.chain(*[x for x in compressed_paths.values()])
+        new_nodes = set(new_nodes)
+        new_nodes = sorted(new_nodes, key=lambda x: x[0])
+        new_nodes = [x[1] for x in new_nodes]
+
+        new_dag_dict = {n: [] for n, i in enumerate(new_nodes)}
+
+        for k, p in compressed_paths.items():
+            for n in p[:-1]:
+                parent = p[p.index(n) - 1]
+                parent_ix = new_nodes.index(parent[1])
+                n_ix = new_nodes.index(n[1])
+                if n_ix not in new_dag_dict[parent_ix]:
+                    new_dag_dict[parent_ix].append(n_ix)
+
+        return new_dag_dict, new_nodes
+
     def simplify_tree(self, links, root, party: list, nodes_compress=[], edge_keep=[]):
         """ """
         party.append(root)
@@ -799,11 +829,18 @@ class Utility_Pipeline_Manager:
         """"""
 
         self.logger.info("Matching path to tree")
+        print("Matching path to tree")
+        pipe_tree.node_index = pipe_tree.node_index.sort_index()
+
+        pipe_tree.nodes = pipe_tree.node_index.node
 
         self.logger.info("Generating node index dict")
         nodes_index_dict = self.node_index_dict(pipe_tree)
+
         self.logger.info("Generating explicit edge dict")
         explicit_edge_dict = self.generate_explicit_edge_dict(pipe_tree)
+
+        print(pipe_tree.nodes)
 
         parent = explicit_path[0]
         parent_main = (0, ("root", None, None))
@@ -1330,11 +1367,15 @@ class Utils_Manager:
 
         ###
         self.parameter_util = Parameter_DB_Utility()
+        print("parameter_util initialized")
+        print(Televir_Directories.docker_app_directory)
 
         self.utility_repository = Utility_Repository(
             db_path=Televir_Directories.docker_app_directory,
-            install_type="docker",
+            install_type="local",
         )
+
+        print("utility_repository initialized")
 
         self.utility_technologies = self.parameter_util.get_technologies_available()
         self.utility_manager = Utility_Pipeline_Manager()
@@ -1367,6 +1408,7 @@ class Utils_Manager:
         technology = project.technology
         samples = PIProject_Sample.objects.filter(project=project)
         local_tree = self.generate_project_tree(technology, project, user)
+        print("local tree generated")
 
         self.logger.info("Checking runs to deploy")
         tree_makeup = local_tree.makeup
@@ -1375,16 +1417,23 @@ class Utils_Manager:
         self.logger.info("Pipeline tree generated")
         pipeline_tree_index = self.get_software_tree_index(technology, tree_makeup)
         self.logger.info("Pipeline tree index generated")
+        print("pipeline tree generated")
         local_paths = local_tree.get_all_graph_paths_explicit()
+        print("local paths generated")
         sample = samples[0]
 
         runs_to_deploy = 0
         self.logger.info(
             "now going to start checking if existing paths correspond to branches in trees"
         )
+
+        print(pipeline_tree.node_index.node.unique())
+        print(tree_makeup, pipeline_tree_index)
+
         for sample in samples:
 
             for leaf, path in local_paths.items():
+                print(leaf, path)
 
                 try:
                     matched_path = self.utility_manager.match_path_to_tree(
@@ -1394,6 +1443,12 @@ class Utils_Manager:
                     self.logger.info("Path not matched to tree")
                     self.logger.info(e)
                     continue
+
+                if matched_path == None:
+                    continue
+
+                print("matched path to tree")
+                print(matched_path)
 
                 self.logger.info("Matched path to tree")
 
@@ -1451,6 +1506,35 @@ class Utils_Manager:
 
         else:
             raise Exception("No software tree for technology")
+
+    def pipe_tree_from_dag_dict(
+        self, dag_dict: dict, nodes: list, technology: str, tree_makeup: int
+    ) -> PipelineTree:
+        """
+        Generate a pipeline tree from a dag dict
+        """
+
+        node_index = [(i, n) for i, n in enumerate(nodes)]
+
+        nodes = []
+        edges = {}
+        edge_list = []
+        leaves = []
+        for node in dag_dict:
+            nodes.append(node)
+            for child in dag_dict[node]:
+                edge_list.append((node, child))
+
+            if len(dag_dict[node]) == 0:
+                leaves.append(node)
+
+        return PipelineTree(
+            node_index=node_index,
+            edges=edge_list,
+            leaves=leaves,
+            technology=technology,
+            makeup=tree_makeup,
+        )
 
     def generate_software_base_tree(self, technology, tree_makeup: int):
         """
