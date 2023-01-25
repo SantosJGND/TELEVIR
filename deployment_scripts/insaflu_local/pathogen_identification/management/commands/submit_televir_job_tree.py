@@ -5,33 +5,18 @@ from typing import List
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from managing_files.models import ProcessControler
-from pathogen_identification.constants_settings import ConstantsSettings
-from pathogen_identification.deployment_main import Run_Main_from_Leaf
 from pathogen_identification.models import (
-    ParameterSet,
     PIProject_Sample,
     Projects,
     SoftwareTree,
     SoftwareTreeNode,
 )
+from pathogen_identification.utilities.tree_deployment import Tree_Progress
 from pathogen_identification.utilities.utilities_pipeline import (
-    Parameter_DB_Utility,
-    PipelineTree,
     Utility_Pipeline_Manager,
     Utils_Manager,
 )
 from utils.process_SGE import ProcessSGE
-
-
-class Sample_Staging:
-    """
-    Class to stage samples for a project
-    """
-
-    def __init__(self, sample: PIProject_Sample):
-
-        self.sample = sample
-        self.is_deleted = self.sample.is_deleted
 
 
 class Command(BaseCommand):
@@ -119,7 +104,50 @@ class Command(BaseCommand):
         pipeline_utils = Utility_Pipeline_Manager()
         module_tree = pipeline_utils.compress_software_tree(reduced_tree)
 
+        print("####")
+        print(local_tree.get_all_graph_paths_explicit())
+
+        print(local_tree.leaves)
+        print(module_tree.node_index)
+
+        print(module_tree.nodes_compress)
+        print(module_tree.edge_compress)
+
         print(module_tree.compress_dag_dict)
-        # for project_sample in samples:
-        #    if not project_sample.is_deleted:
-        #        for leaf, path in available_paths_explicit.items():
+
+        project_sample = samples[0]
+        deployment_tree = Tree_Progress(module_tree, project_sample, project)
+
+        """
+        for project_sample in samples:
+            if not project_sample.is_deleted:
+                deployment_tree = Tree_Progress(module_tree, project_sample, project)
+
+                print("FIRST")
+                print(len(deployment_tree.current_nodes))
+                print(deployment_tree.get_current_module())
+                deployment_tree.run_current_nodes()
+                deployment_tree.update_nodes()
+                print("SECOND")
+                print(len(deployment_tree.current_nodes))
+                print(deployment_tree.get_current_module())
+                deployment_tree.deploy_nodes()
+                print("THIRD")
+                print(len(deployment_tree.current_nodes))
+                print(deployment_tree.get_current_module())
+                deployment_tree.deploy_nodes()
+                print("FOURTH")
+                print(len(deployment_tree.current_nodes))
+                print(deployment_tree.get_current_module())
+                deployment_tree.deploy_nodes()
+                print("FIFTH")
+                print(len(deployment_tree.current_nodes))
+                print(deployment_tree.get_current_module())
+                deployment_tree.deploy_nodes()
+
+                print("SIXTH")
+                print(len(deployment_tree.current_nodes))
+                print(deployment_tree.get_current_module())
+                deployment_tree.deploy_nodes()
+        
+        """

@@ -521,7 +521,10 @@ class setup_dl:
 
         fl = "https://viralzone.expasy.org/resources/Virosaurus/2020_4/virosaurus90_vertebrate-20200330.fas.gz"
 
-        if not os.path.isfile(self.seqdir + os.path.basename(fl)):
+        if (
+            not os.path.isfile(self.seqdir + os.path.basename(fl))
+            or os.path.getsize(self.seqdir + os.path.basename(fl)) <= 100
+        ):
             if self.test:
                 logging.info("virosaurus90_vertebrate_20200330.fas not found.")
                 return False
@@ -535,6 +538,23 @@ class setup_dl:
                     )
                 except subprocess.CalledProcessError:
                     logging.info("wget failed. trying curl...")
+                    return False
+
+                if (
+                    not os.path.isfile(self.seqdir + os.path.basename(fl))
+                    or os.path.getsize(self.seqdir + os.path.basename(fl)) <= 100
+                ):
+
+                    logging.info("curl failed. trying curl...")
+                    subprocess.run(
+                        ["curl", fl, "-o", self.seqdir + os.path.basename(fl)]
+                    )
+
+                if (
+                    not os.path.isfile(self.seqdir + os.path.basename(fl))
+                    or os.path.getsize(self.seqdir + os.path.basename(fl)) <= 100
+                ):
+                    logging.info("virosaurus download failed.")
                     return False
         else:
             logging.info("virosaurus90_vertebrate_20200330.fas found.")

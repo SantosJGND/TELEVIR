@@ -213,15 +213,19 @@ class PipelineTree:
         compressed_paths = {z: paths[z] for z in leaves_list}
 
         new_nodes = it.chain(*[x for x in compressed_paths.values()])
-        new_nodes = set(new_nodes)
+
         new_nodes = sorted(new_nodes, key=lambda x: x[0])
         new_nodes = [x[1] for x in new_nodes]
+        new_nodes_no_duplicates_same_order = list(dict.fromkeys(new_nodes))
+        new_nodes = new_nodes_no_duplicates_same_order
 
         new_dag_dict = {n: [] for n, i in enumerate(new_nodes)}
 
         for k, p in compressed_paths.items():
-            for n in p[:-1]:
-                parent = p[p.index(n) - 1]
+            for ix in range(1, len(p)):
+                n = p[ix]
+                parent = p[ix - 1]
+
                 parent_ix = new_nodes.index(parent[1])
                 n_ix = new_nodes.index(n[1])
                 if n_ix not in new_dag_dict[parent_ix]:
