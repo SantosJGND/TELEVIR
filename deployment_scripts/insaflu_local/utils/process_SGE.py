@@ -651,7 +651,7 @@ class ProcessSGE(object):
         """
         process_controler = ProcessControler()
         vect_command = [
-            "sudo python  {} create_sample_list_by_user --user_id {} {}".format(
+            "sudo .venv/bin/python  {} create_sample_list_by_user --user_id {} {}".format(
                 os.path.join(settings.BASE_DIR, "manage.py"),
                 user.pk,
                 "--settings fluwebvirus.settings_test" if b_test else "",

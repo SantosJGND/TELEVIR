@@ -276,7 +276,10 @@ class Tree_Node:
 
         try:
             parameter_set = ParameterSet.objects.get(
-                project=project, sample=sample, status=ParameterSet.STATUS_FINISHED
+                project=project,
+                sample=sample,
+                status=ParameterSet.STATUS_FINISHED,
+                leaf=node,
             )
 
         except ParameterSet.DoesNotExist:
