@@ -199,8 +199,15 @@ class Tree_Node:
     run_manager: PathogenIdentification_Deployment_Manager
     tree_node: SoftwareTreeNode
     parameter_set: ParameterSet
+    root: bool = False
 
-    def __init__(self, pipe_tree: PipelineTree, node_index: int, software_tree_pk: int):
+    def __init__(
+        self,
+        pipe_tree: PipelineTree,
+        node_index: int,
+        software_tree_pk: int,
+        root: bool = False,
+    ):
 
         node_metadata = pipe_tree.node_index.loc[node_index].node
         print(node_metadata)
@@ -216,6 +223,7 @@ class Tree_Node:
         self.parameters = self.determine_params(pipe_tree)
         self.software_tree_pk = software_tree_pk
         self.leaves = pipe_tree.leaves_from_node(node_index)
+        self.root = root
 
     def receive_run_manager(
         self, run_manager: PathogenIdentification_Deployment_Manager
@@ -224,7 +232,7 @@ class Tree_Node:
         run_manager.configure()
         run_manager.import_params(self.parameters)
 
-        if self.node_index == 0:
+        if self.root:
             run_manager.run_main_prep()
 
         self.run_manager = run_manager
@@ -239,6 +247,15 @@ class Tree_Node:
 
         node_metadata = pipe_tree.node_index.loc[self.node_index].node
         software_tree = SoftwareTree.objects.get(pk=self.software_tree_pk)
+        print(self.node_index)
+        tree_node = SoftwareTreeNode.objects.filter(
+            software_tree=software_tree,
+            index=self.node_index,
+            name=node_metadata[0],
+            value=node_metadata[1],
+            node_type=node_metadata[2],
+        )
+        print(tree_node)
 
         try:
             tree_node = SoftwareTreeNode.objects.get(
@@ -340,6 +357,8 @@ class TreeNode_Iterator:
 
 
 class Tree_Progress:
+    """takes compressed pipeline tree only"""
+
     tree: PipelineTree
     current_nodes: List[Tree_Node]
     current_module: str
@@ -363,8 +382,14 @@ class Tree_Progress:
         self.sample = sample
         self.project = project
 
+        self.root = self.determine_root(pipe_tree)
         self.initialize_nodes()
         self.determine_current_module()
+
+    @staticmethod
+    def determine_root(pipeline_tree: PipelineTree):
+        root = [node[0] for node in pipeline_tree.nodes_compress if 0 in node[1]]
+        return root[0]
 
     def setup_deployment_manager(self):
         utils = Utils()
@@ -405,7 +430,7 @@ class Tree_Progress:
 
     def initialize_nodes(self):
         origin_node = Tree_Node(
-            self.tree, 0, software_tree_pk=self.tree.software_tree_pk
+            self.tree, self.root, software_tree_pk=self.tree.software_tree_pk, root=True
         )
 
         run_manager = self.setup_deployment_manager()
@@ -740,6 +765,9 @@ class Tree_Progress:
             self.register_node_leaves(node)
 
     def deploy_nodes(self):
+        print("deploying nodes")
+        print(self.current_module)
+        print(self.current_nodes)
         if self.current_module == "end":
             return
 

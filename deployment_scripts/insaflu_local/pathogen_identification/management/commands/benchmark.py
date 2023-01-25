@@ -253,12 +253,24 @@ class Tree_Node:
 
     def generate_software_tree_node_entry(self, pipe_tree: PipelineTree):
 
+        print("is node leaf?", self._is_node_leaf())
         if not self._is_node_leaf():
             return
 
         node_metadata = pipe_tree.node_index.loc[self.node_index].node
         software_tree = SoftwareTree.objects.get(pk=self.software_tree_pk)
 
+        print("software tree", software_tree)
+        print("node metadata", node_metadata)
+        tree_node = SoftwareTreeNode.objects.filter(
+            software_tree=software_tree,
+            index=self.node_index,
+            name=node_metadata[0],
+            value=node_metadata[1],
+            node_type=node_metadata[2],
+        )
+
+        print(tree_node)
         try:
             tree_node = SoftwareTreeNode.objects.get(
                 software_tree=software_tree,
@@ -294,6 +306,7 @@ class Tree_Node:
     def register(self, project: Projects, sample: PIProject_Sample, tree: PipelineTree):
 
         tree_node = self.generate_software_tree_node_entry(tree)
+        print("tree node", tree_node)
         if tree_node is None:
             return False
 
@@ -308,6 +321,7 @@ class Tree_Node:
         return True
 
     def determine_params(self, pipe_tree):
+
         arguments_list = []
         for node in self.branch:
 
@@ -317,6 +331,9 @@ class Tree_Node:
         arguments_df = pd.DataFrame(
             arguments_list, columns=["parameter", "value", "flag"]
         )
+
+        if self.node_index == 0:
+            print(arguments_df)
 
         module_df = arguments_df[arguments_df.flag == "module"]
         module = module_df.parameter.values[0]
@@ -382,6 +399,8 @@ class Tree_Progress:
 
         self.initialize_nodes()
         self.determine_current_module()
+
+        print(pipe_tree.node_index)
 
     def setup_deployment_manager(self):
         utils = Utils()
@@ -450,6 +469,7 @@ class Tree_Progress:
         return new_node
 
     def register_node(self, node: Tree_Node):
+        print("registering node")
 
         if node.run_manager.sent:
             return False
@@ -1188,7 +1208,7 @@ class Command(BaseCommand):
         deployment_tree = Tree_Progress(software_tree, project_sample, project)
 
         print("leaves: ", software_tree.compress_dag_dict)
-
+        """
         print("FIRST")
         print(len(deployment_tree.current_nodes))
         print(deployment_tree.get_current_module())
@@ -1216,3 +1236,4 @@ class Command(BaseCommand):
         print(deployment_tree.get_current_module())
         deployment_tree.deploy_nodes()
         # deployment_tree.update_nodes()
+        """

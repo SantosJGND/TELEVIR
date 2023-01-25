@@ -44,10 +44,16 @@ class PipelineTree:
     edges: list
     leaves: list
     makeup: int
-    software_tree_pk: int = 0
+    software_tree_pk: int
 
     def __init__(
-        self, technology: str, node_index: list, edges: list, leaves: list, makeup: int
+        self,
+        technology: str,
+        node_index: list,
+        edges: list,
+        leaves: list,
+        makeup: int,
+        software_tree_pk: int = 0,
     ):
 
         self.technology = technology
@@ -58,6 +64,7 @@ class PipelineTree:
         self.leaves = leaves
         self.edge_dict = [(x[0], x[1]) for x in self.edges]
         self.makeup = makeup
+        self.software_tree_pk = software_tree_pk
 
         self.logger = logging.getLogger(__name__)
         self.logger.info(
@@ -90,8 +97,7 @@ class PipelineTree:
         return parents_dict
 
     def node_from_index(self, nix):
-
-        return self.nodes[nix]
+        return self.node_index.loc[nix].node
 
     def get_path_explicit(self, path: list) -> list:
         """return nodes names for nodes index list"""
@@ -201,6 +207,8 @@ class PipelineTree:
 
     def reduced_tree(self, leaves_list: list):
         """trims paths not leading to provided leaves"""
+        root_node = ("root", None, None)
+
         if len(leaves_list) == 0:
             return self.dag_dict
 
@@ -215,23 +223,22 @@ class PipelineTree:
         new_nodes = it.chain(*[x for x in compressed_paths.values()])
 
         new_nodes = sorted(new_nodes, key=lambda x: x[0])
-        new_nodes = [x[1] for x in new_nodes]
+        new_nodes_index = [x[0] for x in new_nodes]
+        new_nodes = [x[1] for x in new_nodes if x[1] != root_node]
         new_nodes_no_duplicates_same_order = list(dict.fromkeys(new_nodes))
         new_nodes = new_nodes_no_duplicates_same_order
 
-        new_dag_dict = {n: [] for n, i in enumerate(new_nodes)}
+        new_node_index = self.node_index[self.node_index.index.isin(new_nodes_index)]
+        new_dag_dict = {
+            parent: [
+                child
+                for child in self.dag_dict[parent]
+                if child in new_node_index.index
+            ]
+            for parent in new_node_index.index
+        }
 
-        for k, p in compressed_paths.items():
-            for ix in range(1, len(p)):
-                n = p[ix]
-                parent = p[ix - 1]
-
-                parent_ix = new_nodes.index(parent[1])
-                n_ix = new_nodes.index(n[1])
-                if n_ix not in new_dag_dict[parent_ix]:
-                    new_dag_dict[parent_ix].append(n_ix)
-
-        return new_dag_dict, new_nodes
+        return new_dag_dict, new_node_index
 
     def simplify_tree(self, links, root, party: list, nodes_compress=[], edge_keep=[]):
         """ """
@@ -343,6 +350,7 @@ class PipelineTree:
             if child_name[2] != "module":
                 new_party.append(child)
                 self.same_module_children(child, new_party, branches=branches)
+
             else:
                 if len(new_party) > 0:
                     branches.append(new_party)
@@ -388,8 +396,10 @@ class PipelineTree:
 
         for node in self.nodes_compress:
             node_name = self.node_index.loc[node[0]].node
-            if not node_name[2] == "module":
-                continue
+
+            if not node_name[1] is None:
+                if not node_name[2] == "module":
+                    continue
 
             parent_node = edge_df[edge_df.child == node[0]].parent.values
 
@@ -401,6 +411,10 @@ class PipelineTree:
             same_module_branches = self.same_module_children(
                 node[0], [node[0]], branches=[]
             )
+
+            if node_name == ("root", None, None):
+                same_module_branches = [[node[0], self.compress_dag_dict[node[0]][0]]]
+
             new_nodes, new_edges, nodes_df, edge_df = edit_branches(
                 same_module_branches, nodes_df, edge_df, parent_node
             )
@@ -800,8 +814,8 @@ class Utility_Pipeline_Manager:
         nodes_dict = {(i, x): [] for i, x in enumerate(pipeline_tree.nodes)}
 
         for edge in pipeline_tree.edges:
-            parent = (edge[0], pipeline_tree.nodes[edge[0]])
-            child = (edge[1], pipeline_tree.nodes[edge[1]])
+            parent = (edge[0], pipeline_tree.node_index.loc[edge[0]].node)
+            child = (edge[1], pipeline_tree.node_index.loc[edge[1]].node)
             nodes_dict[parent].append(child)
 
         nodes_dict = {
@@ -895,6 +909,7 @@ class Utility_Pipeline_Manager:
             parent_main = child_main
 
     def compress_software_tree(self, software_tree: PipelineTree):
+
         software_tree.compress_tree()
         software_tree.split_modules()
 
@@ -1511,20 +1526,38 @@ class Utils_Manager:
         else:
             raise Exception("No software tree for technology")
 
+    def tree_subset(self, tree: PipelineTree, leaves: list) -> PipelineTree:
+        """
+        Return a subset of a tree
+        """
+
+        reduced_dag, reduced_node_index = tree.reduced_tree(leaves)
+
+        reduced_tree = self.pipe_tree_from_dag_dict(
+            reduced_dag, reduced_node_index, tree.technology, tree.makeup
+        )
+
+        return reduced_tree
+
     def pipe_tree_from_dag_dict(
-        self, dag_dict: dict, nodes: list, technology: str, tree_makeup: int
+        self,
+        dag_dict: dict,
+        node_index: pd.DataFrame,
+        technology: str,
+        tree_makeup: int,
     ) -> PipelineTree:
         """
         Generate a pipeline tree from a dag dict
         """
 
-        node_index = [(i, n) for i, n in enumerate(nodes)]
+        nodes = node_index.node.unique()
 
         nodes = []
         edges = {}
         edge_list = []
         leaves = []
         for node in dag_dict:
+
             nodes.append(node)
             for child in dag_dict[node]:
                 edge_list.append((node, child))
@@ -1532,12 +1565,16 @@ class Utils_Manager:
             if len(dag_dict[node]) == 0:
                 leaves.append(node)
 
+        print("#### copnverting node index")
+        print(node_index.reset_index().to_numpy().tolist())
+
         return PipelineTree(
-            node_index=node_index,
+            node_index=node_index.reset_index().to_numpy().tolist(),
             edges=edge_list,
             leaves=leaves,
             technology=technology,
             makeup=tree_makeup,
+            software_tree_pk=self.get_software_tree_index(technology, tree_makeup),
         )
 
     def generate_software_base_tree(self, technology, tree_makeup: int):

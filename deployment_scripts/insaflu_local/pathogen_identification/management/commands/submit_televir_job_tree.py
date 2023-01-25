@@ -90,35 +90,13 @@ class Command(BaseCommand):
         }
 
         ### SUBMISSION
-        available_paths_explicit = {
-            z: g for z, g in local_paths.items() if z in available_paths.keys()
-        }
-
-        reduced_dag, reduced_nodes = local_tree.reduced_tree(
-            list(available_paths_explicit.keys())
-        )
-        reduced_tree = utils.pipe_tree_from_dag_dict(
-            reduced_dag, reduced_nodes, technology, tree_makeup
-        )
 
         pipeline_utils = Utility_Pipeline_Manager()
+
+        reduced_tree = utils.tree_subset(pipeline_tree, list(matched_paths.values()))
+
         module_tree = pipeline_utils.compress_software_tree(reduced_tree)
 
-        print("####")
-        print(local_tree.get_all_graph_paths_explicit())
-
-        print(local_tree.leaves)
-        print(module_tree.node_index)
-
-        print(module_tree.nodes_compress)
-        print(module_tree.edge_compress)
-
-        print(module_tree.compress_dag_dict)
-
-        project_sample = samples[0]
-        deployment_tree = Tree_Progress(module_tree, project_sample, project)
-
-        """
         for project_sample in samples:
             if not project_sample.is_deleted:
                 deployment_tree = Tree_Progress(module_tree, project_sample, project)
@@ -149,5 +127,5 @@ class Command(BaseCommand):
                 print(len(deployment_tree.current_nodes))
                 print(deployment_tree.get_current_module())
                 deployment_tree.deploy_nodes()
-        
-        """
+
+        print(len(samples))
