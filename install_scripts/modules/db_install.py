@@ -537,7 +537,7 @@ class setup_dl:
                         ["wget", "--no-check-certificate", fl, "-P", self.seqdir]
                     )
                 except subprocess.CalledProcessError:
-                    logging.info("wget failed. trying curl...")
+                    logging.info("virosaus download failed.")
                     return False
 
                 if (
@@ -545,7 +545,7 @@ class setup_dl:
                     or os.path.getsize(self.seqdir + os.path.basename(fl)) <= 100
                 ):
 
-                    logging.info("curl failed. trying curl...")
+                    logging.info("wget failed. trying curl...")
                     subprocess.run(
                         ["curl", fl, "-o", self.seqdir + os.path.basename(fl)]
                     )
