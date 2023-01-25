@@ -564,7 +564,7 @@ class ProcessSGE(object):
         """
         process_controler = ProcessControler()
         vect_command = [
-            "sudo ../TELEVIR/.venv-deploy/bin/python {} run_clean_minion --sample_id {} --user_id {} {}".format(
+            "python {} run_clean_minion --sample_id {} --user_id {} {}".format(
                 os.path.join(settings.BASE_DIR, "manage.py"),
                 sample.pk,
                 user.pk,

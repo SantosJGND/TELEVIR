@@ -1208,7 +1208,7 @@ class Command(BaseCommand):
         deployment_tree = Tree_Progress(software_tree, project_sample, project)
 
         print("leaves: ", software_tree.compress_dag_dict)
-        """
+
         print("FIRST")
         print(len(deployment_tree.current_nodes))
         print(deployment_tree.get_current_module())
@@ -1236,4 +1236,3 @@ class Command(BaseCommand):
         print(deployment_tree.get_current_module())
         deployment_tree.deploy_nodes()
         # deployment_tree.update_nodes()
-        """
