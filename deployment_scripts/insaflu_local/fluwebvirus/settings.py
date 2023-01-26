@@ -14,6 +14,9 @@ import os
 
 from decouple import config
 
+## environment to run locally.
+LOCAL_ENV = config("LOCAL_ENV")
+
 ## define APP version
 APP_VERSION_NUMBER = "2.0.0"
 

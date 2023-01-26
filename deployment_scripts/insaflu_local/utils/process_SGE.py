@@ -315,8 +315,11 @@ class ProcessSGE(object):
         """
         process_controler = ProcessControler()
         vect_command = [
-            "python3 {} collect_global_files --project_id {} --user_id {}".format(
-                os.path.join(settings.BASE_DIR, "manage.py"), project.pk, user.pk
+            "{} {} collect_global_files --project_id {} --user_id {}".format(
+                os.path.join(settings.LOCAL_ENV, "python"),
+                os.path.join(settings.BASE_DIR, "manage.py"),
+                project.pk,
+                user.pk,
             )
         ]
         self.logger_production.info("Processing: " + ";".join(vect_command))
@@ -351,8 +354,11 @@ class ProcessSGE(object):
         """
         process_controler = ProcessControler()
         vect_command = [
-            "python3 {} collect_global_files_for_update_metadata --project_id {} --user_id {}".format(
-                os.path.join(settings.BASE_DIR, "manage.py"), project.pk, user.pk
+            "{} {} collect_global_files_for_update_metadata --project_id {} --user_id {}".format(
+                os.path.join(settings.LOCAL_ENV, "python3"),
+                os.path.join(settings.BASE_DIR, "manage.py"),
+                project.pk,
+                user.pk,
             )
         ]
         self.logger_production.info("Processing: " + ";".join(vect_command))
@@ -459,7 +465,8 @@ class ProcessSGE(object):
         """
         process_controler = ProcessControler()
         vect_command = [
-            "python3 {} second_stage_medaka --project_sample_id {} --user_id {}".format(
+            "{} {} second_stage_medaka --project_sample_id {} --user_id {}".format(
+                os.path.join(settings.LOCAL_ENV, "python"),
                 os.path.join(settings.BASE_DIR, "manage.py"),
                 project_sample.pk,
                 user.pk,
@@ -525,7 +532,8 @@ class ProcessSGE(object):
         """
         process_controler = ProcessControler()
         vect_command = [
-            "python3 {} run_trimmomatic_species --sample_id {} --user_id {} {}".format(
+            "{} {} run_trimmomatic_species --sample_id {} --user_id {} {}".format(
+                os.path.join(settings.LOCAL_ENV, "python"),
                 os.path.join(settings.BASE_DIR, "manage.py"),
                 sample.pk,
                 user.pk,
@@ -564,7 +572,8 @@ class ProcessSGE(object):
         """
         process_controler = ProcessControler()
         vect_command = [
-            "python {} run_clean_minion --sample_id {} --user_id {} {}".format(
+            "{} {} run_clean_minion --sample_id {} --user_id {} {}".format(
+                os.path.join(settings.LOCAL_ENV, "python"),
                 os.path.join(settings.BASE_DIR, "manage.py"),
                 sample.pk,
                 user.pk,
@@ -607,7 +616,8 @@ class ProcessSGE(object):
         """
         process_controler = ProcessControler()
         vect_command = [
-            "python3 {} link_files --user_id {} {}".format(
+            "{} {} link_files --user_id {} {}".format(
+                os.path.join(settings.LOCAL_ENV, "python3"),
                 os.path.join(settings.BASE_DIR, "manage.py"),
                 user.pk,
                 "--settings fluwebvirus.settings_test" if b_test else "",
@@ -651,7 +661,8 @@ class ProcessSGE(object):
         """
         process_controler = ProcessControler()
         vect_command = [
-            "sudo .venv/bin/python  {} create_sample_list_by_user --user_id {} {}".format(
+            "{} {} create_sample_list_by_user --user_id {} {}".format(
+                os.path.join(settings.LOCAL_ENV, "python"),
                 os.path.join(settings.BASE_DIR, "manage.py"),
                 user.pk,
                 "--settings fluwebvirus.settings_test" if b_test else "",
@@ -703,7 +714,8 @@ class ProcessSGE(object):
         """
         process_controler = ProcessControler()
         vect_command = [
-            "python3 {} create_projects_list_by_user --user_id {} {}".format(
+            "{} {} create_projects_list_by_user --user_id {} {}".format(
+                os.path.join(settings.LOCAL_ENV, "python"),
                 os.path.join(settings.BASE_DIR, "manage.py"),
                 user.pk,
                 "--settings fluwebvirus.settings_test" if b_test else "",
@@ -822,7 +834,8 @@ class ProcessSGE(object):
         out_dir = self.utils.get_temp_dir()
 
         vect_command = [
-            "python3 {} submit_televir_job --user_id {} --project_id {} -o {}".format(
+            "{} {} submit_televir_job --user_id {} --project_id {} -o {}".format(
+                os.path.join(settings.LOCAL_ENV, "python"),
                 os.path.join(settings.BASE_DIR, "manage.py"),
                 user_pk,
                 project_pk,
@@ -868,7 +881,8 @@ class ProcessSGE(object):
         out_dir = self.utils.get_temp_dir()
 
         vect_command = [
-            "python3 {} submit_televir_map --ref_id {} -o {}".format(
+            "{} {} submit_televir_map --ref_id {} -o {}".format(
+                os.path.join(settings.LOCAL_ENV, "python"),
                 os.path.join(settings.BASE_DIR, "manage.py"),
                 reference_pk,
                 out_dir,
