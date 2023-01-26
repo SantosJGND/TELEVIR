@@ -263,6 +263,7 @@ class ProcessSGE(object):
                     line.find("scheduling info:") == 0 and not job_candicate is None
                 ):  ## it is wainting in the queue
                     vect_job_ids.append(job_candicate)
+
         if os.path.exists(file_result):
             os.unlink(file_result)
         if len(vect_job_ids) > 0:
