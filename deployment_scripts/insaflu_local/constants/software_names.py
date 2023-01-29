@@ -73,7 +73,7 @@ class SoftwareNames(object):
     SOFTWARE_FASTQ_VERSION = "0.11.9"
     SOFTWARE_FASTQ_PARAMETERS = ""
     SOFTWARE_FASTQ = os.path.join(
-        settings.DIR_SOFTWARE, "FastQC/fastqc".format(SOFTWARE_FASTQ_VERSION)
+        settings.DIR_SOFTWARE, "FastQC/fastqc"  # .format(SOFTWARE_FASTQ_VERSION)
     )
     SOFTWARE_TRIMMOMATIC = os.path.join(
         settings.DIR_SOFTWARE, "trimmomatic/classes/trimmomatic.jar"
