@@ -334,21 +334,19 @@ class env_install:
         """
 
         ### GIT CLONE
-        soft = "fastqc"
+        soft = "FastQC"
         sdir = self.envsdir + soft.split("/")[0] + "/"
 
         CWD = os.getcwd()
         os.chdir(self.envsdir)
 
-        exists = os.path.isdir(sdir)
-        if not exists:
-            os.mkdir(sdir)
-
-        os.chdir(sdir)
+        # exists = os.path.isdir(sdir)
+        # if not exists:
+        #    os.mkdir(sdir)
 
         zip_source = "https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.9.zip"
         zip_name = os.path.basename(zip_source).strip(".zip")
-        exec_target = sdir + "/FastQC/fastqc"
+        exec_target = sdir + "/fastqc"
 
         exists = os.path.exists(exec_target)
         if exists:

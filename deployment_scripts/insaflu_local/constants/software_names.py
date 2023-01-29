@@ -6,10 +6,9 @@ Created on Nov 26, 2017
 
 import os
 
+from constants.constants import Constants
 from django.conf import settings
 from settings.constants_settings import ConstantsSettings
-
-from constants.constants import Constants
 
 
 class SoftwareNames(object):
@@ -74,7 +73,7 @@ class SoftwareNames(object):
     SOFTWARE_FASTQ_VERSION = "0.11.9"
     SOFTWARE_FASTQ_PARAMETERS = ""
     SOFTWARE_FASTQ = os.path.join(
-        settings.DIR_SOFTWARE, "FastQC/{}/FastQC/fastqc".format(SOFTWARE_FASTQ_VERSION)
+        settings.DIR_SOFTWARE, "FastQC/fastqc".format(SOFTWARE_FASTQ_VERSION)
     )
     SOFTWARE_TRIMMOMATIC = os.path.join(
         settings.DIR_SOFTWARE, "trimmomatic/classes/trimmomatic.jar"
