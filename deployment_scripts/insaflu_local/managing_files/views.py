@@ -594,8 +594,8 @@ class SamplesAddView(LoginRequiredMixin, FormValidMessageMixin, generic.FormView
                 taskID = process_SGE.set_run_clean_minion(
                     sample, self.request.user, job_name
                 )
-                sample.is_ready_for_projects = True
-                sample.save()
+            sample.is_ready_for_projects = True
+            sample.save()
         except Exception as e:
             self.logger.error("Fail to run: ProcessSGE - " + str(e))
             return super(SamplesAddView, self).form_invalid(form)
