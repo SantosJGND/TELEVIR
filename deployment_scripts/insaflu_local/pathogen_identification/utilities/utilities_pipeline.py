@@ -37,6 +37,18 @@ def make_tree(lst):
     return d
 
 
+def differences_tuple_list(lista, listb):
+    """
+    Return the differences between two lists
+    """
+    list_a = [tuple([str(x) for x in y]) for y in lista]
+    list_a = set(list_a)
+
+    list_b = [tuple([str(x) for x in y]) for y in listb]
+    list_b = set(list_b)
+    return list(list_a.symmetric_difference(list_b))
+
+
 class PipelineTree:
 
     technology: str
@@ -79,6 +91,16 @@ class PipelineTree:
             ]
             for z in self.node_index.index
         }
+
+    def __eq__(self, other):
+
+        diff_nodes = differences_tuple_list(self.nodes, other.nodes)
+        diff_edges = differences_tuple_list(self.edges, other.edges)
+
+        if len(diff_nodes) == 0 and len(diff_edges) == 0:
+            return True
+        else:
+            return False
 
     def get_parents_dict(self):
         """
@@ -545,15 +567,7 @@ class Utility_Pipeline_Manager:
         """
         old_tree = self.generate_default_software_tree()
 
-        old_tree_list = old_tree.nodes
-        new_tree_list = new_tree.nodes
-
-        old_tree_set = set(old_tree_list)
-        new_tree_set = set(new_tree_list)
-
-        diff = new_tree_set.symmetric_difference(old_tree_set)
-
-        return diff
+        return new_tree == old_tree
 
     def compare_software_trees_given(
         self, old_tree: PipelineTree, new_tree: PipelineTree
@@ -562,17 +576,7 @@ class Utility_Pipeline_Manager:
         Compare two software trees and return the differences
         """
 
-        old_tree_list = old_tree.nodes
-        new_tree_list = new_tree.nodes
-
-        new_tree_list = [tuple([str(x) for x in y]) for y in new_tree_list]
-
-        old_tree_set = set(old_tree_list)
-        new_tree_set = set(new_tree_list)
-
-        diff = new_tree_set.symmetric_difference(old_tree_set)
-
-        return diff
+        return old_tree == new_tree
 
     def check_software_is_installed(self, software_name: str) -> bool:
         """
@@ -1621,7 +1625,7 @@ class Utils_Manager:
                 existing_pipeline_tree
             )
 
-            if len(tree_differences) > 0:
+            if not tree_differences:
                 self.parameter_util.update_software_tree(pipeline_tree)
         else:
 

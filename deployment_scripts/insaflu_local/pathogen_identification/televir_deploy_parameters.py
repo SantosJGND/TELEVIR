@@ -278,13 +278,13 @@ class Params_Nanopore:
             "minimap2",
         ],  # , "minimap-asm"],
         CS.PIPELINE_NAME_read_classification: [
-            # "krakenuniq",
-            # "fastviromeexplorer",
-            # "clark",
-            # "desamba",
+            "krakenuniq",
+            "fastviromeexplorer",
+            "clark",
+            "desamba",
             "kaiju",
             "centrifuge",
-            # "diamond",
+            "diamond",
         ],
         CS.PIPELINE_NAME_remapping: [
             "minimap2"

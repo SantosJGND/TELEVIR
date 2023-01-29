@@ -685,23 +685,9 @@ class Tree_Progress:
             group_targets = self.get_node_node_targets(nodes)
             volonteer = nodes[0]
 
-            print("################## PROCESSING SUBJECT ##################")
-            print(nodes)
-            print(group_targets)
-
             mapped_instances_shared = self.process_subject(volonteer, group_targets)
 
-            print("################## PROCESSING SUBJECT DONE ##################")
-            print("################## UPDATING MAPPED INSTANCES ##################")
-            print(f"mapped_instances_shared: {len(mapped_instances_shared)}")
-
             nodes = self.update_mapped_instances(nodes, mapped_instances_shared)
-
-            print("### mapped_instances_shared ###")
-            print(
-                [n.run_manager.run_engine.remap_manager.mapped_instances for n in nodes]
-            )
-
             current_nodes.extend(nodes)
 
         if len(current_nodes) > 0:

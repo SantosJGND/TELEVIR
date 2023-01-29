@@ -21,6 +21,16 @@ class Pipeline_Makeup:
     ASSEMBLY_SPECIAL_STEP = "ASSEMBLY_SPECIAL"
     VIRAL_ENRICHMENT_SPECIAL_STEP = "VIRAL_ENRICHMENT"
 
+    PIPELINE_STEPS_ORDER = [
+        CS.PIPELINE_NAME_read_quality_analysis,
+        CS.PIPELINE_NAME_host_depletion,
+        CS.PIPELINE_NAME_viral_enrichment,
+        CS.PIPELINE_NAME_assembly,
+        CS.PIPELINE_NAME_read_classification,
+        CS.PIPELINE_NAME_contig_classification,
+        CS.PIPELINE_NAME_remapping,
+    ]
+
     dependencies_graph_edges = {
         CS.PIPELINE_NAME_viral_enrichment: [ROOT],
         VIRAL_ENRICHMENT_SPECIAL_STEP: [ROOT],
@@ -78,7 +88,9 @@ class Pipeline_Makeup:
             if x != self.dependencies_graph_sink
         ]
 
-        return dpath[::-1]
+        dpath = [x for x in self.PIPELINE_STEPS_ORDER if x in dpath]
+
+        return dpath
 
     def get_denpendencies_paths_dict(self):
         """

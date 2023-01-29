@@ -1157,7 +1157,7 @@ class Command(BaseCommand):
                 existing_pipeline_tree, software_tree
             )
 
-            if len(tree_differences) > 0:
+            if not tree_differences:
                 parameter_util.update_software_tree(software_tree)
         else:
 
