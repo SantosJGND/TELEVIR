@@ -97,6 +97,7 @@ def main():
         HOME = "/televir/mngs_benchmark/"
         ENVDIR = "/televir/mngs_benchmark/mngs_environments/"
         DEPLOYMENT_DIR = "/televir/mngs_benchmark/app/"
+        DATABASE = "insaflu_db"
         TECH = "nanopore"
         TAXDUMP = "/opt/taxdump.tar.gz"
         ORGANISM = "viral"
@@ -131,6 +132,7 @@ def main():
         ENV = mainconf.ENV
         INSTALL_CONFIG = mainconf.INSTALL_CONFIG
         INSTALL_TYPE = "local"
+        DATABASE = mainconf.DATABASE
 
         INSTALL_PARAMS["HOME"] = HOME
         INSTALL_PARAMS["ENVSDIR"]["SOURCE"] = SOURCE
@@ -206,7 +208,7 @@ def main():
         )
 
         deploy_prep.dir_prep()
-        deploy_prep.export()
+        deploy_prep.export(DATABASE)
 
 
 if __name__ == "__main__":

@@ -137,7 +137,7 @@ class main_deploy_prep:
         self.app_dir = os.path.join(self.dir, "pathogen_identification") + "/"
         # os.makedirs(self.dir)
 
-    def export(self):
+    def export(self, database):
         # self.paramf = self.pdir + f"params_files/params_{self.tech}.py"
         self.paramf = os.path.join(self.dir + "constants") + "/constants.py"
         env_file = self.dir + ".env_model"
@@ -167,6 +167,7 @@ class main_deploy_prep:
             # os.system(f"sed -i 's#{tag}#{repl}#g' {test_params_ont_json}")
             # os.system(f"sed -i 's#{tag}#{repl}#g' {test_params_illumina_json}")
 
+        os.system(f"sed -i 's#$DATABASE#{database}#g' {env_file}")
         os.system(f"sed -i 's#$SOURCE#{self.source}#g' {new_params}")
         os.system(f"sed -i 's#$SOURCE#{self.source}#g' {self.paramf}")
 
