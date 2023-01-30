@@ -1777,7 +1777,7 @@ class Mapping_Manager(Tandem_Remap):
 
         self.mapped_instances = []
         self.remap_targets = remap_targets
-        self.target_taxids = set([target.taxid for target in remap_targets])
+        self.target_taxids = set([str(target.taxid) for target in remap_targets])
         self.reads_before_processing = r1.read_number_clean + r2.read_number_clean
         self.reads_after_processing = (
             r1.get_current_fastq_read_number() + r2.get_current_fastq_read_number()
@@ -1904,7 +1904,7 @@ class Mapping_Manager(Tandem_Remap):
     def validate_mapped_instance_taxid(self, mapped_instance: Mapping_Instance):
 
         print(mapped_instance.reference.target.taxid)
-        if mapped_instance.reference.target.taxid in self.target_taxids:
+        if str(mapped_instance.reference.target.taxid) in self.target_taxids:
             return True
         else:
             return False

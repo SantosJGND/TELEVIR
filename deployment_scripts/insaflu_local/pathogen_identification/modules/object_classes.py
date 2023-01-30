@@ -1027,10 +1027,15 @@ class Software_detail:
                 self.db = ""
                 self.db_name = ""
 
+            print("############ ARGS ############")
+            print(method_details)
+
             try:
                 db_name = method_details[
                     method_details.parameter.str.contains("DB")
                 ].value.values[0]
+                print("################# DB NAME #################")
+                print(db_name)
                 if ".gz" in db_name:
                     self.db = os.path.join(config["source"]["REF_FASTA"], db_name)
                     self.db_name = db_name

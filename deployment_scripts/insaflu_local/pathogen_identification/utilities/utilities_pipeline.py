@@ -386,10 +386,20 @@ class PipelineTree:
             self.compress_tree()
             self.split_modules()
 
-        nodes_df = pd.DataFrame(self.nodes_compress, columns=["node", "branch"])
+        original_nodes = pd.DataFrame(self.nodes_compress, columns=["node", "branch"])
+        nodes_df = original_nodes.copy()
         edge_df = pd.DataFrame(self.edge_compress, columns=["parent", "child"])
 
-        def edit_branches(branches, nodes_df, edge_df, parent_node):
+        print(nodes_df)
+
+        def edit_branches(
+            node,
+            branches,
+            nodes_df_small,
+            edge_df_small,
+            parent_node,
+            original_nodes_df,
+        ):
             """ """
             new_edges = []
             new_nodes = []
@@ -397,14 +407,28 @@ class PipelineTree:
                 if len(branch) == 1:
                     continue
 
-                nodes_df = nodes_df[~nodes_df.node.isin(branch)]
-                edge_df = edge_df[~edge_df.parent.isin(branch[:-1])]
-                edge_df = edge_df[~edge_df.child.isin(branch)]
+                recovered_branch = []
+                print("branch:", branch)
+                for node in branch:
+                    internal_nodes = original_nodes_df[
+                        original_nodes_df.node == node
+                    ].branch.values[0]
+                    print(node, internal_nodes)
+                    recovered_branch.extend(internal_nodes)
+
+                recovered_branch = tuple(set(recovered_branch))
+                print("recovered:", recovered_branch, branch)
+                branch = recovered_branch
+                nodes_df_small = nodes_df_small[~nodes_df_small.node.isin(branch)]
+                edge_df_small = edge_df_small[~edge_df_small.parent.isin(branch[:-1])]
+                edge_df_small = edge_df_small[~edge_df_small.child.isin(branch)]
 
                 new_edges.append([parent_node, branch[-1]])
                 new_nodes.append([branch[-1], tuple(branch)])
 
-            return new_nodes, new_edges, nodes_df, edge_df
+            print(nodes_df)
+            print("###3#")
+            return new_nodes, new_edges, nodes_df_small, edge_df_small
 
         def merge_new_branches(new_nodes, new_edges, nodes_df, edge_df):
 
@@ -436,15 +460,22 @@ class PipelineTree:
 
             if node_name == ("root", None, None):
                 same_module_branches = [[node[0], self.compress_dag_dict[node[0]][0]]]
-
             new_nodes, new_edges, nodes_df, edge_df = edit_branches(
-                same_module_branches, nodes_df, edge_df, parent_node
+                node[0],
+                same_module_branches,
+                nodes_df,
+                edge_df,
+                parent_node,
+                original_nodes,
             )
+
             nodes_df, edge_df = merge_new_branches(
                 new_nodes, new_edges, nodes_df, edge_df
             )
 
-        self.nodes_compress = nodes_df.drop_duplicates().to_numpy().tolist()
+        self.nodes_compress = (
+            nodes_df.drop_duplicates(subset=["node"]).to_numpy().tolist()
+        )
         self.edge_compress = edge_df.drop_duplicates().to_numpy().tolist()
 
 
@@ -915,9 +946,23 @@ class Utility_Pipeline_Manager:
     def compress_software_tree(self, software_tree: PipelineTree):
 
         software_tree.compress_tree()
+        print("######################")
+        print("Compressed tree")
+        print(software_tree.nodes_compress)
+        print(software_tree.edge_compress)
+
         software_tree.split_modules()
+        print("######################")
+        print("Split modules")
+        print(software_tree.nodes_compress)
+        print(software_tree.edge_compress)
 
         software_tree.get_module_tree()
+        print("######################")
+        print("Module tree")
+
+        print(software_tree.nodes_compress)
+        print(software_tree.edge_compress)
 
         return software_tree
 

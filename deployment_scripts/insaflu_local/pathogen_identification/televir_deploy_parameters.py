@@ -269,7 +269,7 @@ class Params_Nanopore:
         CS.PIPELINE_NAME_viral_enrichment: [
             # "",
             # "kaiju",
-            "krakenuniq",
+            # "krakenuniq",
             "centrifuge",
         ],
         CS.PIPELINE_NAME_assembly: ["raven"],  # spades, velvet,
@@ -278,13 +278,13 @@ class Params_Nanopore:
             "minimap2",
         ],  # , "minimap-asm"],
         CS.PIPELINE_NAME_read_classification: [
-            "krakenuniq",
-            "fastviromeexplorer",
-            "clark",  #
-            "desamba",  #
-            "kaiju",  #
-            "centrifuge",
-            "diamond",
+            "krakenuniq",  #
+            # "fastviromeexplorer",
+            # "clark",  #
+            # "desamba",  #
+            # "kaiju",  #
+            # "centrifuge",  #
+            # "diamond",
         ],
         CS.PIPELINE_NAME_remapping: [
             "minimap2"

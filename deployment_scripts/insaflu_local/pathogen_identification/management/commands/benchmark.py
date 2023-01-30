@@ -62,6 +62,11 @@ class PathogenIdentification_Deployment_Manager:
     prepped: bool = False
     sent: bool = False
 
+    STATUS_ZERO = 0
+    STATUS_PREPPED = 1
+    STATUS_RUNNING = 2
+    STATUS_SENT = 3
+
     def __init__(
         self,
         sample: PIProject_Sample,  # sample name
@@ -222,7 +227,6 @@ class Tree_Node:
     def __init__(self, pipe_tree: PipelineTree, node_index: int, software_tree_pk: int):
 
         node_metadata = pipe_tree.node_index.loc[node_index].node
-        print(node_metadata)
 
         self.module = node_metadata[0]
         self.node_index = node_index
@@ -323,6 +327,7 @@ class Tree_Node:
     def determine_params(self, pipe_tree):
 
         arguments_list = []
+        print("branch", self.branch)
         for node in self.branch:
 
             node_metadata = pipe_tree.node_index.loc[node].node
@@ -334,6 +339,8 @@ class Tree_Node:
 
         if self.node_index == 0:
             print(arguments_df)
+
+        print("arguments df", arguments_df)
 
         module_df = arguments_df[arguments_df.flag == "module"]
         module = module_df.parameter.values[0]
@@ -431,8 +438,6 @@ class Tree_Progress:
     def register_node_leaves(self, node: Tree_Node):
 
         if len(node.leaves) == 0:
-            print("leaf node")
-            print(node.node_index)
             self.submit_node_run(node)
 
         for leaf in node.leaves:
@@ -1139,6 +1144,11 @@ class Command(BaseCommand):
             leaves=pipe_tree.leaves,
             makeup=-1,
         )
+
+        print("####### HARD CODED PIPELINE TREE #######")
+        print(pipe_tree.node_index.reset_index().to_numpy().tolist())
+        print(pipe_tree.edge_dict)
+        print("###############")
 
         return software_tree
 
