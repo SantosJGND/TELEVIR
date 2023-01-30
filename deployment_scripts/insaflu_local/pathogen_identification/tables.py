@@ -537,7 +537,6 @@ class RunMainTable(tables.Table):
 
         if (
             finished_processing
-            or finished_remapping
             or record.parameter_set.status == ParameterSet.STATUS_FINISHED
         ):
             record_name = (
