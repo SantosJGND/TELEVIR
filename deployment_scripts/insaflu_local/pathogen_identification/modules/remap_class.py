@@ -1903,7 +1903,6 @@ class Mapping_Manager(Tandem_Remap):
 
     def validate_mapped_instance_taxid(self, mapped_instance: Mapping_Instance):
 
-        print(mapped_instance.reference.target.taxid)
         if str(mapped_instance.reference.target.taxid) in self.target_taxids:
             return True
         else:
@@ -1914,19 +1913,11 @@ class Mapping_Manager(Tandem_Remap):
         if self.verify_mapped_instance(mapped_instance):
             if self.validate_mapped_instance_taxid(mapped_instance):
                 self.mapped_instances.append(mapped_instance)
-                print("Updated mapping instance")
-            else:
-                print("Taxid mismatch, not updating")
-        else:
-            print("Read mismatch, not updating")
 
     def update_mapped_instance(self, mapped_instance: Mapping_Instance):
 
         if self.validate_mapped_instance_taxid(mapped_instance):
             self.mapped_instances.append(mapped_instance)
-            print("Updated mapping instance")
-        else:
-            print("Taxid mismatch, not updating")
 
     def update_mapped_instances(self, mapped_instances: List[Mapping_Instance]):
 

@@ -265,7 +265,7 @@ class ConstantsSettings:
     CONSTANTS_ONT = {
         "minimum_coverage_threshold": 1,
         "max_output_number": 12,
-        "taxid_limit": 5,
+        "taxid_limit": 15,
         "sift_query": "phage",
         "assembly_contig_min_length": 500,
     }

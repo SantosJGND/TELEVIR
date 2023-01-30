@@ -547,17 +547,8 @@ class Tree_Progress:
     def get_remap_plans(nodes: List[Tree_Node]):
 
         for n in nodes:
-            print("##############################")
-            print("Getting remap plans for node: " + str(n.node_index))
-            print(
-                n.run_manager.run_engine.read_classification_drone.classification_report
-            )
-            print(
-                n.run_manager.run_engine.contig_classification_drone.classification_report
-            )
+
             n.run_manager.run_engine.plan_remap_prep()
-            print(n.run_manager.run_engine.merged_targets)
-            print("##############################")
 
         return nodes
 
@@ -567,8 +558,6 @@ class Tree_Progress:
             n.run_manager.run_engine.merged_targets for n in targetdf_list
         ]
 
-        print("Merging node targets: " + str(len(node_merged_targets)))
-        print(node_merged_targets)
         node_merged_targets = pd.concat(node_merged_targets, axis=0).reset_index()
 
         return node_merged_targets
@@ -704,8 +693,7 @@ class Tree_Progress:
         mapped_instances_shared: List[Mapping_Instance],
     ):
         new_nodes = []
-        print("######### UPDATING MAPPED INSTANCES #########")
-        print("updating mapped instances")
+
         for node in nodes_to_update:
             node.run_manager.run_engine.update_mapped_instances(mapped_instances_shared)
             new_nodes.append(node)
