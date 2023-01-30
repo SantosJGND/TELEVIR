@@ -64,11 +64,11 @@ class Params_Illumina:
             "CLARK_DB": ["clark/viruses"],
         },
         "krakenuniq": {
-            "KUNIQ_ARGS": [
+            "KRAKENUNIQ_ARGS": [
                 "--quick --min-hits 1",
             ],
-            "KUNIQ_THREADS": [8],
-            "KUNIQ_DB": ["kuniq/viral/"],
+            "KRAKENUNIQ_THREADS": [8],
+            "KRAKENUNIQ_DB": ["kuniq/viral/"],
         },
         "kraken2": {
             "KRAKEN_ARGS": ["--confidence 0.3 --quick"],
@@ -280,9 +280,9 @@ class Params_Nanopore:
         CS.PIPELINE_NAME_read_classification: [
             "krakenuniq",
             "fastviromeexplorer",
-            "clark",
-            "desamba",
-            "kaiju",
+            "clark",  #
+            "desamba",  #
+            "kaiju",  #
             "centrifuge",
             "diamond",
         ],
@@ -320,11 +320,11 @@ class Params_Nanopore:
             "CLARK_DB": ["clark/viruses"],
         },
         "krakenuniq": {
-            "KUNIQ_ARGS": [
+            "KRAKENUNIQ_ARGS": [
                 "--quick --min-hits 1",
             ],
-            "KUNIQ_THREADS": [8],
-            "KUNIQ_DB": ["kuniq/viral/"],
+            "KRAKENUNIQ_THREADS": [8],
+            "KRAKENUNIQ_DB": ["kuniq/viral/"],
         },
         "kraken2": {
             "KRAKEN_ARGS": ["--confidence 0.3 --quick"],
@@ -414,9 +414,13 @@ class Params_Nanopore:
             "CLARK_DB": ["clark/viruses"],
         },
         "krakenuniq": {
-            "KUNIQ_ARGS": ["--exact", "--exact hll-precision 14", "hll-precision 14"],
-            "KUNIQ_THREADS": [8],
-            "KUNIQ_DB": ["kuniq/viral"],
+            "KRAKENUNIQ_ARGS": [
+                "--exact",
+                "--exact hll-precision 14",
+                "hll-precision 14",
+            ],
+            "KRAKENUNIQ_THREADS": [8],
+            "KRAKENUNIQ_DB": ["kuniq/viral"],
         },
         "kraken2": {
             "KRAKEN_ARGS": ["--confidence .7", "--confidence 0.5"],
