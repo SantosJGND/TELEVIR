@@ -954,10 +954,8 @@ class RunMain_class(Run_Deployment_Methods):
     def update_mapped_instances(self, mapped_instance: List[Mapping_Instance]):
         """Update the remap manager with the new mapped instances, register."""
         self.prep_REMAPPING()
-        print("updating mapped instances, run", self.prefix)
         self.remap_manager.update_mapped_instances(mapped_instance)
-        print("updating mapped instances done")
-        print(self.prefix, len(self.remap_manager.mapped_instances))
+
         self.remapping_performed = True
         self.generate_output_data_classes()
         self.Update_exec_time()

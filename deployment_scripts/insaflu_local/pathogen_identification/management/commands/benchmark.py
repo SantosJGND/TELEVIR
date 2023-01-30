@@ -257,15 +257,12 @@ class Tree_Node:
 
     def generate_software_tree_node_entry(self, pipe_tree: PipelineTree):
 
-        print("is node leaf?", self._is_node_leaf())
         if not self._is_node_leaf():
             return
 
         node_metadata = pipe_tree.node_index.loc[self.node_index].node
         software_tree = SoftwareTree.objects.get(pk=self.software_tree_pk)
 
-        print("software tree", software_tree)
-        print("node metadata", node_metadata)
         tree_node = SoftwareTreeNode.objects.filter(
             software_tree=software_tree,
             index=self.node_index,
@@ -274,7 +271,6 @@ class Tree_Node:
             node_type=node_metadata[2],
         )
 
-        print(tree_node)
         try:
             tree_node = SoftwareTreeNode.objects.get(
                 software_tree=software_tree,
@@ -310,7 +306,6 @@ class Tree_Node:
     def register(self, project: Projects, sample: PIProject_Sample, tree: PipelineTree):
 
         tree_node = self.generate_software_tree_node_entry(tree)
-        print("tree node", tree_node)
         if tree_node is None:
             return False
 
@@ -327,7 +322,6 @@ class Tree_Node:
     def determine_params(self, pipe_tree):
 
         arguments_list = []
-        print("branch", self.branch)
         for node in self.branch:
 
             node_metadata = pipe_tree.node_index.loc[node].node
@@ -336,11 +330,6 @@ class Tree_Node:
         arguments_df = pd.DataFrame(
             arguments_list, columns=["parameter", "value", "flag"]
         )
-
-        if self.node_index == 0:
-            print(arguments_df)
-
-        print("arguments df", arguments_df)
 
         module_df = arguments_df[arguments_df.flag == "module"]
         module = module_df.parameter.values[0]
@@ -406,8 +395,6 @@ class Tree_Progress:
 
         self.initialize_nodes()
         self.determine_current_module()
-
-        print(pipe_tree.node_index)
 
     def setup_deployment_manager(self):
         utils = Utils()
@@ -520,7 +507,6 @@ class Tree_Progress:
                     return False
 
             if node.run_manager.run_engine.remapping_performed:
-                print("##### EXPORTING SEQUENCES #####")
                 node.run_manager.run_engine.export_sequences()
                 node.run_manager.run_engine.export_final_reports()
                 node.run_manager.run_engine.Summarize()
@@ -572,9 +558,7 @@ class Tree_Progress:
         ]
 
         print("Merging node targets: " + str(len(node_merged_targets)))
-        print(node_merged_targets)
         node_merged_targets = pd.concat(node_merged_targets, axis=0).reset_index()
-        print(node_merged_targets)
 
         return node_merged_targets
 
@@ -642,9 +626,6 @@ class Tree_Progress:
         for node in self.current_nodes:
             update_combination_dict(node)
 
-        print("####### GROUPED NODES #######")
-        print(source_paramaters_combinations)
-
         grouped_nodes = [
             register["nodes"]
             for source, register in source_paramaters_combinations.items()
@@ -664,20 +645,12 @@ class Tree_Progress:
         original_targets = copy.deepcopy(
             volonteer.run_manager.run_engine.merged_targets
         )
-        print("volonteer: " + str(volonteer.node_index))
-        print("original targets:")
-        print(original_targets)
-        print(original_targets.shape)
 
         volonteer.run_manager.update_merged_targets(group_targets)
-        print("updated targets:")
-        print(volonteer.run_manager.run_engine.merged_targets.shape)
 
         volonteer.run_manager.run_main()
 
         volonteer.run_manager.update_merged_targets(original_targets)
-        print("final_targets:")
-        print(volonteer.run_manager.run_engine.merged_targets.shape)
 
         mapped_instances_shared = (
             volonteer.run_manager.run_engine.remap_manager.mapped_instances
@@ -699,22 +672,9 @@ class Tree_Progress:
             group_targets = self.get_node_node_targets(nodes)
             volonteer = nodes[0]
 
-            print("################## PROCESSING SUBJECT ##################")
-            print(nodes)
-            print(group_targets)
-
             mapped_instances_shared = self.process_subject(volonteer, group_targets)
 
-            print("################## PROCESSING SUBJECT DONE ##################")
-            print("################## UPDATING MAPPED INSTANCES ##################")
-            print(f"mapped_instances_shared: {len(mapped_instances_shared)}")
-
             nodes = self.update_mapped_instances(nodes, mapped_instances_shared)
-
-            print("### mapped_instances_shared ###")
-            print(
-                [n.run_manager.run_engine.remap_manager.mapped_instances for n in nodes]
-            )
 
             current_nodes.extend(nodes)
 
@@ -735,7 +695,7 @@ class Tree_Progress:
 
     def run_simplified_mapping(self):
         nodes_by_sample_sources = self.group_nodes_by_source_and_parameters()
-        print(nodes_by_sample_sources)
+
         self.stacked_deployement(nodes_by_sample_sources)
 
     def update_nodes(self):
@@ -1144,11 +1104,6 @@ class Command(BaseCommand):
             leaves=pipe_tree.leaves,
             makeup=-1,
         )
-
-        print("####### HARD CODED PIPELINE TREE #######")
-        print(pipe_tree.node_index.reset_index().to_numpy().tolist())
-        print(pipe_tree.edge_dict)
-        print("###############")
 
         return software_tree
 

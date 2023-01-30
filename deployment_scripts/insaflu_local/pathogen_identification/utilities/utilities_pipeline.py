@@ -390,8 +390,6 @@ class PipelineTree:
         nodes_df = original_nodes.copy()
         edge_df = pd.DataFrame(self.edge_compress, columns=["parent", "child"])
 
-        print(nodes_df)
-
         def edit_branches(
             node,
             branches,
@@ -408,16 +406,13 @@ class PipelineTree:
                     continue
 
                 recovered_branch = []
-                print("branch:", branch)
                 for node in branch:
                     internal_nodes = original_nodes_df[
                         original_nodes_df.node == node
                     ].branch.values[0]
-                    print(node, internal_nodes)
                     recovered_branch.extend(internal_nodes)
 
                 recovered_branch = tuple(set(recovered_branch))
-                print("recovered:", recovered_branch, branch)
                 branch = recovered_branch
                 nodes_df_small = nodes_df_small[~nodes_df_small.node.isin(branch)]
                 edge_df_small = edge_df_small[~edge_df_small.parent.isin(branch[:-1])]
@@ -426,8 +421,6 @@ class PipelineTree:
                 new_edges.append([parent_node, branch[-1]])
                 new_nodes.append([branch[-1], tuple(branch)])
 
-            print(nodes_df)
-            print("###3#")
             return new_nodes, new_edges, nodes_df_small, edge_df_small
 
         def merge_new_branches(new_nodes, new_edges, nodes_df, edge_df):
@@ -477,6 +470,15 @@ class PipelineTree:
             nodes_df.drop_duplicates(subset=["node"]).to_numpy().tolist()
         )
         self.edge_compress = edge_df.drop_duplicates().to_numpy().tolist()
+
+        self.compress_dag_dict = {
+            z: [
+                self.edge_compress[x][1]
+                for x in range(len(self.edge_compress))
+                if self.edge_compress[x][0] == z
+            ]
+            for z in list(set([x[0] for x in self.nodes_compress]))
+        }
 
 
 class Utility_Pipeline_Manager:
@@ -893,8 +895,6 @@ class Utility_Pipeline_Manager:
         self.logger.info("Generating explicit edge dict")
         explicit_edge_dict = self.generate_explicit_edge_dict(pipe_tree)
 
-        print(pipe_tree.nodes)
-
         parent = explicit_path[0]
         parent_main = (0, ("root", None, None))
         child_main = None
@@ -946,23 +946,10 @@ class Utility_Pipeline_Manager:
     def compress_software_tree(self, software_tree: PipelineTree):
 
         software_tree.compress_tree()
-        print("######################")
-        print("Compressed tree")
-        print(software_tree.nodes_compress)
-        print(software_tree.edge_compress)
 
         software_tree.split_modules()
-        print("######################")
-        print("Split modules")
-        print(software_tree.nodes_compress)
-        print(software_tree.edge_compress)
 
         software_tree.get_module_tree()
-        print("######################")
-        print("Module tree")
-
-        print(software_tree.nodes_compress)
-        print(software_tree.edge_compress)
 
         return software_tree
 
@@ -1011,9 +998,6 @@ class Parameter_DB_Utility:
 
     @staticmethod
     def expand_parameters_table(combined_table, software_db_dict={}):
-        # print(software_db_dict)
-        # print("#####")
-
         def fix_row(row):
 
             if not row.parameter:
@@ -1048,12 +1032,9 @@ class Parameter_DB_Utility:
 
                 if row.parameter_name == "--db" and software_db_dict:
                     software_name = row.software_name
-                    # print(software_name)
                     possibilities = [software_name, software_name.lower()]
                     if "_" in software_name:
                         possibilities.append(software_name.split("_")[0])
-
-                    # print(possibilities)
 
                     for p in possibilities:
                         if p in software_db_dict:
@@ -1495,13 +1476,9 @@ class Utils_Manager:
             "now going to start checking if existing paths correspond to branches in trees"
         )
 
-        print(pipeline_tree.node_index.node.unique())
-        print(tree_makeup, pipeline_tree_index)
-
         for sample in samples:
 
             for leaf, path in local_paths.items():
-                print(leaf, path)
 
                 try:
                     matched_path = self.utility_manager.match_path_to_tree(
@@ -1613,9 +1590,6 @@ class Utils_Manager:
 
             if len(dag_dict[node]) == 0:
                 leaves.append(node)
-
-        print("#### copnverting node index")
-        print(node_index.reset_index().to_numpy().tolist())
 
         return PipelineTree(
             node_index=node_index.reset_index().to_numpy().tolist(),
