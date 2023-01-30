@@ -520,7 +520,7 @@ class RunDetail_main:
         """
         Update the execution time of the pipeline.
         """
-        self.exec_time = time.perf_counter() - self.exec_time
+        self.exec_time = time.perf_counter() - self.start_time
 
 
 class Run_Deployment_Methods(RunDetail_main):

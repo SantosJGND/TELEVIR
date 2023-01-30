@@ -64,7 +64,7 @@ class ProcessSGE(object):
         """
         temp_file = self.utils.get_temp_file("qsub_out", FileExtensions.FILE_TXT)
 
-        cmd = "export SGE_ROOT={}; sh {} > {}".format(
+        cmd = "export SGE_ROOT={}; nohup sh {} &> {} &".format(
             settings.SGE_ROOT, file_name, temp_file
         )
         exist_status = os.system(cmd)

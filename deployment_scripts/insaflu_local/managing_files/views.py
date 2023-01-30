@@ -467,7 +467,6 @@ class SamplesAddView(LoginRequiredMixin, FormValidMessageMixin, generic.FormView
         """
 
         with transaction.atomic():
-            insaflu_cli = Insaflu_Cli()
 
             ### test anonymous account
             try:
@@ -491,13 +490,6 @@ class SamplesAddView(LoginRequiredMixin, FormValidMessageMixin, generic.FormView
             like_dates = form.cleaned_data["like_dates"]
 
             sample = form.save(commit=False)
-            print(sample.path_name_1)
-            print(sample.candidate_file_name_1)
-
-            r1 = sample.path_name_1.name
-            r2 = None
-            if sample.exist_file_2():
-                r2 = sample.path_name_1.name
 
             # temp_r1, temp_r2 = insaflu_cli.temp_reads(r1, r2)
             ## set other data
