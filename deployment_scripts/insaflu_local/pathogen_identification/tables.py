@@ -535,7 +535,11 @@ class RunMainTable(tables.Table):
         finished_processing = FinalReport.objects.filter(run=record).count() > 0
         finished_remapping = record.report == "finished"
 
-        if finished_remapping:
+        if (
+            finished_processing
+            or finished_remapping
+            or record.parameter_set.status == ParameterSet.STATUS_FINISHED
+        ):
             record_name = (
                 '<a href="'
                 + reverse(
