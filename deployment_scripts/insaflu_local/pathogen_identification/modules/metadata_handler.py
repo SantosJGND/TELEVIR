@@ -110,6 +110,19 @@ class Metadata_handler:
 
         return df
 
+    @staticmethod
+    def clean_report(df: pd.DataFrame):
+        """
+        Clean report.
+        """
+        if df.shape[0] > 0:
+            for target_col in ["acc", "protid", "prot_acc", "taxid"]:
+                if target_col in df.columns:
+                    df = df.dropna(subset=[target_col])
+                    df = df.drop_duplicates(subset=[target_col])
+                    df = df.reset_index(drop=True)
+        return df
+
     def results_process(self, df: pd.DataFrame, sift: bool = True) -> pd.DataFrame:
         """
         Process results.
@@ -117,6 +130,8 @@ class Metadata_handler:
         summarize merged dataframe to get counts per taxid.
         if sift is true, filter results to only include self.sift_query.
         """
+
+        df = self.clean_report(df)
 
         df = self.merge_report_to_metadata(df)
 
