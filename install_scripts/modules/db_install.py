@@ -20,8 +20,8 @@ def grep_sequence_identifiers(input, output):
     """
 
     os.system(
-        "zgrep -P '^>' {} | grep -v 'GENE\|gene'| sed 's/^>//; s/[ ].*$//g' > {}".format(
-            input, output
+        "zgrep -P '^>' {} | sed 's/^>//; s/[ ].*$//g' > {}".format(
+            input, output  # | grep -v 'GENE\|gene'
         )
     )
 
