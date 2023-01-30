@@ -1830,18 +1830,18 @@ class Mapping_Manager(Tandem_Remap):
                 mapped_instance.reference.move_coverage_plot(static_plots_dir)
                 mapped_instance.export_mapping_files(media_dir)
             else:
-                print("No reads mapped, skipping coverage plot")
+                self.logger.info("No reads mapped, skipping coverage plot")
                 mapped_instance.reference.cleanup_files()
 
             if apres:
                 mapped_instance.reference.move_dotplot(static_plots_dir)
             else:
-                print("No contigs mapped, skipping dotplot")
+                self.logger.info("No contigs mapped, skipping dotplot")
                 if mapped_instance.assembly:
                     mapped_instance.assembly.cleanup_files()
 
     def move_igv_to_static(self, static_dir):
-        print("Moving IGV files to static")
+        self.logger.info("Moving IGV files to static")
         for instance in self.mapped_instances:
 
             if instance.reference.number_of_reads_mapped > 0:

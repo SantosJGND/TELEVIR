@@ -130,8 +130,8 @@ class RunDetail_main:
         )
         self.threads = config["threads"]
 
-        self.logger_level_main = logging.INFO
-        self.logger_level_detail = logging.INFO
+        self.logger_level_main = logging.ERROR
+        self.logger_level_detail = logging.ERROR
         self.logger = logging.getLogger("main {}".format(self.prefix))
         self.logger.setLevel(self.logger_level_main)
 

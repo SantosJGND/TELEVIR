@@ -375,7 +375,7 @@ class PipelineTree:
 
             else:
                 if len(new_party) > 0:
-                    branches.append(new_party)
+                    branches.append({"branch": tuple(new_party), "exit": (node, child)})
                 new_party = []
 
         return branches
@@ -388,7 +388,8 @@ class PipelineTree:
 
         original_nodes = pd.DataFrame(self.nodes_compress, columns=["node", "branch"])
         nodes_df = original_nodes.copy()
-        edge_df = pd.DataFrame(self.edge_compress, columns=["parent", "child"])
+        original_edge_df = pd.DataFrame(self.edge_compress, columns=["parent", "child"])
+        edge_df = original_edge_df.copy()
 
         def edit_branches(
             node,
@@ -401,7 +402,9 @@ class PipelineTree:
             """ """
             new_edges = []
             new_nodes = []
-            for branch in branches:
+            for branch_meta in branches:
+                branch = branch_meta["branch"]
+                exit_edge = branch_meta["exit"]
                 if len(branch) == 1:
                     continue
 
@@ -413,13 +416,15 @@ class PipelineTree:
                     recovered_branch.extend(internal_nodes)
 
                 recovered_branch = tuple(set(recovered_branch))
-                branch = recovered_branch
+                branch = sorted(recovered_branch)
                 nodes_df_small = nodes_df_small[~nodes_df_small.node.isin(branch)]
-                edge_df_small = edge_df_small[~edge_df_small.parent.isin(branch[:-1])]
+                edge_df_small = edge_df_small[
+                    ~edge_df_small.parent.isin([x for x in branch if x != exit_edge[0]])
+                ]
                 edge_df_small = edge_df_small[~edge_df_small.child.isin(branch)]
 
-                new_edges.append([parent_node, branch[-1]])
-                new_nodes.append([branch[-1], tuple(branch)])
+                new_edges.append([parent_node, exit_edge[0]])
+                new_nodes.append([exit_edge[0], tuple(branch)])
 
             return new_nodes, new_edges, nodes_df_small, edge_df_small
 
@@ -433,6 +438,10 @@ class PipelineTree:
 
             return nodes_df, edge_df
 
+        print(edge_df)
+
+        print(self.nodes_compress)
+
         for node in self.nodes_compress:
             node_name = self.node_index.loc[node[0]].node
 
@@ -440,7 +449,12 @@ class PipelineTree:
                 if not node_name[2] == "module":
                     continue
 
-            parent_node = edge_df[edge_df.child == node[0]].parent.values
+            parent_node = original_edge_df[
+                original_edge_df.child == node[0]
+            ].parent.values
+            child_node = original_edge_df[
+                original_edge_df.parent == node[0]
+            ].child.values
 
             if len(parent_node) == 0:
                 parent_node = [0]
@@ -452,7 +466,17 @@ class PipelineTree:
             )
 
             if node_name == ("root", None, None):
-                same_module_branches = [[node[0], self.compress_dag_dict[node[0]][0]]]
+                same_module_branches = {
+                    "branch": [[node[0], self.compress_dag_dict[node[0]][0]]],
+                    "exit": (0, self.compress_dag_dict[node[0]][0]),
+                }
+
+            print("#########")
+            print("node", node)
+            print("parent_node", parent_node)
+            print("child_node", child_node)
+            print("same_module_branches", same_module_branches)
+
             new_nodes, new_edges, nodes_df, edge_df = edit_branches(
                 node[0],
                 same_module_branches,
@@ -949,6 +973,11 @@ class Utility_Pipeline_Manager:
 
         software_tree.split_modules()
 
+        print("SPLIT TREE")
+        print(software_tree.compress_dag_dict)
+        print(software_tree.nodes_compress)
+        print(software_tree.node_index)
+        print("######")
         software_tree.get_module_tree()
 
         return software_tree

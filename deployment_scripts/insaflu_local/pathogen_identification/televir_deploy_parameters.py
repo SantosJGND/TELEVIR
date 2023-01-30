@@ -416,8 +416,8 @@ class Params_Nanopore:
         "krakenuniq": {
             "KRAKENUNIQ_ARGS": [
                 "--exact",
-                "--exact hll-precision 14",
-                "hll-precision 14",
+                "--exact --hll-precision 14",
+                "--hll-precision 14",
             ],
             "KRAKENUNIQ_THREADS": [8],
             "KRAKENUNIQ_DB": ["kuniq/viral"],

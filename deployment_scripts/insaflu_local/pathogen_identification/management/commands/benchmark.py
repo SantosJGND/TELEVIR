@@ -547,7 +547,17 @@ class Tree_Progress:
     def get_remap_plans(nodes: List[Tree_Node]):
 
         for n in nodes:
+            print("##############################")
+            print("Getting remap plans for node: " + str(n.node_index))
+            print(
+                n.run_manager.run_engine.read_classification_drone.classification_report
+            )
+            print(
+                n.run_manager.run_engine.contig_classification_drone.classification_report
+            )
             n.run_manager.run_engine.plan_remap_prep()
+            print(n.run_manager.run_engine.merged_targets)
+            print("##############################")
 
         return nodes
 
@@ -558,6 +568,7 @@ class Tree_Progress:
         ]
 
         print("Merging node targets: " + str(len(node_merged_targets)))
+        print(node_merged_targets)
         node_merged_targets = pd.concat(node_merged_targets, axis=0).reset_index()
 
         return node_merged_targets
@@ -624,7 +635,13 @@ class Tree_Progress:
                 source_paramaters_combinations[source]["nodes"].append(node)
 
         for node in self.current_nodes:
+            sample_source = node.run_manager.run_engine.sample.sources_list()
+            print("node: " + str(node.node_index))
+            print("Sample source: " + str(sample_source))
             update_combination_dict(node)
+
+        print("########### GROUPED NODES ###########")
+        print(source_paramaters_combinations)
 
         grouped_nodes = [
             register["nodes"]
@@ -687,10 +704,12 @@ class Tree_Progress:
         mapped_instances_shared: List[Mapping_Instance],
     ):
         new_nodes = []
-
+        print("######### UPDATING MAPPED INSTANCES #########")
+        print("updating mapped instances")
         for node in nodes_to_update:
             node.run_manager.run_engine.update_mapped_instances(mapped_instances_shared)
             new_nodes.append(node)
+
         return new_nodes
 
     def run_simplified_mapping(self):
@@ -706,11 +725,15 @@ class Tree_Progress:
                 new_node = self.spawn_node_child(node, child)
                 new_nodes.append(new_node)
 
+        print("updating nodes")
+        print(len(new_nodes))
+        self.current_nodes = new_nodes
+
         if len(new_nodes) == 0:
             self.current_module = "end"
         else:
-            self.current_nodes = new_nodes
-        self.determine_current_module()
+
+            self.determine_current_module()
 
     def run_current_nodes(self):
 
@@ -738,7 +761,8 @@ class Tree_Progress:
     def deploy_nodes(self):
         if self.current_module == "end":
             return
-
+        if self.current_module == ConstantsSettings.PIPELINE_NAME_read_quality_analysis:
+            self.update_nodes()
         if self.current_module == ConstantsSettings.PIPELINE_NAME_remapping:
             self.run_nodes_simply()
         else:
@@ -1169,35 +1193,23 @@ class Command(BaseCommand):
         project_sample = insaflu_cli.piproject_sample_from_sample(sample, project, user)
 
         software_tree = self.generate_modular_software_tree(technology)
+        print(software_tree.compress_dag_dict)
+        print(software_tree.nodes_compress)
+        print(software_tree.node_index)
+        software_tree.node_index.to_csv("node_index.csv")
 
         deployment_tree = Tree_Progress(software_tree, project_sample, project)
 
         print("leaves: ", software_tree.compress_dag_dict)
 
-        print("FIRST")
-        print(len(deployment_tree.current_nodes))
-        print(deployment_tree.get_current_module())
-        # deployment_tree.run_current_nodes()
-        deployment_tree.update_nodes()
-        print("SECOND")
-        print(len(deployment_tree.current_nodes))
-        print(deployment_tree.get_current_module())
-        deployment_tree.deploy_nodes()
-        print("THIRD")
-        print(len(deployment_tree.current_nodes))
-        print(deployment_tree.get_current_module())
-        deployment_tree.deploy_nodes()
-        print("FOURTH")
-        print(len(deployment_tree.current_nodes))
-        print(deployment_tree.get_current_module())
-        deployment_tree.deploy_nodes()
-        print("FIFTH")
-        print(len(deployment_tree.current_nodes))
-        print(deployment_tree.get_current_module())
-        deployment_tree.deploy_nodes()
+        current_module = deployment_tree.get_current_module()
+        while current_module != "end":
+            # for x in range(0):
+            print("NEXT")
+            print(len(deployment_tree.current_nodes))
+            print(deployment_tree.get_current_module())
+            print([x.node_index for x in deployment_tree.current_nodes])
+            print([x.children for x in deployment_tree.current_nodes])
+            deployment_tree.deploy_nodes()
 
-        print("SIXTH")
-        print(len(deployment_tree.current_nodes))
-        print(deployment_tree.get_current_module())
-        deployment_tree.deploy_nodes()
-        # deployment_tree.update_nodes()
+            current_module = deployment_tree.get_current_module()
