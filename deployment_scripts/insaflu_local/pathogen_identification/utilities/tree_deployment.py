@@ -740,7 +740,10 @@ class Tree_Progress:
     def deploy_nodes(self):
         if self.current_module == "end":
             return
-        if self.current_module == ConstantsSettings.PIPELINE_NAME_read_quality_analysis:
+        if self.current_module in [
+            "root",
+            ConstantsSettings.PIPELINE_NAME_read_quality_analysis,
+        ]:
             self.update_nodes()
         if self.current_module == ConstantsSettings.PIPELINE_NAME_remapping:
             self.run_nodes_simply()
