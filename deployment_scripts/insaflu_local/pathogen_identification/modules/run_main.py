@@ -67,6 +67,7 @@ class RunDetail_main:
     sift_query: str
     max_remap: int
     taxid_limit: int
+    merged_targets = pd.DataFrame()
 
     ## actions
     quality_control: bool
@@ -920,7 +921,7 @@ class RunMain_class(Run_Deployment_Methods):
 
     def plan_remap_prep(self):
 
-        if len(self.metadata_tool.remap_targets) == 0:
+        if len(self.merged_targets) == 0:
 
             self.metadata_tool.match_and_select_targets(
                 self.read_classification_drone.classification_report,
