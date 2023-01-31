@@ -115,8 +115,8 @@ class Command(BaseCommand):
                     print(deployment_tree.get_current_module())
                     print([x.node_index for x in deployment_tree.current_nodes])
                     print([x.children for x in deployment_tree.current_nodes])
-                    # deployment_tree.deploy_nodes()
-                    deployment_tree.update_nodes()
+                    deployment_tree.deploy_nodes()
+                    # deployment_tree.update_nodes()
 
                     current_module = deployment_tree.get_current_module()
 

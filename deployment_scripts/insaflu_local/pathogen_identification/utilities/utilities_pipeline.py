@@ -302,6 +302,11 @@ class PipelineTree:
         self.nodes_compress = nodes_compress
         self.edge_compress = edges_compress
 
+        self.compress_dag_dict = {
+            x[0]: [y[1] for y in self.edge_compress if y[0] == x[0]]
+            for x in self.nodes_compress
+        }
+
     def split_modules(self):
 
         if self.nodes_compress is None:
@@ -972,6 +977,12 @@ class Utility_Pipeline_Manager:
     def compress_software_tree(self, software_tree: PipelineTree):
 
         software_tree.compress_tree()
+
+        print("COMPRESS TREE")
+        print(software_tree.compress_dag_dict)
+        print(software_tree.nodes_compress)
+        print(software_tree.node_index)
+        print("######")
 
         software_tree.split_modules()
 

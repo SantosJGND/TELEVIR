@@ -171,7 +171,7 @@ class PathogenIdentification_Deployment_Manager:
 
     def run_main_prep(self):
 
-        if self.prepped:
+        if self.prepped or self.run_params_db.empty:
             return
 
         self.run_engine = RunMain_class(self.config, self.run_params_db, self.username)
@@ -228,8 +228,7 @@ class Tree_Node:
         run_manager.configure()
         run_manager.import_params(self.parameters)
 
-        if self.node_index == 0:
-            run_manager.run_main_prep()
+        run_manager.run_main_prep()
 
         self.run_manager = run_manager
 
@@ -317,6 +316,11 @@ class Tree_Node:
         print(arguments_df)
         print(self.node_index)
         print(pipe_tree.node_index)
+
+        arguments_df = arguments_df[arguments_df.parameter != "root"]
+
+        if len(arguments_df) == 0:
+            return pd.DataFrame()
 
         module_df = arguments_df[arguments_df.flag == "module"]
         module = module_df.parameter.values[0]
