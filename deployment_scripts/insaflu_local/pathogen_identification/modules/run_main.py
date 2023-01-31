@@ -514,7 +514,8 @@ class RunDetail_main:
 
         if "taxid" in targets_df.columns:
             targets_df["taxid"] = targets_df["taxid"].astype(str)
-            self.merged_targets = targets_df
+
+        self.merged_targets = targets_df
 
     def Update_exec_time(self):
         """
