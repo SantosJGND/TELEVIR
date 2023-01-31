@@ -47,24 +47,9 @@ class Insaflu_Cli:
 
         return r1, r2
 
-    def temp_reads_fofn(self, fofn):
+    def temp_reads(self, fofn):
         utils = Utils()
         r1, r2 = self.read_fofn(fofn)
-        temp_dir = utils.get_temp_dir()
-
-        new_r1 = os.path.join(temp_dir, os.path.basename(r1))
-        new_r2 = None
-
-        shutil.copy(r1, new_r1)
-
-        if r2:
-            new_r2 = os.path.join(temp_dir, os.path.basename(r2))
-            shutil.copy(r2, new_r2)
-
-        return new_r1, new_r2
-
-    def temp_reads(self, r1, r2):
-        utils = Utils()
         temp_dir = utils.get_temp_dir()
 
         new_r1 = os.path.join(temp_dir, os.path.basename(r1))
@@ -87,7 +72,7 @@ class Insaflu_Cli:
             sample = Sample.objects.get(name=name, owner=user)
 
         except Sample.DoesNotExist:
-            tmp_r1, tmp_r2 = self.temp_reads_fofn(fofn)
+            tmp_r1, tmp_r2 = self.temp_reads(fofn)
             sample = self.sample_save(name, user, tmp_r1, tmp_r2, technology)
             self.move_sample(sample, user)
             self.sample_preprocess(sample, user)

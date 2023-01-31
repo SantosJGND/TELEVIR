@@ -43,6 +43,11 @@ class PathogenIdentification_Deployment_Manager:
     prepped: bool = False
     sent: bool = False
 
+    STATUS_ZERO = 0
+    STATUS_PREPPED = 1
+    STATUS_RUNNING = 2
+    STATUS_SENT = 3
+
     def __init__(
         self,
         sample: PIProject_Sample,  # sample name
@@ -199,18 +204,10 @@ class Tree_Node:
     run_manager: PathogenIdentification_Deployment_Manager
     tree_node: SoftwareTreeNode
     parameter_set: ParameterSet
-    root: bool = False
 
-    def __init__(
-        self,
-        pipe_tree: PipelineTree,
-        node_index: int,
-        software_tree_pk: int,
-        root: bool = False,
-    ):
+    def __init__(self, pipe_tree: PipelineTree, node_index: int, software_tree_pk: int):
 
         node_metadata = pipe_tree.node_index.loc[node_index].node
-        print(node_metadata)
 
         self.module = node_metadata[0]
         self.node_index = node_index
@@ -223,7 +220,6 @@ class Tree_Node:
         self.parameters = self.determine_params(pipe_tree)
         self.software_tree_pk = software_tree_pk
         self.leaves = pipe_tree.leaves_from_node(node_index)
-        self.root = root
 
     def receive_run_manager(
         self, run_manager: PathogenIdentification_Deployment_Manager
@@ -232,7 +228,7 @@ class Tree_Node:
         run_manager.configure()
         run_manager.import_params(self.parameters)
 
-        if self.root:
+        if self.node_index == 0:
             run_manager.run_main_prep()
 
         self.run_manager = run_manager
@@ -247,7 +243,7 @@ class Tree_Node:
 
         node_metadata = pipe_tree.node_index.loc[self.node_index].node
         software_tree = SoftwareTree.objects.get(pk=self.software_tree_pk)
-        print(self.node_index)
+
         tree_node = SoftwareTreeNode.objects.filter(
             software_tree=software_tree,
             index=self.node_index,
@@ -255,7 +251,6 @@ class Tree_Node:
             value=node_metadata[1],
             node_type=node_metadata[2],
         )
-        print(tree_node)
 
         try:
             tree_node = SoftwareTreeNode.objects.get(
@@ -276,10 +271,7 @@ class Tree_Node:
 
         try:
             parameter_set = ParameterSet.objects.get(
-                project=project,
-                sample=sample,
-                status=ParameterSet.STATUS_FINISHED,
-                leaf=node,
+                project=project, sample=sample, status=ParameterSet.STATUS_FINISHED
             )
 
         except ParameterSet.DoesNotExist:
@@ -309,6 +301,7 @@ class Tree_Node:
         return True
 
     def determine_params(self, pipe_tree):
+
         arguments_list = []
         for node in self.branch:
 
@@ -318,8 +311,6 @@ class Tree_Node:
         arguments_df = pd.DataFrame(
             arguments_list, columns=["parameter", "value", "flag"]
         )
-
-        print(arguments_df)
 
         module_df = arguments_df[arguments_df.flag == "module"]
         module = module_df.parameter.values[0]
@@ -360,8 +351,6 @@ class TreeNode_Iterator:
 
 
 class Tree_Progress:
-    """takes compressed pipeline tree only"""
-
     tree: PipelineTree
     current_nodes: List[Tree_Node]
     current_module: str
@@ -385,14 +374,8 @@ class Tree_Progress:
         self.sample = sample
         self.project = project
 
-        self.root = self.determine_root(pipe_tree)
         self.initialize_nodes()
         self.determine_current_module()
-
-    @staticmethod
-    def determine_root(pipeline_tree: PipelineTree):
-        root = [node[0] for node in pipeline_tree.nodes_compress if 0 in node[1]]
-        return root[0]
 
     def setup_deployment_manager(self):
         utils = Utils()
@@ -423,8 +406,6 @@ class Tree_Progress:
     def register_node_leaves(self, node: Tree_Node):
 
         if len(node.leaves) == 0:
-            print("leaf node")
-            print(node.node_index)
             self.submit_node_run(node)
 
         for leaf in node.leaves:
@@ -433,7 +414,7 @@ class Tree_Progress:
 
     def initialize_nodes(self):
         origin_node = Tree_Node(
-            self.tree, self.root, software_tree_pk=self.tree.software_tree_pk, root=True
+            self.tree, 0, software_tree_pk=self.tree.software_tree_pk
         )
 
         run_manager = self.setup_deployment_manager()
@@ -461,6 +442,7 @@ class Tree_Progress:
         return new_node
 
     def register_node(self, node: Tree_Node):
+        print("registering node")
 
         if node.run_manager.sent:
             return False
@@ -506,7 +488,6 @@ class Tree_Progress:
                     return False
 
             if node.run_manager.run_engine.remapping_performed:
-                print("##### EXPORTING SEQUENCES #####")
                 node.run_manager.run_engine.export_sequences()
                 node.run_manager.run_engine.export_final_reports()
                 node.run_manager.run_engine.Summarize()
@@ -547,6 +528,7 @@ class Tree_Progress:
     def get_remap_plans(nodes: List[Tree_Node]):
 
         for n in nodes:
+
             n.run_manager.run_engine.plan_remap_prep()
 
         return nodes
@@ -557,10 +539,7 @@ class Tree_Progress:
             n.run_manager.run_engine.merged_targets for n in targetdf_list
         ]
 
-        print("Merging node targets: " + str(len(node_merged_targets)))
-        print(node_merged_targets)
         node_merged_targets = pd.concat(node_merged_targets, axis=0).reset_index()
-        print(node_merged_targets)
 
         return node_merged_targets
 
@@ -626,9 +605,12 @@ class Tree_Progress:
                 source_paramaters_combinations[source]["nodes"].append(node)
 
         for node in self.current_nodes:
+            sample_source = node.run_manager.run_engine.sample.sources_list()
+            print("node: " + str(node.node_index))
+            print("Sample source: " + str(sample_source))
             update_combination_dict(node)
 
-        print("####### GROUPED NODES #######")
+        print("########### GROUPED NODES ###########")
         print(source_paramaters_combinations)
 
         grouped_nodes = [
@@ -650,20 +632,12 @@ class Tree_Progress:
         original_targets = copy.deepcopy(
             volonteer.run_manager.run_engine.merged_targets
         )
-        print("volonteer: " + str(volonteer.node_index))
-        print("original targets:")
-        print(original_targets)
-        print(original_targets.shape)
 
         volonteer.run_manager.update_merged_targets(group_targets)
-        print("updated targets:")
-        print(volonteer.run_manager.run_engine.merged_targets.shape)
 
         volonteer.run_manager.run_main()
 
         volonteer.run_manager.update_merged_targets(original_targets)
-        print("final_targets:")
-        print(volonteer.run_manager.run_engine.merged_targets.shape)
 
         mapped_instances_shared = (
             volonteer.run_manager.run_engine.remap_manager.mapped_instances
@@ -688,6 +662,7 @@ class Tree_Progress:
             mapped_instances_shared = self.process_subject(volonteer, group_targets)
 
             nodes = self.update_mapped_instances(nodes, mapped_instances_shared)
+
             current_nodes.extend(nodes)
 
         if len(current_nodes) > 0:
@@ -703,11 +678,12 @@ class Tree_Progress:
         for node in nodes_to_update:
             node.run_manager.run_engine.update_mapped_instances(mapped_instances_shared)
             new_nodes.append(node)
+
         return new_nodes
 
     def run_simplified_mapping(self):
         nodes_by_sample_sources = self.group_nodes_by_source_and_parameters()
-        print(nodes_by_sample_sources)
+
         self.stacked_deployement(nodes_by_sample_sources)
 
     def update_nodes(self):
@@ -718,19 +694,17 @@ class Tree_Progress:
                 new_node = self.spawn_node_child(node, child)
                 new_nodes.append(new_node)
 
+        print("updating nodes")
+        print(len(new_nodes))
+        self.current_nodes = new_nodes
+
         if len(new_nodes) == 0:
             self.current_module = "end"
         else:
-            self.current_nodes = new_nodes
-        self.determine_current_module()
+
+            self.determine_current_module()
 
     def run_current_nodes(self):
-
-        if (
-            self.get_current_module()
-            == ConstantsSettings.PIPELINE_NAME_read_quality_analysis
-        ):
-            print("skipping read quality analysis")
 
         for node in self.current_nodes:
             self.run_node(node)
@@ -754,12 +728,10 @@ class Tree_Progress:
             self.register_node_leaves(node)
 
     def deploy_nodes(self):
-        print("deploying nodes")
-        print(self.current_module)
-        print(self.current_nodes)
         if self.current_module == "end":
             return
-
+        if self.current_module == ConstantsSettings.PIPELINE_NAME_read_quality_analysis:
+            self.update_nodes()
         if self.current_module == ConstantsSettings.PIPELINE_NAME_remapping:
             self.run_nodes_simply()
         else:
