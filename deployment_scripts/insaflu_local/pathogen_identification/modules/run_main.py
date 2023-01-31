@@ -516,6 +516,7 @@ class RunDetail_main:
         if "taxid" in targets_df.columns:
             targets_df["taxid"] = targets_df["taxid"].astype(str)
 
+        self.metadata_tool.merged_targets = targets_df
         self.merged_targets = targets_df
 
     def Update_exec_time(self):
@@ -921,20 +922,18 @@ class RunMain_class(Run_Deployment_Methods):
 
     def plan_remap_prep(self):
 
-        if len(self.merged_targets) == 0:
+        self.metadata_tool.match_and_select_targets(
+            self.read_classification_drone.classification_report,
+            self.contig_classification_drone.classification_report,
+            self.max_remap,
+            self.taxid_limit,
+        )
 
-            self.metadata_tool.match_and_select_targets(
-                self.read_classification_drone.classification_report,
-                self.contig_classification_drone.classification_report,
-                self.max_remap,
-                self.taxid_limit,
-            )
-
-            self.aclass_summary = self.metadata_tool.aclass
-            self.rclass_summary = self.metadata_tool.rclass
-            self.merged_targets = self.metadata_tool.merged_targets
-            self.raw_targets = self.metadata_tool.raw_targets
-            self.remap_plan = self.metadata_tool.remap_plan
+        self.aclass_summary = self.metadata_tool.aclass
+        self.rclass_summary = self.metadata_tool.rclass
+        self.merged_targets = self.metadata_tool.merged_targets
+        self.raw_targets = self.metadata_tool.raw_targets
+        self.remap_plan = self.metadata_tool.remap_plan
 
     def Run_Remapping(self):
 

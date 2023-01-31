@@ -73,9 +73,11 @@ class Metadata_handler:
             report_1,
             report_2,
         )
-        self.merge_reports_clean(
-            taxid_limit=taxid_limit,
-        )
+
+        if self.merged_targets.empty:
+            self.merge_reports_clean(
+                taxid_limit=taxid_limit,
+            )
 
         #######
         #######
