@@ -423,6 +423,7 @@ class Metadata_handler:
         remap_absent = []
         taxf = self.accession_to_taxid
         remap_plan = []
+        targets.taxid = targets.taxid.astype(int)
 
         for taxid in targets.taxid.unique():
 
@@ -430,7 +431,7 @@ class Metadata_handler:
                 remap_absent.append(taxid)
 
                 nset = pd.DataFrame(columns=["taxid"])
-                remap_plan.append([taxid, "none", "none"])
+                remap_plan.append([taxid, "none", "none", "none"])
                 continue
 
             nset = (
@@ -502,6 +503,7 @@ class Metadata_handler:
                     )
                     remap_plan.append([taxid, pref, fileset, description])
 
+        print("#####")
         self.remap_plan = pd.DataFrame(
             remap_plan, columns=["taxid", "acc", "file", "description"]
         )
