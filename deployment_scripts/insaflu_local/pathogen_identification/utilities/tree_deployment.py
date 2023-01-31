@@ -312,6 +312,12 @@ class Tree_Node:
             arguments_list, columns=["parameter", "value", "flag"]
         )
 
+        print("######")
+        print(self.branch)
+        print(arguments_df)
+        print(self.node_index)
+        print(pipe_tree.node_index)
+
         module_df = arguments_df[arguments_df.flag == "module"]
         module = module_df.parameter.values[0]
         software = module_df.value.values[0]

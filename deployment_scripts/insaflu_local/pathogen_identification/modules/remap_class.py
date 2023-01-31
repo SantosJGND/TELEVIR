@@ -937,7 +937,7 @@ class Remapping:
         self.filter_bamfile_read_names()
         self.sort_bam()
         self.index_sorted_bam()
-        self.generate_vcf()
+        # self.generate_vcf()
         self.get_genomecoverage()
         self.get_mapped_reads_no_header()
         self.filter_sam_file_mapped()

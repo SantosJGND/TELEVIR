@@ -97,6 +97,10 @@ class Command(BaseCommand):
 
         module_tree = pipeline_utils.compress_software_tree(reduced_tree)
 
+        print(module_tree.compress_dag_dict)
+        print(module_tree.nodes_compress)
+        print(module_tree.node_index)
+
         for project_sample in samples:
             if not project_sample.is_deleted:
                 deployment_tree = Tree_Progress(module_tree, project_sample, project)
@@ -111,7 +115,8 @@ class Command(BaseCommand):
                     print(deployment_tree.get_current_module())
                     print([x.node_index for x in deployment_tree.current_nodes])
                     print([x.children for x in deployment_tree.current_nodes])
-                    deployment_tree.deploy_nodes()
+                    # deployment_tree.deploy_nodes()
+                    deployment_tree.update_nodes()
 
                     current_module = deployment_tree.get_current_module()
 
