@@ -30,7 +30,7 @@ from pathogen_identification.models import (
 from pathogen_identification.modules.remap_class import Mapping_Instance
 from pathogen_identification.modules.run_main import RunMain_class
 from pathogen_identification.utilities.benchmark_graph_utils import pipeline_tree
-from pathogen_identification.utilities.insaflu_cli import InsafluCli
+from pathogen_identification.utilities.insaflu_cli import Insaflu_Cli
 from pathogen_identification.utilities.tree_deployment import Tree_Progress
 from pathogen_identification.utilities.utilities_pipeline import (
     Parameter_DB_Utility,
