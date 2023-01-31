@@ -644,7 +644,8 @@ class Tree_Progress:
         )
 
         volonteer.run_manager.update_merged_targets(group_targets)
-
+        print("running_main")
+        print(volonteer.run_manager.run_engine.remapping)
         volonteer.run_manager.run_main()
 
         volonteer.run_manager.update_merged_targets(original_targets)
@@ -667,6 +668,8 @@ class Tree_Progress:
             nodes = self.get_remap_plans(nodes)
 
             group_targets = self.get_node_node_targets(nodes)
+            print("group_targets")
+            print(group_targets)
             volonteer = nodes[0]
 
             mapped_instances_shared = self.process_subject(volonteer, group_targets)
