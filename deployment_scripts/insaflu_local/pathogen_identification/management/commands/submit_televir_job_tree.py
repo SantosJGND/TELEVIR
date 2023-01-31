@@ -101,30 +101,18 @@ class Command(BaseCommand):
             if not project_sample.is_deleted:
                 deployment_tree = Tree_Progress(module_tree, project_sample, project)
 
-                print("FIRST")
-                print(len(deployment_tree.current_nodes))
-                print(deployment_tree.get_current_module())
-                deployment_tree.deploy_nodes()
-                print("SECOND")
-                print(len(deployment_tree.current_nodes))
-                print(deployment_tree.get_current_module())
-                deployment_tree.deploy_nodes()
-                print("THIRD")
-                print(len(deployment_tree.current_nodes))
-                print(deployment_tree.get_current_module())
-                deployment_tree.deploy_nodes()
-                print("FOURTH")
-                print(len(deployment_tree.current_nodes))
-                print(deployment_tree.get_current_module())
-                deployment_tree.deploy_nodes()
-                print("FIFTH")
-                print(len(deployment_tree.current_nodes))
-                print(deployment_tree.get_current_module())
-                deployment_tree.deploy_nodes()
+                print("leaves: ", module_tree.compress_dag_dict)
 
-                print("SIXTH")
-                print(len(deployment_tree.current_nodes))
-                print(deployment_tree.get_current_module())
-                deployment_tree.deploy_nodes()
+                current_module = deployment_tree.get_current_module()
+                while current_module != "end":
+                    # for x in range(0):
+                    print("NEXT")
+                    print(len(deployment_tree.current_nodes))
+                    print(deployment_tree.get_current_module())
+                    print([x.node_index for x in deployment_tree.current_nodes])
+                    print([x.children for x in deployment_tree.current_nodes])
+                    deployment_tree.deploy_nodes()
+
+                    current_module = deployment_tree.get_current_module()
 
         print(len(samples))

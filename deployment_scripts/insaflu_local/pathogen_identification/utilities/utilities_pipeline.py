@@ -466,10 +466,12 @@ class PipelineTree:
             )
 
             if node_name == ("root", None, None):
-                same_module_branches = {
-                    "branch": [[node[0], self.compress_dag_dict[node[0]][0]]],
-                    "exit": (0, self.compress_dag_dict[node[0]][0]),
-                }
+                same_module_branches = [
+                    {
+                        "branch": [[node[0], self.compress_dag_dict[node[0]][0]]],
+                        "exit": (0, self.compress_dag_dict[node[0]][0]),
+                    }
+                ]
 
             print("#########")
             print("node", node)

@@ -1,3 +1,4 @@
+import csv
 import logging
 import os
 import re
@@ -144,7 +145,12 @@ class run_kaiju(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         return pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[1, 2], comment="@"
+            self.report_path,
+            sep="\t",
+            header=None,
+            usecols=[1, 2],
+            comment="@",
+            quoting=csv.QUOTE_NONE,
         ).rename(columns={1: "qseqid", 2: "taxid"})
 
 
@@ -235,7 +241,12 @@ class run_FastViromeExplorer(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         return pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[0, 2], comment="@"
+            self.report_path,
+            sep="\t",
+            header=None,
+            usecols=[0, 2],
+            comment="@",
+            quoting=csv.QUOTE_NONE,
         ).rename(columns={0: "qseqid", 2: "acc"})
 
 
@@ -388,7 +399,11 @@ class run_blast(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         return pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[0, 1]
+            self.report_path,
+            sep="\t",
+            header=None,
+            usecols=[0, 1],
+            quoting=csv.QUOTE_NONE,
         ).rename(
             columns={
                 0: "qseqid",
@@ -473,7 +488,11 @@ class run_blast_p(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         return pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[0, 1]
+            self.report_path,
+            sep="\t",
+            header=None,
+            usecols=[0, 1],
+            quoting=csv.QUOTE_NONE,
         ).rename(
             {
                 0: "qseqid",
@@ -562,7 +581,11 @@ class run_centrifuge(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         report = pd.read_csv(
-            self.full_report_path, sep="\t", header=None, usecols=[0, 6]
+            self.full_report_path,
+            sep="\t",
+            header=None,
+            usecols=[0, 6],
+            quoting=csv.QUOTE_NONE,
         ).rename(columns={0: "qseqid", 6: "acc"})
 
         report = report[report.acc != "unclassified"][["qseqid", "acc"]]
@@ -623,7 +646,12 @@ class run_deSamba(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         report = pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[0, 2, 4, 8], comment="@"
+            self.report_path,
+            sep="\t",
+            header=None,
+            usecols=[0, 2, 4, 8],
+            comment="@",
+            quoting=csv.QUOTE_NONE,
         ).rename(columns={0: "qseqid", 2: "acc", 4: "qual", 8: "length"})
         report = report[report.acc != "*"][["qseqid", "acc"]]
 
@@ -714,7 +742,12 @@ class run_kraken2(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         return pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[1, 2], comment="@"
+            self.report_path,
+            sep="\t",
+            header=None,
+            usecols=[1, 2],
+            comment="@",
+            quoting=csv.QUOTE_NONE,
         ).rename(columns={1: "qseqid", 2: "taxid"})
 
 
@@ -779,7 +812,12 @@ class run_diamond(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         report = pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[0, 1], comment="@"
+            self.report_path,
+            sep="\t",
+            header=None,
+            usecols=[0, 1],
+            comment="@",
+            quoting=csv.QUOTE_NONE,
         ).rename(columns={0: "qseqid", 1: "prot_acc"})
         report["prot_acc"] = report["prot_acc"].apply(self.acc_name_simplify)
         return report
@@ -847,7 +885,12 @@ class run_krakenuniq(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         return pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[1, 2], comment="@"
+            self.report_path,
+            sep="\t",
+            header=None,
+            usecols=[1, 2],
+            comment="@",
+            quoting=csv.QUOTE_NONE,
         ).rename(columns={1: "qseqid", 2: "protid"})
 
 
@@ -894,7 +937,12 @@ class run_minimap2_illumina(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         report = pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[0, 2], comment="@"
+            self.report_path,
+            sep="\t",
+            header=None,
+            usecols=[0, 2],
+            comment="@",
+            quoting=csv.QUOTE_NONE,
         ).rename(columns={0: "acc", 1: "qseqid"})
 
         report = report[report["acc"] != "*"]
@@ -942,7 +990,12 @@ class run_bowtie2(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         return pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[0, 2], comment="@"
+            self.report_path,
+            sep="\t",
+            header=None,
+            usecols=[0, 2],
+            comment="@",
+            quoting=csv.QUOTE_NONE,
         ).rename(columns={2: "acc", 0: "qseqid"})
 
 
@@ -1002,7 +1055,12 @@ class run_bwa_mem(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         report = pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[0, 2], comment="@"
+            self.report_path,
+            sep="\t",
+            header=None,
+            usecols=[0, 2],
+            comment="@",
+            quoting=csv.QUOTE_NONE,
         ).rename(columns={0: "qseqid", 2: "acc"})
 
         report = report[report["acc"] != "*"]
@@ -1051,7 +1109,12 @@ class run_bowtie2_ONT(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         report = pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[0, 2], comment="@"
+            self.report_path,
+            sep="\t",
+            header=None,
+            usecols=[0, 2],
+            comment="@",
+            quoting=csv.QUOTE_NONE,
         ).rename(columns={1: "acc", 0: "qseqid"})
 
         report = report[report["acc"] != "*"]
@@ -1101,7 +1164,12 @@ class run_minimap2_ONT(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         report = pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[0, 5], comment="@"
+            self.report_path,
+            sep="\t",
+            header=None,
+            usecols=[0, 5],
+            comment="@",
+            quoting=csv.QUOTE_NONE,
         ).rename(columns={0: "qseqid", 5: "acc"})
 
         report = report[report["acc"] != "*"]
@@ -1148,7 +1216,12 @@ class run_minimap2_asm(Classifier_init):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
         return pd.read_csv(
-            self.report_path, sep="\t", header=None, usecols=[0, 5], comment="@"
+            self.report_path,
+            sep="\t",
+            header=None,
+            usecols=[0, 5],
+            comment="@",
+            quoting=csv.QUOTE_NONE,
         ).rename(columns={0: "qseqid", 5: "acc"})
 
 
