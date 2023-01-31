@@ -448,7 +448,6 @@ def Update_RunMain(run_class: RunMain_class, parameter_set: ParameterSet):
     try:
         runmain = RunMain.objects.get(
             project__name=run_class.sample.project_name,
-            suprun=run_class.suprun,
             sample=sample,
             name=run_class.prefix,
             parameter_set=parameter_set,
@@ -521,7 +520,6 @@ def get_run_parents(run_class: RunMain_class, parameter_set: ParameterSet):
     try:
         runmain = RunMain.objects.get(
             project=project,
-            suprun=run_class.suprun,
             sample=sample,
             name=run_class.prefix,
             parameter_set=parameter_set,

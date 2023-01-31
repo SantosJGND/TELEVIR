@@ -23,6 +23,7 @@ from pathogen_identification.utilities.update_DBs import (
     Update_Remap,
     Update_RunMain_Initial,
     Update_RunMain_Secondary,
+    get_run_parents,
 )
 from pathogen_identification.utilities.utilities_pipeline import PipelineTree
 from settings.constants_settings import ConstantsSettings
@@ -42,6 +43,7 @@ class PathogenIdentification_Deployment_Manager:
     username: str
     prepped: bool = False
     sent: bool = False
+    parameter_set: ParameterSet
 
     STATUS_ZERO = 0
     STATUS_PREPPED = 1
@@ -193,6 +195,50 @@ class PathogenIdentification_Deployment_Manager:
     def update_merged_targets(self, merged_targets: pd.DataFrame):
         self.run_engine.update_merged_targets(merged_targets)
 
+    def delete_run_media(self):
+        """delete project media directory"""
+
+        if self.prepped:
+            if os.path.isdir(self.run_engine.media_dir):
+                shutil.rmtree(self.run_engine.media_dir, ignore_errors=True)
+
+    def delete_run_static(self):
+        """delete project static directory"""
+
+        if self.prepped:
+            if os.path.isdir(self.run_engine.static_dir):
+                shutil.rmtree(self.run_engine.static_dir, ignore_errors=True)
+
+    def retrieve_runmain(self):
+        """retrieve runmain object from database"""
+
+        self.run_engine = RunMain_class(
+            self.project,
+            self.prefix,
+            self.dir,
+            self.threads,
+            self.run_params_db,
+            self.parameter_set,
+            self.username,
+        )
+
+    def delete_run_record(self):
+        """delete project record in database"""
+
+        if self.prepped:
+
+            _, runmain, _ = get_run_parents(self.run_engine, self.parameter_set)
+
+            if runmain is not None:
+                runmain.delete()
+
+    def delete_run(self, parameter_set: ParameterSet):
+        """delete project record in database"""
+
+        self.delete_run_media()
+        self.delete_run_static()
+        self.delete_run_record()
+
 
 class Tree_Node:
     module: str
@@ -270,18 +316,27 @@ class Tree_Node:
 
         try:
             parameter_set = ParameterSet.objects.get(
-                project=project, sample=sample, status=ParameterSet.STATUS_FINISHED
+                project=project, sample=sample, leaf=node
             )
 
         except ParameterSet.DoesNotExist:
             parameter_set = ParameterSet()
             parameter_set.project = project
             parameter_set.sample = sample
-            parameter_set.status = ParameterSet.STATUS_FINISHED
+            parameter_set.status = ParameterSet.STATUS_RUNNING
             parameter_set.leaf = node
             parameter_set.save()
 
         return parameter_set
+
+    def register_finished(self):
+        self.parameter_set.status = ParameterSet.STATUS_FINISHED
+        self.parameter_set.save()
+
+    def register_failed(self):
+        self.parameter_set.status = ParameterSet.STATUS_ERROR
+        self.parameter_set.save()
+        self.run_manager.delete_run(self.parameter_set)
 
     def register(self, project: Projects, sample: PIProject_Sample, tree: PipelineTree):
 
@@ -417,10 +472,22 @@ class Tree_Progress:
 
         if len(node.leaves) == 0:
             self.submit_node_run(node)
+            node.register_finished()
 
         for leaf in node.leaves:
             leaf_node = self.spawn_node_child(node, leaf)
             self.submit_node_run(leaf_node)
+
+    def register_failed_children(self, node: Tree_Node):
+
+        if len(node.leaves) == 0:
+            self.submit_node_run(node)
+            node.register_failed()
+
+        for leaf in node.leaves:
+            leaf_node = self.spawn_node_child(node, leaf)
+            self.submit_node_run(leaf_node)
+            leaf_node.register_failed()
 
     def initialize_nodes(self):
         origin_node = Tree_Node(
@@ -519,6 +586,7 @@ class Tree_Progress:
         print("Submitting node run: " + str(node.node_index))
 
         registration_success = self.register_node(node)
+
         print("Registration success: " + str(registration_success))
         if not registration_success:
             return
@@ -723,7 +791,14 @@ class Tree_Progress:
             self.run_node(node)
 
     def run_node(self, node: Tree_Node):
-        node.run_manager.run_main()
+
+        try:
+            node.run_manager.run_main()
+        except Exception as e:
+            print("error")
+            print(e)
+            self.register_failed_children(node)
+            return
 
     def run_nodes_sequential(self):
         self.run_current_nodes()

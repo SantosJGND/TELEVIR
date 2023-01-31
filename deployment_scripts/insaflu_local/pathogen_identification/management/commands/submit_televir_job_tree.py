@@ -73,22 +73,10 @@ class Command(BaseCommand):
         pipeline_tree_query = SoftwareTree.objects.get(pk=pipeline_tree_index)
 
         ### MANAGEMENT
-        submission_dict = {sample: [] for sample in samples if not sample.is_deleted}
         matched_paths = {
             leaf: utils.utility_manager.match_path_to_tree_safe(path, pipeline_tree)
             for leaf, path in local_paths.items()
         }
-        available_paths = {
-            leaf: path for leaf, path in matched_paths.items() if path is not None
-        }
-
-        available_path_nodes = {
-            leaf: SoftwareTreeNode.objects.get(
-                software_tree__pk=pipeline_tree_index, index=path
-            )
-            for leaf, path in available_paths.items()
-        }
-
         ### SUBMISSION
 
         pipeline_utils = Utility_Pipeline_Manager()
