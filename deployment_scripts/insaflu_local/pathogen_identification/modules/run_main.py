@@ -928,11 +928,11 @@ class RunMain_class(Run_Deployment_Methods):
                 self.taxid_limit,
             )
 
-        self.aclass_summary = self.metadata_tool.aclass
-        self.rclass_summary = self.metadata_tool.rclass
-        self.merged_targets = self.metadata_tool.merged_targets
-        self.raw_targets = self.metadata_tool.raw_targets
-        self.remap_plan = self.metadata_tool.remap_plan
+            self.aclass_summary = self.metadata_tool.aclass
+            self.rclass_summary = self.metadata_tool.rclass
+            self.merged_targets = self.metadata_tool.merged_targets
+            self.raw_targets = self.metadata_tool.raw_targets
+            self.remap_plan = self.metadata_tool.remap_plan
 
     def Run_Remapping(self):
 
@@ -940,6 +940,8 @@ class RunMain_class(Run_Deployment_Methods):
 
             self.plan_remap_prep()
             self.export_intermediate_reports()
+
+            print("merged targets: ", self.merged_targets)
 
             self.prep_REMAPPING()
             self.deploy_REMAPPING()
