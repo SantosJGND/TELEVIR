@@ -51,7 +51,7 @@ class Metadata_handler:
 
         self.rclass: pd.DataFrame
         self.aclass: pd.DataFrame
-        self.merged_targets: pd.DataFrame
+        self.merged_targets: pd.DataFrame = pd.DataFrame()
         self.remap_targets: List[Remap_Target]
         self.remap_absent_taxid_list: List[str]
         self.remap_plan = pd.DataFrame
