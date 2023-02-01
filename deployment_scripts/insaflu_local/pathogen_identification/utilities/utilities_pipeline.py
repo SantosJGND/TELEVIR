@@ -220,7 +220,7 @@ class PipelineTree:
         """ """
         leaves = []
         if len(self.compress_dag_dict[node]) == 0:
-            return [node]
+            return []
 
         for n in self.compress_dag_dict[node]:
             leaves.extend(self.leaves_from_node(n))

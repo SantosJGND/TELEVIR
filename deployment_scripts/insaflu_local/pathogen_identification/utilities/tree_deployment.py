@@ -714,7 +714,7 @@ class Tree_Progress:
         volonteer.run_manager.update_merged_targets(group_targets)
         print("running_main")
         print(volonteer.run_manager.run_engine.remapping)
-        volonteer.run_manager.run_main()
+        run_success = volonteer.run_manager.run_main()
 
         volonteer.run_manager.update_merged_targets(original_targets)
 
@@ -740,11 +740,19 @@ class Tree_Progress:
             print(group_targets)
             volonteer = nodes[0]
 
-            mapped_instances_shared = self.process_subject(volonteer, group_targets)
+            mapped_instances_shared, deployment_success = self.process_subject(
+                volonteer, group_targets
+            )
 
             nodes = self.update_mapped_instances(nodes, mapped_instances_shared)
 
-            current_nodes.extend(nodes)
+            if deployment_success:
+                current_nodes.extend(nodes)
+
+            else:
+
+                for node in nodes:
+                    self.register_failed_children(node)
 
         if len(current_nodes) > 0:
             self.current_nodes = current_nodes
@@ -775,8 +783,6 @@ class Tree_Progress:
                 new_node = self.spawn_node_child(node, child)
                 new_nodes.append(new_node)
 
-        print("updating nodes")
-        print(len(new_nodes))
         self.current_nodes = new_nodes
 
         if len(new_nodes) == 0:
@@ -787,18 +793,31 @@ class Tree_Progress:
 
     def run_current_nodes(self):
 
+        new_nodes = []
+
         for node in self.current_nodes:
-            self.run_node(node)
+            run_success = self.run_node(node)
+
+            if run_success:
+                new_nodes.append(node)
+
+            else:
+                self.register_node_leaves(node)
+                self.register_failed_children(node)
+
+        self.current_nodes = new_nodes
 
     def run_node(self, node: Tree_Node):
 
         try:
+            # raise ("test exception")
             node.run_manager.run_main()
+            return True
         except Exception as e:
             print("error")
             print(e)
-            self.register_failed_children(node)
-            return
+
+            return False
 
     def run_nodes_sequential(self):
         self.run_current_nodes()
