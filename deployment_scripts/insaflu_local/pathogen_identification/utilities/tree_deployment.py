@@ -329,14 +329,41 @@ class Tree_Node:
 
         return parameter_set
 
-    def register_finished(self):
-        self.parameter_set.status = ParameterSet.STATUS_FINISHED
-        self.parameter_set.save()
+    def register_finished(
+        self, project: Projects, sample: PIProject_Sample, tree: PipelineTree
+    ):
+        tree_node = self.generate_software_tree_node_entry(tree)
+        if tree_node is None:
+            return False
 
-    def register_failed(self):
-        self.parameter_set.status = ParameterSet.STATUS_ERROR
-        self.parameter_set.save()
-        self.run_manager.delete_run(self.parameter_set)
+        parameter_set = self.setup_parameterset(project, sample, tree_node)
+
+        if parameter_set is None:
+            return False
+
+        parameter_set.status = ParameterSet.STATUS_FINISHED
+        parameter_set.save()
+
+        return True
+
+    def register_failed(
+        self, project: Projects, sample: PIProject_Sample, tree: PipelineTree
+    ):
+        tree_node = self.generate_software_tree_node_entry(tree)
+        if tree_node is None:
+            return False
+
+        parameter_set = self.setup_parameterset(project, sample, tree_node)
+
+        if parameter_set is None:
+            return False
+
+        parameter_set.status = ParameterSet.STATUS_ERROR
+        parameter_set.save()
+
+        self.run_manager.delete_run(parameter_set)
+
+        return True
 
     def register(self, project: Projects, sample: PIProject_Sample, tree: PipelineTree):
 
@@ -365,12 +392,6 @@ class Tree_Node:
         arguments_df = pd.DataFrame(
             arguments_list, columns=["parameter", "value", "flag"]
         )
-
-        print("######")
-        print(self.branch)
-        print(arguments_df)
-        print(self.node_index)
-        print(pipe_tree.node_index)
 
         arguments_df = arguments_df[arguments_df.parameter != "root"]
 
@@ -472,22 +493,32 @@ class Tree_Progress:
 
         if len(node.leaves) == 0:
             self.submit_node_run(node)
-            node.register_finished()
+            self.register_finished(node)
 
         for leaf in node.leaves:
             leaf_node = self.spawn_node_child(node, leaf)
             self.submit_node_run(leaf_node)
+
+    def register_finished(self, node: Tree_Node):
+
+        registration_success = node.register_finished(
+            self.project, self.sample, self.tree
+        )
 
     def register_failed_children(self, node: Tree_Node):
 
         if len(node.leaves) == 0:
             self.submit_node_run(node)
-            node.register_failed()
+            registration_success = node.register_failed(
+                self.project, self.sample, self.tree
+            )
 
         for leaf in node.leaves:
             leaf_node = self.spawn_node_child(node, leaf)
             self.submit_node_run(leaf_node)
-            leaf_node.register_failed()
+            registration_success = leaf_node.register_failed(
+                self.project, self.sample, self.tree
+            )
 
     def initialize_nodes(self):
         origin_node = Tree_Node(
@@ -501,7 +532,6 @@ class Tree_Progress:
         self.register_node_leaves(origin_node)
 
         self.current_nodes = [origin_node]
-        # self.current_nodes.add_node(origin_node)
 
     def get_current_module(self):
         return self.current_module
