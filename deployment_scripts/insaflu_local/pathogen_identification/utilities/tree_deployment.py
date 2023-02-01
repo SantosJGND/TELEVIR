@@ -752,7 +752,7 @@ class Tree_Progress:
             volonteer.run_manager.run_engine.remap_manager.mapped_instances
         )
 
-        return mapped_instances_shared
+        return mapped_instances_shared, run_success
 
     def stacked_deployement(self, nodes_by_sample_sources: List[List[Tree_Node]]):
 
