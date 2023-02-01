@@ -491,7 +491,9 @@ class Tree_Progress:
 
     def register_node_leaves(self, node: Tree_Node):
 
-        if len(node.leaves) == 0:
+        print(node)
+        print(node.leaves)
+        if node.node_index in node.leaves:
             self.submit_node_run(node)
             self.register_finished(node)
 
