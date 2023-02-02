@@ -44,6 +44,7 @@ def deploy_ProjectPI(request):
         project = Projects.objects.get(id=int(project_id))
         utils = Utils_Manager()
         runs_to_deploy = utils.check_runs_to_deploy(user, project)
+        print("runs_to_deploy", runs_to_deploy)
 
         try:
             if runs_to_deploy:
@@ -52,6 +53,8 @@ def deploy_ProjectPI(request):
                     user=request.user,
                     project_pk=project.pk,
                 )
+
+                print("taskid", taskID)
 
                 data["is_deployed"] = True
 

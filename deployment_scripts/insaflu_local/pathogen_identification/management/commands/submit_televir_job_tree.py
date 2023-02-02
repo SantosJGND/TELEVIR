@@ -60,6 +60,21 @@ class Command(BaseCommand):
             ProcessControler.FLAG_RUNNING,
         )
 
+        process = ProcessControler.objects.filter(
+            owner__id=user.pk,
+            name=process_controler.get_name_televir_project(project_pk=project.pk),
+        )
+
+        print(process)
+
+        if process.exists():
+            process = process.first()
+
+            print(f"Process {process.pk} has been submitted")
+
+        else:
+            print("Process does not exist")
+
         ### UTILITIES
         utils = Utils_Manager()
         samples = PIProject_Sample.objects.filter(project=project)

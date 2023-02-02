@@ -31,12 +31,6 @@ from managing_files.forms import AddSampleProjectForm
 from managing_files.manage_database import ManageDatabase
 from managing_files.models import Sample
 from managing_files.tables import SampleToProjectsTable
-from settings.constants_settings import ConstantsSettings as CS
-from settings.default_software_project_sample import DefaultProjectSoftware
-from settings.models import Technology
-from utils.process_SGE import ProcessSGE
-from utils.utils import ShowInfoMainPage, Utils
-
 from pathogen_identification.constants_settings import ConstantsSettings
 from pathogen_identification.models import (
     ContigClassification,
@@ -60,6 +54,11 @@ from pathogen_identification.tables import (
     RunMainTable,
     SampleTable,
 )
+from settings.constants_settings import ConstantsSettings as CS
+from settings.default_software_project_sample import DefaultProjectSoftware
+from settings.models import Technology
+from utils.process_SGE import ProcessSGE
+from utils.utils import ShowInfoMainPage, Utils
 
 
 def clean_check_box_in_session(request):
@@ -565,56 +564,6 @@ class AddSamples_PIProjectsView(
                     project_sample.report = "report"
                     project_sample.save()
                     project_sample_add += 1
-
-                ### create a task to perform the analysis of snippy and freebayes
-                ### Important, it is necessary to run again because can have some changes in the parameters.
-                try:
-                    if len(job_name_wait) == 0:
-                        (
-                            job_name_wait,
-                            job_name,
-                        ) = self.request.user.profile.get_name_sge_seq(
-                            Profile.SGE_PROCESS_projects, Profile.SGE_GLOBAL
-                        )
-                    if sample.is_type_fastq_gz_sequencing():
-                        taskID = process_SGE.set_second_stage_snippy(
-                            project_sample, self.request.user, job_name, [job_name_wait]
-                        )
-                    else:
-                        taskID = process_SGE.set_second_stage_medaka(
-                            project_sample, self.request.user, job_name, [job_name_wait]
-                        )
-
-                    ### set project sample queue ID
-                    manageDatabase.set_project_sample_metakey(
-                        project_sample,
-                        self.request.user,
-                        metaKeyAndValue.get_meta_key_queue_by_project_sample_id(
-                            project_sample.id
-                        ),
-                        MetaKeyAndValue.META_VALUE_Queue,
-                        taskID,
-                    )
-                except:
-                    pass
-
-            ### necessary to calculate the global results again
-            if project_sample_add > 0:
-                try:
-                    taskID = process_SGE.set_collect_global_files(
-                        project, self.request.user
-                    )
-                    manageDatabase.set_project_metakey(
-                        project,
-                        self.request.user,
-                        metaKeyAndValue.get_meta_key(
-                            MetaKeyAndValue.META_KEY_Queue_TaskID_Project, project.id
-                        ),
-                        MetaKeyAndValue.META_VALUE_Queue,
-                        taskID,
-                    )
-                except:
-                    pass
 
             if project_sample_add == 0:
                 messages.warning(
