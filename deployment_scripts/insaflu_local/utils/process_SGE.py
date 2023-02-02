@@ -71,6 +71,7 @@ class ProcessSGE(object):
         print("temp file: ", temp_file)
         print("cmd: {}".format(cmd))
         print("exit status", exist_status)
+        exist_status = 1
 
         if exist_status != 0:
             if os.path.exists(temp_file):

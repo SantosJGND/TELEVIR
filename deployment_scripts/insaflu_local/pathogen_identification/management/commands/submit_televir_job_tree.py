@@ -84,8 +84,6 @@ class Command(BaseCommand):
         tree_makeup = local_tree.makeup
 
         pipeline_tree = utils.generate_software_tree(technology, tree_makeup)
-        pipeline_tree_index = utils.get_software_tree_index(technology, tree_makeup)
-        pipeline_tree_query = SoftwareTree.objects.get(pk=pipeline_tree_index)
 
         ### MANAGEMENT
         matched_paths = {
