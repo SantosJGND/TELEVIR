@@ -181,6 +181,7 @@ class PathogenIdentification_Deployment_Manager:
         self.prepped = True
 
     def run_main(self):
+
         self.run_engine.Run_QC()
         self.run_engine.Run_PreProcess()
         self.run_engine.Sanitize_reads()
@@ -828,11 +829,8 @@ class Tree_Progress:
     def run_node(self, node: Tree_Node):
 
         try:
-            deployment_success = node.run_manager.run_main()
-            if deployment_success:
-                return True
-            else:
-                return False
+            node.run_manager.run_main()
+            return True
         except Exception as e:
             print("error")
             print(e)
