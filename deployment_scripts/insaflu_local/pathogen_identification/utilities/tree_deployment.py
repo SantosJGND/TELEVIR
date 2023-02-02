@@ -209,25 +209,12 @@ class PathogenIdentification_Deployment_Manager:
             if os.path.isdir(self.run_engine.static_dir):
                 shutil.rmtree(self.run_engine.static_dir, ignore_errors=True)
 
-    def retrieve_runmain(self):
-        """retrieve runmain object from database"""
-
-        self.run_engine = RunMain_class(
-            self.project,
-            self.prefix,
-            self.dir,
-            self.threads,
-            self.run_params_db,
-            self.parameter_set,
-            self.username,
-        )
-
-    def delete_run_record(self):
+    def delete_run_record(self, parameter_set: ParameterSet):
         """delete project record in database"""
 
         if self.prepped:
 
-            _, runmain, _ = get_run_parents(self.run_engine, self.parameter_set)
+            _, runmain, _ = get_run_parents(self.run_engine, parameter_set)
 
             if runmain is not None:
                 runmain.delete()
@@ -237,7 +224,7 @@ class PathogenIdentification_Deployment_Manager:
 
         self.delete_run_media()
         self.delete_run_static()
-        self.delete_run_record()
+        self.delete_run_record(parameter_set)
 
 
 class Tree_Node:
@@ -491,10 +478,9 @@ class Tree_Progress:
 
     def register_node_leaves(self, node: Tree_Node):
 
-        print(node)
-        print(node.leaves)
         if node.node_index in node.leaves:
-            self.submit_node_run(node)
+            print(node, node.leaves)
+            # self.submit_node_run(node)
             self.register_finished(node)
 
         for leaf in node.leaves:
@@ -509,15 +495,15 @@ class Tree_Progress:
 
     def register_failed_children(self, node: Tree_Node):
 
-        if len(node.leaves) == 0:
-            self.submit_node_run(node)
+        if node.node_index in node.leaves:
+            # self.submit_node_run(node)
             registration_success = node.register_failed(
                 self.project, self.sample, self.tree
             )
 
         for leaf in node.leaves:
             leaf_node = self.spawn_node_child(node, leaf)
-            self.submit_node_run(leaf_node)
+            # self.submit_node_run(leaf_node)
             registration_success = leaf_node.register_failed(
                 self.project, self.sample, self.tree
             )
@@ -746,7 +732,7 @@ class Tree_Progress:
         volonteer.run_manager.update_merged_targets(group_targets)
         print("running_main")
         print(volonteer.run_manager.run_engine.remapping)
-        run_success = volonteer.run_manager.run_main()
+        run_success = self.run_node(volonteer)
 
         volonteer.run_manager.update_merged_targets(original_targets)
 
@@ -842,9 +828,11 @@ class Tree_Progress:
     def run_node(self, node: Tree_Node):
 
         try:
-            # raise ("test exception")
-            node.run_manager.run_main()
-            return True
+            deployment_success = node.run_manager.run_main()
+            if deployment_success:
+                return True
+            else:
+                return False
         except Exception as e:
             print("error")
             print(e)

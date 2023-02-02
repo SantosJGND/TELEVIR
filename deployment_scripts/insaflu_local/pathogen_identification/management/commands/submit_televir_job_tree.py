@@ -85,27 +85,46 @@ class Command(BaseCommand):
 
         module_tree = pipeline_utils.compress_software_tree(reduced_tree)
 
-        print(module_tree.compress_dag_dict)
-        print(module_tree.nodes_compress)
-        print(module_tree.node_index)
+        try:
 
-        for project_sample in samples:
-            if not project_sample.is_deleted:
-                deployment_tree = Tree_Progress(module_tree, project_sample, project)
+            print(module_tree.compress_dag_dict)
+            print(module_tree.nodes_compress)
+            print(module_tree.node_index)
 
-                print("leaves: ", module_tree.compress_dag_dict)
+            for project_sample in samples:
+                if not project_sample.is_deleted:
+                    deployment_tree = Tree_Progress(
+                        module_tree, project_sample, project
+                    )
 
-                current_module = deployment_tree.get_current_module()
-                while current_module != "end":
-                    # for x in range(0):
-                    print("NEXT")
-                    print(len(deployment_tree.current_nodes))
-                    print(deployment_tree.get_current_module())
-                    print([x.node_index for x in deployment_tree.current_nodes])
-                    print([x.children for x in deployment_tree.current_nodes])
-                    deployment_tree.deploy_nodes()
-                    # deployment_tree.update_nodes()
+                    print("leaves: ", module_tree.compress_dag_dict)
 
                     current_module = deployment_tree.get_current_module()
+                    while current_module != "end":
+                        # for x in range(0):
+                        print("NEXT")
+                        print(len(deployment_tree.current_nodes))
+                        print(deployment_tree.get_current_module())
+                        print([x.node_index for x in deployment_tree.current_nodes])
+                        print([x.children for x in deployment_tree.current_nodes])
+                        deployment_tree.deploy_nodes()
+                        # deployment_tree.update_nodes()
 
-        print(len(samples))
+                        current_module = deployment_tree.get_current_module()
+
+            print(len(samples))
+
+            process_SGE.set_process_controler(
+                user,
+                process_controler.get_name_televir_project(project_pk=project.pk),
+                ProcessControler.FLAG_FINISHED,
+            )
+
+        except Exception as e:
+            print(e)
+            process_SGE.set_process_controler(
+                user,
+                process_controler.get_name_televir_project(project_pk=project.pk),
+                ProcessControler.FLAG_ERROR,
+            )
+            raise e
