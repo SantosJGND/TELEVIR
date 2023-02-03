@@ -446,7 +446,7 @@ class Params_Nanopore:
             "DIAMOND_ARGS": [
                 "--top 3 -e 0.01 --id 70 --query-cover 60 --algo 0 --very-sensitive --long-reads",
             ],
-            "DIAMOND_DB": ["diamond/refseq"],
+            "DIAMOND_DB": ["diamond/refseq_prot"],
             "DIAMOND_THREADS": [4],
         },
         "kaiju": {
