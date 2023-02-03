@@ -300,7 +300,7 @@ class setup_dl:
         fprot_suf = os.path.splitext(fprot)[0]
 
         if os.path.isfile(self.seqdir + fprot):
-            self.fastas["prot"]["refseq"] = self.seqdir + fprot
+            self.fastas["prot"]["refseq_prot"] = self.seqdir + fprot
             logging.info(f"{fprot_suf} found.")
             return False
 
@@ -330,10 +330,10 @@ class setup_dl:
             else:
                 logging.info(f"{fprot_suf} not found. downloading...")
                 self.get_concat(protf, fprot_suf, host, source)
-                self.fastas["prot"]["refseq"] = self.seqdir + fprot
+                self.fastas["prot"]["refseq_prot"] = self.seqdir + fprot
                 True
         else:
-            self.fastas["prot"]["refseq"] = self.seqdir + fprot
+            self.fastas["prot"]["refseq_prot"] = self.seqdir + fprot
             logging.info(f"{fprot_suf} found.")
             return True
 

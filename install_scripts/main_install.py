@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import datetime
 import logging
 import os
 import sys
@@ -140,7 +141,7 @@ class main_setup:
     ]
 
     installed_software = []
-    installed_dbs = []
+    installed_databases = []
 
     def __init__(
         self,
@@ -174,6 +175,16 @@ class main_setup:
 
         self.setup_config()
         self.utilities = repository(db_path=self.wdir.home, install_type=install_type)
+
+    @staticmethod
+    def software_install_string(software_name: str):
+        date = datetime.datetime.now().strftime("%Y-%m-%d")
+        return f"{software_name} installed on {date}"
+
+    @staticmethod
+    def database_install_string(database_name: str):
+        date = datetime.datetime.now().strftime("%Y-%m-%d")
+        return f"{database_name} installed on {date}"
 
     def setup_config(self):
         if self.install_config == "full":
@@ -303,7 +314,9 @@ class main_setup:
         if self.layout.install_request_sequences:
             request_success = self.wdir.install_requests()
             if request_success:
-                self.installed_dbs.append("requests")
+                self.installed_databases.append(
+                    self.database_install_string("requests")
+                )
                 self.utilities.add_database(
                     self.utilities.database_item(
                         "requests",
@@ -315,12 +328,14 @@ class main_setup:
         if self.layout.install_refseq_prot:
             success_refprot = self.wdir.refseq_prot_dl()
             if success_refprot:
-                self.installed_dbs.append("refseq_prot")
+                self.installed_databases.append(
+                    self.database_install_string("refseq_prot")
+                )
 
                 self.utilities.add_database(
                     self.utilities.database_item(
                         "refseq_prot",
-                        self.wdir.fastas["prot"]["refseq"],
+                        self.wdir.fastas["prot"]["refseq_prot"],
                         True,
                     )
                 )
@@ -328,7 +343,9 @@ class main_setup:
         if self.layout.install_refseq_gen:
             success_refnuc = self.wdir.refseq_gen_dl()
             if success_refnuc:
-                self.installed_dbs.append("refseq_gen")
+                self.installed_databases.append(
+                    self.database_install_string("refseq_gen")
+                )
 
                 self.utilities.add_database(
                     self.utilities.database_item(
@@ -341,7 +358,9 @@ class main_setup:
         if self.layout.install_swissprot:
             swissprot_dl = self.wdir.swissprot_dl()
             if swissprot_dl:
-                self.installed_dbs.append("swissprot")
+                self.installed_databases.append(
+                    self.database_install_string("swissprot")
+                )
 
                 self.utilities.add_database(
                     self.utilities.database_item(
@@ -355,7 +374,7 @@ class main_setup:
 
             success_hg38 = self.wdir.download_hg38()
             if success_hg38:
-                self.installed_dbs.append("hg38")
+                self.installed_databases.append(self.database_install_string("hg38"))
                 self.utilities.add_database(
                     self.utilities.database_item(
                         "hg38",
@@ -368,7 +387,7 @@ class main_setup:
 
             success_hg38 = self.wdir.download_grc38()
             if success_hg38:
-                self.installed_dbs.append("grc38")
+                self.installed_databases.append(self.database_install_string("grc38"))
                 self.utilities.add_database(
                     self.utilities.database_item(
                         "grc38",
@@ -382,7 +401,9 @@ class main_setup:
             if self.layout.install_virosaurus:
                 success_virosaurus = self.wdir.virosaurus_dl()
                 if success_virosaurus:
-                    self.installed_dbs.append("virosaurus")
+                    self.installed_databases.append(
+                        self.database_install_string("virosaurus")
+                    )
 
                     self.utilities.add_database(
                         self.utilities.database_item(
@@ -395,7 +416,9 @@ class main_setup:
             if self.layout.install_rvdb:
                 success_rvdb = self.wdir.RVDB_dl()
                 if success_rvdb:
-                    self.installed_dbs.append("rvdb")
+                    self.installed_databases.append(
+                        self.database_install_string("rvdb")
+                    )
 
                     self.utilities.add_database(
                         self.utilities.database_item(
@@ -470,7 +493,9 @@ class main_setup:
                 ] = f"{prepdl.seqdir}{centlib}"  # add to fastas dict
 
                 if install_success:
-                    self.installed_software.append("centrifuge")
+                    self.installed_software.append(
+                        self.software_install_string("centrifuge")
+                    )
 
                     self.utilities.add_software(
                         self.utilities.software_item(
@@ -486,7 +511,7 @@ class main_setup:
         if self.layout.install_clark:
             success_install = sofprep.clark_install(dbname=self.organism)
             if success_install:
-                self.installed_software.append("clark")
+                self.installed_software.append(self.software_install_string("clark"))
 
                 self.utilities.add_software(
                     self.utilities.software_item(
@@ -516,7 +541,7 @@ class main_setup:
 
             if success_install:
 
-                self.installed_software.append("kraken2")
+                self.installed_software.append(self.software_install_string("kraken2"))
 
                 self.utilities.add_software(
                     self.utilities.software_item(
@@ -532,7 +557,9 @@ class main_setup:
         if self.layout.install_krakenuniq:
             success_install = sofprep.kuniq_install(dbname=self.organism)
             if success_install:
-                self.installed_software.append("krakenuniq")
+                self.installed_software.append(
+                    self.software_install_string("krakenuniq")
+                )
                 self.utilities.add_software(
                     self.utilities.software_item(
                         "krakenuniq",
@@ -548,7 +575,7 @@ class main_setup:
 
             if self.layout.install_kaiju:
                 sofprep.kaiju_viral_install()
-                self.installed_software.append("kaiju")
+                self.installed_software.append(self.software_install_string("kaiju"))
 
                 self.utilities.add_software(
                     self.utilities.software_item(
@@ -565,7 +592,7 @@ class main_setup:
         for fname, fpath in prepdl.fastas["host"].items():
             bwa_install = sofprep.bwa_install(dbname=fname, reference=fpath)
             if bwa_install:
-                self.installed_software.append("bwa")
+                self.installed_software.append(self.software_install_string("bwa"))
                 self.utilities.add_software(
                     self.utilities.software_item(
                         "bwa",
@@ -579,7 +606,9 @@ class main_setup:
             if self.layout.install_bowtie2:
                 bowtie2_install = sofprep.bowtie2_index(dbname=fname, reference=fpath)
                 if bowtie2_install:
-                    self.installed_software.append("bowtie2")
+                    self.installed_software.append(
+                        self.software_install_string("bowtie2")
+                    )
                     self.utilities.add_software(
                         self.utilities.software_item(
                             "bowtie2",
@@ -607,7 +636,9 @@ class main_setup:
                 install_success = sofprep.diamond_install(dbname=fname, db=fdb)
 
                 if install_success:
-                    self.installed_software.append("diamond")
+                    self.installed_software.append(
+                        self.software_install_string("diamond")
+                    )
 
                     self.utilities.add_software(
                         self.utilities.software_item(
@@ -632,7 +663,9 @@ class main_setup:
                     )
 
                     if success_install:
-                        self.installed_software.append("blast")
+                        self.installed_software.append(
+                            self.software_install_string("blastp")
+                        )
 
                         self.utilities.add_software(
                             self.utilities.software_item(
@@ -655,7 +688,9 @@ class main_setup:
                     list_create=True,
                 )
                 if install_success:
-                    self.installed_software.append("fastviromeexplorer")
+                    self.installed_software.append(
+                        self.software_install_string("fastviromeexplorer")
+                    )
 
                     self.utilities.add_software(
                         self.utilities.software_item(
@@ -671,7 +706,7 @@ class main_setup:
 
                 if fname == "refseq":
                     install_success = sofprep.blast_install(
-                        reference=prepdl.fastas["nuc"]["refseq"],
+                        reference=fdb,
                         dbname=f"refseq_{self.organism}_genome",
                         nuc=True,
                         taxid_map=sofprep.metadir + "acc2taxid.nuc.map",
@@ -680,7 +715,9 @@ class main_setup:
                     )
 
                     if install_success:
-                        self.installed_software.append("blast")
+                        self.installed_software.append(
+                            self.software_install_string("blastn")
+                        )
 
                         self.utilities.add_software(
                             self.utilities.software_item(
@@ -701,7 +738,9 @@ class main_setup:
                     )
 
                     if install_success:
-                        self.installed_software.append("desamba")
+                        self.installed_software.append(
+                            self.software_install_string("desamba")
+                        )
 
                         self.utilities.add_software(
                             self.utilities.software_item(
@@ -732,6 +771,24 @@ class main_setup:
                 )
 
                 self.dl_metadata_nuc()
+
+            if self.seqdl:
+                self.utilities.dump_database(self.wdir.home)
+
+            if self.soft:
+                self.utilities.dump_software(self.wdir.home)
+
+    def register_install_logs(self):
+
+        with open(os.path.join(self.wdir.home, "install_log.txt"), "w") as install_log:
+            if self.installed_software:
+                install_log.write("Installed software:\n")
+                for software in self.installed_software:
+                    install_log.write(f"{software}\n")
+            if self.installed_databases:
+                install_log.write("Installed databases:\n")
+                for database in self.installed_databases:
+                    install_log.write(f"{database}\n")
 
     def setup_deploy(self):
 
