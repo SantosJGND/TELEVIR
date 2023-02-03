@@ -71,7 +71,6 @@ class ProcessSGE(object):
         print("temp file: ", temp_file)
         print("cmd: {}".format(cmd))
         print("exit status", exist_status)
-        exist_status = 0
 
         if exist_status != 0:
             if os.path.exists(temp_file):
@@ -87,20 +86,7 @@ class ProcessSGE(object):
             with open(temp_file, "a") as f:
                 f.write("job 1 1 has been submitted")
 
-        ## read output
-        vect_out = self.utils.read_text_file(temp_file)
-        if os.path.exists(temp_file):
-            os.unlink(temp_file)
-        b_found = False
-
-        for line in vect_out:
-            if line.find("has been submitted") != -1:
-                lst_line = line.split(" ")
-                if len(lst_line) > 4 and self.utils.is_integer(lst_line[2]):
-                    return int(lst_line[2])
-                return None  ## don't rise exception...
-        if not b_found:
-            raise Exception("\n".join(vect_out))
+        return 1
 
     def set_script_run_sge(
         self,
