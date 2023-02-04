@@ -665,7 +665,7 @@ class setup_dl:
             return
 
         refseq_prot = self.fastas["prot"]["refseq_prot"]
-        outfile = f"{self.metadir}refseq_prot_acc2taxid.txt"
+        outfile = f"{self.metadir}refseq_prot_acc2taxid.tsv"
 
         if os.path.exists(outfile):
             logging.info(f"{outfile} found.")
@@ -739,7 +739,7 @@ class setup_dl:
                 for dci in range(1, 11):
                     os.system("rm {}".format(self.metadir + f"{dbi}_a2p_{dci}.tsv"))
 
-                self.meta[dbi] = self.metadir + f"{dbi}_acc2taxid.tsv"
+                self.meta[dbi] = "refseq_prot"
 
         logging.info(
             f"accession to taxid mapping done. You can now delete the directory {self.metadir}prot.accession2taxid/"
