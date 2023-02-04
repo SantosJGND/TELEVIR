@@ -655,6 +655,48 @@ class setup_dl:
         :return: self
         """
 
+        self.prot2taxid_rescue()
+
+    def parse_refseq_prot(self):
+
+        if "refseq_prot" not in self.fastas["prot"]:
+            logging.info("refseq_prot not found.")
+            return
+
+        refseq_prot = self.fastas["prot"]["refseq_prot"]
+        outfile = f"{self.metadir}refseq_prot_acc.txt"
+
+        if os.path.exists(outfile):
+            logging.info("refseq_prot_acc.txt found.")
+            return
+
+        def retrieve_within_square_brackets(string):
+            return string[string.find("[") + 1 : string.find("]")]
+
+        def retrieve_acc_string(string):
+            return string.split()[0][1:]
+
+        lines = []
+        with gzip.open(refseq_prot, "rt") as f:
+            for line in f:
+                if line.startswith(">"):
+                    acc = retrieve_acc_string(line)
+                    description = retrieve_within_square_brackets(line)
+                    lines.append([acc, description])
+
+        df = pd.DataFrame(lines, columns=["acc", "description"])
+        tax2description = pd.read_csv(f"{self.metadir}/taxid2desc.tsv", sep="\t")
+
+        df = df.merge(tax2description, on="description", how="left")
+        df.to_csv(outfile, sep="\t", index=False)
+
+        self.meta["refseq_prot"] = outfile
+
+    def prot2taxid_rescue(self):
+        """
+        parse accession to taxid files for each fasta in fasta.prot.
+        """
+
         dict_ids = self.temp_nucmeta()
 
         if dict_ids:
@@ -766,6 +808,9 @@ class setup_dl:
         dict_ids = {}
 
         for dbs, fl in self.fastas["prot"].items():
+            if dbs in ["refseq_prot"]:
+                continue
+
             outfile = self.metadir + f"{dbs}_acc2taxid.tsv"
             if os.path.isfile(outfile):
                 self.meta[dbs] = outfile
