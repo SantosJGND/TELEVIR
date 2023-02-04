@@ -692,7 +692,6 @@ class setup_dl:
         df = df[["acc", "taxid"]]
         df = df.dropna()
         df.taxid = df.taxid.astype(int)
-        print(df.head())
 
         df.to_csv(outfile, sep="\t", index=False)
 
@@ -795,13 +794,9 @@ class setup_dl:
                 p2t = pd.read_csv(outfile, sep="\t")
                 to_concat.append(p2t)
 
-                print(dbs, p2t.head())
-
         if to_concat:
 
             general_db = pd.concat(to_concat, axis=0)
-
-            print(general_db.head())
             general_db.columns = ["prot_acc", "taxid"]
             general_db.drop_duplicates(subset="prot_acc")
 
