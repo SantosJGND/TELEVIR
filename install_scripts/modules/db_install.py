@@ -798,6 +798,7 @@ class setup_dl:
         if to_concat:
 
             general_db = pd.concat(to_concat, axis=0)
+            print(general_db.head())
             general_db.columns = ["prot_acc", "taxid"]
             general_db.drop_duplicates(subset="prot_acc")
 
