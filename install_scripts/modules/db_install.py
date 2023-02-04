@@ -665,10 +665,10 @@ class setup_dl:
             return
 
         refseq_prot = self.fastas["prot"]["refseq_prot"]
-        outfile = f"{self.metadir}refseq_prot_acc.txt"
+        outfile = f"{self.metadir}refseq_prot_acc2taxid.txt"
 
         if os.path.exists(outfile):
-            logging.info("refseq_prot_acc.txt found.")
+            logging.info(f"{outfile} found.")
             return
 
         def retrieve_within_square_brackets(string):
@@ -689,6 +689,7 @@ class setup_dl:
         tax2description = pd.read_csv(f"{self.metadir}/taxid2desc.tsv", sep="\t")
 
         df = df.merge(tax2description, on="description", how="left")
+        df.taxid = df.taxid.astype(int)
         df.to_csv(outfile, sep="\t", index=False)
 
         self.meta["refseq_prot"] = outfile
