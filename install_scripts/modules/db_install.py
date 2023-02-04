@@ -689,7 +689,11 @@ class setup_dl:
         tax2description = pd.read_csv(f"{self.metadir}/taxid2desc.tsv", sep="\t")
 
         df = df.merge(tax2description, on="description", how="left")
+        print(df.head())
+        df = df[["prot_acc", "taxid"]]
+        df = df.dropna()
         df.taxid = df.taxid.astype(int)
+
         df.to_csv(outfile, sep="\t", index=False)
 
         self.meta["refseq_prot"] = outfile
