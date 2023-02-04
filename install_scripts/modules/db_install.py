@@ -685,7 +685,7 @@ class setup_dl:
                     description = retrieve_within_square_brackets(line)
                     lines.append([acc, description])
 
-        df = pd.DataFrame(lines, columns=["prot_acc", "description"])
+        df = pd.DataFrame(lines, columns=["acc", "description"])
         tax2description = pd.read_csv(f"{self.metadir}/taxid2desc.tsv", sep="\t")
 
         df = df.merge(tax2description, on="description", how="left")
