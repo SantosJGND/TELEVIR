@@ -1,5 +1,7 @@
+
+
 install_scripts/__pycache__/
-__pycache__/
+*__pycache__/
 .venv-deploy/
 .venv/
 .cenv/

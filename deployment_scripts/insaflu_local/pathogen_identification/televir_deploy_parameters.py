@@ -34,7 +34,7 @@ class Params_Illumina:
             # "fastviromeexplorer",
             "krakenuniq",
             # "clark",
-            "kaiju",
+            # "kaiju",
             "centrifuge",
             # "diamond",
         ],

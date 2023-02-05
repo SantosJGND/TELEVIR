@@ -7,24 +7,16 @@ from typing import List
 import pandas as pd
 from constants.constants import Televir_Metadata_Constants as Televir_Metadata
 from constants.constants import TypePath
-from pathogen_identification.constants_settings import ConstantsSettings as PIConstants
-from pathogen_identification.models import (
-    ParameterSet,
-    PIProject_Sample,
-    Projects,
-    SoftwareTree,
-    SoftwareTreeNode,
-)
+from pathogen_identification.constants_settings import \
+    ConstantsSettings as PIConstants
+from pathogen_identification.models import (ParameterSet, PIProject_Sample,
+                                            Projects, SoftwareTree,
+                                            SoftwareTreeNode)
 from pathogen_identification.modules.remap_class import Mapping_Instance
 from pathogen_identification.modules.run_main import RunMain_class
 from pathogen_identification.utilities.update_DBs import (
-    Update_Assembly,
-    Update_Classification,
-    Update_Remap,
-    Update_RunMain_Initial,
-    Update_RunMain_Secondary,
-    get_run_parents,
-)
+    Update_Assembly, Update_Classification, Update_Remap,
+    Update_RunMain_Initial, Update_RunMain_Secondary, get_run_parents)
 from pathogen_identification.utilities.utilities_pipeline import PipelineTree
 from settings.constants_settings import ConstantsSettings
 from utils.utils import Utils
@@ -743,6 +735,38 @@ class Tree_Progress:
 
         return mapped_instances_shared, run_success
 
+    def stacked_deployment_classification(
+        self, nodes_by_sample_sources: List[List[Tree_Node]]
+    ):
+        new_nodes = []
+        print("########## STACKED DEPLOYMENT CLASS FICATION ##########")
+        print(nodes_by_sample_sources)
+        for nodes_subset in nodes_by_sample_sources:
+
+            if len(nodes_subset) == 0:
+                continue
+
+            volonteer = nodes_subset[0]
+            print("volonteer: " + str(volonteer.node_index))
+            run_success = self.run_node(volonteer)
+            print("run_success: " + str(run_success))
+
+            if run_success:
+
+                for node in nodes_subset:
+                    node.run_manager.run_engine.read_classification_drone = (
+                        volonteer.run_manager.run_engine.read_classification_drone
+                    )
+                    node.run_manager.run_engine.read_classification_performed = True
+                    new_nodes.append(node)
+            else:
+
+                for node in nodes_subset:
+                    self.register_failed_children(node)
+
+        if len(new_nodes) > 0:
+            self.current_nodes = new_nodes
+
     def stacked_deployement(self, nodes_by_sample_sources: List[List[Tree_Node]]):
 
         current_nodes = []
@@ -793,6 +817,11 @@ class Tree_Progress:
         nodes_by_sample_sources = self.group_nodes_by_source_and_parameters()
 
         self.stacked_deployement(nodes_by_sample_sources)
+
+    def run_simplified_classification(self):
+        nodes_by_sample_sources = self.group_nodes_by_source_and_parameters()
+
+        self.stacked_deployment_classification(nodes_by_sample_sources)
 
     def update_nodes(self):
         new_nodes = []
@@ -847,6 +876,11 @@ class Tree_Progress:
         self.register_current_nodes()
         self.update_nodes()
 
+    def run_nodes_classification(self):
+        self.run_simplified_classification()
+        self.register_current_nodes()
+        self.update_nodes()
+
     def register_current_nodes(self):
         for node in self.current_nodes:
 
@@ -860,6 +894,10 @@ class Tree_Progress:
             ConstantsSettings.PIPELINE_NAME_read_quality_analysis,
         ]:
             self.update_nodes()
+
+        if self.current_module == ConstantsSettings.PIPELINE_NAME_read_classification:
+            self.run_nodes_classification()
+
         if self.current_module == ConstantsSettings.PIPELINE_NAME_remapping:
             self.run_nodes_simply()
         else:
