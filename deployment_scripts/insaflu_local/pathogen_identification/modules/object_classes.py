@@ -462,25 +462,31 @@ class Read_class:
 
         self.history = [self.current]
 
+    def create_link(self, file_path, new_path):
+        if os.path.isfile(file_path):
+            if os.path.isfile(new_path):
+                os.remove(new_path)
+            os.symlink(file_path, new_path)
+
     def update(self, new_suffix, clean_dir: str, enriched_dir: str, depleted_dir: str):
         self.prefix = self.prefix.replace(self.suffix, new_suffix)
         self.suffix = new_suffix
         new_clean = os.path.join(clean_dir, self.prefix + ".clean.fastq.gz")
         if os.path.isfile(self.clean):
             if new_clean != self.clean:
-                shutil.copy(self.clean, new_clean)
+                self.create_link(self.clean, new_clean)
         self.clean = new_clean
 
         new_enriched = os.path.join(enriched_dir, self.prefix + ".enriched.fastq.gz")
         if os.path.isfile(self.enriched):
             if new_enriched != self.enriched:
-                shutil.copy(self.enriched, new_enriched)
+                self.create_link(self.enriched, new_enriched)
         self.enriched = new_enriched
 
         new_depleted = os.path.join(depleted_dir, self.prefix + ".depleted.fastq.gz")
         if os.path.isfile(self.depleted):
             if new_depleted != self.depleted:
-                shutil.copy(self.depleted, new_depleted)
+                self.create_link(self.depleted, new_depleted)
         self.depleted = new_depleted
 
         if self.current_status == "raw":
