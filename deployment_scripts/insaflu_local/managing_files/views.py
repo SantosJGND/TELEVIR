@@ -427,9 +427,6 @@ class SamplesView(LoginRequiredMixin, ListView):
         return context
 
 
-from pathogen_identification.utilities.insaflu_cli import Insaflu_Cli
-
-
 class SamplesAddView(LoginRequiredMixin, FormValidMessageMixin, generic.FormView):
     """
     Create a new reference
