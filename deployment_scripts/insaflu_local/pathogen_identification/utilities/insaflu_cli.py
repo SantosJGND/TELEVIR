@@ -5,6 +5,8 @@ import logging
 import os
 import shutil
 from datetime import date
+from constants.constants import Constants, TypeFile
+import ntpath
 
 from constants.meta_key_and_values import MetaKeyAndValue
 from django.conf import settings
@@ -15,6 +17,10 @@ from settings.constants_settings import ConstantsSettings
 from settings.models import Sample
 from utils.process_SGE import ProcessSGE
 from utils.utils import Utils
+from utils.parse_in_files import ParseInFiles
+from typing import List
+from managing_files.models import ProcessControler, Sample
+from managing_files.models import MetaKey, UploadFiles
 
 
 class Insaflu_Cli:
@@ -149,6 +155,288 @@ class Insaflu_Cli:
                 sample.file_name_2,
             )
         sample.save()
+
+    def metadata_check_errors(self, metadata_full_path: str, user: User):
+        
+
+        if not os.path.exists(metadata_full_path):
+            self.logger.info(
+                "Metadata file {} could not be found".format(metadata_full_path)
+            )
+            return False
+
+        # Process the metadata file to check if everything is ok
+        parse_in_files = self.metadata_parse(metadata_full_path, user)
+
+        if parse_in_files.get_errors().has_errors():
+            self.logger.info(
+                "Errors found processing the metadata file {}".format(metadata_file)
+            )
+            self.logger.info(str(parse_in_files.get_errors()))
+            # self.logger_debug.error("Errors found processing the metadata table")
+            # self.logger_debug.erro(str(parse_in_files.get_errors()))
+            return False
+        
+        return True
+    
+    def metadata_parse(self, , metadata_full_path: str, user: User):
+        parse_in_files = ParseInFiles()
+        b_test_char_encoding = False
+        parse_in_files.parse_sample_files(
+            metadata_full_path,
+            user,
+            b_test_char_encoding,
+            ParseInFiles.STATE_READ_all,
+        )
+
+        return parse_in_files
+    
+    def metadata_fastqs(self, sample_list: List[Sample]):
+        fastq_files_to_upload = []
+        missing_fastqs = False
+        for sample in sample_list:
+            fastq1 = sample[0].candidate_file_name_1
+
+            fastq_full_path = os.path.join(
+                getattr(settings, "MEDIA_ROOT", None),
+                Constants.DIR_PROCESSED_FILES_UPLOADS,
+                fastq1,
+            )
+            if not os.path.exists(fastq_full_path):
+                self.logger.info(
+                    "Fastq file {} could not be found".format(fastq_full_path)
+                )
+                missing_fastqs = True
+            fastq_files_to_upload.append(fastq_full_path)
+
+            fastq2 = ""
+            # Carefull this may be sensitive to spaces in the table
+            if sample[0].candidate_file_name_2.strip() != "":
+                fastq2 = sample[0].candidate_file_name_2
+                fastq_full_path = os.path.join(
+                    getattr(settings, "MEDIA_ROOT", None),
+                    Constants.DIR_PROCESSED_FILES_UPLOADS,
+                    fastq2,
+                )
+                fastq_files_to_upload.append(fastq_full_path)
+                if not os.path.exists(fastq_full_path):
+                    self.logger.info(
+                        "Fastq file {} could not be found".format(fastq_full_path)
+                    )
+                    missing_fastqs = True
+
+            self.logger.info(
+                "sample {} file(s) to be processed: {} {} ".format(
+                    sample[0].name, fastq1, fastq2
+                )
+            )
+
+        if missing_fastqs:
+            self.logger.info("Fastq files are missing, cannot continue")
+            return []
+
+        self.logger.info(
+            " {} samples are going to be processed".format(
+                len(sample_list)
+            )
+        )
+
+        return fastq_files_to_upload
+
+
+    def metadata_upload_prep(self, metadata_full_path: str, user: User):
+        # Add the metadata file as an upload
+        # may not be needed, but for consistency with website we do it
+        metadata_file= os.path.basename(metadata_full_path)
+        utils = Utils()
+
+        sample_file_upload_files = UploadFiles()
+        sample_file_upload_files.file_name = metadata_file
+        sample_file_upload_files.is_valid = True
+        sample_file_upload_files.is_processed = False
+        sample_file_upload_files.is_deleted = False
+        sample_file_upload_files.number_errors = 0
+        sample_file_upload_files.number_files_processed = 0
+
+
+        try:
+            type_file = MetaKey.objects.get(name=TypeFile.TYPE_FILE_sample_file)
+        except MetaKey.DoesNotExist:
+            type_file = MetaKey()
+            type_file.name = TypeFile.TYPE_FILE_sample_file
+            type_file.save()
+
+        sample_file_upload_files.type_file = type_file
+        sample_file_upload_files.owner = user
+        sample_file_upload_files.description = ""
+
+        # move the files to the right place
+        sz_file_to = os.path.join(
+            getattr(settings, "MEDIA_ROOT", None),
+            utils.get_path_upload_file(user.id, TypeFile.TYPE_FILE_sample_file),
+            metadata_file,
+        )
+
+        # get unique file name, as the user can upload files with same name...
+        sz_file_to, path_added = utils.get_unique_file(sz_file_to)
+
+        # Add this back in the end... to "consume" the file
+        utils.copy_file(metadata_full_path, sz_file_to)
+
+        if path_added is None:
+            sample_file_upload_files.path_name.name = os.path.join(
+                utils.get_path_upload_file(
+                    user.id, TypeFile.TYPE_FILE_sample_file
+                ),
+                ntpath.basename(sz_file_to),
+            )
+        else:
+            sample_file_upload_files.path_name.name = os.path.join(
+                utils.get_path_upload_file(
+                    user.id, TypeFile.TYPE_FILE_sample_file
+                ),
+                path_added,
+                ntpath.basename(sz_file_to),
+            )
+
+        self.logger.info(
+            "{} file was processed".format(sample_file_upload_files.path_name.name)
+        )
+
+        return sample_file_upload_files
+
+
+    def sample_file_process(self, fastq_to_upload, user: User):
+        utils = Utils()
+
+        self.logger.info("Fastq file to upload: {}".format(fastq_to_upload))
+
+        fastq_upload_files = UploadFiles()
+        fastq_upload_files.file_name = utils.clean_name(
+            os.path.basename(fastq_to_upload)
+        )
+
+        # move the files to the right place
+        sz_file_to = os.path.join(
+            getattr(settings, "MEDIA_ROOT", None),
+            utils.get_path_upload_file(user.id, TypeFile.TYPE_FILE_fastq_gz),
+            fastq_upload_files.file_name,
+        )
+        sz_file_to, path_added = utils.get_unique_file(
+            sz_file_to
+        )  ## get unique file name, user can upload files with same name...
+        #     utils.move_file(temp_file, sz_file_to)
+        utils.copy_file(fastq_to_upload, sz_file_to)
+
+        # test if file exists (may fail due to full disk or other error)
+        if not os.path.exists(sz_file_to) and os.path.getsize(sz_file_to) > 10:
+            self.logger.info(
+                " Error copying file {} file to {}".format(
+                    fastq_to_upload, sz_file_to
+                )
+            )
+            # If we do a return here then we need an atomic transaction or a way to prevent inconsistencies...
+            return False
+
+        if path_added is None:
+            fastq_upload_files.path_name.name = os.path.join(
+                utils.get_path_upload_file(
+                    user.id, TypeFile.TYPE_FILE_fastq_gz
+                ),
+                fastq_upload_files.file_name,
+            )
+        else:
+            fastq_upload_files.path_name.name = os.path.join(
+                utils.get_path_upload_file(
+                    user.id, TypeFile.TYPE_FILE_fastq_gz
+                ),
+                path_added,
+                fastq_upload_files.file_name,
+            )
+
+        try:
+            type_file = MetaKey.objects.get(name=TypeFile.TYPE_FILE_fastq_gz)
+        except MetaKey.DoesNotExist:
+            type_file = MetaKey()
+            type_file.name = TypeFile.TYPE_FILE_fastq_gz
+            type_file.save()
+
+        fastq_upload_files.is_valid = True
+        fastq_upload_files.is_processed = (
+            False  ## True when all samples are set
+        )
+        fastq_upload_files.owner = user
+        fastq_upload_files.type_file = type_file
+        fastq_upload_files.number_files_to_process = 1
+        fastq_upload_files.number_files_processed = 0
+        fastq_upload_files.description = ""
+
+        return fastq_upload_files
+
+
+    
+    def process_sample_list(self, sample_list: List[str], user: User): 
+        sample_list= []
+
+        for sample in sample_list:
+            sample_object= self.sample_preprocess(sample, user)
+            sample_list.append(sample_object)
+        
+        return sample_list
+    
+    @staticmethod
+    def save_objects(objects_to_save: List[object]):
+        for object in objects_to_save:
+            object.save()
+    
+    @staticmethod
+    def retrieve_saved_sample(file_parser: ParseInFiles, user: User):
+        samples = set()
+        for vect_sample in file_parser.vect_samples:
+            
+            try:
+                sample = Sample.objects.get(name__iexact=vect_sample[0].name, owner=user, is_deleted=False)
+                ## if exist don't add
+                samples.add(sample)
+                continue     ## already exist
+            except Sample.DoesNotExist as e:
+                pass
+        
+        return samples
+
+    def create_sample_from_metadata(self, metadata_full_path: str, user: User):
+
+        if not self.metadata_check_errors(metadata_full_path, user):
+            return False
+
+        parse_in_files = self.metadata_parse(metadata_full_path, user)
+
+        fastq_files_to_upload= self.metadata_fastqs(parse_in_files.get_vect_samples())
+
+        if not fastq_files_to_upload:
+            
+            return []
+
+        sample_file_upload_files = self.metadata_upload_prep(metadata_full_path, user)
+
+        sample_file_upload_files.number_files_to_process = len(
+            parse_in_files.get_vect_samples()
+        )
+
+        samples_to_save= self.process_sample_list(fastq_files_to_upload, user)
+        upload_files= samples_to_save + [sample_file_upload_files]
+
+        self.save_objects(upload_files)
+
+        parse_in_files.create_samples(sample_file_upload_files, user)
+        parse_in_files.link_files(user, False)
+
+        self.logger.info("End")
+
+        samples= self.retrieve_saved_sample(parse_in_files, user)
+
+        return samples
+
 
     def sample_preprocess(self, sample: Sample, user: User):
         from managing_files.manage_database import ManageDatabase
