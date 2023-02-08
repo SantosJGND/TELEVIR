@@ -2,25 +2,24 @@
 ### generate tree
 #####
 import logging
+import ntpath
 import os
 import shutil
 from datetime import date
-from constants.constants import Constants, TypeFile
-import ntpath
+from typing import List
 
+from constants.constants import Constants, TypeFile
 from constants.meta_key_and_values import MetaKeyAndValue
 from django.conf import settings
 from django.contrib.auth.models import User
 from extend_user.models import Profile
+from managing_files.models import MetaKey, ProcessControler, Sample, UploadFiles
 from pathogen_identification.models import PIProject_Sample, Projects, SoftwareTree
 from settings.constants_settings import ConstantsSettings
 from settings.models import Sample
+from utils.parse_in_files import ParseInFiles
 from utils.process_SGE import ProcessSGE
 from utils.utils import Utils
-from utils.parse_in_files import ParseInFiles
-from typing import List
-from managing_files.models import ProcessControler, Sample
-from managing_files.models import MetaKey, UploadFiles
 
 
 class Insaflu_Cli:
@@ -157,7 +156,6 @@ class Insaflu_Cli:
         sample.save()
 
     def metadata_check_errors(self, metadata_full_path: str, user: User):
-        
 
         if not os.path.exists(metadata_full_path):
             self.logger.info(
@@ -169,17 +167,20 @@ class Insaflu_Cli:
         parse_in_files = self.metadata_parse(metadata_full_path, user)
 
         if parse_in_files.get_errors().has_errors():
+
             self.logger.info(
-                "Errors found processing the metadata file {}".format(metadata_file)
+                "Errors found processing the metadata file {}".format(
+                    metadata_full_path
+                )
             )
             self.logger.info(str(parse_in_files.get_errors()))
             # self.logger_debug.error("Errors found processing the metadata table")
             # self.logger_debug.erro(str(parse_in_files.get_errors()))
             return False
-        
+
         return True
-    
-    def metadata_parse(self, , metadata_full_path: str, user: User):
+
+    def metadata_parse(self, metadata_full_path: str, user: User):
         parse_in_files = ParseInFiles()
         b_test_char_encoding = False
         parse_in_files.parse_sample_files(
@@ -190,7 +191,7 @@ class Insaflu_Cli:
         )
 
         return parse_in_files
-    
+
     def metadata_fastqs(self, sample_list: List[Sample]):
         fastq_files_to_upload = []
         missing_fastqs = False
@@ -236,18 +237,15 @@ class Insaflu_Cli:
             return []
 
         self.logger.info(
-            " {} samples are going to be processed".format(
-                len(sample_list)
-            )
+            " {} samples are going to be processed".format(len(sample_list))
         )
 
         return fastq_files_to_upload
 
-
     def metadata_upload_prep(self, metadata_full_path: str, user: User):
         # Add the metadata file as an upload
         # may not be needed, but for consistency with website we do it
-        metadata_file= os.path.basename(metadata_full_path)
+        metadata_file = os.path.basename(metadata_full_path)
         utils = Utils()
 
         sample_file_upload_files = UploadFiles()
@@ -257,7 +255,6 @@ class Insaflu_Cli:
         sample_file_upload_files.is_deleted = False
         sample_file_upload_files.number_errors = 0
         sample_file_upload_files.number_files_processed = 0
-
 
         try:
             type_file = MetaKey.objects.get(name=TypeFile.TYPE_FILE_sample_file)
@@ -285,16 +282,12 @@ class Insaflu_Cli:
 
         if path_added is None:
             sample_file_upload_files.path_name.name = os.path.join(
-                utils.get_path_upload_file(
-                    user.id, TypeFile.TYPE_FILE_sample_file
-                ),
+                utils.get_path_upload_file(user.id, TypeFile.TYPE_FILE_sample_file),
                 ntpath.basename(sz_file_to),
             )
         else:
             sample_file_upload_files.path_name.name = os.path.join(
-                utils.get_path_upload_file(
-                    user.id, TypeFile.TYPE_FILE_sample_file
-                ),
+                utils.get_path_upload_file(user.id, TypeFile.TYPE_FILE_sample_file),
                 path_added,
                 ntpath.basename(sz_file_to),
             )
@@ -305,8 +298,7 @@ class Insaflu_Cli:
 
         return sample_file_upload_files
 
-
-    def sample_file_process(self, fastq_to_upload, user: User):
+    def sample_file_process(self, fastq_to_upload, user: User) -> UploadFiles:
         utils = Utils()
 
         self.logger.info("Fastq file to upload: {}".format(fastq_to_upload))
@@ -331,25 +323,19 @@ class Insaflu_Cli:
         # test if file exists (may fail due to full disk or other error)
         if not os.path.exists(sz_file_to) and os.path.getsize(sz_file_to) > 10:
             self.logger.info(
-                " Error copying file {} file to {}".format(
-                    fastq_to_upload, sz_file_to
-                )
+                " Error copying file {} file to {}".format(fastq_to_upload, sz_file_to)
             )
             # If we do a return here then we need an atomic transaction or a way to prevent inconsistencies...
             return False
 
         if path_added is None:
             fastq_upload_files.path_name.name = os.path.join(
-                utils.get_path_upload_file(
-                    user.id, TypeFile.TYPE_FILE_fastq_gz
-                ),
+                utils.get_path_upload_file(user.id, TypeFile.TYPE_FILE_fastq_gz),
                 fastq_upload_files.file_name,
             )
         else:
             fastq_upload_files.path_name.name = os.path.join(
-                utils.get_path_upload_file(
-                    user.id, TypeFile.TYPE_FILE_fastq_gz
-                ),
+                utils.get_path_upload_file(user.id, TypeFile.TYPE_FILE_fastq_gz),
                 path_added,
                 fastq_upload_files.file_name,
             )
@@ -362,9 +348,7 @@ class Insaflu_Cli:
             type_file.save()
 
         fastq_upload_files.is_valid = True
-        fastq_upload_files.is_processed = (
-            False  ## True when all samples are set
-        )
+        fastq_upload_files.is_processed = False  ## True when all samples are set
         fastq_upload_files.owner = user
         fastq_upload_files.type_file = type_file
         fastq_upload_files.number_files_to_process = 1
@@ -373,48 +357,53 @@ class Insaflu_Cli:
 
         return fastq_upload_files
 
-
-    
-    def process_sample_list(self, sample_list: List[str], user: User): 
-        sample_list= []
+    def process_sample_list(self, sample_list: List[str], user: User):
+        upload_list = []
 
         for sample in sample_list:
-            sample_object= self.sample_preprocess(sample, user)
-            sample_list.append(sample_object)
-        
-        return sample_list
-    
+            sample_object = self.sample_file_process(sample, user)
+            upload_list.append(sample_object)
+
+        return upload_list
+
     @staticmethod
     def save_objects(objects_to_save: List[object]):
         for object in objects_to_save:
             object.save()
-    
+
     @staticmethod
     def retrieve_saved_sample(file_parser: ParseInFiles, user: User):
         samples = set()
         for vect_sample in file_parser.vect_samples:
-            
+
             try:
-                sample = Sample.objects.get(name__iexact=vect_sample[0].name, owner=user, is_deleted=False)
+                sample = Sample.objects.get(
+                    name__iexact=vect_sample[0].name, owner=user, is_deleted=False
+                )
                 ## if exist don't add
                 samples.add(sample)
-                continue     ## already exist
+                continue  ## already exist
             except Sample.DoesNotExist as e:
                 pass
-        
+
         return samples
 
     def create_sample_from_metadata(self, metadata_full_path: str, user: User):
+
+        print("metadata_full_path: ", metadata_full_path)
+        print("user: ", user)
+        print("errors: ", self.metadata_check_errors(metadata_full_path, user))
 
         if not self.metadata_check_errors(metadata_full_path, user):
             return False
 
         parse_in_files = self.metadata_parse(metadata_full_path, user)
 
-        fastq_files_to_upload= self.metadata_fastqs(parse_in_files.get_vect_samples())
+        fastq_files_to_upload = self.metadata_fastqs(parse_in_files.get_vect_samples())
+        print("fastq_files_to_upload: ", fastq_files_to_upload)
 
         if not fastq_files_to_upload:
-            
+
             return []
 
         sample_file_upload_files = self.metadata_upload_prep(metadata_full_path, user)
@@ -423,8 +412,8 @@ class Insaflu_Cli:
             parse_in_files.get_vect_samples()
         )
 
-        samples_to_save= self.process_sample_list(fastq_files_to_upload, user)
-        upload_files= samples_to_save + [sample_file_upload_files]
+        samples_to_save = self.process_sample_list(fastq_files_to_upload, user)
+        upload_files = samples_to_save + [sample_file_upload_files]
 
         self.save_objects(upload_files)
 
@@ -433,10 +422,9 @@ class Insaflu_Cli:
 
         self.logger.info("End")
 
-        samples= self.retrieve_saved_sample(parse_in_files, user)
+        samples = self.retrieve_saved_sample(parse_in_files, user)
 
         return samples
-
 
     def sample_preprocess(self, sample: Sample, user: User):
         from managing_files.manage_database import ManageDatabase

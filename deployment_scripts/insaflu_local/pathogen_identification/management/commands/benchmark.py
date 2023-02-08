@@ -245,6 +245,7 @@ class Command(BaseCommand):
         current_module = deployment_tree.get_current_module()
         while current_module != "end":
             # for x in range(0):
+
             print("NEXT")
             print(len(deployment_tree.current_nodes))
             print(deployment_tree.get_current_module())

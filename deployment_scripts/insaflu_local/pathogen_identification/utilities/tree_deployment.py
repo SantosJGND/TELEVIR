@@ -7,16 +7,24 @@ from typing import List
 import pandas as pd
 from constants.constants import Televir_Metadata_Constants as Televir_Metadata
 from constants.constants import TypePath
-from pathogen_identification.constants_settings import \
-    ConstantsSettings as PIConstants
-from pathogen_identification.models import (ParameterSet, PIProject_Sample,
-                                            Projects, SoftwareTree,
-                                            SoftwareTreeNode)
+from pathogen_identification.constants_settings import ConstantsSettings as PIConstants
+from pathogen_identification.models import (
+    ParameterSet,
+    PIProject_Sample,
+    Projects,
+    SoftwareTree,
+    SoftwareTreeNode,
+)
 from pathogen_identification.modules.remap_class import Mapping_Instance
 from pathogen_identification.modules.run_main import RunMain_class
 from pathogen_identification.utilities.update_DBs import (
-    Update_Assembly, Update_Classification, Update_Remap,
-    Update_RunMain_Initial, Update_RunMain_Secondary, get_run_parents)
+    Update_Assembly,
+    Update_Classification,
+    Update_Remap,
+    Update_RunMain_Initial,
+    Update_RunMain_Secondary,
+    get_run_parents,
+)
 from pathogen_identification.utilities.utilities_pipeline import PipelineTree
 from settings.constants_settings import ConstantsSettings
 from utils.utils import Utils
@@ -471,6 +479,8 @@ class Tree_Progress:
 
     def register_node_leaves(self, node: Tree_Node):
 
+        print("registering node: ", node.node_index, "leaves: ", node.leaves)
+
         if node.node_index in node.leaves:
             print(node, node.leaves)
             # self.submit_node_run(node)
@@ -787,7 +797,13 @@ class Tree_Progress:
                 volonteer, group_targets
             )
 
+            print("mapped_instances_shared")
+            print(len(mapped_instances_shared))
+
             nodes = self.update_mapped_instances(nodes, mapped_instances_shared)
+
+            print("deployment_success: " + str(deployment_success))
+            print("updated nodes")
 
             if deployment_success:
                 current_nodes.extend(nodes)
@@ -878,6 +894,7 @@ class Tree_Progress:
 
     def run_nodes_classification(self):
         self.run_simplified_classification()
+        print("RAN CLASSIFICATION")
         self.register_current_nodes()
         self.update_nodes()
 

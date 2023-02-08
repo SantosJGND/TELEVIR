@@ -34,6 +34,14 @@ class Command(BaseCommand):
             help="file of metadata. one file path per line.",
         )
 
+        parser.add_argument(
+            "--fofn",
+            "-f",
+            type=str,
+            default=None,
+            help="file of fastq files. one file path per line.",
+        )
+
     @staticmethod
     def add_samples(user: User, project: Projects, **options):
         insaflu_cli = Insaflu_Cli()
@@ -89,14 +97,19 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         ###
         #### SETUP
+
+        insaflu_cli = Insaflu_Cli()
         try:
             user = User.objects.get(username=options["user_name"])
         except User.DoesNotExist:
             print("User does not exist")
             sys.exit(1)
 
+        if options["fofn"] is not None:
+            sample_fofn = options["fofn"]
+            sample = insaflu_cli.create_sample_from_fofn(sample_fofn, user, "ONT")
+
         if options["metadata"] is not None:
             metadata_fofn = options["metadata"]
 
-            insaflu_cli = Insaflu_Cli()
             samples = insaflu_cli.create_sample_from_metadata(metadata_fofn, user)
