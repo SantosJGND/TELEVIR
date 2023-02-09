@@ -149,16 +149,20 @@ class Utility_Repository:
     def print_table_schema(self, table_name):
         print(self.engine.execute(f"PRAGMA table_info({table_name})").fetchall())
 
+    def reset_tables(self):
+        """
+        Create the tables
+        """
+        self.clear_tables()
+
+        self.metadata.create_all(self.engine)
+
     def create_tables(self):
         """
         Create the tables
         """
-        self.delete_tables()
         self.create_software_table()
         self.create_database_table()
-
-        self.print_table_schema("software")
-        self.print_table_schema("database")
 
         self.metadata.create_all(self.engine)
 

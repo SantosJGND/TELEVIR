@@ -756,6 +756,8 @@ class main_setup:
 
         if self.seqdl or self.soft:
 
+            self.utilities.reset_tables()
+
             # repdl = self.setup_dir(self.INSTALL_PARAMS)
             self.prep_dl()
             logging.info("Downloading databases and software")
