@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
         parser.add_argument(
             "--project_name",
-            type=int,
+            type=str,
             help="project to be run (string)",
         )
 

@@ -8,12 +8,7 @@ from django.core.management.base import BaseCommand
 from managing_files.models import ProcessControler
 from pathogen_identification.models import PIProject_Sample, Projects
 from pathogen_identification.utilities.insaflu_cli import Insaflu_Cli
-from pathogen_identification.utilities.tree_deployment import Tree_Progress
-from pathogen_identification.utilities.utilities_pipeline import (
-    Utility_Pipeline_Manager,
-    Utils_Manager,
-)
-from utils.process_SGE import ProcessSGE
+from settings.constants_settings import ConstantsSettings
 
 
 class Command(BaseCommand):
@@ -40,6 +35,14 @@ class Command(BaseCommand):
             type=str,
             default=None,
             help="file of fastq files. one file path per line.",
+        )
+
+        parser.add_argument(
+            "-t",
+            "--technology",
+            type=str,
+            default="ONT",
+            help="technology",
         )
 
     @staticmethod
@@ -99,6 +102,17 @@ class Command(BaseCommand):
         #### SETUP
 
         insaflu_cli = Insaflu_Cli()
+
+        technology = options["technology"]
+
+        if technology.lower() in ["nanopore", "ont"]:
+            technology = ConstantsSettings.TECHNOLOGY_minion
+        elif technology.lower() in ["illumina", "pacbio", "Illumina/IonTorrent"]:
+            technology = ConstantsSettings.TECHNOLOGY_illumina
+        else:
+            print("Technology not supported")
+            sys.exit(1)
+
         try:
             user = User.objects.get(username=options["user_name"])
         except User.DoesNotExist:
@@ -107,7 +121,7 @@ class Command(BaseCommand):
 
         if options["fofn"] is not None:
             sample_fofn = options["fofn"]
-            sample = insaflu_cli.create_sample_from_fofn(sample_fofn, user, "ONT")
+            sample = insaflu_cli.create_sample_from_fofn(sample_fofn, user, technology)
 
         if options["metadata"] is not None:
             metadata_fofn = options["metadata"]

@@ -1,34 +1,12 @@
 #####
 ### generate tree
 #####
-import copy
-import logging
 import os
-import shutil
 import sys
 from datetime import date
-from threading import Thread
-from tkinter.tix import Tree
-from typing import List
 
-import pandas as pd
-from constants.constants import Televir_Metadata_Constants as Televir_Metadata
-from constants.constants import TypePath
-from constants.meta_key_and_values import MetaKeyAndValue
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
-from extend_user.models import Profile
-from pathogen_identification.constants_settings import ConstantsSettings as PIConstants
-from pathogen_identification.models import (
-    ParameterSet,
-    PIProject_Sample,
-    Projects,
-    SoftwareTree,
-    SoftwareTreeNode,
-)
-from pathogen_identification.modules.remap_class import Mapping_Instance
-from pathogen_identification.modules.run_main import RunMain_class
 from pathogen_identification.utilities.benchmark_graph_utils import pipeline_tree
 from pathogen_identification.utilities.insaflu_cli import Insaflu_Cli
 from pathogen_identification.utilities.tree_deployment import Tree_Progress
@@ -38,9 +16,6 @@ from pathogen_identification.utilities.utilities_pipeline import (
     Utility_Pipeline_Manager,
 )
 from settings.constants_settings import ConstantsSettings
-from settings.models import Sample
-from utils.process_SGE import ProcessSGE
-from utils.utils import Utils
 
 
 class Command(BaseCommand):
