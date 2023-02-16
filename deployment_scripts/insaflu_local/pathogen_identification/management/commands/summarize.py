@@ -39,25 +39,17 @@ def collect_parameters_project(project: Projects):
     utils = Utils_Manager()
     technology = project.technology
     user = project.owner
-    local_tree = utils.generate_project_tree(technology, project, user)
-    local_paths = local_tree.get_all_graph_paths_explicit()
-
-    tree_makeup = local_tree.makeup
-
-    pipeline_tree = utils.generate_software_tree(technology, tree_makeup)
-    all_paths = utils.get_all_technology_pipelines(technology, tree_makeup)
-    pipeline_tree_index = utils.get_software_tree_index(
-        technology, tree_makeup)
 
     parameterset = ParameterSet.objects.filter(
         project=project, status=ParameterSet.STATUS_FINISHED)
 
     project_params = []
-    print(project.name)
-    print(len(parameterset))
-    print(all_paths.keys())
+
     for ps in parameterset:
         print(ps.leaf.pk)
+        software_tree = ps.leaf.software_tree
+        tree_makeup = software_tree.global_index
+        all_paths = utils.get_all_technology_pipelines(technology, tree_makeup)
         params = all_paths.get(ps.leaf.index, None)
         print(params)
 
