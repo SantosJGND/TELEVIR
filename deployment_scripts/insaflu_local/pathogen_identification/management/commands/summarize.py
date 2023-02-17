@@ -5,7 +5,10 @@ from django.core.management.base import BaseCommand
 from pathogen_identification.models import (FinalReport, ParameterSet,
                                             PIProject_Sample, Projects,
                                             RunMain)
-from pathogen_identification.utilities.utilities_pipeline import Utils_Manager
+from pathogen_identification.utilities.benchmark_graph_utils import \
+    pipeline_tree
+from pathogen_identification.utilities.utilities_pipeline import (
+    PipelineTree, Utils_Manager)
 
 
 def read_parameters(row):
@@ -49,13 +52,23 @@ def collect_parameters_project(project: Projects):
         print(ps.leaf.pk)
         software_tree = ps.leaf.software_tree
         tree_makeup = software_tree.global_index
-        all_paths = utils.get_all_technology_pipelines(technology, tree_makeup)
-        params = all_paths.get(ps.leaf.index, None)
-        print(params)
+        pipe_tree = utils.parameter_util.software_tree_to_pipeline_tree(
+            software_tree=software_tree)
+
+        print("node_leaf: ", pipe_tree.leaves_from_node(ps.leaf.index))
+        leaf = pipe_tree.leaves_from_node(ps.leaf.index)[0]
+
+        all_paths = pipe_tree.get_all_graph_paths()
+        print(all_paths.keys())
+        print(ps.leaf.index)
+        params = all_paths.get(leaf, None)
 
         if params is None:
             continue
-        run = RunMain.objects.get(parameter_set=ps)
+        try:
+            run = RunMain.objects.get(parameter_set=ps)
+        except RunMain.MultipleObjectsReturned:
+            run = RunMain.objects.filter(parameter_set=ps).first()
 
         params["run"] = run.name
         params["run_id"] = run.pk
@@ -109,6 +122,22 @@ class Command(BaseCommand):
             help="project to target",
         )
 
+    def generate_hardcoded_pipeline_tree(self, technology):
+
+        pipe_tree = pipeline_tree()
+        pipe_tree.param_input(technology)
+        pipe_tree.create_pipe_tree()
+
+        software_tree = PipelineTree(
+            technology=technology,
+            node_index=pipe_tree.node_index.reset_index().to_numpy().tolist(),
+            edges=[x for x in pipe_tree.edge_dict if x[0] != "root"],
+            leaves=pipe_tree.leaves,
+            makeup=-1,
+        )
+
+        return software_tree
+
     def handle(self, *args, **options):
         ###
         #
@@ -160,12 +189,12 @@ class Command(BaseCommand):
         ).drop("id", axis=1)
 
         ####
-
+        # local_tree= self.generate_hardcoded_pipeline_tree(technology=technology)
         all_parameters = projects_params_summary(projects_query)
 
         ####
         reports_df.to_csv("all_reports.tsv", index=False, sep="\t")
 
+        ####
         all_parameters.to_csv("all_parameters.tsv", index=False, sep="\t")
-
         #

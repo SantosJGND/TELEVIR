@@ -1,5 +1,5 @@
 #####
-### generate tree
+# generate tree
 #####
 import os
 import sys
@@ -7,14 +7,12 @@ from datetime import date
 
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
-from pathogen_identification.utilities.benchmark_graph_utils import pipeline_tree
+from pathogen_identification.utilities.benchmark_graph_utils import \
+    pipeline_tree
 from pathogen_identification.utilities.insaflu_cli import Insaflu_Cli
 from pathogen_identification.utilities.tree_deployment import Tree_Progress
 from pathogen_identification.utilities.utilities_pipeline import (
-    Parameter_DB_Utility,
-    PipelineTree,
-    Utility_Pipeline_Manager,
-)
+    Parameter_DB_Utility, PipelineTree, Utility_Pipeline_Manager)
 from settings.constants_settings import ConstantsSettings
 
 
@@ -204,8 +202,10 @@ class Command(BaseCommand):
             project_name, user, technology
         )
 
-        sample = insaflu_cli.create_sample_from_fofn(sample_fofn, user, technology)
-        project_sample = insaflu_cli.piproject_sample_from_sample(sample, project, user)
+        sample = insaflu_cli.create_sample_from_fofn(
+            sample_fofn, user, technology)
+        project_sample = insaflu_cli.piproject_sample_from_sample(
+            sample, project, user)
 
         software_tree = self.generate_modular_software_tree(technology)
         print(software_tree.compress_dag_dict)

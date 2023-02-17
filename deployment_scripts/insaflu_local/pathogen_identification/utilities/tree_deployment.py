@@ -7,24 +7,16 @@ from typing import List
 import pandas as pd
 from constants.constants import Televir_Metadata_Constants as Televir_Metadata
 from constants.constants import TypePath
-from pathogen_identification.constants_settings import ConstantsSettings as PIConstants
-from pathogen_identification.models import (
-    ParameterSet,
-    PIProject_Sample,
-    Projects,
-    SoftwareTree,
-    SoftwareTreeNode,
-)
+from pathogen_identification.constants_settings import \
+    ConstantsSettings as PIConstants
+from pathogen_identification.models import (ParameterSet, PIProject_Sample,
+                                            Projects, SoftwareTree,
+                                            SoftwareTreeNode)
 from pathogen_identification.modules.remap_class import Mapping_Instance
 from pathogen_identification.modules.run_main import RunMain_class
 from pathogen_identification.utilities.update_DBs import (
-    Update_Assembly,
-    Update_Classification,
-    Update_Remap,
-    Update_RunMain_Initial,
-    Update_RunMain_Secondary,
-    get_run_parents,
-)
+    Update_Assembly, Update_Classification, Update_Remap,
+    Update_RunMain_Initial, Update_RunMain_Secondary, get_run_parents)
 from pathogen_identification.utilities.utilities_pipeline import PipelineTree
 from settings.constants_settings import ConstantsSettings
 from utils.utils import Utils
@@ -73,9 +65,11 @@ class PathogenIdentification_Deployment_Manager:
         self.install_registry = Televir_Metadata
 
         self.threads = threads
-        self.file_r1 = sample.sample.get_fastq_available(TypePath.MEDIA_ROOT, True)
+        self.file_r1 = sample.sample.get_fastq_available(
+            TypePath.MEDIA_ROOT, True)
         if sample.sample.exist_file_2():
-            self.file_r2 = sample.sample.get_fastq_available(TypePath.MEDIA_ROOT, False)
+            self.file_r2 = sample.sample.get_fastq_available(
+                TypePath.MEDIA_ROOT, False)
         else:
             self.file_r2 = ""
 
@@ -103,7 +97,8 @@ class PathogenIdentification_Deployment_Manager:
         self.config["sample_name"] = self.sample
         self.config["r1"] = new_r1_path
         self.config["r2"] = new_r2_path
-        self.config["type"] = ["SE", "PE"][int(os.path.isfile(self.config["r2"]))]
+        self.config["type"] = ["SE", "PE"][int(
+            os.path.isfile(self.config["r2"]))]
 
         return True
 
@@ -176,7 +171,8 @@ class PathogenIdentification_Deployment_Manager:
         if self.prepped or self.run_params_db.empty:
             return
 
-        self.run_engine = RunMain_class(self.config, self.run_params_db, self.username)
+        self.run_engine = RunMain_class(
+            self.config, self.run_params_db, self.username)
         self.run_engine.Prep_deploy()
         self.prepped = True
 
@@ -253,7 +249,7 @@ class Tree_Node:
 
         self.parameters = self.determine_params(pipe_tree)
         self.software_tree_pk = software_tree_pk
-        self.leaves = pipe_tree.leaves_from_node(node_index)
+        self.leaves = pipe_tree.leaves_from_node_compress(node_index)
 
     def receive_run_manager(
         self, run_manager: PathogenIdentification_Deployment_Manager
@@ -545,7 +541,8 @@ class Tree_Progress:
         if node.run_manager.sent:
             return False
 
-        registraction_success = node.register(self.project, self.sample, self.tree)
+        registraction_success = node.register(
+            self.project, self.sample, self.tree)
 
         return registraction_success
 
@@ -619,7 +616,8 @@ class Tree_Progress:
             n.run_manager.run_engine.merged_targets for n in self.current_nodes
         ]
         node_merged_targets = pd.concat(node_merged_targets, axis=0)
-        node_merged_targets = node_merged_targets.drop_duplicates(subset=["taxid"])
+        node_merged_targets = node_merged_targets.drop_duplicates(subset=[
+                                                                  "taxid"])
 
         return node_merged_targets
 
@@ -638,7 +636,8 @@ class Tree_Progress:
             n.run_manager.run_engine.merged_targets for n in targetdf_list
         ]
 
-        node_merged_targets = pd.concat(node_merged_targets, axis=0).reset_index()
+        node_merged_targets = pd.concat(
+            node_merged_targets, axis=0).reset_index()
 
         return node_merged_targets
 
@@ -646,7 +645,8 @@ class Tree_Progress:
 
         node_merged_targets = self.merge_node_targets_list(nodes_list)
 
-        node_merged_targets = self.process_mapping_managerdf(node_merged_targets)
+        node_merged_targets = self.process_mapping_managerdf(
+            node_merged_targets)
 
         return node_merged_targets
 
@@ -800,7 +800,8 @@ class Tree_Progress:
             print("mapped_instances_shared")
             print(len(mapped_instances_shared))
 
-            nodes = self.update_mapped_instances(nodes, mapped_instances_shared)
+            nodes = self.update_mapped_instances(
+                nodes, mapped_instances_shared)
 
             print("deployment_success: " + str(deployment_success))
             print("updated nodes")
@@ -824,7 +825,8 @@ class Tree_Progress:
         new_nodes = []
 
         for node in nodes_to_update:
-            node.run_manager.run_engine.update_mapped_instances(mapped_instances_shared)
+            node.run_manager.run_engine.update_mapped_instances(
+                mapped_instances_shared)
             new_nodes.append(node)
 
         return new_nodes
@@ -925,7 +927,7 @@ class Tree_Progress:
         import multiprocessing as mp
 
         node_batches = [
-            self.current_nodes[i : i + batch]
+            self.current_nodes[i: i + batch]
             for i in range(0, len(self.current_nodes), batch)
         ]
 
