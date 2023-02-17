@@ -83,6 +83,7 @@ def collect_parameters_project(project: Projects):
         params["run_id"] = run.pk
         params["sample"] = ps.sample.name
         params["sample_id"] = ps.sample.pk
+        params["sample_name"] = ps.sample.name
         params["project"] = ps.project.name
         params["project_id"] = ps.project.pk
 
