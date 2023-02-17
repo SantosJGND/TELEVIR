@@ -84,10 +84,11 @@ def collect_parameters_project(project: Projects):
         params["sample"] = ps.sample.name
         params["sample_id"] = ps.sample.pk
         params["sample_name"] = ps.sample.name
-        params["project"] = ps.project.name
-        params["project_id"] = ps.project.pk
+        params["project"] = project.name
+        params["project_id"] = project.pk
 
         project_params.append(params)
+
     if len(project_params):
         project_params = pd.concat(project_params)
 
@@ -105,6 +106,34 @@ def projects_params_summary(project_query):
     if len(all_params):
         all_params = pd.concat(all_params)
     return all_params
+
+
+def projects_reports_summary(project_query):
+    all_reports = []
+
+    for project in project_query:
+        samples = PIProject_Sample.objects.filter(project=project)
+        for sample in samples:
+            mainruns = RunMain.objects.filter(sample=sample)
+            for mainrun in mainruns:
+
+                final_report = FinalReport.objects.filter(run=mainrun)
+
+                if len(final_report) == 0:
+                    continue
+                final_report_dict = final_report.to_dict()
+                final_report_dict["run"] = mainrun.name
+                final_report_dict["run_id"] = mainrun.pk
+                final_report_dict["sample"] = sample.name
+                final_report_dict["sample_id"] = sample.pk
+                final_report_dict["project"] = project.name
+                final_report_dict["project_id"] = project.pk
+                all_reports.append(final_report_dict)
+
+    if len(all_reports):
+        all_reports = pd.DataFrame(all_reports)
+
+    return all_reports
 
 
 class Command(BaseCommand):
@@ -201,6 +230,7 @@ class Command(BaseCommand):
         ####
         # local_tree= self.generate_hardcoded_pipeline_tree(technology=technology)
         all_parameters = projects_params_summary(projects_query)
+        reports_df = projects_reports_summary(projects_query)
 
         ####
         reports_df.to_csv("all_reports.tsv", index=False, sep="\t")
