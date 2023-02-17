@@ -79,7 +79,6 @@ def collect_parameters_project(project: Projects):
         except RunMain.MultipleObjectsReturned:
             run = RunMain.objects.filter(parameter_set=ps).first()
 
-        params["run"] = run.name
         params["run_id"] = run.pk
         params["sample"] = ps.sample.name
         params["sample_id"] = ps.sample.pk
@@ -132,6 +131,7 @@ def projects_reports_summary(project_query):
                 final_report_dict["sample_id"] = sample.pk
                 final_report_dict["project"] = project.name
                 final_report_dict["project_id"] = project.pk
+                final_report_dict["runtime"] = mainrun.runtime
                 all_reports.append(final_report_dict)
 
     if len(all_reports):
