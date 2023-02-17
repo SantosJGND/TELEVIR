@@ -121,7 +121,8 @@ def projects_reports_summary(project_query):
 
                 if len(final_report) == 0:
                     continue
-                final_report_dict = final_report.to_dict()
+                final_report_dict = pd.DataFrame(
+                    final_report.values())
                 final_report_dict["run"] = mainrun.name
                 final_report_dict["run_id"] = mainrun.pk
                 final_report_dict["sample"] = sample.name
@@ -131,7 +132,7 @@ def projects_reports_summary(project_query):
                 all_reports.append(final_report_dict)
 
     if len(all_reports):
-        all_reports = pd.DataFrame(all_reports)
+        all_reports = pd.concat(all_reports)
 
     return all_reports
 
