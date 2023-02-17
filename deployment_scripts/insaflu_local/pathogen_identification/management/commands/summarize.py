@@ -48,17 +48,26 @@ def collect_parameters_project(project: Projects):
 
     project_params = []
 
+    # get unique software trees:
+    software_trees = set([ps.leaf.software_tree for ps in parameterset])
+    all_project_paths_dict = {}
+    all_pipe_trees_dict = {}
+    for software_tree in software_trees:
+        pipe_tree = utils.parameter_util.software_tree_to_pipeline_tree(
+            software_tree=software_tree)
+        all_paths = pipe_tree.get_all_graph_paths()
+        all_project_paths_dict[software_tree.pk] = all_paths
+        all_pipe_trees_dict[software_tree.pk] = pipe_tree
+
     for ps in parameterset:
         print(ps.leaf.pk)
         software_tree = ps.leaf.software_tree
-        tree_makeup = software_tree.global_index
-        pipe_tree = utils.parameter_util.software_tree_to_pipeline_tree(
-            software_tree=software_tree)
+        pipe_tree = all_pipe_trees_dict[software_tree.pk]
+        all_paths = all_project_paths_dict[software_tree.pk]
 
         print("node_leaf: ", pipe_tree.leaves_from_node(ps.leaf.index))
         leaf = pipe_tree.leaves_from_node(ps.leaf.index)[0]
 
-        all_paths = pipe_tree.get_all_graph_paths()
         print(all_paths.keys())
         print(ps.leaf.index)
         params = all_paths.get(leaf, None)
