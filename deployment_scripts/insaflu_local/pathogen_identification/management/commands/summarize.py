@@ -114,7 +114,9 @@ def projects_reports_summary(project_query):
     for project in project_query:
         samples = PIProject_Sample.objects.filter(project=project)
         for sample in samples:
-            mainruns = RunMain.objects.filter(sample=sample)
+            ps = ParameterSet.objects.filter(
+                sample=sample, project=project, status=ParameterSet.STATUS_FINISHED)
+            mainruns = RunMain.objects.filter(parameter_set__in=ps)
             for mainrun in mainruns:
 
                 final_report = FinalReport.objects.filter(run=mainrun)
@@ -126,6 +128,7 @@ def projects_reports_summary(project_query):
                 final_report_dict["run"] = mainrun.name
                 final_report_dict["run_id"] = mainrun.pk
                 final_report_dict["sample"] = sample.name
+                final_report_dict["sample_name"] = sample.name
                 final_report_dict["sample_id"] = sample.pk
                 final_report_dict["project"] = project.name
                 final_report_dict["project_id"] = project.pk
