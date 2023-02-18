@@ -43,50 +43,56 @@ def collect_parameters_project(project: Projects):
     technology = project.technology
     user = project.owner
 
-    parameterset = ParameterSet.objects.filter(
-        project=project, status=ParameterSet.STATUS_FINISHED)
+    samples = PIProject_Sample.objects.filter(project=project)
 
-    project_params = []
+    for sample in samples:
+        parameterset = ParameterSet.objects.filter(
+            project=project, sample=sample, status=ParameterSet.STATUS_FINISHED)
+        mainruns = RunMain.objects.filter(parameter_set__in=ps)
 
-    # get unique software trees:
-    software_trees = set([ps.leaf.software_tree for ps in parameterset])
-    all_project_paths_dict = {}
-    all_pipe_trees_dict = {}
-    for software_tree in software_trees:
-        pipe_tree = utils.parameter_util.software_tree_to_pipeline_tree(
-            software_tree=software_tree)
-        all_paths = pipe_tree.get_all_graph_paths()
-        all_project_paths_dict[software_tree.pk] = all_paths
-        all_pipe_trees_dict[software_tree.pk] = pipe_tree
+        project_params = []
 
-    for ps in parameterset:
-        print(ps.leaf.pk)
-        software_tree = ps.leaf.software_tree
-        pipe_tree = all_pipe_trees_dict[software_tree.pk]
-        all_paths = all_project_paths_dict[software_tree.pk]
+        # get unique software trees:
+        software_trees = set([ps.leaf.software_tree for ps in parameterset])
+        all_project_paths_dict = {}
+        all_pipe_trees_dict = {}
+        for software_tree in software_trees:
+            pipe_tree = utils.parameter_util.software_tree_to_pipeline_tree(
+                software_tree=software_tree)
+            all_paths = pipe_tree.get_all_graph_paths()
+            all_project_paths_dict[software_tree.pk] = all_paths
+            all_pipe_trees_dict[software_tree.pk] = pipe_tree
 
-        print("node_leaf: ", pipe_tree.leaves_from_node(ps.leaf.index))
-        leaf = pipe_tree.leaves_from_node(ps.leaf.index)[0]
+        for run in mainruns:
+            ps = run.parameter_set
+            print(ps.leaf.pk)
+            software_tree = ps.leaf.software_tree
+            pipe_tree = all_pipe_trees_dict[software_tree.pk]
+            all_paths = all_project_paths_dict[software_tree.pk]
 
-        print(all_paths.keys())
-        print(ps.leaf.index)
-        params = all_paths.get(leaf, None)
+            print("node_leaf: ", pipe_tree.leaves_from_node(ps.leaf.index))
+            leaf = pipe_tree.leaves_from_node(ps.leaf.index)[0]
 
-        if params is None:
-            continue
-        try:
-            run = RunMain.objects.get(parameter_set=ps)
-        except RunMain.MultipleObjectsReturned:
-            run = RunMain.objects.filter(parameter_set=ps).first()
+            print(all_paths.keys())
+            print(ps.leaf.index)
+            params = all_paths.get(leaf, None)
 
-        params["run_id"] = run.pk
-        params["sample"] = ps.sample.name
-        params["sample_id"] = ps.sample.pk
-        params["sample_name"] = ps.sample.name
-        params["project"] = project.name
-        params["project_id"] = project.pk
+            if params is None:
+                continue
+            try:
+                run = RunMain.objects.get(parameter_set=ps)
+            except RunMain.MultipleObjectsReturned:
+                run = RunMain.objects.filter(parameter_set=ps).first()
 
-        project_params.append(params)
+            params["run"] = run.name
+            params["run_id"] = run.pk
+            params["sample"] = ps.sample.name
+            params["sample_id"] = ps.sample.pk
+            params["sample_name"] = ps.sample.name
+            params["project"] = project.name
+            params["project_id"] = project.pk
+
+            project_params.append(params)
 
     if len(project_params):
         project_params = pd.concat(project_params)
