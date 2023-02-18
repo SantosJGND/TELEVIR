@@ -44,13 +44,12 @@ def collect_parameters_project(project: Projects):
     user = project.owner
 
     samples = PIProject_Sample.objects.filter(project=project)
+    project_params = []
 
     for sample in samples:
         parameterset = ParameterSet.objects.filter(
             project=project, sample=sample, status=ParameterSet.STATUS_FINISHED)
         mainruns = RunMain.objects.filter(parameter_set__in=parameterset)
-
-        project_params = []
 
         # get unique software trees:
         software_trees = set([ps.leaf.software_tree for ps in parameterset])
@@ -78,11 +77,7 @@ def collect_parameters_project(project: Projects):
             params = all_paths.get(leaf, None)
 
             if params is None:
-                continue
-            try:
-                run = RunMain.objects.get(parameter_set=ps)
-            except RunMain.MultipleObjectsReturned:
-                run = RunMain.objects.filter(parameter_set=ps).first()
+                print("no params found for leaf: ", leaf)
 
             params["run"] = run.name
             params["run_id"] = run.pk
