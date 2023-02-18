@@ -48,7 +48,7 @@ def collect_parameters_project(project: Projects):
     for sample in samples:
         parameterset = ParameterSet.objects.filter(
             project=project, sample=sample, status=ParameterSet.STATUS_FINISHED)
-        mainruns = RunMain.objects.filter(parameter_set__in=ps)
+        mainruns = RunMain.objects.filter(parameter_set__in=parameterset)
 
         project_params = []
 
