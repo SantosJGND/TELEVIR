@@ -1,5 +1,5 @@
 #####
-### generate tree
+# generate tree
 #####
 import logging
 import ntpath
@@ -13,8 +13,10 @@ from constants.meta_key_and_values import MetaKeyAndValue
 from django.conf import settings
 from django.contrib.auth.models import User
 from extend_user.models import Profile
-from managing_files.models import MetaKey, ProcessControler, Sample, UploadFiles
-from pathogen_identification.models import PIProject_Sample, Projects, SoftwareTree
+from managing_files.models import (MetaKey, ProcessControler, Sample,
+                                   UploadFiles)
+from pathogen_identification.models import (PIProject_Sample, Projects,
+                                            SoftwareTree)
 from settings.constants_settings import ConstantsSettings
 from settings.models import Sample
 from utils.parse_in_files import ParseInFiles
@@ -71,7 +73,7 @@ class Insaflu_Cli:
     def create_sample_from_fofn(self, fofn, user: User, technology: str):
 
         r1, r2 = self.read_fofn(fofn)
-        name = os.path.basename(fofn).split(".")[0]
+        name = os.path.splitext(fofn)[0]
 
         try:
             sample = Sample.objects.get(name=name, owner=user)
@@ -94,14 +96,16 @@ class Insaflu_Cli:
             owner=user,
             path_name_1=r1,
             path_name_2=r2,
-            type_of_fastq=int(technology == ConstantsSettings.TECHNOLOGY_minion),
+            type_of_fastq=int(
+                technology == ConstantsSettings.TECHNOLOGY_minion),
             date_of_onset=date.today(),
             date_of_collection=date.today(),
         )
 
         sample.is_deleted = False
         sample.is_obsolete = False
-        sample.file_name_1 = utils.clean_name(os.path.basename(sample.path_name_1.name))
+        sample.file_name_1 = utils.clean_name(
+            os.path.basename(sample.path_name_1.name))
         sample.is_valid_1 = True
         if sample.exist_file_2():
             sample.file_name_2 = utils.clean_name(
@@ -145,7 +149,8 @@ class Insaflu_Cli:
             )
             utils.move_file(
                 os.path.join(
-                    getattr(settings, "MEDIA_ROOT", None), sample.path_name_2.name
+                    getattr(settings, "MEDIA_ROOT",
+                            None), sample.path_name_2.name
                 ),
                 sz_file_to,
             )
@@ -159,7 +164,8 @@ class Insaflu_Cli:
 
         if not os.path.exists(metadata_full_path):
             self.logger.info(
-                "Metadata file {} could not be found".format(metadata_full_path)
+                "Metadata file {} could not be found".format(
+                    metadata_full_path)
             )
             return False
 
@@ -222,7 +228,8 @@ class Insaflu_Cli:
                 fastq_files_to_upload.append(fastq_full_path)
                 if not os.path.exists(fastq_full_path):
                     self.logger.info(
-                        "Fastq file {} could not be found".format(fastq_full_path)
+                        "Fastq file {} could not be found".format(
+                            fastq_full_path)
                     )
                     missing_fastqs = True
 
@@ -257,7 +264,8 @@ class Insaflu_Cli:
         sample_file_upload_files.number_files_processed = 0
 
         try:
-            type_file = MetaKey.objects.get(name=TypeFile.TYPE_FILE_sample_file)
+            type_file = MetaKey.objects.get(
+                name=TypeFile.TYPE_FILE_sample_file)
         except MetaKey.DoesNotExist:
             type_file = MetaKey()
             type_file.name = TypeFile.TYPE_FILE_sample_file
@@ -270,7 +278,8 @@ class Insaflu_Cli:
         # move the files to the right place
         sz_file_to = os.path.join(
             getattr(settings, "MEDIA_ROOT", None),
-            utils.get_path_upload_file(user.id, TypeFile.TYPE_FILE_sample_file),
+            utils.get_path_upload_file(
+                user.id, TypeFile.TYPE_FILE_sample_file),
             metadata_file,
         )
 
@@ -282,18 +291,21 @@ class Insaflu_Cli:
 
         if path_added is None:
             sample_file_upload_files.path_name.name = os.path.join(
-                utils.get_path_upload_file(user.id, TypeFile.TYPE_FILE_sample_file),
+                utils.get_path_upload_file(
+                    user.id, TypeFile.TYPE_FILE_sample_file),
                 ntpath.basename(sz_file_to),
             )
         else:
             sample_file_upload_files.path_name.name = os.path.join(
-                utils.get_path_upload_file(user.id, TypeFile.TYPE_FILE_sample_file),
+                utils.get_path_upload_file(
+                    user.id, TypeFile.TYPE_FILE_sample_file),
                 path_added,
                 ntpath.basename(sz_file_to),
             )
 
         self.logger.info(
-            "{} file was processed".format(sample_file_upload_files.path_name.name)
+            "{} file was processed".format(
+                sample_file_upload_files.path_name.name)
         )
 
         return sample_file_upload_files
@@ -316,26 +328,29 @@ class Insaflu_Cli:
         )
         sz_file_to, path_added = utils.get_unique_file(
             sz_file_to
-        )  ## get unique file name, user can upload files with same name...
+        )  # get unique file name, user can upload files with same name...
         #     utils.move_file(temp_file, sz_file_to)
         utils.copy_file(fastq_to_upload, sz_file_to)
 
         # test if file exists (may fail due to full disk or other error)
         if not os.path.exists(sz_file_to) and os.path.getsize(sz_file_to) > 10:
             self.logger.info(
-                " Error copying file {} file to {}".format(fastq_to_upload, sz_file_to)
+                " Error copying file {} file to {}".format(
+                    fastq_to_upload, sz_file_to)
             )
             # If we do a return here then we need an atomic transaction or a way to prevent inconsistencies...
             return False
 
         if path_added is None:
             fastq_upload_files.path_name.name = os.path.join(
-                utils.get_path_upload_file(user.id, TypeFile.TYPE_FILE_fastq_gz),
+                utils.get_path_upload_file(
+                    user.id, TypeFile.TYPE_FILE_fastq_gz),
                 fastq_upload_files.file_name,
             )
         else:
             fastq_upload_files.path_name.name = os.path.join(
-                utils.get_path_upload_file(user.id, TypeFile.TYPE_FILE_fastq_gz),
+                utils.get_path_upload_file(
+                    user.id, TypeFile.TYPE_FILE_fastq_gz),
                 path_added,
                 fastq_upload_files.file_name,
             )
@@ -348,7 +363,7 @@ class Insaflu_Cli:
             type_file.save()
 
         fastq_upload_files.is_valid = True
-        fastq_upload_files.is_processed = False  ## True when all samples are set
+        fastq_upload_files.is_processed = False  # True when all samples are set
         fastq_upload_files.owner = user
         fastq_upload_files.type_file = type_file
         fastq_upload_files.number_files_to_process = 1
@@ -380,9 +395,9 @@ class Insaflu_Cli:
                 sample = Sample.objects.get(
                     name__iexact=vect_sample[0].name, owner=user, is_deleted=False
                 )
-                ## if exist don't add
+                # if exist don't add
                 samples.add(sample)
-                continue  ## already exist
+                continue  # already exist
             except Sample.DoesNotExist as e:
                 pass
 
@@ -399,14 +414,16 @@ class Insaflu_Cli:
 
         parse_in_files = self.metadata_parse(metadata_full_path, user)
 
-        fastq_files_to_upload = self.metadata_fastqs(parse_in_files.get_vect_samples())
+        fastq_files_to_upload = self.metadata_fastqs(
+            parse_in_files.get_vect_samples())
         print("fastq_files_to_upload: ", fastq_files_to_upload)
 
         if not fastq_files_to_upload:
 
             return []
 
-        sample_file_upload_files = self.metadata_upload_prep(metadata_full_path, user)
+        sample_file_upload_files = self.metadata_upload_prep(
+            metadata_full_path, user)
 
         sample_file_upload_files.number_files_to_process = len(
             parse_in_files.get_vect_samples()
@@ -436,10 +453,12 @@ class Insaflu_Cli:
             (job_name_wait, job_name) = user.profile.get_name_sge_seq(
                 Profile.SGE_PROCESS_clean_sample, Profile.SGE_SAMPLE
             )
-            if sample.is_type_fastq_gz_sequencing():  ### default is Illumina
-                taskID = process_SGE.set_run_trimmomatic_species(sample, user, job_name)
-            else:  ### Minion, codify with other
-                taskID = process_SGE.set_run_clean_minion(sample, user, job_name)
+            if sample.is_type_fastq_gz_sequencing():  # default is Illumina
+                taskID = process_SGE.set_run_trimmomatic_species(
+                    sample, user, job_name)
+            else:  # Minion, codify with other
+                taskID = process_SGE.set_run_clean_minion(
+                    sample, user, job_name)
 
             sample.is_ready_for_projects = True
             sample.save()
@@ -448,7 +467,7 @@ class Insaflu_Cli:
             self.logger.error("Fail to run: ProcessSGE - " + str(e))
             return
 
-        ## refresh sample list for this user
+        # refresh sample list for this user
         if not job_name is None:
             process_SGE.set_create_sample_list_by_user(user, [job_name])
         ###
@@ -491,7 +510,8 @@ class Insaflu_Cli:
     def create_benchmark_softwaretree_if_not_exists(self):
 
         try:
-            benchmark_softwaretree = SoftwareTree.objects.filter(name="default")
+            benchmark_softwaretree = SoftwareTree.objects.filter(
+                name="default")
         except SoftwareTree.DoesNotExist:
             benchmark_softwaretree = SoftwareTree.objects.create(
                 name="default",

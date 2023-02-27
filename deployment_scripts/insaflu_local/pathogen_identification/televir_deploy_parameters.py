@@ -5,7 +5,7 @@ class Params_Illumina:
 
     DATA_TYPE = "illumina"
 
-    ################################## CONSTANT PARAMS
+    # CONSTANT PARAMS
 
     CONSTANTS = {
         "minimum_coverage_threshold": 2,
@@ -15,33 +15,35 @@ class Params_Illumina:
         "assembly_contig_min_length": 300,
     }
 
-    ################################## SOFTWARE
+    # SOFTWARE
 
     SOFTWARE = {
         CS.PIPELINE_NAME_read_quality_analysis: ["trimmomatic"],  # trimmomatic
         CS.PIPELINE_NAME_viral_enrichment: [
             "centrifuge",
-            # "kraken2",
+            "kraken2",
+            "kaiju",
             # "fastviromeexplorer",
         ],  # "virmet", "dvf", "minimap2", "centrifuge", "kaiju", "kuniq", "kraken2", "fve", "virmet"],
         CS.PIPELINE_NAME_assembly: ["spades"],  # "flye", "raven"],
         CS.PIPELINE_NAME_contig_classification: [
             "blast",
-            # "minimap2_asm",
+            "minimap2",
         ],  # ["blast", "minimap-asm", "diamond", "virsorter"],
         CS.PIPELINE_NAME_read_classification: [
-            # "kraken2",
-            # "fastviromeexplorer",
+            "kraken2",
+            "fastviromeexplorer",
             "krakenuniq",
-            # "clark",
-            # "kaiju",
+            "clark",
+            "kaiju",
             "centrifuge",
             # "diamond",
         ],
-        CS.PIPELINE_NAME_remapping: ["snippy"],  # snippy, rematch, bowtie, minimap-rem
+        # snippy, rematch, bowtie, minimap-rem
+        CS.PIPELINE_NAME_remapping: ["snippy"],
     }
 
-    ################################## PARAMS
+    # PARAMS
     ARGS_QC = {
         "trimmomatic": {
             "TRIM_ARGS": [
@@ -100,7 +102,7 @@ class Params_Illumina:
             "MINIMAP_DB": [
                 "refseq_viral.genome.fna.gz",
                 "virosaurus90_vertebrate-20200330.fas.gz",
-            ],  ##NCBIrs_ViralCG.dustmasked.fna.gz, virosaurus90_vertebrate-20200330.fas.gz
+            ],  # NCBIrs_ViralCG.dustmasked.fna.gz, virosaurus90_vertebrate-20200330.fas.gz
         },
         "fastviromeexplorer": {
             "FVE_ARGS": ["-cr 0.1 -co .2 -cn 5"],
@@ -111,7 +113,7 @@ class Params_Illumina:
         },
     }
 
-    ############################  ASSEMBLY PARAMS
+    # ASSEMBLY PARAMS
 
     ARGS_ASS = {
         "spades": {
@@ -140,7 +142,7 @@ class Params_Illumina:
         },
     }
 
-    ############################# CLASSIFICATION PARAMS
+    # CLASSIFICATION PARAMS
 
     ARGS_CLASS = {
         "clark": {
@@ -197,7 +199,7 @@ class Params_Illumina:
             "MINIMAP_DB": [
                 "refseq_viral.genome.fna.gz",
                 "virosaurus90_vertebrate-20200330.fas.gz",
-            ],  ##NCBIrs_ViralCG.dustmasked.fna.gz
+            ],  # NCBIrs_ViralCG.dustmasked.fna.gz
         },
         "minimap2_asm": {
             "MINIMAP_ARGS": [""],
@@ -216,7 +218,7 @@ class Params_Illumina:
         },
     }
 
-    ############################# REMAP PARAMS
+    # REMAP PARAMS
 
     ARGS_REMAP = {
         "snippy": {
@@ -262,10 +264,11 @@ class Params_Nanopore:
         "assembly_contig_min_length": 500,
     }
 
-    ################################## SOFTWARE
+    # SOFTWARE
 
     SOFTWARE = {
-        CS.PIPELINE_NAME_read_quality_analysis: ["nanofilt"],  # "nanofilt", trimmomatic
+        # "nanofilt", trimmomatic
+        CS.PIPELINE_NAME_read_quality_analysis: ["nanofilt"],
         CS.PIPELINE_NAME_viral_enrichment: [
             # "",
             # "kaiju",
@@ -291,7 +294,7 @@ class Params_Nanopore:
         ],  # snippy, rematch, bowtie, minimap-rem
     }
 
-    ################################## PARAMS
+    # PARAMS
 
     ARGS_QC = {
         "trimmomatic": {
@@ -365,7 +368,7 @@ class Params_Nanopore:
         },
     }
 
-    ############################  ASSEMBLY PARAMS
+    # ASSEMBLY PARAMS
 
     ARGS_ASS = {
         "spades": {
@@ -405,7 +408,7 @@ class Params_Nanopore:
         },
     }
 
-    ############################# CLASSIFICATION PARAMS
+    # CLASSIFICATION PARAMS
 
     ARGS_CLASS = {
         "clark": {
@@ -487,7 +490,7 @@ class Params_Nanopore:
         },
     }
 
-    ############################# REMAP PARAMS
+    # REMAP PARAMS
 
     ARGS_REMAP = {
         "snippy": {

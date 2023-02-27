@@ -8,12 +8,10 @@ from constants.constants import Constants, FileExtensions, FileType, TypePath
 from constants.constants_mixed_infection import ConstantsMixedInfection
 from constants.software_names import SoftwareNames
 from django.conf import settings
-
 # from django.db.models import Manager as GeoManager
 from django.contrib.auth.models import User
 from django.contrib.gis.db.models import PointField
 from django.db import models
-
 # Create your models here.
 from django.db.models import Manager as GeoManager  # #  change to django  2.x
 from django.utils.safestring import mark_safe

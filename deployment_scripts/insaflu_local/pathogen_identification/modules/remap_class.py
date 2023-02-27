@@ -9,17 +9,13 @@ import numpy as np
 import pandas as pd
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 from pathogen_identification.constants_settings import ConstantsSettings
-from pathogen_identification.modules.object_classes import (
-    Bedgraph,
-    Read_class,
-    Remap_Target,
-    RunCMD,
-    Software_detail,
-)
+from pathogen_identification.modules.object_classes import (Bedgraph,
+                                                            Read_class,
+                                                            Remap_Target,
+                                                            RunCMD,
+                                                            Software_detail)
 from pathogen_identification.utilities.utilities_general import (
-    plot_dotplot,
-    read_paf_coordinates,
-)
+    plot_dotplot, read_paf_coordinates)
 from scipy.stats import kstest
 
 pd.options.mode.chained_assignment = None
@@ -155,7 +151,7 @@ class coverage_parse:
         depthR = sum(overX.s * overX.x)
         overX = sum(overX.s)
         results = [depth, depthR, overX]
-        ### region operations
+        # region operations
         bedp = bedm[bedm.x >= self.Xm].reset_index(drop=True)
         windows_covered = "NA"
 
@@ -173,11 +169,13 @@ class coverage_parse:
                     ctgsize = self.ctgl[ctg]
                     nwindows = self.calculate_windows(ctgsize)
 
-                    tdrange = list(np.linspace(0, ctgsize, nwindows + 1, dtype=int))
+                    tdrange = list(np.linspace(
+                        0, ctgsize, nwindows + 1, dtype=int))
                     td_windows = [
                         [
                             tdrange[x],
-                            tdrange[x + 1] - 1 if tdrange[x + 1] < ctgsize else ctgsize,
+                            tdrange[x + 1] - 1 if tdrange[x +
+                                                          1] < ctgsize else ctgsize,
                         ]
                         for x in range(len(tdrange) - 1)
                     ]
@@ -202,7 +200,7 @@ class coverage_parse:
             else:
                 results.extend([1, savg, "NA"])
 
-        ### gap operations.
+        # gap operations.
         bedg = bedm[bedm.x < self.Xm].reset_index(drop=True)
 
         if bedg.shape[0] == 0:
@@ -215,7 +213,8 @@ class coverage_parse:
                 distances = []
                 for ctg in bedg.contig.unique():
                     bg = bedg[bedg.contig == ctg].copy()
-                    distances.append(np.sum(np.array(bg.i[1:]) - np.array(bg.e[:-1])))
+                    distances.append(
+                        np.sum(np.array(bg.i[1:]) - np.array(bg.e[:-1])))
 
                 distances = np.sum(np.array(distances) / len(distances))
                 savg = np.median(bedp.s)
@@ -649,7 +648,8 @@ class Remapping:
         self.minimum_coverage = minimum_coverage
         self.logdir = log_dir
 
-        self.cmd = RunCMD(bin, logdir=log_dir, prefix=prefix, task="remapping_main")
+        self.cmd = RunCMD(bin, logdir=log_dir, prefix=prefix,
+                          task="remapping_main")
 
         os.makedirs(self.rdir, exist_ok=True)
 
@@ -691,7 +691,8 @@ class Remapping:
         )
         self.dotplot = f"{self.rdir}/{self.prefix}.{target.acc_simple}.dotplot.png"
 
-        self.read_map_sorted_bam_exists = os.path.isfile(self.read_map_sorted_bam)
+        self.read_map_sorted_bam_exists = os.path.isfile(
+            self.read_map_sorted_bam)
         self.assembly_map_paf_exists = os.path.isfile(self.assembly_map_paf)
         self.mapped_subset_r1_exists = os.path.isfile(self.mapped_subset_r1)
         self.mapped_subset_r2_exists = os.path.isfile(self.mapped_subset_r2)
@@ -766,7 +767,8 @@ class Remapping:
             self.mapped_subset_r2_fasta, destination
         )
 
-        self.reference_file = self.relocate_file(self.reference_file, destination)
+        self.reference_file = self.relocate_file(
+            self.reference_file, destination)
         self.reference_fasta_index = self.relocate_file(
             self.reference_fasta_index, destination
         )
@@ -777,7 +779,8 @@ class Remapping:
         self.read_map_sorted_bam_index = self.relocate_file(
             self.read_map_sorted_bam_index, destination
         )
-        self.assembly_map_paf = self.relocate_file(self.assembly_map_paf, destination)
+        self.assembly_map_paf = self.relocate_file(
+            self.assembly_map_paf, destination)
 
         self.mapped_contigs_fasta = self.relocate_file(
             self.mapped_contigs_fasta, destination
@@ -898,7 +901,8 @@ class Remapping:
             return self
 
         if len(self.target.accid_in_file) == 0:
-            self.logger.info(f"No target contigs found for {self.target.accid}")
+            self.logger.info(
+                f"No target contigs found for {self.target.accid}")
             return self
 
         os.makedirs(self.rdir, exist_ok=True)
@@ -906,7 +910,8 @@ class Remapping:
         self.retrieve_reference()
 
         if not self.reference_file_exists:
-            self.logger.info(f"No reference file found for {self.target.accid}")
+            self.logger.info(
+                f"No reference file found for {self.target.accid}")
             return self
 
         self.index_reference()
@@ -1186,7 +1191,8 @@ class Remapping:
         if not output_sam:
             output_sam = os.path.join(self.rdir, f"temp{randint(1,1999)}.sam")
 
-        read_name_filter_regex = re.compile("^[A-Za-z0-9_.-]*$")  # (r"@|=&$\t")
+        read_name_filter_regex = re.compile(
+            "^[A-Za-z0-9_.-]*$")  # (r"@|=&$\t")
 
         with open(self.read_map_sam, "r") as f:
             with open(output_sam, "w") as f2:
@@ -1237,7 +1243,8 @@ class Remapping:
 
         if not os.path.isfile(self.read_map_sam_rmdup):
             self.logger.error(
-                "Duplicate removal failed for file {}".format(self.read_map_sam)
+                "Duplicate removal failed for file {}".format(
+                    self.read_map_sam)
             )
             return
         if same:
@@ -1360,7 +1367,8 @@ class Remapping:
         if os.path.getsize(self.genome_coverage):
 
             bedgraph = Bedgraph(self.genome_coverage)
-            bedgraph.plot_coverage(self.coverage_plot, tlen=self.reference_fasta_length)
+            bedgraph.plot_coverage(
+                self.coverage_plot, tlen=self.reference_fasta_length)
 
         self.coverage_plot_exists = os.path.exists(self.coverage_plot)
 
@@ -1368,7 +1376,8 @@ class Remapping:
         if os.path.getsize(self.assembly_map_paf):
 
             df = read_paf_coordinates(self.assembly_map_paf)
-            plot_dotplot(df, self.dotplot, "dotplot", xmax=self.reference_fasta_length)
+            plot_dotplot(df, self.dotplot, "dotplot",
+                         xmax=self.reference_fasta_length)
             self.dotplot_exists = os.path.exists(self.dotplot)
 
     def move_coverage_plot(self, static_dir_plots):
@@ -1391,7 +1400,8 @@ class Remapping:
     def move_dotplot(self, static_dir_plots):
         """Move dotplot to static directory."""
 
-        new_dotplot = os.path.join(static_dir_plots, os.path.basename(self.dotplot))
+        new_dotplot = os.path.join(
+            static_dir_plots, os.path.basename(self.dotplot))
 
         self.full_path_dotplot = os.path.join(
             ConstantsSettings.static_directory, new_dotplot
@@ -1537,7 +1547,8 @@ class Mapping_Instance:
 
     def generate_full_mapping_report_entry(self):
 
-        ntax = pd.concat((self.mapping_main_info, self.reference.report), axis=1)
+        ntax = pd.concat(
+            (self.mapping_main_info, self.reference.report), axis=1)
 
         def simplify_taxid(x):
             return (
@@ -1777,7 +1788,8 @@ class Mapping_Manager(Tandem_Remap):
 
         self.mapped_instances = []
         self.remap_targets = remap_targets
-        self.target_taxids = set([str(target.taxid) for target in remap_targets])
+        self.target_taxids = set([str(target.taxid)
+                                 for target in remap_targets])
         self.reads_before_processing = r1.read_number_clean + r2.read_number_clean
         self.reads_after_processing = (
             r1.get_current_fastq_read_number() + r2.get_current_fastq_read_number()
@@ -1840,6 +1852,9 @@ class Mapping_Manager(Tandem_Remap):
                 if mapped_instance.assembly:
                     mapped_instance.assembly.cleanup_files()
 
+            os.system("rm -rf " + mapped_instance.reference.rdir)
+            os.system("rm -rf " + mapped_instance.assembly.rdir)
+
     def move_igv_to_static(self, static_dir):
         self.logger.info("Moving IGV files to static")
         for instance in self.mapped_instances:
@@ -1872,7 +1887,8 @@ class Mapping_Manager(Tandem_Remap):
 
         self.report.ngaps = self.report.ngaps.fillna(0)
         self.report = self.report[self.report.coverage > 0]
-        self.report = self.report.sort_values(["coverage", "Hdepth"], ascending=False)
+        self.report = self.report.sort_values(
+            ["coverage", "Hdepth"], ascending=False)
 
     def collect_final_report_summary_statistics(self):
         if self.report.shape[0] > 0:

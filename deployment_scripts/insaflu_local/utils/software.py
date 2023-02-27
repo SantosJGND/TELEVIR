@@ -24,13 +24,8 @@ from ete3 import Tree
 from manage_virus.models import UploadFile
 from manage_virus.uploadFiles import UploadFiles
 from managing_files.manage_database import ManageDatabase
-from managing_files.models import (
-    MixedInfectionsTag,
-    ProcessControler,
-    ProjectSample,
-    Reference,
-    Sample,
-)
+from managing_files.models import (MixedInfectionsTag, ProcessControler,
+                                   ProjectSample, Reference, Sample)
 from settings.constants_settings import ConstantsSettings
 from settings.default_parameters import DefaultParameters
 from settings.default_software_project_sample import DefaultProjectSoftware
@@ -39,15 +34,8 @@ from utils.mixed_infections_management import MixedInfectionsManagement
 from utils.parse_coverage_file import GetCoverage
 from utils.parse_out_files import ParseOutFiles
 from utils.process_SGE import ProcessSGE
-from utils.result import (
-    CountHits,
-    DecodeObjects,
-    KeyValue,
-    MaskingConsensus,
-    Result,
-    ResultAverageAndNumberReads,
-    SoftwareDesc,
-)
+from utils.result import (CountHits, DecodeObjects, KeyValue, MaskingConsensus,
+                          Result, ResultAverageAndNumberReads, SoftwareDesc)
 from utils.utils import Utils
 
 
@@ -59,7 +47,7 @@ class Software(object):
     utils = Utils()
     software_names = SoftwareNames()
 
-    ## logging
+    # logging
     logger_debug = logging.getLogger("fluWebVirus.debug")
     logger_production = logging.getLogger("fluWebVirus.production")
 
@@ -67,9 +55,9 @@ class Software(object):
         """
         test if a a vcf file has a gzip file, if not create it
         """
-        ### create the gzip file
+        # create the gzip file
         self.utils.compress_files(self.software_names.get_bgzip(), vcf_file)
-        ### create the tabix
+        # create the tabix
         if vcf_file.endswith(".gz"):
             self.create_index_files(vcf_file)
         else:
@@ -114,7 +102,7 @@ class Software(object):
         software : SOFTWARE_SNIPPY_name, SOFTWARE_FREEBAYES_name
         """
         for type_file in self.get_vect_type_files_to_copy(software):
-            if type_file == FileType.FILE_CONSENSUS_FA:  ## if .fa file pass to .fasta
+            if type_file == FileType.FILE_CONSENSUS_FA:  # if .fa file pass to .fasta
                 self.utils.copy_file(
                     os.path.join(
                         path_from,
@@ -131,8 +119,8 @@ class Software(object):
             elif (
                 type_file == FileType.FILE_VCF
                 and software == SoftwareNames.SOFTWARE_FREEBAYES_name
-            ):  ## vcf file
-                ### create the bgzip file
+            ):  # vcf file
+                # create the bgzip file
                 self.utils.compress_files(
                     self.software_names.get_bgzip(),
                     os.path.join(
@@ -144,7 +132,7 @@ class Software(object):
                         ),
                     ),
                 )
-                ### create the tabix
+                # create the tabix
                 self.create_index_files(
                     os.path.join(
                         path_from,
@@ -156,7 +144,7 @@ class Software(object):
                     )
                 )
 
-                ### copy both
+                # copy both
                 self.utils.copy_file(
                     os.path.join(
                         path_from,
@@ -184,7 +172,7 @@ class Software(object):
                     ),
                 )
 
-                ### if snippy copy also the vcf
+                # if snippy copy also the vcf
                 self.utils.copy_file(
                     os.path.join(
                         path_from,
@@ -198,7 +186,7 @@ class Software(object):
                         TypePath.MEDIA_ROOT, type_file, software
                     ),
                 )
-            elif type_file == FileType.FILE_REF_FASTA:  ## this is only work for Snippy
+            elif type_file == FileType.FILE_REF_FASTA:  # this is only work for Snippy
                 self.utils.copy_file(
                     os.path.join(
                         path_from,
@@ -213,7 +201,7 @@ class Software(object):
                         TypePath.MEDIA_ROOT, type_file, software
                     ),
                 )
-                ## create the FAI index
+                # create the FAI index
                 self.create_fai_fasta(
                     project_sample.get_file_output(
                         TypePath.MEDIA_ROOT, type_file, software
@@ -238,7 +226,8 @@ class Software(object):
         """
         Create fai for a fasta file
         """
-        cmd = "%s faidx %s" % (self.software_names.get_samtools(), fileFastaName)
+        cmd = "%s faidx %s" % (
+            self.software_names.get_samtools(), fileFastaName)
         exist_status = os.system(cmd)
         if exist_status != 0:
             self.logger_production.error("Fail to run: " + cmd)
@@ -290,7 +279,8 @@ class Software(object):
         0 + 0 with mate mapped to a different chr
         0 + 0 with mate mapped to a different chr (mapQ>=5)
         """
-        temp_file = self.utils.get_temp_file("bam_stat", FileExtensions.FILE_TXT)
+        temp_file = self.utils.get_temp_file(
+            "bam_stat", FileExtensions.FILE_TXT)
         cmd = "%s flagstat %s > %s" % (
             self.software_names.get_samtools(),
             bam_file,
@@ -308,7 +298,7 @@ class Software(object):
             vect_result = self.utils.read_text_file(temp_file)
             self.utils.remove_file(temp_file)
 
-            ### parse result
+            # parse result
             for line in vect_result:
                 sz_temp = line.strip()
                 if len(sz_temp) == 0:
@@ -331,11 +321,13 @@ class Software(object):
 
     def creat_new_reference_to_snippy(self, project_sample):
 
-        ### get temp file
-        temp_file = self.utils.get_temp_file("new_reference", FileExtensions.FILE_FASTA)
+        # get temp file
+        temp_file = self.utils.get_temp_file(
+            "new_reference", FileExtensions.FILE_FASTA)
         cmd = "perl %s %s %s" % (
             self.software_names.get_create_new_reference_to_snippy(),
-            project_sample.project.reference.get_reference_gbk(TypePath.MEDIA_ROOT),
+            project_sample.project.reference.get_reference_gbk(
+                TypePath.MEDIA_ROOT),
             temp_file,
         )
         #         print(cmd)
@@ -443,7 +435,7 @@ class Software(object):
             self.logger_debug.error("Fail to run: " + cmd)
             raise Exception("Fail to run fastq to fasta")
 
-        ### need create a fasta file
+        # need create a fasta file
         return cmd
 
     def is_exist_database_abricate(self, database):
@@ -452,8 +444,10 @@ class Software(object):
         argannot    1749    2017-Oct-30
         card    2158    2017-Oct-30
         """
-        temp_file = self.utils.get_temp_file("list_abricate", FileExtensions.FILE_TXT)
-        cmd = "{} --list > {}".format(self.software_names.get_abricate(), temp_file)
+        temp_file = self.utils.get_temp_file(
+            "list_abricate", FileExtensions.FILE_TXT)
+        cmd = "{} --list > {}".format(
+            self.software_names.get_abricate(), temp_file)
         exist_status = os.system(cmd)
         if exist_status != 0:
             self.logger_production.error("Fail to run: " + cmd)
@@ -481,7 +475,7 @@ class Software(object):
             self.logger_debug.error("Fail to run: " + cmd)
             raise Exception("Fail to run make directory")
 
-        ## copy the file
+        # copy the file
         self.utils.copy_file(
             file_name,
             os.path.join(
@@ -518,6 +512,7 @@ class Software(object):
     Global processing
     """
     #     @transaction.atomic
+
     def identify_type_and_sub_type(
         self, sample, fastq1_1, fastq1_2, owner, b_run_tests=False
     ):
@@ -527,18 +522,18 @@ class Software(object):
         """
 
         manageDatabase = ManageDatabase()
-        ### temp dir out spades
+        # temp dir out spades
         out_dir_result = self.utils.get_temp_dir()
         result_all = Result()
 
-        ### test files
+        # test files
         if fastq1_1 is None or not os.path.exists(fastq1_1):
             return False
         if not fastq1_2 is None and not os.path.exists(fastq1_2):
             return False
 
         print("identify_type_and_sub_type")
-        if sample.is_type_fastq_gz_sequencing():  ## illumina
+        if sample.is_type_fastq_gz_sequencing():  # illumina
             try:
                 cmd = self.run_spades(fastq1_1, fastq1_2, out_dir_result)
                 parameters = self.software_names.get_spades_parameters()
@@ -573,7 +568,7 @@ class Software(object):
                 )
                 self.utils.remove_dir(out_dir_result)
                 return False
-        else:  ### for minion
+        else:  # for minion
             try:
                 cmd = self.convert_fastq_to_fasta(
                     fastq1_1, os.path.join(out_dir_result, "contigs.fasta")
@@ -598,7 +593,7 @@ class Software(object):
             not os.path.exists(file_out_contigs)
             or os.path.getsize(file_out_contigs) < 50
         ):
-            ## save error in MetaKeySample
+            # save error in MetaKeySample
             result = Result()
             if sample.is_type_fastq_gz_sequencing():
                 result.set_error(
@@ -627,11 +622,11 @@ class Software(object):
             self.utils.remove_dir(out_dir_result)
             return False
 
-        ### test id abricate has the database
+        # test id abricate has the database
         try:
             uploadFile = UploadFile.objects.order_by("-version")[0]
         except UploadFile.DoesNotExist:
-            ## save error in MetaKeySample
+            # save error in MetaKeySample
             result = Result()
             result.set_error(
                 "Abricate (%s) fail to run"
@@ -656,7 +651,8 @@ class Software(object):
 
         if not self.is_exist_database_abricate(uploadFile.abricate_name):
             try:
-                self.create_database_abricate(uploadFile.abricate_name, uploadFile.path)
+                self.create_database_abricate(
+                    uploadFile.abricate_name, uploadFile.path)
             except Exception:
                 result = Result()
                 result.set_error(
@@ -680,7 +676,7 @@ class Software(object):
                 self.utils.remove_dir(out_dir_result)
                 return False
 
-        ## run abricate
+        # run abricate
         out_file_abricate = self.utils.get_temp_file("temp_abricate", ".txt")
         try:
             cmd = self.run_abricate(
@@ -722,7 +718,7 @@ class Software(object):
             return False
 
         if not os.path.exists(out_file_abricate):
-            ## save error in MetaKeySample
+            # save error in MetaKeySample
             result = Result()
             result.set_error(
                 "Abricate (%s)identify_contigs fail to run"
@@ -752,13 +748,13 @@ class Software(object):
             SoftwareNames.SOFTWARE_SPAdes_CLEAN_HITS_BELLOW_VALUE,
         )
 
-        ### set the identification in database
+        # set the identification in database
         uploadFiles = UploadFiles()
         vect_data = uploadFiles.uploadIdentifyVirus(
             dict_data_out, uploadFile.abricate_name
         )
         if len(vect_data) == 0:
-            ## save error in MetaKeySample
+            # save error in MetaKeySample
             result = Result()
             result.set_error("Fail to identify type and sub type")
             result.add_software(
@@ -780,12 +776,13 @@ class Software(object):
                 sample.identify_virus.add(identify_virus)
             sample.save()
 
-        ## copy the abricate output
+        # copy the abricate output
         self.utils.copy_file(
-            clean_abricate_file, sample.get_abricate_output(TypePath.MEDIA_ROOT)
+            clean_abricate_file, sample.get_abricate_output(
+                TypePath.MEDIA_ROOT)
         )
 
-        ## Only identify Contigs for Illuminua, because Spades runs. In ONT doesn't run because it is identify in reads.
+        # Only identify Contigs for Illuminua, because Spades runs. In ONT doesn't run because it is identify in reads.
         try:
             contigs_2_sequences = Contigs2Sequences(b_run_tests)
             (
@@ -794,7 +791,8 @@ class Software(object):
             ) = contigs_2_sequences.identify_contigs(
                 file_out_contigs,
                 os.path.basename(
-                    sample.get_draft_contigs_abricate_output(TypePath.MEDIA_ROOT)
+                    sample.get_draft_contigs_abricate_output(
+                        TypePath.MEDIA_ROOT)
                 )
                 if sample.is_type_fastq_gz_sequencing()
                 else os.path.basename(
@@ -802,8 +800,8 @@ class Software(object):
                 ),
                 True if sample.is_type_fastq_gz_sequencing() else False,
             )
-            ## copy the contigs from spades
-            if sample.is_type_fastq_gz_sequencing():  ## illumina
+            # copy the contigs from spades
+            if sample.is_type_fastq_gz_sequencing():  # illumina
                 if os.path.exists(out_file_clean):
                     self.utils.copy_file(
                         out_file_clean,
@@ -812,18 +810,21 @@ class Software(object):
                 if os.path.exists(clean_abricate_file):
                     self.utils.copy_file(
                         clean_abricate_file,
-                        sample.get_draft_contigs_abricate_output(TypePath.MEDIA_ROOT),
+                        sample.get_draft_contigs_abricate_output(
+                            TypePath.MEDIA_ROOT),
                     )
             else:
                 print(
                     "Should be writing abricate results to {}".format(
-                        sample.get_draft_reads_abricate_output(TypePath.MEDIA_ROOT)
+                        sample.get_draft_reads_abricate_output(
+                            TypePath.MEDIA_ROOT)
                     )
                 )
                 if os.path.exists(clean_abricate_file):
                     self.utils.copy_file(
                         clean_abricate_file,
-                        sample.get_draft_reads_abricate_output(TypePath.MEDIA_ROOT),
+                        sample.get_draft_reads_abricate_output(
+                            TypePath.MEDIA_ROOT),
                     )
             result_all.add_software(
                 SoftwareDesc(
@@ -858,7 +859,7 @@ class Software(object):
             )
             return False
 
-        ## save everything OK
+        # save everything OK
         if sample.is_type_fastq_gz_sequencing():
             manageDatabase.set_sample_metakey(
                 sample,
@@ -877,7 +878,8 @@ class Software(object):
                 owner,
                 MetaKeyAndValue.META_KEY_Identify_Sample,
                 MetaKeyAndValue.META_VALUE_Success,
-                "Success, Abricate(%s)" % (self.software_names.get_abricate_version()),
+                "Success, Abricate(%s)" % (
+                    self.software_names.get_abricate_version()),
             )
         manageDatabase.set_sample_metakey(
             sample,
@@ -897,27 +899,28 @@ class Software(object):
         :return specie TAGs: Reference.SPECIES_SARS_COV_2; Reference.SPECIES_MPXV; Reference.SPECIES_INFLUENZA, ...
         """
 
-        ### Done
+        # Done
         if (
             len(reference.specie_tag) > 0
             and reference.specie_tag != Reference.SPECIES_NOT_SET
         ):
             return reference.specie_tag
 
-        ### test id abricate has the database
+        # test id abricate has the database
         try:
             uploadFile = UploadFile.objects.order_by("-version")[0]
         except UploadFile.DoesNotExist:
             return Reference.SPECIES_NOT_SET
 
-        ## if not exist try to create it
+        # if not exist try to create it
         if not self.is_exist_database_abricate(uploadFile.abricate_name):
             try:
-                self.create_database_abricate(uploadFile.abricate_name, uploadFile.path)
+                self.create_database_abricate(
+                    uploadFile.abricate_name, uploadFile.path)
             except Exception:
                 return Reference.SPECIES_NOT_SET
 
-        ## run abricate
+        # run abricate
         out_file_abricate = self.utils.get_temp_file("temp_abricate", ".txt")
         try:
             cmd = self.run_abricate(
@@ -938,13 +941,13 @@ class Software(object):
             "doesnt_mather.txt",
             SoftwareNames.SOFTWARE_SPAdes_CLEAN_HITS_BELLOW_VALUE,
         )
-        ## don't need this file, only need vect_data_file
+        # don't need this file, only need vect_data_file
         self.utils.remove_file(clean_abricate_file)
         self.utils.remove_file(out_file_abricate)
 
         uploadFiles = UploadFiles()
         try:
-            ## could fail some identification, so, return False if it occurs
+            # could fail some identification, so, return False if it occurs
             vect_data = uploadFiles.uploadIdentifyVirus(
                 vect_data, uploadFile.abricate_name
             )
@@ -953,15 +956,16 @@ class Software(object):
         except Exception as e:
             return Reference.SPECIES_NOT_SET
 
-        ### test number of right segments
-        number_right_beta_cov, number_right_mpxv, number_right_influenza = (0, 0, 0)
+        # test number of right segments
+        number_right_beta_cov, number_right_mpxv, number_right_influenza = (
+            0, 0, 0)
         for identify_virus in vect_data:
             if (
                 identify_virus.seq_virus.name == "BetaCoV"
                 and identify_virus.seq_virus.kind_type.name == "Genus"
             ):
                 number_right_beta_cov += 1
-            ### need to read from the file
+            # need to read from the file
             elif (
                 identify_virus.seq_virus.name
                 in (
@@ -996,7 +1000,7 @@ class Software(object):
             ):
                 number_right_mpxv += 1
 
-        ## if right at least two
+        # if right at least two
         if number_right_beta_cov > 0:
             reference.specie_tag = Reference.SPECIES_SARS_COV_2
             reference.save()
@@ -1010,7 +1014,7 @@ class Software(object):
             reference.save()
             return Reference.SPECIES_INFLUENZA
 
-        ## Not ser
+        # Not ser
         return Reference.SPECIES_NOT_SET
 
     def run_fastq(self, file_name_1, file_name_2):
@@ -1053,7 +1057,8 @@ class Software(object):
         if not os.path.exists(fasta_file_name) or os.path.getsize(fasta_file_name) == 0:
             raise Exception("File doesn't exist")
         temp_dir = self.utils.get_temp_dir()
-        name_strain = self.utils.clean_extension(os.path.basename(original_file_name))
+        name_strain = self.utils.clean_extension(
+            os.path.basename(original_file_name))
         cmd = "{} {} {} --strain {} --force --outdir {} --prefix {}".format(
             self.software_names.get_prokka(),
             fasta_file_name,
@@ -1069,10 +1074,11 @@ class Software(object):
             self.logger_debug.error("Fail to run: " + cmd)
             raise Exception("Fail to run prokka")
 
-        ## clean /mol_type=
+        # clean /mol_type=
         gbk_file = os.path.join(
             temp_dir,
-            self.utils.clean_extension(original_file_name) + FileExtensions.FILE_GBK,
+            self.utils.clean_extension(
+                original_file_name) + FileExtensions.FILE_GBK,
         )
         temp_file = self.utils.get_temp_file_from_dir(
             temp_dir, "new_file", FileExtensions.FILE_GBK
@@ -1090,7 +1096,8 @@ class Software(object):
         """
         dir_present = os.getcwd()
         os.chdir(dir_to_process)
-        cmd = "{} --output={} *fasta".format(self.software_names.get_mauve(), out_file)
+        cmd = "{} --output={} *fasta".format(
+            self.software_names.get_mauve(), out_file)
         exist_status = os.system(cmd)
         os.chdir(dir_present)
         if exist_status != 0:
@@ -1116,8 +1123,8 @@ class Software(object):
             self.logger_debug.error("Fail to run: " + cmd)
             raise Exception("Fail to run convert mauve")
 
-        #### clean names
-        ### important, must have this order
+        # clean names
+        # important, must have this order
         vect_names_to_clean = [
             FileExtensions.FILE_CONSENSUS_FASTA,
             FileExtensions.FILE_FASTA,
@@ -1198,7 +1205,7 @@ class Software(object):
             self.logger_debug.error("Fail to run: " + cmd)
             raise Exception("Fail to run fasttree")
 
-        ## reroot the tree
+        # reroot the tree
         if not root_leaf is None:
             tree = Tree(out_file)
             if len(tree.get_leaves_by_name(root_leaf)) > 0:
@@ -1220,7 +1227,7 @@ class Software(object):
         :out log.txt with data of the result
         """
 
-        ## get dynamic parameters
+        # get dynamic parameters
         if user is None:
             parameters = self.software_names.get_trimmomatic_parameters()
         else:
@@ -1231,7 +1238,7 @@ class Software(object):
                 )
             )
 
-        ### run software
+        # run software
         temp_dir = self.utils.get_temp_dir()
         if file_name_2 is None or len(file_name_2) == 0:
             cmd = "java -jar %s SE -threads %d %s %s_1P.fastq.gz %s" % (
@@ -1242,7 +1249,7 @@ class Software(object):
                 parameters,
             )
         else:
-            ### need to make links the files to trimmomatic identify the _R1_ and _R2_
+            # need to make links the files to trimmomatic identify the _R1_ and _R2_
             new_file_name = os.path.join(temp_dir, "name_R1_001.fastq.gz")
             cmd = "ln -s {} {}".format(file_name_1, new_file_name)
             os.system(cmd)
@@ -1266,10 +1273,10 @@ class Software(object):
 
         result = Result()
         for line in output.split("\n"):
-            ### line of interested
+            # line of interested
             if line.startswith("Input Read Pairs:"):
-                ### parse line
-                ### Input Read Pairs: 44425 Both Surviving: 41254 (92,86%) Forward Only Surviving: 2306 (5,19%) Reverse Only Surviving: 431 (0,97%) Dropped: 434 (0,98%)
+                # parse line
+                # Input Read Pairs: 44425 Both Surviving: 41254 (92,86%) Forward Only Surviving: 2306 (5,19%) Reverse Only Surviving: 431 (0,97%) Dropped: 434 (0,98%)
                 for _ in range(
                     len(SoftwareNames.SOFTWARE_TRIMMOMATIC_vect_info_to_collect)
                 ):
@@ -1316,7 +1323,7 @@ class Software(object):
                         line.split("Quality encoding detected as")[1].strip(),
                     )
                 )
-        ### dt_info has the information
+        # dt_info has the information
         return (temp_dir, result, parameters)
 
     def run_snippy(
@@ -1387,17 +1394,18 @@ class Software(object):
             self.utils.remove_dir(temp_dir)
             raise Exception("Fail to run snippy")
 
-        ### add FREQ to VCF file
+        # add FREQ to VCF file
         parse_out_files = ParseOutFiles()
         out_file_transformed_amino = parse_out_files.add_amino_single_letter_code(
             os.path.join(temp_dir, sample_name + ".vcf")
         )
         self.utils.add_freq_to_vcf(
-            out_file_transformed_amino, os.path.join(temp_dir, sample_name + "_2.vcf")
+            out_file_transformed_amino, os.path.join(
+                temp_dir, sample_name + "_2.vcf")
         )
         self.utils.remove_file(out_file_transformed_amino)
 
-        ### add FREQ and other things to TAB file
+        # add FREQ and other things to TAB file
         self.run_snippy_vcf_to_tab_freq_and_evidence(
             path_reference_fasta,
             path_reference_genbank,
@@ -1442,7 +1450,7 @@ class Software(object):
             self.logger_debug.error("Fail to run: " + cmd)
             raise Exception("Fail to run nextalign")
 
-        ### return file names
+        # return file names
         vect_file_gene_out = []
         if len(genes_to_process) > 0:
             vect_file_gene_out = [
@@ -1461,7 +1469,7 @@ class Software(object):
         """
         temp_file = self.utils.get_temp_file("gbk_to_gff3", ".txt")
 
-        ## set VERSION ID equal to ACCESSION
+        # set VERSION ID equal to ACCESSION
         out_file_gb = self.utils.get_temp_file("file_name", ".gb")
         self.utils.clean_genbank_version_name(genbank, out_file_gb)
 
@@ -1475,19 +1483,19 @@ class Software(object):
             self.logger_debug.error("Fail to run: " + cmd)
             raise Exception("Fail to run genbank2gff3")
 
-        ##        with open(temp_file, "w") as out_handle, open(out_file_gb) as in_handle:
-        ##            GFF.write(SeqIO.parse(in_handle, "genbank"), out_handle)
+        # with open(temp_file, "w") as out_handle, open(out_file_gb) as in_handle:
+        # GFF.write(SeqIO.parse(in_handle, "genbank"), out_handle)
 
-        ### remove clean version gb file
+        # remove clean version gb file
         os.unlink(out_file_gb)
 
-        ### filter file
+        # filter file
         #     vect_filter = ['remark', 'source', 'gene']
         vect_pass = ["CDS"]
-        ##### CAVEAT...
-        ### If you lead ID= in the gff the orf1ab will be continued (Transcript_Exon_MN908947_13468_21555|Coding|1/1|c.395C>T|p.Thr132Ile|p.T132I)
-        ### if it is removed ID=  is going like (Transcript_orf1ab|Coding|1/1|c.13597C>T|p.His4533Tyr|p.H4533Y)
-        ### the last one is equal to SNIPPY
+        # CAVEAT...
+        # If you lead ID= in the gff the orf1ab will be continued (Transcript_Exon_MN908947_13468_21555|Coding|1/1|c.395C>T|p.Thr132Ile|p.T132I)
+        # if it is removed ID=  is going like (Transcript_orf1ab|Coding|1/1|c.13597C>T|p.His4533Tyr|p.H4533Y)
+        # the last one is equal to SNIPPY
         vect_remove_info = ["ID="]
         with open(temp_file) as handle, open(out_file, "w") as handle_write:
             for line in handle:
@@ -1503,7 +1511,8 @@ class Software(object):
                 if sz_temp[0] == "#":
                     handle_write.write(sz_temp + "\n")
                 elif (
-                    len(sz_temp.split("\t")) > 3 and sz_temp.split("\t")[2] in vect_pass
+                    len(sz_temp.split("\t")) > 3 and sz_temp.split(
+                        "\t")[2] in vect_pass
                 ):
                     lst_data = sz_temp.split("\t")
                     if len(lst_data) > 8:
@@ -1515,9 +1524,10 @@ class Software(object):
                             if data_.lower().startswith("gene="):
                                 has_gene = True
                             if data_.lower().startswith("name="):
-                                gene = "gene={}".format("=".join(data_.split("=")[1:]))
+                                gene = "gene={}".format(
+                                    "=".join(data_.split("=")[1:]))
 
-                            ### for next clade
+                            # for next clade
                             if data_.lower().startswith("gene_name="):
                                 has_gene_name = True
                             if data_.lower().startswith(
@@ -1531,24 +1541,26 @@ class Software(object):
                                     vect_remove_index.append(_)
                                     break
 
-                        ### remove index
-                        vect_remove_index = sorted(vect_remove_index, reverse=True)
+                        # remove index
+                        vect_remove_index = sorted(
+                            vect_remove_index, reverse=True)
                         for remove_index in vect_remove_index:
                             lst_data_info.pop(remove_index)
 
-                        ### zero base
+                        # zero base
                         if self.utils.is_integer(lst_data[7]) and int(lst_data[7]) > 0:
                             lst_data[7] = "{}".format(int(lst_data[7]) - 1)
 
-                        ### add gene
+                        # add gene
                         if not has_gene and len(gene) > 0:
                             lst_data[8] = gene + ";" + ";".join(lst_data_info)
                             sz_temp = "\t".join(lst_data)
 
-                        ### only for nextclade, that need to add gene
+                        # only for nextclade, that need to add gene
                         if for_nextclade:
                             if not has_gene_name and len(gene_name) > 0:
-                                lst_data[8] = gene_name + ";" + ";".join(lst_data_info)
+                                lst_data[8] = gene_name + ";" + \
+                                    ";".join(lst_data_info)
                             lst_data[2] = "gene"
                             handle_write.write("\t".join(lst_data) + "\n")
                     handle_write.write(sz_temp + "\n")
@@ -1559,16 +1571,16 @@ class Software(object):
         """ """
         temp_file = self.utils.get_temp_file("gbk_to_gff3", ".txt")
 
-        ## set VERSION ID equal to ACCESSION
+        # set VERSION ID equal to ACCESSION
         out_file_gb = self.utils.get_temp_file("file_name", ".gb")
         self.utils.clean_genbank_version_name(genbank, out_file_gb)
 
         with open(temp_file, "w") as out_handle, open(out_file_gb) as in_handle:
             GFF.write(SeqIO.parse(in_handle, "genbank"), out_handle)
 
-        ### remove clean version gb file
+        # remove clean version gb file
         os.unlink(out_file_gb)
-        ### filter file
+        # filter file
         #     vect_filter = ['remark', 'source', 'gene']
         vect_pass = ["CDS"]
         b_fail = False
@@ -1630,15 +1642,17 @@ class Software(object):
                 )
             )
 
-        self.utils.copy_file(self.software_names.get_snp_eff_config(), temp_file)
+        self.utils.copy_file(
+            self.software_names.get_snp_eff_config(), temp_file)
         handle = open(temp_file, "a")
         base_file_name = os.path.basename(fasta_file)
-        base_file_name = base_file_name[0 : base_file_name.rfind(".")]
+        base_file_name = base_file_name[0: base_file_name.rfind(".")]
         handle.write(
-            "{}.genome : {} reference".format(base_file_name, Constants.INSAFLU_NAME)
+            "{}.genome : {} reference".format(
+                base_file_name, Constants.INSAFLU_NAME)
         )
 
-        ### open fasta
+        # open fasta
         if self.utils.is_gzip(fasta_file):
             handle_fasta = gzip.open(fasta_file, mode="rt")
         else:
@@ -1649,7 +1663,8 @@ class Software(object):
         handle_fasta.close()
 
         handle.write(
-            "\n{}.chromosome : {}".format(base_file_name, ", ".join(vect_names))
+            "\n{}.chromosome : {}".format(
+                base_file_name, ", ".join(vect_names))
         )
         for chromosome in vect_names:
             handle.write(
@@ -1670,11 +1685,11 @@ class Software(object):
         temp_vcf_file = os.path.join(temp_dir, os.path.basename(vcf_file))
         self.utils.copy_file(vcf_file, temp_vcf_file)
 
-        ## create the database
+        # create the database
         out_gff_file = self.utils.get_temp_file("temp_gff", ".gff")
         self.run_genbank2gff3(genbank, out_gff_file)
 
-        ### count sequences, if none return None
+        # count sequences, if none return None
         if self.utils.get_number_sequeces_in_gff_file(out_gff_file) == 0:
             os.unlink(out_gff_file)
             os.unlink(snpeff_config)
@@ -1693,8 +1708,8 @@ class Software(object):
         self.utils.copy_file(fasta_file, temp_file)
         os.unlink(out_gff_file)
 
-        ## indexing database
-        ## snpEff build -c reference/snpeff.config -dataDir . -gff3 ref 2>> run_snippy2_1.log
+        # indexing database
+        # snpEff build -c reference/snpeff.config -dataDir . -gff3 ref 2>> run_snippy2_1.log
         cmd = "%s build -c %s -dataDir %s -gff3 %s" % (
             self.software_names.get_snp_eff(),
             snpeff_config,
@@ -1708,7 +1723,7 @@ class Software(object):
             self.logger_debug.error("Fail to run: " + cmd)
             raise Exception("Fail to create snpEff database")
 
-        ### create the annotation
+        # create the annotation
         cmd = "%s ann %s -c %s -dataDir %s %s %s > %s" % (
             self.software_names.get_snp_eff(),
             self.software_names.get_snp_eff_parameters(),
@@ -1725,7 +1740,7 @@ class Software(object):
             self.logger_debug.error("Fail to run: " + cmd)
             raise Exception("Fail to run snpEff")
 
-        #### add the transform p.Val423Glu to p.V423G
+        # add the transform p.Val423Glu to p.V423G
         parse_out_files = ParseOutFiles()
         out_file_transformed_amino = parse_out_files.add_amino_single_letter_code(
             out_file
@@ -1782,7 +1797,8 @@ class Software(object):
             os.unlink(temp_file)
             self.logger_production.error("Fail to run: " + cmd)
             self.logger_debug.error("Fail to run: " + cmd)
-            raise Exception("Fail to run snippy-vcf-to-tab. Add freq and evidence")
+            raise Exception(
+                "Fail to run snippy-vcf-to-tab. Add freq and evidence")
         os.unlink(temp_file)
         return out_file
 
@@ -1812,7 +1828,8 @@ class Software(object):
             self.logger_debug.error("Fail to run: " + cmd)
             raise Exception("Fail to run freebayes")
 
-        reference_fasta_temp = os.path.join(temp_dir, os.path.basename(reference_fasta))
+        reference_fasta_temp = os.path.join(
+            temp_dir, os.path.basename(reference_fasta))
         cmd = "ln -s {} {}".format(reference_fasta, reference_fasta_temp)
         exist_status = os.system(cmd)
         if exist_status != 0:
@@ -1822,14 +1839,18 @@ class Software(object):
 
         reference_fasta_fai = reference_fasta + FileExtensions.FILE_FAI
         if not os.path.exists(reference_fasta_fai):
-            self.logger_production.error("Files doesnt exist: " + reference_fasta_fai)
-            self.logger_debug.error("Files doesnt exist: " + reference_fasta_fai)
+            self.logger_production.error(
+                "Files doesnt exist: " + reference_fasta_fai)
+            self.logger_debug.error(
+                "Files doesnt exist: " + reference_fasta_fai)
             raise Exception("Fail to run freebayes")
 
         reference_fasta_temp_fai = os.path.join(
-            temp_dir, os.path.basename(reference_fasta) + FileExtensions.FILE_FAI
+            temp_dir, os.path.basename(
+                reference_fasta) + FileExtensions.FILE_FAI
         )
-        cmd = "ln -s {} {}".format(reference_fasta_fai, reference_fasta_temp_fai)
+        cmd = "ln -s {} {}".format(reference_fasta_fai,
+                                   reference_fasta_temp_fai)
         exist_status = os.system(cmd)
         if exist_status != 0:
             self.logger_production.error("Fail to run: " + cmd)
@@ -1851,7 +1872,7 @@ class Software(object):
             raise Exception("Fail to run freebayes")
 
         if os.path.getsize(temp_file) > 0:
-            ### run snpEff
+            # run snpEff
             temp_file_2 = self.utils.get_temp_file("vcf_file", ".vcf")
             output_file = self.run_snpEff(
                 reference_fasta,
@@ -1860,16 +1881,17 @@ class Software(object):
                 os.path.join(temp_dir, os.path.basename(temp_file_2)),
             )
 
-            if output_file is None:  ## sometimes the gff does not have amino sequences
+            if output_file is None:  # sometimes the gff does not have amino sequences
                 self.utils.copy_file(
-                    temp_file, os.path.join(temp_dir, os.path.basename(temp_file_2))
+                    temp_file, os.path.join(
+                        temp_dir, os.path.basename(temp_file_2))
                 )
 
             self.test_bgzip_and_tbi_in_vcf(
                 os.path.join(temp_dir, os.path.basename(temp_file_2))
             )
 
-            ### add FREQ to vcf file
+            # add FREQ to vcf file
             vcf_file_out_temp = self.utils.add_freq_to_vcf(
                 os.path.join(temp_dir, os.path.basename(temp_file_2)),
                 os.path.join(temp_dir, sample_name + ".vcf"),
@@ -1878,7 +1900,7 @@ class Software(object):
             if os.path.exists(temp_file_2):
                 os.unlink(temp_file_2)
 
-            ### pass vcf to tab
+            # pass vcf to tab
             self.run_snippy_vcf_to_tab(
                 reference_fasta,
                 genbank_file,
@@ -1915,7 +1937,8 @@ class Software(object):
             self.logger_debug.error("Fail to run: " + cmd)
             raise Exception("Fail to run freebayes parallel")
 
-        reference_fasta_temp = os.path.join(temp_dir, os.path.basename(reference_fasta))
+        reference_fasta_temp = os.path.join(
+            temp_dir, os.path.basename(reference_fasta))
         cmd = "ln -s {} {}".format(reference_fasta, reference_fasta_temp)
         exist_status = os.system(cmd)
         if exist_status != 0:
@@ -1925,22 +1948,27 @@ class Software(object):
 
         reference_fasta_fai = reference_fasta + FileExtensions.FILE_FAI
         if not os.path.exists(reference_fasta_fai):
-            self.logger_production.error("Files doesnt exist: " + reference_fasta_fai)
-            self.logger_debug.error("Files doesnt exist: " + reference_fasta_fai)
+            self.logger_production.error(
+                "Files doesnt exist: " + reference_fasta_fai)
+            self.logger_debug.error(
+                "Files doesnt exist: " + reference_fasta_fai)
             raise Exception("Fail to run freebayes parallel")
 
         reference_fasta_temp_fai = os.path.join(
-            temp_dir, os.path.basename(reference_fasta) + FileExtensions.FILE_FAI
+            temp_dir, os.path.basename(
+                reference_fasta) + FileExtensions.FILE_FAI
         )
-        cmd = "ln -s {} {}".format(reference_fasta_fai, reference_fasta_temp_fai)
+        cmd = "ln -s {} {}".format(reference_fasta_fai,
+                                   reference_fasta_temp_fai)
         exist_status = os.system(cmd)
         if exist_status != 0:
             self.logger_production.error("Fail to run: " + cmd)
             self.logger_debug.error("Fail to run: " + cmd)
             raise Exception("Fail to run freebayes parallel")
 
-        ### create regions
-        temp_file_bam_coverage = self.utils.get_temp_file("bamtools_coverage", ".txt")
+        # create regions
+        temp_file_bam_coverage = self.utils.get_temp_file(
+            "bamtools_coverage", ".txt")
 
         # bamtools coverage -in aln.bam | coverage_to_regions.py ref.fa 500 >ref.fa.500.regions
         cmd = "%s coverage -in %s > %s" % (
@@ -1955,14 +1983,15 @@ class Software(object):
             self.logger_debug.error("Fail to run: " + cmd)
             raise Exception("Fail to run bamtools coverage")
 
-        #### test if it has some data, if all zero does not have data
+        # test if it has some data, if all zero does not have data
         if (os.path.getsize(temp_file_bam_coverage)) == 0:
             if os.path.exists(temp_file_bam_coverage):
                 os.unlink(temp_file_bam_coverage)
             self.utils.remove_dir(temp_dir)
             return None
 
-        temp_file_regions = self.utils.get_temp_file("freebayes_regions", ".txt")
+        temp_file_regions = self.utils.get_temp_file(
+            "freebayes_regions", ".txt")
         cmd = "cat %s | %s %s 500 > %s" % (
             temp_file_bam_coverage,
             self.software_names.get_coverage_to_regions(),
@@ -1997,7 +2026,7 @@ class Software(object):
             self.logger_debug.error("Fail to run: " + cmd)
             raise Exception("Fail to run freebayes parallel")
 
-        ### run snpEff
+        # run snpEff
         if os.path.exists(temp_file):
             temp_file_2 = self.utils.get_temp_file("vcf_file", ".vcf")
             output_file = self.run_snpEff(
@@ -2006,21 +2035,22 @@ class Software(object):
                 temp_file,
                 os.path.join(temp_dir, os.path.basename(temp_file_2)),
             )
-            if output_file is None:  ## sometimes the gff does not have amino sequences
+            if output_file is None:  # sometimes the gff does not have amino sequences
                 self.utils.copy_file(
-                    temp_file, os.path.join(temp_dir, os.path.basename(temp_file_2))
+                    temp_file, os.path.join(
+                        temp_dir, os.path.basename(temp_file_2))
                 )
 
             self.test_bgzip_and_tbi_in_vcf(
                 os.path.join(temp_dir, os.path.basename(temp_file_2))
             )
 
-            ### add FREQ to vcf file
+            # add FREQ to vcf file
             vcf_file_out_temp = self.utils.add_freq_to_vcf(
                 os.path.join(temp_dir, os.path.basename(temp_file_2)),
                 os.path.join(temp_dir, sample_name + ".vcf"),
             )
-            ### pass vcf to tab
+            # pass vcf to tab
             self.run_snippy_vcf_to_tab(
                 reference_fasta,
                 genbank_file,
@@ -2041,6 +2071,7 @@ class Software(object):
     Global processing
     """
     #     @transaction.atomic
+
     def run_fastq_and_trimmomatic(self, sample, owner):
         """
         run fastq and trimmomatic
@@ -2050,7 +2081,7 @@ class Software(object):
         manage_database = ManageDatabase()
         result_all = Result()
 
-        ### first try run downsize if necessary
+        # first try run downsize if necessary
         if settings.DOWN_SIZE_FASTQ_FILES:
             (is_downsized, file_name_1, file_name_2) = self.make_downsize(
                 sample.get_fastq(TypePath.MEDIA_ROOT, True),
@@ -2060,7 +2091,8 @@ class Software(object):
             if is_downsized:
                 if os.path.exists(file_name_1) and os.path.getsize(file_name_1) > 100:
                     self.utils.move_file(
-                        file_name_1, sample.get_fastq(TypePath.MEDIA_ROOT, True)
+                        file_name_1, sample.get_fastq(
+                            TypePath.MEDIA_ROOT, True)
                     )
                 if (
                     file_name_2 != None
@@ -2069,10 +2101,11 @@ class Software(object):
                     and os.path.getsize(file_name_2) > 100
                 ):
                     self.utils.move_file(
-                        file_name_2, sample.get_fastq(TypePath.MEDIA_ROOT, False)
+                        file_name_2, sample.get_fastq(
+                            TypePath.MEDIA_ROOT, False)
                     )
 
-                ### set the downsize message
+                # set the downsize message
                 manage_database.set_sample_metakey(
                     sample,
                     owner,
@@ -2083,7 +2116,7 @@ class Software(object):
                     ),
                 )
 
-        ### first run fastqc
+        # first run fastqc
         try:
             temp_dir = self.run_fastq(
                 sample.get_fastq(TypePath.MEDIA_ROOT, True),
@@ -2097,7 +2130,7 @@ class Software(object):
                 )
             )
 
-            ### need to copy the files to samples/user path
+            # need to copy the files to samples/user path
             self.utils.copy_file(
                 os.path.join(
                     temp_dir,
@@ -2112,7 +2145,8 @@ class Software(object):
                     os.path.join(
                         temp_dir,
                         os.path.basename(
-                            sample.get_fastqc_output(TypePath.MEDIA_ROOT, False)
+                            sample.get_fastqc_output(
+                                TypePath.MEDIA_ROOT, False)
                         ),
                     ),
                     sample.get_fastqc_output(TypePath.MEDIA_ROOT, False),
@@ -2137,7 +2171,7 @@ class Software(object):
             )
             return (False, False)
 
-        ### get number of sequences and average length
+        # get number of sequences and average length
         (number_1, average_1, std1) = self.get_number_sequences_in_fastq(
             sample.get_fastq(TypePath.MEDIA_ROOT, True)
         )
@@ -2148,7 +2182,7 @@ class Software(object):
         else:
             (number_2, average_2, std_2) = (None, None, None)
 
-        ### create key/values for stat in Illumina, before trimmomatic
+        # create key/values for stat in Illumina, before trimmomatic
         result_all.add_software(
             SoftwareDesc(
                 SoftwareNames.SOFTWARE_ILLUMINA_stat,
@@ -2160,19 +2194,21 @@ class Software(object):
             )
         )
 
-        ### get software parameters
+        # get software parameters
         default_software_project = DefaultProjectSoftware()
-        default_software_project.test_all_defaults(sample.owner, None, None, sample)
+        default_software_project.test_all_defaults(
+            sample.owner, None, None, sample)
 
-        ### test if the software ran
+        # test if the software ran
         if not default_software_project.is_to_run_trimmomatic(sample.owner, sample):
-            ## set software run
+            # set software run
             manage_database.set_sample_metakey(
                 sample,
                 owner,
                 MetaKeyAndValue.META_KEY_Fastq_Trimmomatic,
                 MetaKeyAndValue.META_VALUE_Success,
-                "Success, Fastq({})".format(self.software_names.get_fastq_version()),
+                "Success, Fastq({})".format(
+                    self.software_names.get_fastq_version()),
             )
             manage_database.set_sample_metakey(
                 sample,
@@ -2182,7 +2218,7 @@ class Software(object):
                 result_all.to_json(),
             )
 
-            ### set number of reads to show on the table
+            # set number of reads to show on the table
             result_average = ResultAverageAndNumberReads(
                 number_1, average_1, number_2, average_2
             )
@@ -2194,7 +2230,7 @@ class Software(object):
                 result_average.to_json(),
             )
 
-            ## remove trimmomatic result files
+            # remove trimmomatic result files
             self.utils.remove_file(
                 sample.get_trimmomatic_file(TypePath.MEDIA_ROOT, True)
             )
@@ -2209,7 +2245,7 @@ class Software(object):
             )
             return (result_average.has_reads(), False)
 
-        ### run trimmomatic
+        # run trimmomatic
         try:
             (temp_dir, filtering_result, parameters) = self.run_trimmomatic(
                 sample.get_fastq(TypePath.MEDIA_ROOT, True),
@@ -2218,7 +2254,7 @@ class Software(object):
                 owner,
             )
 
-            ### it run
+            # it run
             result_all.add_software(
                 SoftwareDesc(
                     self.software_names.get_trimmomatic_name(),
@@ -2228,7 +2264,7 @@ class Software(object):
                 )
             )
 
-            ### need to copy the files to samples/user path
+            # need to copy the files to samples/user path
             self.utils.copy_file(
                 os.path.join(
                     temp_dir,
@@ -2243,7 +2279,8 @@ class Software(object):
                     os.path.join(
                         temp_dir,
                         os.path.basename(
-                            sample.get_trimmomatic_file(TypePath.MEDIA_ROOT, False)
+                            sample.get_trimmomatic_file(
+                                TypePath.MEDIA_ROOT, False)
                         ),
                     ),
                     sample.get_trimmomatic_file(TypePath.MEDIA_ROOT, False),
@@ -2269,14 +2306,14 @@ class Software(object):
             self.utils.remove_dir(temp_dir)
             return (False, False)
 
-        ### run fastq again
+        # run fastq again
         try:
             temp_dir = self.run_fastq(
                 sample.get_trimmomatic_file(TypePath.MEDIA_ROOT, True),
                 sample.get_trimmomatic_file(TypePath.MEDIA_ROOT, False),
             )
 
-            ### need to copy the files to samples/user path
+            # need to copy the files to samples/user path
             self.utils.copy_file(
                 os.path.join(
                     temp_dir,
@@ -2291,7 +2328,8 @@ class Software(object):
                     os.path.join(
                         temp_dir,
                         os.path.basename(
-                            sample.get_fastq_trimmomatic(TypePath.MEDIA_ROOT, False)
+                            sample.get_fastq_trimmomatic(
+                                TypePath.MEDIA_ROOT, False)
                         ),
                     ),
                     sample.get_fastq_trimmomatic(TypePath.MEDIA_ROOT, False),
@@ -2316,7 +2354,7 @@ class Software(object):
             )
             return (False, False)
 
-        ### collect numbers
+        # collect numbers
         (number_1, average_1, std1) = self.get_number_sequences_in_fastq(
             sample.get_trimmomatic_file(TypePath.MEDIA_ROOT, True)
         )
@@ -2338,7 +2376,7 @@ class Software(object):
             result_average.to_json(),
         )
 
-        ### create key/values for stat in Illumina, after trimmomatic
+        # create key/values for stat in Illumina, after trimmomatic
         result_all.add_software(
             SoftwareDesc(
                 SoftwareNames.SOFTWARE_ILLUMINA_stat,
@@ -2350,7 +2388,7 @@ class Software(object):
             )
         )
 
-        ## save everything OK
+        # save everything OK
         manage_database.set_sample_metakey(
             sample,
             owner,
@@ -2402,7 +2440,8 @@ class Software(object):
             )
             total_reads += number_1
         if not average_1 is None:
-            result.add_key_value(KeyValue("Average read length R1", str(average_1)))
+            result.add_key_value(
+                KeyValue("Average read length R1", str(average_1)))
         if not std1 is None:
             result.add_key_value(KeyValue("STDEV read length R1", str(std1)))
         if not number_2 is None:
@@ -2411,10 +2450,12 @@ class Software(object):
             )
             total_reads += number_2
         if not average_2 is None:
-            result.add_key_value(KeyValue("Average read length R2", str(average_2)))
+            result.add_key_value(
+                KeyValue("Average read length R2", str(average_2)))
         if not std2 is None:
             result.add_key_value(KeyValue("STDEV read length R2", str(std2)))
-        result.add_key_value(KeyValue("Total reads", "{:,.0f}".format(total_reads)))
+        result.add_key_value(
+            KeyValue("Total reads", "{:,.0f}".format(total_reads)))
         return result.key_values
 
     def get_stats_from_sample_reads(self, sample):
@@ -2438,7 +2479,7 @@ class Software(object):
                 SoftwareNames.SOFTWARE_NANOSTAT_vect_info_to_collect_show_percentage
             )
 
-        ## return variables
+        # return variables
         data_stat, total_reads_start = [], -1
         decode_nanostat = DecodeObjects()
         manageDatabase = ManageDatabase()
@@ -2450,7 +2491,7 @@ class Software(object):
 
         result_data = decode_nanostat.decode_result(meta_data.description)
         vect_soft = result_data.get_list_software_instance(software_name)
-        if len(vect_soft) == 2:  ## has data
+        if len(vect_soft) == 2:  # has data
             key_data_0 = vect_soft[0].get_vect_key_values()
             key_data_1 = vect_soft[1].get_vect_key_values()
             for _ in range(len(key_data_0)):
@@ -2463,7 +2504,8 @@ class Software(object):
                     and float(value_0) > 0
                     and len(value_1) > 0
                 ):
-                    percentage = "{:,.1f}".format(float(value_1) / float(value_0) * 100)
+                    percentage = "{:,.1f}".format(
+                        float(value_1) / float(value_0) * 100)
                 data_stat.append(
                     [
                         key_data_0[_].key,
@@ -2474,7 +2516,7 @@ class Software(object):
                     ]
                 )
 
-                ### get total reads
+                # get total reads
                 if key_data_1[_].key in (
                     "Number of reads R1",
                     "Number of reads R2",
@@ -2484,7 +2526,7 @@ class Software(object):
                         total_reads_start = 0
                     total_reads_start += int(float(value_1))
 
-        elif len(vect_soft) == 1:  ## only has the fist analysis
+        elif len(vect_soft) == 1:  # only has the fist analysis
             key_data_0 = vect_soft[0].get_vect_key_values()
             for _ in range(len(key_data_0)):
                 percentage = "--"
@@ -2499,7 +2541,7 @@ class Software(object):
                     [key_data_0[_].key, key_data_0[_].value, "--", "0.0", percentage]
                 )
 
-                ### get total reads
+                # get total reads
                 if key_data_0[_].key in (
                     "Number of reads",
                     "Number of reads R1",
@@ -2525,7 +2567,7 @@ class Software(object):
             ProcessControler.FLAG_RUNNING,
         )
 
-        ### it can be deleted
+        # it can be deleted
         if sample.is_deleted or not sample.is_valid_1:
             process_SGE.set_process_controler(
                 user,
@@ -2536,12 +2578,12 @@ class Software(object):
 
         ################################
         ##################################
-        ### remove possible previous alerts from others run
+        # remove possible previous alerts from others run
         manage_database = ManageDatabase()
         for keys_to_remove in MetaKeyAndValue.VECT_TO_REMOVE_RUN_SAMPLE:
             manage_database.remove_sample_start_metakey(sample, keys_to_remove)
 
-        ### remove some other
+        # remove some other
         sample.identify_virus.all().delete()
         if not sample.mixed_infections_tag is None:
             sample.mixed_infections_tag = None
@@ -2550,21 +2592,21 @@ class Software(object):
 
         try:
             print("Start run_fastq_and_trimmomatic")
-            ### run trimmomatics
+            # run trimmomatics
             b_has_data, b_it_ran = self.run_fastq_and_trimmomatic(sample, user)
 
             print("Result run_fastq_and_trimmomatic: " + str(b_has_data))
 
-            ### test Abricate ON/OFF
+            # test Abricate ON/OFF
             default_software_project = DefaultProjectSoftware()
             b_make_identify_species = default_software_project.is_to_run_abricate(
                 sample.owner, sample, ConstantsSettings.TECHNOLOGY_illumina
             )
             b_make_identify_species = False
-            ### queue the quality check and
+            # queue the quality check and
             if (
                 b_has_data and b_make_identify_species
-            ):  ## don't run for single file because spades doesn't work for one single file
+            ):  # don't run for single file because spades doesn't work for one single file
                 self.identify_type_and_sub_type(
                     sample,
                     sample.get_fastq_available(TypePath.MEDIA_ROOT, True),
@@ -2572,13 +2614,13 @@ class Software(object):
                     user,
                 )
 
-            ## set the flag that is ready for process
+            # set the flag that is ready for process
             sample_to_update = Sample.objects.get(pk=sample.id)
             sample_to_update.is_sample_in_the_queue = False
             if b_has_data:
                 sample_to_update.is_ready_for_projects = True
 
-                ### make identify species
+                # make identify species
                 if b_make_identify_species:
                     sample_to_update.type_subtype = (
                         sample_to_update.get_type_sub_type()[
@@ -2606,7 +2648,7 @@ class Software(object):
                             message,
                         )
 
-                    ### save tag mixed_infecion
+                    # save tag mixed_infecion
                     manage_database.set_sample_metakey(
                         sample,
                         user,
@@ -2666,7 +2708,7 @@ class Software(object):
                 sample_to_update.type_subtype = Constants.EMPTY_VALUE_TYPE_SUBTYPE
             sample_to_update.save()
 
-            ### set the flag of the end of the task
+            # set the flag of the end of the task
             meta_sample = manage_database.get_sample_metakey_last(
                 sample,
                 MetaKeyAndValue.META_KEY_Queue_TaskID,
@@ -2689,7 +2731,7 @@ class Software(object):
             )
             return False
 
-        ### finished
+        # finished
         process_SGE.set_process_controler(
             user,
             process_controler.get_name_sample(sample),
@@ -2699,7 +2741,7 @@ class Software(object):
 
     def process_second_stage_snippy_coverage_freebayes(self, project_sample, user):
         """ """
-        ### make it running
+        # make it running
         process_controler = ProcessControler()
         process_SGE = ProcessSGE()
         process_SGE.set_process_controler(
@@ -2708,7 +2750,7 @@ class Software(object):
             ProcessControler.FLAG_RUNNING,
         )
 
-        ## run collect data
+        # run collect data
         return self.__process_second_stage_snippy_coverage_freebayes(
             project_sample, user
         )
@@ -2717,6 +2759,7 @@ class Software(object):
     Global processing, Snippy, Coverage, Freebayes and MixedInfections
     """
     #     @transaction.atomic
+
     def __process_second_stage_snippy_coverage_freebayes(self, project_sample, user):
         """
         Global processing, snippy, coverage,
@@ -2726,7 +2769,7 @@ class Software(object):
         process_SGE = ProcessSGE()
         manageDatabase = ManageDatabase()
         result_all = Result()
-        ### metakey for this process
+        # metakey for this process
         metaKeyAndValue = MetaKeyAndValue()
         try:
             meta_key_project_sample = (
@@ -2735,7 +2778,7 @@ class Software(object):
                 )
             )
 
-            ### Test if this sample already run
+            # Test if this sample already run
             meta_sample = manageDatabase.get_project_sample_metakey_last(
                 project_sample,
                 meta_key_project_sample,
@@ -2747,13 +2790,14 @@ class Software(object):
             ):
                 return
 
-            ## test software parameters for project_sample
+            # test software parameters for project_sample
             default_project_software = DefaultProjectSoftware()
-            default_project_software.test_all_defaults(user, None, project_sample, None)
+            default_project_software.test_all_defaults(
+                user, None, project_sample, None)
 
-            ## process snippy
+            # process snippy
             try:
-                ### get snippy parameters
+                # get snippy parameters
                 snippy_parameters = (
                     default_project_software.get_snippy_parameters_all_possibilities(
                         user, project_sample
@@ -2800,8 +2844,9 @@ class Software(object):
                     result.to_json(),
                 )
 
-                ### get again and set error
-                project_sample = ProjectSample.objects.get(pk=project_sample.id)
+                # get again and set error
+                project_sample = ProjectSample.objects.get(
+                    pk=project_sample.id)
                 project_sample.is_error = True
                 project_sample.save()
 
@@ -2825,13 +2870,13 @@ class Software(object):
                 )
                 return False
 
-            ## copy the files to the project sample directories
+            # copy the files to the project sample directories
             self.copy_files_to_project(
                 project_sample, self.software_names.get_snippy_name(), out_put_path
             )
             self.utils.remove_dir(out_put_path)
 
-            ### make the link for the new tab file name
+            # make the link for the new tab file name
             path_snippy_tab = project_sample.get_file_output(
                 TypePath.MEDIA_ROOT,
                 FileType.FILE_TAB,
@@ -2845,7 +2890,7 @@ class Software(object):
                 )
                 self.utils.link_file(path_snippy_tab, sz_file_to)
 
-            ### get mapped stast reads
+            # get mapped stast reads
             bam_file = project_sample.get_file_output(
                 TypePath.MEDIA_ROOT,
                 FileType.FILE_BAM,
@@ -2862,11 +2907,11 @@ class Software(object):
                 result.to_json(),
             )
 
-            ## get coverage from deep file
+            # get coverage from deep file
             get_coverage = GetCoverage()
             try:
 
-                ### limit of the coverage for a project, can be None, if not exist
+                # limit of the coverage for a project, can be None, if not exist
                 coverage_for_project = (
                     default_project_software.get_snippy_single_parameter_for_project(
                         project_sample.project, DefaultParameters.SNIPPY_COVERAGE_NAME
@@ -2912,14 +2957,15 @@ class Software(object):
                     )
                 ################################
                 ##################################
-                ### set the alerts in the coverage
-                ### remove possible previous alerts from others run
+                # set the alerts in the coverage
+                # remove possible previous alerts from others run
                 for keys_to_remove in MetaKeyAndValue.VECT_TO_REMOVE_RUN_PROJECT_SAMPLE:
                     manageDatabase.remove_project_sample_start_metakey(
                         project_sample, keys_to_remove
                     )
 
-                project_sample = ProjectSample.objects.get(pk=project_sample.id)
+                project_sample = ProjectSample.objects.get(
+                    pk=project_sample.id)
                 project_sample.alert_second_level = 0
                 project_sample.alert_first_level = 0
                 for element in coverage.get_dict_data():
@@ -2967,7 +3013,7 @@ class Software(object):
                         )
                 project_sample.save()
 
-                ## set the coverage in database
+                # set the coverage in database
                 meta_sample = manageDatabase.set_project_sample_metakey(
                     project_sample,
                     user,
@@ -2993,8 +3039,9 @@ class Software(object):
                     result.to_json(),
                 )
 
-                ### get again and set error
-                project_sample = ProjectSample.objects.get(pk=project_sample.id)
+                # get again and set error
+                project_sample = ProjectSample.objects.get(
+                    pk=project_sample.id)
                 project_sample.is_error = True
                 project_sample.save()
 
@@ -3020,7 +3067,7 @@ class Software(object):
 
             #####################
             ###
-            ### make mask the consensus SoftwareNames.SOFTWARE_MSA_MASKER
+            # make mask the consensus SoftwareNames.SOFTWARE_MSA_MASKER
             limit_to_mask_consensus = int(
                 default_project_software.get_mask_consensus_single_parameter(
                     project_sample,
@@ -3046,7 +3093,7 @@ class Software(object):
                 project_sample.sample.name,
                 limit_to_mask_consensus,
             )
-            ### add version of mask
+            # add version of mask
             result_all.add_software(
                 SoftwareDesc(
                     self.software_names.get_msa_masker_name(),
@@ -3061,8 +3108,8 @@ class Software(object):
                 )
             )
 
-            ## identify VARIANTS IN INCOMPLETE LOCUS in all locus, set yes in variants if are in areas with coverage problems
-            ## transform 'synonymous_variant c.981A>G p.Glu327Glu' to ["synonymous_variant", "c.981A>G", "p.Glu327Glu"]
+            # identify VARIANTS IN INCOMPLETE LOCUS in all locus, set yes in variants if are in areas with coverage problems
+            # transform 'synonymous_variant c.981A>G p.Glu327Glu' to ["synonymous_variant", "c.981A>G", "p.Glu327Glu"]
             parse_out_files = ParseOutFiles()
             parse_out_files.add_variants_in_incomplete_locus(
                 project_sample.get_file_output(
@@ -3075,8 +3122,8 @@ class Software(object):
 
             ################
             ################
-            ## run freebayes if at least one segment has some coverage
-            ## test if it is necessary to run freebayes
+            # run freebayes if at least one segment has some coverage
+            # test if it is necessary to run freebayes
             count_hits = CountHits()
             if default_project_software.is_to_run_freebayes(user, project_sample):
                 try:
@@ -3103,7 +3150,7 @@ class Software(object):
                     )
                 except Exception as e:
 
-                    ### can fail the freebayes parallel and try the regular one
+                    # can fail the freebayes parallel and try the regular one
                     try:
                         out_put_path = self.run_freebayes(
                             project_sample.get_file_output(
@@ -3144,8 +3191,9 @@ class Software(object):
                             result.to_json(),
                         )
 
-                        ### get again and set error
-                        project_sample = ProjectSample.objects.get(pk=project_sample.id)
+                        # get again and set error
+                        project_sample = ProjectSample.objects.get(
+                            pk=project_sample.id)
                         project_sample.is_error = True
                         project_sample.save()
 
@@ -3164,23 +3212,24 @@ class Software(object):
                             )
                         process_SGE.set_process_controler(
                             user,
-                            process_controler.get_name_project_sample(project_sample),
+                            process_controler.get_name_project_sample(
+                                project_sample),
                             ProcessControler.FLAG_ERROR,
                         )
                         return False
 
-                ## count hits from tab file
+                # count hits from tab file
                 count_hits = CountHits()
                 if not out_put_path is None:
                     file_tab = os.path.join(
                         out_put_path, project_sample.sample.name + ".tab"
                     )
                     if os.path.exists(file_tab):
-                        vect_count_type = ["snp"]  ## only detects snp
+                        vect_count_type = ["snp"]  # only detects snp
                         count_hits = self.utils.count_hits_from_tab(
                             file_tab, vect_count_type
                         )
-                        ### set flag that is finished
+                        # set flag that is finished
                         manageDatabase.set_project_sample_metakey(
                             project_sample,
                             user,
@@ -3190,7 +3239,8 @@ class Software(object):
                         )
                     else:
                         result = Result()
-                        result.set_error("Fail to collect tab file from freebayes")
+                        result.set_error(
+                            "Fail to collect tab file from freebayes")
                         result.add_software(
                             SoftwareDesc(
                                 self.software_names.get_freebayes_name(),
@@ -3206,8 +3256,9 @@ class Software(object):
                             result.to_json(),
                         )
 
-                        ### get again and set error
-                        project_sample = ProjectSample.objects.get(pk=project_sample.id)
+                        # get again and set error
+                        project_sample = ProjectSample.objects.get(
+                            pk=project_sample.id)
                         project_sample.is_error = True
                         project_sample.save()
 
@@ -3226,7 +3277,8 @@ class Software(object):
                             )
                         process_SGE.set_process_controler(
                             user,
-                            process_controler.get_name_project_sample(project_sample),
+                            process_controler.get_name_project_sample(
+                                project_sample),
                             ProcessControler.FLAG_ERROR,
                         )
                         return False
@@ -3236,10 +3288,10 @@ class Software(object):
                         self.software_names.get_freebayes_name(),
                         out_put_path,
                     )
-                    ## remove path dir if exist
+                    # remove path dir if exist
                     self.utils.remove_dir(out_put_path)
                 else:
-                    ### set count hits to zero
+                    # set count hits to zero
                     manageDatabase.set_project_sample_metakey(
                         project_sample,
                         user,
@@ -3248,19 +3300,20 @@ class Software(object):
                         count_hits.to_json(),
                     )
 
-                ### mixed infection
+                # mixed infection
                 try:
-                    ## get instances
+                    # get instances
                     mixed_infections_management = MixedInfectionsManagement()
 
-                    ## set the alert also
+                    # set the alert also
                     mixed_infection = mixed_infections_management.get_mixed_infections(
                         project_sample, user, count_hits
                     )
                 except:
                     result = Result()
                     result.set_error("Fail to calculate mixed infextion")
-                    result.add_software(SoftwareDesc("In house software", "1.0", ""))
+                    result.add_software(SoftwareDesc(
+                        "In house software", "1.0", ""))
                     manageDatabase.set_project_sample_metakey(
                         project_sample,
                         user,
@@ -3269,8 +3322,9 @@ class Software(object):
                         result.to_json(),
                     )
 
-                    ### get again and set error
-                    project_sample = ProjectSample.objects.get(pk=project_sample.id)
+                    # get again and set error
+                    project_sample = ProjectSample.objects.get(
+                        pk=project_sample.id)
                     project_sample.is_error = True
                     project_sample.save()
 
@@ -3289,12 +3343,13 @@ class Software(object):
                         )
                     process_SGE.set_process_controler(
                         user,
-                        process_controler.get_name_project_sample(project_sample),
+                        process_controler.get_name_project_sample(
+                            project_sample),
                         ProcessControler.FLAG_ERROR,
                     )
                     return False
             else:
-                ### set count hits to zero
+                # set count hits to zero
                 mixed_infections_management = MixedInfectionsManagement()
                 mixed_infection = (
                     mixed_infections_management.get_mixed_infections_empty_value()
@@ -3307,7 +3362,7 @@ class Software(object):
                     count_hits.to_json(),
                 )
 
-                ### remove several files that can exist form previous interactions
+                # remove several files that can exist form previous interactions
                 tab_freebayes_file = project_sample.get_file_output(
                     TypePath.MEDIA_ROOT,
                     FileType.FILE_TAB,
@@ -3342,15 +3397,16 @@ class Software(object):
                 )
                 self.utils.remove_file(file_out)
 
-            ### draw coverage
+            # draw coverage
             try:
-                ### make the coverage images
+                # make the coverage images
                 draw_all_coverage = DrawAllCoverage()
                 draw_all_coverage.draw_all_coverages(project_sample)
             except:
                 result = Result()
                 result.set_error("Fail to draw coverage images")
-                result.add_software(SoftwareDesc("In house software", "1.0", ""))
+                result.add_software(SoftwareDesc(
+                    "In house software", "1.0", ""))
                 manageDatabase.set_project_sample_metakey(
                     project_sample,
                     user,
@@ -3359,8 +3415,9 @@ class Software(object):
                     result.to_json(),
                 )
 
-                ### get again and set error
-                project_sample = ProjectSample.objects.get(pk=project_sample.id)
+                # get again and set error
+                project_sample = ProjectSample.objects.get(
+                    pk=project_sample.id)
                 project_sample.is_error = True
                 project_sample.save()
 
@@ -3384,7 +3441,7 @@ class Software(object):
                 )
                 return False
 
-            ### get again
+            # get again
             manage_database = ManageDatabase()
             project_sample = ProjectSample.objects.get(pk=project_sample.id)
             project_sample.is_finished = True
@@ -3398,7 +3455,7 @@ class Software(object):
             )
             project_sample.mixed_infections = mixed_infection
             project_sample.save()
-            ### add today date, last change
+            # add today date, last change
             project = project_sample.project
             project.last_change_date = datetime.datetime.now()
             project.save()
@@ -3407,7 +3464,7 @@ class Software(object):
 
             collect_extra_data = CollectExtraData()
 
-            ### get a clean freebayes file
+            # get a clean freebayes file
             tab_freebayes_file = project_sample.get_file_output(
                 TypePath.MEDIA_ROOT,
                 FileType.FILE_TAB,
@@ -3435,25 +3492,26 @@ class Software(object):
                     tab_freebayes_file, file_out, vect_type_remove
                 )
 
-            ### get clean consensus file
+            # get clean consensus file
             consensus_fasta = project_sample.get_file_output(
                 TypePath.MEDIA_ROOT,
                 FileType.FILE_CONSENSUS_FASTA,
                 SoftwareNames.SOFTWARE_SNIPPY_name,
             )
             if os.path.exists(consensus_fasta):
-                file_out = project_sample.get_consensus_file(TypePath.MEDIA_ROOT)
+                file_out = project_sample.get_consensus_file(
+                    TypePath.MEDIA_ROOT)
                 self.utils.filter_fasta_all_sequences_file(
                     consensus_fasta, coverage, file_out, limit_to_mask_consensus, False
                 )
 
-                ## make a backup of this file to use has a starter of second stage analysis
+                # make a backup of this file to use has a starter of second stage analysis
                 self.utils.copy_file(
                     project_sample.get_consensus_file(TypePath.MEDIA_ROOT),
                     project_sample.get_backup_consensus_file(),
                 )
 
-            ### set the tag of result OK
+            # set the tag of result OK
             manageDatabase.set_project_sample_metakey(
                 project_sample,
                 user,
@@ -3461,7 +3519,7 @@ class Software(object):
                 MetaKeyAndValue.META_VALUE_Success,
                 result_all.to_json(),
             )
-            ### set the flag of the end of the task
+            # set the flag of the end of the task
             meta_sample = manageDatabase.get_project_sample_metakey_last(
                 project_sample,
                 meta_key_project_sample,
@@ -3476,7 +3534,7 @@ class Software(object):
                     meta_sample.description,
                 )
         except:
-            ## finished with error
+            # finished with error
             process_SGE.set_process_controler(
                 user,
                 process_controler.get_name_project_sample(project_sample),
@@ -3484,7 +3542,7 @@ class Software(object):
             )
             return False
 
-        ### finished
+        # finished
         process_SGE.set_process_controler(
             user,
             process_controler.get_name_project_sample(project_sample),
@@ -3500,7 +3558,8 @@ class Software(object):
         if not file_to_index.endswith(FileExtensions.FILE_VCF_GZ):
             file_to_index += FileExtensions.FILE_VCF_GZ
         if not os.path.exists(file_to_index):
-            self.logger_production.error("File doesn't exist: " + file_to_index)
+            self.logger_production.error(
+                "File doesn't exist: " + file_to_index)
             self.logger_debug.error("Fail doesn't exist: " + file_to_index)
             raise Exception("File doesn't exist")
 
@@ -3510,14 +3569,14 @@ class Software(object):
         """
         :param index_type [gff, bed, sam, vcf]
         """
-        ## test if tbi exists
+        # test if tbi exists
         if os.path.exists(file_name + FileExtensions.FILE_TBI):
             return
 
         if index_type == SoftwareNames.SOFTWARE_DEPTH_SAMTOOLS_file_flag:
-            ### index -s 1 -> chr name
-            ### index -b 2 -> start position
-            ### index -e 2 -> end position
+            # index -s 1 -> chr name
+            # index -b 2 -> start position
+            # index -e 2 -> end position
             cmd = "{} -s 1 -b 2 -e 2 {}".format(
                 self.software_names.get_tabix(), file_name
             )
@@ -3565,7 +3624,7 @@ class Software(object):
         if not os.path.exists(path_name):
             return
         current_dir = os.getcwd()
-        os.chdir(path_name)  ## change to path that will be compressed
+        os.chdir(path_name)  # change to path that will be compressed
 
         file_name_zip = "zip_file_out.zip"
         cmd = "zip -r {} *".format(file_name_zip)
@@ -3587,7 +3646,8 @@ class Software(object):
         temp_file = self.utils.get_temp_file("fasta_2_upper", ".fasta")
         cmd = (
             "awk '/^>/ {print($0)}; /^[^>]/ {print(toupper($0))}'"
-            + " {} > {}; mv {} {}".format(file_name, temp_file, temp_file, file_name)
+            + " {} > {}; mv {} {}".format(file_name,
+                                          temp_file, temp_file, file_name)
         )
         exist_status = os.system(cmd)
         if exist_status != 0:
@@ -3624,11 +3684,11 @@ class Software(object):
         ):
             file_size_max = os.path.getsize(path_2)
 
-        ### need to make the down size
+        # need to make the down size
         if file_size_max > max_fastq_file:
             ratio = max_fastq_file / file_size_max
 
-            ## small correction
+            # small correction
             if ratio < 0.8:
                 ratio += 0.1
 
@@ -3689,7 +3749,8 @@ class Software(object):
             return (
                 True,
                 path_1_temp,
-                path_2_temp if (path_2 != None and os.path.exists(path_2)) else None,
+                path_2_temp if (
+                    path_2 != None and os.path.exists(path_2)) else None,
             )
         return (False, path_1, path_2)
 
@@ -3708,11 +3769,12 @@ class Software(object):
                 -df /tmp/insaFlu/insa_flu_path_86811930/run_snippy1_sdfs/run_snippy1_sdfs.depth.gz
                 -o /tmp/insaFlu/insa_flu_path_86811930/temp.fasta --c 200
         """
-        ## run all elements in reference
+        # run all elements in reference
         temp_masked = self.utils.get_temp_file("masked_file", ".fasta")
         temp_to_join = self.utils.get_temp_file("join_file", ".fasta")
         temp_mafft_align = self.utils.get_temp_file("mafft_to_align", ".fasta")
-        temp_new_consensus = self.utils.get_temp_file("new_consensus", ".fasta")
+        temp_new_consensus = self.utils.get_temp_file(
+            "new_consensus", ".fasta")
         vect_out_fasta = []
 
         msa_parameters = ""
@@ -3724,9 +3786,9 @@ class Software(object):
                     and coverage.ratio_value_coverage_bigger_limit(
                         record.id, limit_make_mask
                     )
-                ):  ### make mask
+                ):  # make mask
 
-                    ### get sequences
+                    # get sequences
                     vect_out_fasta_to_align = []
                     record_id = record.id
                     record.id = record.id + "_ref"
@@ -3738,14 +3800,14 @@ class Software(object):
                             vect_out_fasta_to_align, handle_fasta_out_align, "fasta"
                         )
 
-                    ### run maft
+                    # run maft
                     temp_mafft_align = self.run_mafft(
                         temp_to_join,
                         temp_mafft_align,
                         SoftwareNames.SOFTWARE_MAFFT_PARAMETERS,
                     )
 
-                    ### run mask
+                    # run mask
                     msa_parameters = self.run_mask_app(
                         temp_mafft_align,
                         deep_file,
@@ -3753,26 +3815,27 @@ class Software(object):
                         coverage.get_middle_limit(),
                     )
 
-                    ### read output file
-                    dt_mask_consensus = SeqIO.to_dict(SeqIO.parse(temp_masked, "fasta"))
+                    # read output file
+                    dt_mask_consensus = SeqIO.to_dict(
+                        SeqIO.parse(temp_masked, "fasta"))
                     if record_id in dt_mask_consensus:
                         record_temp = dt_mask_consensus[record_id]
                     else:
                         record_temp = dt_consensus[record_id]
-                    ## add sample name to the consensus sequences
+                    # add sample name to the consensus sequences
                     record_temp.description = sample_name
                     vect_out_fasta.append(record_temp)
-                else:  ## write as is
-                    ## add sample name to the consensus sequences
+                else:  # write as is
+                    # add sample name to the consensus sequences
                     record.description = sample_name
                     vect_out_fasta.append(record)
 
-        ### write the output
+        # write the output
         with open(temp_new_consensus, "w") as handle_fasta_out:
             if len(vect_out_fasta) > 0:
                 SeqIO.write(vect_out_fasta, handle_fasta_out, "fasta")
 
-        ### move temp consensus to original position, if has info
+        # move temp consensus to original position, if has info
         if os.stat(temp_new_consensus).st_size > 0:
             self.utils.move_file(temp_new_consensus, consensus_file)
 
@@ -3855,7 +3918,7 @@ class Software(object):
             else -1
         )
 
-        ## collecting all positions to maks
+        # collecting all positions to maks
         dt_positions = {}
         if beginning != -1:
             for _ in range(0, beginning):
@@ -3868,12 +3931,12 @@ class Software(object):
             for _ in range(pos_from, len(str(sequence_ref.seq))):
                 dt_positions[_] = 1
 
-        ## several sites
+        # several sites
         if not mask_sites is None and len(mask_sites.split(",")[0]) > 0:
             for site in [int(_) - 1 for _ in mask_sites.split(",")]:
                 if site < sequence_length:
                     dt_positions[site] = 1
-        ## several ranges
+        # several ranges
         if not mask_range is None:
             for data_ in mask_range.split(","):
                 if len(data_) > 0 and len(data_.split("-")) == 2:
@@ -3883,7 +3946,7 @@ class Software(object):
                         if site < sequence_length:
                             dt_positions[site] = 1
 
-        ## mask positions
+        # mask positions
         masked_sequence = MutableSeq(seq_consensus)
         ref_insertions = 0
         ref_pos = 0
@@ -3905,7 +3968,7 @@ class Software(object):
     ):
         """masking consensus file with positions related with reference elements"""
         vect_record_out = []
-        ## always work with the backup
+        # always work with the backup
         with open(reference_fasta_file, "rU") as handle_ref, open(
             consensus_fasta_file, "rU"
         ) as handle_consensus:
@@ -3936,7 +3999,7 @@ class Software(object):
             with open(temp_file, "w") as handle_fasta_out:
                 SeqIO.write(vect_record_out, handle_fasta_out, "fasta")
 
-            ### move temp consensus to original position, if has info
+            # move temp consensus to original position, if has info
             if os.stat(temp_file).st_size > 0:
                 self.utils.move_file(temp_file, consensus_fasta_file)
             else:
@@ -3949,7 +4012,7 @@ class Software(object):
         :out (ref_seq, consensus_seq)
         """
 
-        ### set temp dir
+        # set temp dir
         if out_dir_temp is None:
             out_dir = self.utils.get_temp_dir()
         else:
@@ -3963,10 +4026,12 @@ class Software(object):
         )
         records = []
         ref_seq_name = "ref"
-        records.append(SeqRecord(Seq(ref_seq), id=ref_seq_name, description=""))
-        records.append(SeqRecord(Seq(consensus_seq), id="consensus", description=""))
+        records.append(
+            SeqRecord(Seq(ref_seq), id=ref_seq_name, description=""))
+        records.append(SeqRecord(Seq(consensus_seq),
+                       id="consensus", description=""))
 
-        ### save file
+        # save file
         with open(temp_file_name, "w") as handle_write:
             SeqIO.write(records, handle_write, "fasta")
         try:
@@ -3980,7 +4045,7 @@ class Software(object):
         except Exception as a:
             return "", ""
 
-        ## test if the output is in fasta
+        # test if the output is in fasta
         try:
             number_record = self.utils.is_fasta(temp_file_name_out)
             if number_record != 2:
@@ -3988,13 +4053,13 @@ class Software(object):
         except IOError as e:
             return "", ""
 
-        ## read file
+        # read file
         with open(temp_file_name_out) as handle:
-            ## get both sequences
+            # get both sequences
             seq_ref = ""
             seq_other = ""
             for record_dict in SeqIO.parse(handle, "fasta"):
-                if record_dict.id == ref_seq_name:  ## ref seq
+                if record_dict.id == ref_seq_name:  # ref seq
                     seq_ref = str(record_dict.seq).upper()
                 else:
                     seq_other = str(record_dict.seq).upper()
@@ -4051,7 +4116,8 @@ class Software(object):
         self.utils.copy_file(
             alignments, os.path.join(temp_dir, "data", "sequences.fasta")
         )
-        self.utils.copy_file(metadata, os.path.join(temp_dir, "data", "metadata.tsv"))
+        self.utils.copy_file(metadata, os.path.join(
+            temp_dir, "data", "metadata.tsv"))
 
         # Copy the build-specific config file to the appropriate place in the temp folder
         config_file = os.path.join(
@@ -4075,9 +4141,10 @@ class Software(object):
         if exit_status != 0:
             self.logger_production.error("Fail to run: " + cmd)
             self.logger_debug.error("Fail to run: " + cmd)
-            raise Exception("Fail to generate include file in temp folder " + temp_dir)
+            raise Exception(
+                "Fail to generate include file in temp folder " + temp_dir)
 
-        ### add reference sequence Fasta to global alignment
+        # add reference sequence Fasta to global alignment
         reference_fasta = os.path.join(
             getattr(settings, "STATIC_ROOT", None),
             Constants.DIR_NEXTSTRAIN_tables,
@@ -4181,7 +4248,8 @@ class Software(object):
             )
 
         # Note this only works for now, IF the metadata entry is the last row (because the columns won't match...)
-        self.utils.copy_file(metadata, os.path.join(temp_dir, "data", "metadata.tsv"))
+        self.utils.copy_file(metadata, os.path.join(
+            temp_dir, "data", "metadata.tsv"))
         # cmd = "cat {} {} > {}".format(metadata, os.path.join(temp_dir, 'data', 'references_metadata.tsv'), os.path.join(temp_dir, 'data', 'metadata.tsv'))
         # exit_status = os.system(cmd)
         # if (exit_status != 0):
@@ -4199,7 +4267,8 @@ class Software(object):
         if exit_status != 0:
             self.logger_production.error("Fail to run: " + cmd)
             self.logger_debug.error("Fail to run: " + cmd)
-            raise Exception("Fail to generate include file in temp folder " + temp_dir)
+            raise Exception(
+                "Fail to generate include file in temp folder " + temp_dir)
 
         cmd = (
             SoftwareNames.SOFTWARE_NEXTSTRAIN
@@ -4223,7 +4292,8 @@ class Software(object):
         tree_file = self.utils.get_temp_file("treefile.nwk", sz_type="nwk")
         # Convert json to tree
         cmd = "{} --tree {} --output-tree {}".format(
-            os.path.join(settings.DIR_SOFTWARE, "nextstrain/auspice_tree_to_table.sh"),
+            os.path.join(settings.DIR_SOFTWARE,
+                         "nextstrain/auspice_tree_to_table.sh"),
             os.path.join(temp_dir, "auspice", "ncov_current.json"),
             tree_file,
         )
@@ -4274,9 +4344,11 @@ class Software(object):
                 output_path=temp_dir,
             )
 
-        alignment_file = self.utils.get_temp_file("aligned.fasta", sz_type="fasta")
+        alignment_file = self.utils.get_temp_file(
+            "aligned.fasta", sz_type="fasta")
         self.utils.move_file(
-            os.path.join(temp_dir, "results", "aligned_current.fasta"), alignment_file
+            os.path.join(temp_dir, "results",
+                         "aligned_current.fasta"), alignment_file
         )
 
         self.utils.remove_dir(temp_dir)
@@ -4343,7 +4415,8 @@ class Software(object):
         self.utils.copy_file(
             alignments, os.path.join(temp_dir, "data", "sequences.fasta")
         )
-        self.utils.copy_file(metadata, os.path.join(temp_dir, "data", "metadata.tsv"))
+        self.utils.copy_file(metadata, os.path.join(
+            temp_dir, "data", "metadata.tsv"))
 
         # add 'root = "reference_id"' at the top of Snakefile_base, creating the final Snakefile
         cmd = "cat {} | sed 's/REFID/{}/' > {}".format(
@@ -4378,7 +4451,8 @@ class Software(object):
         tree_file = self.utils.get_temp_file("treefile.nwk", sz_type="nwk")
         # Convert json to tree
         cmd = "{} --tree {} --output-tree {}".format(
-            os.path.join(settings.DIR_SOFTWARE, "nextstrain/auspice_tree_to_table.sh"),
+            os.path.join(settings.DIR_SOFTWARE,
+                         "nextstrain/auspice_tree_to_table.sh"),
             os.path.join(temp_dir, "auspice", "generic.json"),
             tree_file,
         )
@@ -4413,7 +4487,8 @@ class Software(object):
         auspice_zip = self.utils.get_temp_file("tempfile.zip", sz_type="zip")
         self.utils.move_file(zip_out, auspice_zip)
 
-        alignment_file = self.utils.get_temp_file("aligned.fasta", sz_type="fasta")
+        alignment_file = self.utils.get_temp_file(
+            "aligned.fasta", sz_type="fasta")
         self.utils.move_file(
             os.path.join(temp_dir, "results", "aligned.fasta"), alignment_file
         )
@@ -4467,15 +4542,18 @@ class Software(object):
         # add sequences.fasta and metadata.tsv to data folder
         self.utils.copy_file(
             alignments,
-            os.path.join(temp_dir, "data", "sequences_" + strain + "_ha.fasta"),
+            os.path.join(temp_dir, "data", "sequences_" +
+                         strain + "_ha.fasta"),
         )
         self.utils.copy_file(
-            metadata, os.path.join(temp_dir, "data", "metadata_" + strain + "_ha.tsv")
+            metadata, os.path.join(
+                temp_dir, "data", "metadata_" + strain + "_ha.tsv")
         )
 
         # Now run Nextstrain
         cmd = "{} build --native {} targets/flu_{}_ha_{} --cores {}".format(
-            SoftwareNames.SOFTWARE_NEXTSTRAIN, temp_dir, strain, period, str(cores)
+            SoftwareNames.SOFTWARE_NEXTSTRAIN, temp_dir, strain, period, str(
+                cores)
         )
         exit_status = os.system(cmd)
         if exit_status != 0:
@@ -4488,7 +4566,8 @@ class Software(object):
         tree_file = self.utils.get_temp_file("treefile.nwk", sz_type="nwk")
         # Convert json to tree
         cmd = "{} --tree {} --output-tree {}".format(
-            os.path.join(settings.DIR_SOFTWARE, "nextstrain/auspice_tree_to_table.sh"),
+            os.path.join(settings.DIR_SOFTWARE,
+                         "nextstrain/auspice_tree_to_table.sh"),
             os.path.join(
                 temp_dir, "auspice", "flu_" + strain + "_ha_" + period + ".json"
             ),
@@ -4526,10 +4605,12 @@ class Software(object):
         self.utils.move_file(zip_out, auspice_zip)
 
         # results/aligned_h3n2_ha_12y.fasta
-        alignment_file = self.utils.get_temp_file("aligned.fasta", sz_type="fasta")
+        alignment_file = self.utils.get_temp_file(
+            "aligned.fasta", sz_type="fasta")
         self.utils.move_file(
             os.path.join(
-                temp_dir, "results", "aligned_{}_ha_{}.fasta".format(strain, period)
+                temp_dir, "results", "aligned_{}_ha_{}.fasta".format(
+                    strain, period)
             ),
             alignment_file,
         )
@@ -4576,7 +4657,8 @@ class Software(object):
 
         # add sequences.fasta and metadata.tsv to data folder
         # self.utils.copy_file(alignments,os.path.join(temp_dir, 'data', "sequences.fasta"))
-        self.utils.copy_file(metadata, os.path.join(temp_dir, "data", "metadata.tsv"))
+        self.utils.copy_file(metadata, os.path.join(
+            temp_dir, "data", "metadata.tsv"))
 
         cmd = "cat {} {} > {}".format(
             os.path.join(temp_dir, "data", "references_sequences.fasta"),
@@ -4606,7 +4688,8 @@ class Software(object):
         tree_file = self.utils.get_temp_file("treefile.nwk", sz_type="nwk")
         # Convert json to tree
         cmd = "{} --tree {} --output-tree {}".format(
-            os.path.join(settings.DIR_SOFTWARE, "nextstrain/auspice_tree_to_table.sh"),
+            os.path.join(settings.DIR_SOFTWARE,
+                         "nextstrain/auspice_tree_to_table.sh"),
             os.path.join(temp_dir, "auspice", "monkeypox_hmpxv1_big.json"),
             tree_file,
         )
@@ -4642,7 +4725,8 @@ class Software(object):
         self.utils.move_file(zip_out, auspice_zip)
 
         # results/hmpxv1_big/aligned.fasta
-        alignment_file = self.utils.get_temp_file("aligned.fasta", sz_type="fasta")
+        alignment_file = self.utils.get_temp_file(
+            "aligned.fasta", sz_type="fasta")
         self.utils.move_file(
             os.path.join(temp_dir, "results", "hmpxv1_big", "aligned.fasta"),
             alignment_file,
@@ -4676,7 +4760,8 @@ class Software(object):
         temp_dir = self.utils.get_temp_dir()
 
         # Add as parameter...
-        db_file = os.path.join(settings.STATIC_ROOT, Constants.DIR_TYPE_ALN2PHENO, db)
+        db_file = os.path.join(settings.STATIC_ROOT,
+                               Constants.DIR_TYPE_ALN2PHENO, db)
 
         # Run aln2pheno
         cmd = "{} --db {} -g {} --algn {} -r {} --odir {} --output prefix -f".format(
@@ -4696,7 +4781,8 @@ class Software(object):
 
         # copy results to output
         self.utils.copy_file(temp_dir + "/prefix_final_report.tsv", report)
-        self.utils.copy_file(temp_dir + "/prefix_flagged_mutation_report.tsv", flagged)
+        self.utils.copy_file(
+            temp_dir + "/prefix_flagged_mutation_report.tsv", flagged)
 
         ###
         self.utils.remove_dir(temp_dir)
@@ -4718,7 +4804,8 @@ class Contigs2Sequences(object):
         """
         self.b_testing = b_testing
         self.root_path = os.path.join(
-            getattr(settings, "STATIC_ROOT", None), "tests" if b_testing else ""
+            getattr(settings, "STATIC_ROOT",
+                    None), "tests" if b_testing else ""
         )
 
     def get_most_recent_database(self):
@@ -4749,7 +4836,7 @@ class Contigs2Sequences(object):
         return (str(version), path_to_return)
 
     def get_database_name(self):
-        ### get database file name
+        # get database file name
         (version, database_file_name) = self.get_most_recent_database()
         return self.utils.clean_extension(os.path.basename(database_file_name))
 
@@ -4767,18 +4854,19 @@ class Contigs2Sequences(object):
         """
         software = Software()
 
-        ### get database file name, if it is not passed
+        # get database file name, if it is not passed
         (version, database_file_name) = self.get_most_recent_database()
         database_name = self.get_database_name()
 
-        ### first create database
+        # first create database
         if not software.is_exist_database_abricate(database_name):
-            software.create_database_abricate(database_name, database_file_name)
+            software.create_database_abricate(
+                database_name, database_file_name)
 
         out_file = self.utils.get_temp_file(
             "abricate_contig2seq", FileExtensions.FILE_TXT
         )
-        ### run abricate
+        # run abricate
         software.run_abricate(
             database_name,
             file_name,
@@ -4811,11 +4899,12 @@ class Contigs2Sequences(object):
                         vect_out_fasta.append(
                             SeqRecord(
                                 Seq(str(record.seq)),
-                                id="_".join(record.id.split(".")[0].split("_")[:4]),
+                                id="_".join(record.id.split(
+                                    ".")[0].split("_")[:4]),
                                 description=";".join(vect_possible_id),
                             )
                         )
-                    ## NEED to check coverage for CANU
+                    # NEED to check coverage for CANU
                     elif (
                         record.id.find("_") != -1
                         and float(record.id.split("_")[-1])

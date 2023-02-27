@@ -64,7 +64,7 @@ class Televir_Metadata_Constants:
             "minimap2_asm": "hostDepletion/hostdep_env",
             "blastn": "hostDepletion/hostdep_env",
             "blastp": "hostDepletion/hostdep_env",
-            "snippy": "/software/snippy",
+            "snippy": "remap/remap",
             "bwa": "remap/remap",
             "bowtie2": "remap/remap",
         },
@@ -93,58 +93,58 @@ class Constants(object):
     classdocs
     """
 
-    ### default user that has the default references to be used in mapping
+    # default user that has the default references to be used in mapping
     DEFAULT_USER = "system"
     DEFAULT_USER_PASS = "default_user_123_$%_2"
-    ## DEFAULT_USER_EMAIL = "insaflu@insa.min-saude.pt"        ### it's defined in .env
+    # DEFAULT_USER_EMAIL = "insaflu@insa.min-saude.pt"        ### it's defined in .env
 
-    ### user anonymous
+    # user anonymous
     USER_ANONYMOUS = "demo"
     USER_ANONYMOUS_PASS = "demo_user"
-    ## USER_ANONYMOUS_EMAIL = "insaflu@insa.min-saude.pt"        ### it's defined in .env
+    # USER_ANONYMOUS_EMAIL = "insaflu@insa.min-saude.pt"        ### it's defined in .env
 
     META_KEY_VALUE_NOT_NEED = "value not needed"
 
-    ## MAX LOCUS FROM FASTA
-    MAX_SEQUENCES_FROM_FASTA = 20  ### update this value
-    MAX_SEQUENCES_FROM_CONTIGS_FASTA = 1000  ### update this value
+    # MAX LOCUS FROM FASTA
+    MAX_SEQUENCES_FROM_FASTA = 20  # update this value
+    MAX_SEQUENCES_FROM_CONTIGS_FASTA = 1000  # update this value
     MAX_LENGTH_SEQ_NAME = (
-        20  ###  it must be less than 20 because of prokka constrainments
+        20  # it must be less than 20 because of prokka constrainments
     )
     MAX_LENGTH_CONTIGS_SEQ_NAME = (
-        190  ###  it must be less than 190 because of the Consensus.name field
+        190  # it must be less than 190 because of the Consensus.name field
     )
-    SHORT_NAME_LENGTH = 20  ### cut length name to show in the tables
+    SHORT_NAME_LENGTH = 20  # cut length name to show in the tables
 
-    ### has the minimun number of files to calculate global files
+    # has the minimun number of files to calculate global files
     MINIMUN_NUMER_SAMPLES_CACULATE_GLOBAL_FILES = 2
 
-    ### Session variables
+    # Session variables
     NUMBER_LOCUS_FASTA_FILE = "number_locus_fasta_file"
     SEQUENCES_TO_PASS = "sequences_to_pass"
 
-    ## https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
-    ## translate table number
+    # https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+    # translate table number
     TRANSLATE_TABLE_NUMBER = 11
 
-    ## start expand tag name rows
+    # start expand tag name rows
     START_EXPAND_SAMPLE_TAG_NAMES_ROWS = 4
 
     DIR_PROCESSED_FILES_UPLOADS = "uploads"
     DIR_PROCESSED_PROCESSED = "processed"
 
-    ### queue names
+    # queue names
     QUEUE_SGE_NAMES = ["queue_1.q", "queue_2.q"]
     QUEUE_SGE_NAME_GLOBAL = "all.q"
-    QUEUE_SGE_NAME_FAST = "fast.q"  ## jobs that are fast to run
-    QUEUE_SGE_NAME_INSA = "insa.q"  ## insa queue
-    ##    QUEUE_SGE_NAME_EMAIL = 'email.q' direct for now...
+    QUEUE_SGE_NAME_FAST = "fast.q"  # jobs that are fast to run
+    QUEUE_SGE_NAME_INSA = "insa.q"  # insa queue
+    # QUEUE_SGE_NAME_EMAIL = 'email.q' direct for now...
 
-    ### separators
+    # separators
     SEPARATOR_COMMA = ","
     SEPARATOR_TAB = "\t"
 
-    ## DIR_PROCESSED_FILES_FROM_WEB/userId_<id>/refId_<id>
+    # DIR_PROCESSED_FILES_FROM_WEB/userId_<id>/refId_<id>
     DIR_PROCESSED_FILES_REFERENCE = DIR_PROCESSED_FILES_UPLOADS + "/references"
     DIR_PROCESSED_FILES_CONSENSUS = DIR_PROCESSED_FILES_UPLOADS + "/consensus"
     DIR_PROCESSED_FILES_FASTQ = DIR_PROCESSED_FILES_UPLOADS + "/fastq"
@@ -170,24 +170,24 @@ class Constants(object):
     FILE_TEMPLATE_INPUT_METADATA_data_tsv = "template_input_metadata_data.tsv"
 
     SAMPLE_LIST_all_samples = (
-        "AllSamples"  ### has all sample list by user, file extension is added after
+        "AllSamples"  # has all sample list by user, file extension is added after
     )
     PROJECTS_LIST_all_samples = (
-        "AllProjects"  ### has all projects list by user, file extension is added after
+        "AllProjects"  # has all projects list by user, file extension is added after
     )
 
     FORMAT_FASTA = "fasta"
-    ## https://support.illumina.com/bulletins/2020/04/maximum-read-length-for-illumina-sequencing-platforms.html
-    FORMAT_FASTQ_illumina = "fastq_illumina"  ### if is lower than 302 is illumina
+    # https://support.illumina.com/bulletins/2020/04/maximum-read-length-for-illumina-sequencing-platforms.html
+    FORMAT_FASTQ_illumina = "fastq_illumina"  # if is lower than 302 is illumina
     FORMAT_FASTQ_ont = "fastq_other"
     EXTENSION_ZIP = ".gz"
-    MAX_LENGHT_ILLUMINA_FASQC_SEQ = 500  ## because of IONtorrent
+    MAX_LENGHT_ILLUMINA_FASQC_SEQ = 500  # because of IONtorrent
     MIN_LENGHT_MINION_FASQC_SEQ = 100
 
-    ## vect with keys to get the ID
+    # vect with keys to get the ID
     VECT_GENBANK_TAG_NAME = ["gene", "CDS", "locus_tag", "protein_id"]
 
-    ## Has all the versions of type influenza typing
+    # Has all the versions of type influenza typing
     DIR_TYPE_CONTIGS_2_SEQUENCES = "db/contigs2sequences/"
     DIR_TYPE_IDENTIFICATION = "db/type_identification/"
     DIR_TYPE_REFERENCES = "db/references/"
@@ -197,7 +197,7 @@ class Constants(object):
 
     INSAFLU_NAME = "insaflu"
 
-    ### key for a session with project name
+    # key for a session with project name
     PROJECT_NAME_SESSION = "project_name_session"
     REFERENCE_NAME_SESSION = "reference_name_session"
 
@@ -211,10 +211,10 @@ class Constants(object):
     AJAX_LOADING_GIF = "ajax-loading-gif.gif"
     AJAX_LOADING_GIF_13 = "ajax-loading-gif-13.gif"
 
-    ### data_set
-    DATA_SET_GENERIC = "Generic"  ## default name for a dataset
+    # data_set
+    DATA_SET_GENERIC = "Generic"  # default name for a dataset
 
-    ### NextClade link
+    # NextClade link
     NEXTCLADE_LINK_sars_cov_2 = (
         "https://clades.nextstrain.org/?dataset-name=sars-cov-2&input-fasta="
     )
@@ -241,11 +241,11 @@ class Constants(object):
     )
     AUSPICE_LINK = "https://auspice.us/"
 
-    ## NUMBER OF SETs to paginate
+    # NUMBER OF SETs to paginate
     PAGINATE_NUMBER = 12
     PAGINATE_NUMBER_SMALL = 2
 
-    ## tag for check box all in the tables
+    # tag for check box all in the tables
     CHECK_BOX_ALL = "check_box_all"
     CHECK_BOX = "check_box"
     GET_CHECK_BOX_SINGLE = "get_check_box_single"
@@ -254,25 +254,26 @@ class Constants(object):
     CHECK_BOX_VALUE = "value"
     CHECK_BOX_not_show_processed_files = "check_box_not_show_processed_files"
 
-    ### empty value used in tables
+    # empty value used in tables
     EMPTY_VALUE_TABLE = "-"
 
     ###
     EMPTY_VALUE_TYPE_SUBTYPE = "Not assigned"
     EMPTY_VALUE_NA = "NA (not applicable)"
 
-    ## session values
+    # session values
     SESSION_KEY_USER_ID = "session_key_user_id"
 
-    ## separator between names
+    # separator between names
     SEPARATOR_sample_record_id = "__"
 
-    ## errors
+    # errors
     PROJECT_NAME = "project_name"
     ERROR_REFERENCE = "error_reference"
     ERROR_PROJECT_NAME = "error_project_name"
 
-    vect_ambigous = ["R", "Y", "K", "M", "S", "W", "B", "D", "H", "V", "N", "*"]
+    vect_ambigous = ["R", "Y", "K", "M", "S",
+                     "W", "B", "D", "H", "V", "N", "*"]
     dt_ambigous = {
         "R": "[AG]",
         "Y": "[TC]",
@@ -339,7 +340,7 @@ class Constants(object):
             return "ref.fa.fai"
         return ""
 
-    ### complement
+    # complement
     def complement(self, seq):
         complseq = [
             self.dict_complement[base] if base in self.dict_complement else base
@@ -388,7 +389,8 @@ class Constants(object):
         """
         if len(name) > max_size:
             return "{}...{}".format(
-                name[: int(max_size / 2)], name[int(len(name) - (max_size / 2)) :]
+                name[: int(max_size / 2)
+                     ], name[int(len(name) - (max_size / 2)):]
             )
         return name
 
@@ -441,21 +443,21 @@ class FileType(Enum):
     FILE_VCF_GZ = 9
     FILE_VCF_GZ_TBI = 10
     FILE_CSV = 11
-    FILE_REF_FASTA = 12  ## ref/ref.fa
-    FILE_REF_FASTA_FAI = 13  ## ref/ref.fa.fai
+    FILE_REF_FASTA = 12  # ref/ref.fa
+    FILE_REF_FASTA_FAI = 13  # ref/ref.fa.fai
 
 
 class TypeFile(object):
 
-    TYPE_FILE_fastq_gz = "fastq.gz"  ## fastq.fz files
+    TYPE_FILE_fastq_gz = "fastq.gz"  # fastq.fz files
     TYPE_FILE_sample_file = (
-        "sample-file imported"  ## file that the user import with sample descriptions
+        "sample-file imported"  # file that the user import with sample descriptions
     )
     TYPE_FILE_sample_file_metadata = (
-        "sample-file metadata"  ## file that the user import with new metadata
+        "sample-file metadata"  # file that the user import with new metadata
     )
     TYPE_FILE_dataset_file_metadata = (
-        "dataset-file metadata"  ## file that the user import with new metadata
+        "dataset-file metadata"  # file that the user import with new metadata
     )
 
 
@@ -487,11 +489,11 @@ class FileExtensions(object):
     FILE_GZ = ".gz"
     FILE_BED = ".bed"
     FILE_GFF3 = ".gff3"
-    FILE_TBI = ".tbi"  ### create with tabix
-    FILE_IDX = ".idx"  ### created from igvtools
+    FILE_TBI = ".tbi"  # create with tabix
+    FILE_IDX = ".idx"  # created from igvtools
     FILE_JSON = ".json"
     FILE_FASTQ_GZ = ".fastq.gz"
     FILE_FQ_GZ = ".fq.gz"
 
-    ### all GBK
+    # all GBK
     VECT_ALL_GBK_EXTENSIONS = [FILE_GBK, FILE_GB]
