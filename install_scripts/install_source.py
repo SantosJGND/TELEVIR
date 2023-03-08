@@ -1,15 +1,15 @@
 #!/usr/bin/python
-################################# DIRS
+# DIRS
 
 # HOME = "/home/artic/Desktop/METAGEN/db_second_test/"
 # SOURCE = "~/miniconda3/etc/profile.d/conda.sh"
 
 #
-## Installation directions.
-## HOME : directory to install reference databases, sequences.
-## ENVSDIR : Path to software binaries.
-## SOURCE : conda.sh path.
-## BINDIR : path to software bin not installed the conda way.
+# Installation directions.
+# HOME : directory to install reference databases, sequences.
+# ENVSDIR : Path to software binaries.
+# SOURCE : conda.sh path.
+# BINDIR : path to software bin not installed the conda way.
 #
 
 INSTALL_PARAMS = {
@@ -40,11 +40,11 @@ INSTALL_PARAMS = {
 }
 
 #
-## Directions to environment yaml and requirement files.
-## SOURCE: conda source BASH script.
-## ENVSDIR: directory where environments are to be installed in.
-## YAMLDIR: requirements files directory.
-## ENVS: environment directories (downstream of ENVSDIR) and requirement file names (in YAMLDIR).
+# Directions to environment yaml and requirement files.
+# SOURCE: conda source BASH script.
+# ENVSDIR: directory where environments are to be installed in.
+# YAMLDIR: requirements files directory.
+# ENVS: environment directories (downstream of ENVSDIR) and requirement file names (in YAMLDIR).
 #
 
 ENVS_PARAMS = {
@@ -63,6 +63,7 @@ ENVS_PARAMS = {
         "remap/Renv": "Renv.yml",
         "Pyenv/pyenv": "pyenv.yml",
         "classm_lc/venvlc": "venvlc.txt",
+        "plots/pyGenomeTracks": "pyGenomeTracks.yml",
     },
     "GIT": {
         "FastViromeExplorer/fve": "https://github.com/saima-tithi/FastViromeExplorer.git",

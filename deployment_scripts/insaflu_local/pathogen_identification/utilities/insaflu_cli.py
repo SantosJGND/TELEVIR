@@ -73,6 +73,7 @@ class Insaflu_Cli:
     def create_sample_from_fofn(self, fofn, user: User, technology: str):
 
         r1, r2 = self.read_fofn(fofn)
+        name = os.path.basename(fofn)
         name = os.path.splitext(fofn)[0]
 
         try:
@@ -448,6 +449,8 @@ class Insaflu_Cli:
 
         process_SGE = ProcessSGE()
         job_name = None
+
+        print("sample type sequencing: ", sample.is_type_fastq_gz_sequencing())
 
         try:
             (job_name_wait, job_name) = user.profile.get_name_sge_seq(

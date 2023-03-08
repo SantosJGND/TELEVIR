@@ -23,15 +23,17 @@ from utils.utils import Utils
 # => Spool directory: /var/spool/gridengine/spooldb
 # => Initial manager user: sgeadmin
 
-## logs
+# logs
 # <qmaster_spool_dir>/messages
 # <qmaster_spool_dir>/schedd/messages
 # <execd_spool_dir>/<hostname>/messages
 # <sge_root>/<sge_cell>/common/accounting
 # <sge_root>/<sge_cell>/common/statistics
 
-## default configuration
+# default configuration
 # /etc/default/gridengine
+
+
 class ProcessSGE(object):
 
     utils = Utils()
@@ -42,7 +44,7 @@ class ProcessSGE(object):
     SGE_JOB_ID_FINISH = 3
     DEFAULT_QUEUE_NAME = "all.q"
 
-    ## logging
+    # logging
     logger_debug = logging.getLogger("fluWebVirus.debug")
     logger_production = logging.getLogger("fluWebVirus.production")
 
@@ -51,10 +53,10 @@ class ProcessSGE(object):
 
     ###########################################
     ###
-    ###        BEGIN main methods
+    # BEGIN main methods
     ###
-    ###        IMPORTANT
-    ###            Put qsub in /usr/bin/qsub
+    # IMPORTANT
+    # Put qsub in /usr/bin/qsub
     ###
 
     def submitte_job(self, file_name):
@@ -62,7 +64,8 @@ class ProcessSGE(object):
         job submission
         raise exception if something wrong
         """
-        temp_file = self.utils.get_temp_file("qsub_out", FileExtensions.FILE_TXT)
+        temp_file = self.utils.get_temp_file(
+            "qsub_out", FileExtensions.FILE_TXT)
 
         cmd = "export SGE_ROOT={}; nohup sh {} &> {} &".format(
             settings.SGE_ROOT, file_name, temp_file
@@ -112,8 +115,8 @@ class ProcessSGE(object):
             )  # Specifies  that  all  environment  variables active
             # within the qsub utility be exported to the context of the job.
             handleSGE.write("#$ -S /bin/bash\n")  # interpreting shell
-            ## hold_jid <comma separated list of job-ids, can also be a job id pattern such as 2722*> :
-            ## will start the current job/job -array only after completion of all jobs in the comma separated list
+            # hold_jid <comma separated list of job-ids, can also be a job id pattern such as 2722*> :
+            # will start the current job/job -array only after completion of all jobs in the comma separated list
             if isinstance(job_name_wait, str):
                 job_name_wait = [job_name_wait]
             if len(job_name_wait) > 0:
@@ -169,10 +172,11 @@ class ProcessSGE(object):
         tagsSGEWaiting = ("hqw", "qw", "w")
         # test with qstat
         file_result = self.utils.get_temp_file("sge_stat", ".txt")
-        cline = "export SGE_ROOT={}; qstat > {}".format(settings.SGE_ROOT, file_result)
+        cline = "export SGE_ROOT={}; qstat > {}".format(
+            settings.SGE_ROOT, file_result)
         os.system(cline)
 
-        ## read the FILE
+        # read the FILE
         with open(file_result) as handle_result:
             vectRunning = []
             vectWait = []
@@ -181,13 +185,13 @@ class ProcessSGE(object):
                 if line.find("job-ID") != -1 or len(line) < 3 or line.find("---") == 0:
                     continue
                 if len(line.split()) > 0:
-                    ## jobid is running
+                    # jobid is running
                     if line.split()[4] in tagsSGERunning:
                         vectRunning.append(line.split()[0])
                     elif line.split()[4] in tagsSGEWaiting:
                         vectWait.append(line.split()[0])
 
-        ## remove file
+        # remove file
         if os.path.exists(file_result):
             os.unlink(file_result)
         return (vectRunning, vectWait)
@@ -211,9 +215,10 @@ class ProcessSGE(object):
         test if there any tasks running...
         """
         file_result = self.utils.get_temp_file("sge_stat", ".txt")
-        cline = "export SGE_ROOT={}; qstat > {}".format(settings.SGE_ROOT, file_result)
+        cline = "export SGE_ROOT={}; qstat > {}".format(
+            settings.SGE_ROOT, file_result)
         os.system(cline)
-        ## read the FILE
+        # read the FILE
         with open(file_result) as handle_result:
             for line in handle_result:
                 if line.find("job-ID") != -1 or len(line) < 3 or line.find("---") == 0:
@@ -238,7 +243,7 @@ class ProcessSGE(object):
             settings.SGE_ROOT, prefix_id, file_result
         )
         os.system(cline)
-        ## read the FILE
+        # read the FILE
         vect_job_ids = []
         job_candicate = None
         with open(file_result) as handle_result:
@@ -248,8 +253,9 @@ class ProcessSGE(object):
                 elif line.find("job_number:") == 0:
                     job_candicate = line.split(":")[1].strip()
                 elif (
-                    line.find("scheduling info:") == 0 and not job_candicate is None
-                ):  ## it is wainting in the queue
+                    line.find(
+                        "scheduling info:") == 0 and not job_candicate is None
+                ):  # it is wainting in the queue
                     vect_job_ids.append(job_candicate)
 
         if os.path.exists(file_result):
@@ -263,12 +269,13 @@ class ProcessSGE(object):
         wait till all end
         if len(vect_sge_ids) == 0 wait till all are finished, doesn't matter the ID
         """
-        ## expand vect_sge_idsbecaus some lines can have morethan one ID
-        vect_sge_to_search = [c for b in vect_sge_ids for c in str(b).split(",")]
+        # expand vect_sge_idsbecaus some lines can have morethan one ID
+        vect_sge_to_search = [
+            c for b in vect_sge_ids for c in str(b).split(",")]
         if len(vect_sge_to_search) == 0:
             while self.exists_taks_running():
                 print("=" * 50 + "\n  waiting for sge\n" + str(datetime.now()))
-                time.sleep(5)  ## wais 5 seconds
+                time.sleep(5)  # wais 5 seconds
         else:
             while len(vect_sge_to_search) > 0:
                 print("=" * 50)
@@ -282,21 +289,21 @@ class ProcessSGE(object):
                     if self.is_finished(sge_id):
                         vect_remove.append(sge_id)
 
-                ### remove sge
+                # remove sge
                 for sge_id in vect_remove:
                     vect_sge_to_search.remove(sge_id)
 
                 print("=" * 50)
                 if len(vect_sge_to_search) > 0:
-                    time.sleep(5)  ## wais 5 seconds
-        ## set the one still running
+                    time.sleep(5)  # wais 5 seconds
+        # set the one still running
         return [int(_) for _ in vect_sge_to_search]
 
-    #### END MAIN files
+    # END MAIN files
     #############
     #############
 
-    ##### set collect global files
+    # set collect global files
     def set_collect_global_files(self, project, user):
         """
         job_name = "job_name_<user_id>_<seq_id>"
@@ -335,7 +342,7 @@ class ProcessSGE(object):
             raise Exception("Fail to submit the job.")
         return sge_id
 
-    ##### set collect global files
+    # set collect global files
     def set_collect_global_files_for_update_metadata(self, project, user):
         """
         job_name = "job_name_<user_id>_<seq_id>"
@@ -373,7 +380,7 @@ class ProcessSGE(object):
             raise Exception("Fail to submit the job.")
         return sge_id
 
-    ##### set collect global files
+    # set collect global files
     def set_collect_update_pangolin_lineage(self, project, user):
         """
         job_name = "job_name_<user_id>_<seq_id>"
@@ -382,7 +389,8 @@ class ProcessSGE(object):
         process_controler = ProcessControler()
         vect_command = [
             "python3 {} collect_update_pangolin_lineage --project_id {} --user_id {}".format(
-                os.path.join(settings.BASE_DIR, "manage.py"), project.pk, user.pk
+                os.path.join(settings.BASE_DIR,
+                             "manage.py"), project.pk, user.pk
             )
         ]
         self.logger_production.info("Processing: " + ";".join(vect_command))
@@ -491,25 +499,33 @@ class ProcessSGE(object):
         """
         self.utils.remove_file(sample.get_rabbitQC_output(TypePath.MEDIA_ROOT))
         self.utils.remove_file(sample.get_nanofilt_file(TypePath.MEDIA_ROOT))
-        self.utils.remove_file(sample.get_rabbitQC_nanofilt(TypePath.MEDIA_ROOT))
+        self.utils.remove_file(
+            sample.get_rabbitQC_nanofilt(TypePath.MEDIA_ROOT))
 
     def _remove_files_create_by_fastq_and_trimmomatic(self, sample):
         """
         remove all files create by run_nanofilt_and_stat
         """
-        self.utils.remove_file(sample.get_fastqc_output(TypePath.MEDIA_ROOT, True))
-        self.utils.remove_file(sample.get_fastqc_output(TypePath.MEDIA_ROOT, False))
-        self.utils.remove_file(sample.get_trimmomatic_file(TypePath.MEDIA_ROOT, True))
-        self.utils.remove_file(sample.get_trimmomatic_file(TypePath.MEDIA_ROOT, False))
-        self.utils.remove_file(sample.get_fastq_trimmomatic(TypePath.MEDIA_ROOT, True))
-        self.utils.remove_file(sample.get_fastq_trimmomatic(TypePath.MEDIA_ROOT, False))
+        self.utils.remove_file(
+            sample.get_fastqc_output(TypePath.MEDIA_ROOT, True))
+        self.utils.remove_file(
+            sample.get_fastqc_output(TypePath.MEDIA_ROOT, False))
+        self.utils.remove_file(
+            sample.get_trimmomatic_file(TypePath.MEDIA_ROOT, True))
+        self.utils.remove_file(
+            sample.get_trimmomatic_file(TypePath.MEDIA_ROOT, False))
+        self.utils.remove_file(
+            sample.get_fastq_trimmomatic(TypePath.MEDIA_ROOT, True))
+        self.utils.remove_file(
+            sample.get_fastq_trimmomatic(TypePath.MEDIA_ROOT, False))
 
     def _remove_files_create_by_identify_type_and_sub_type(self, sample):
         """
         remove all files create by run_nanofilt_and_stat
         """
         self.utils.remove_file(sample.get_abricate_output(TypePath.MEDIA_ROOT))
-        self.utils.remove_file(sample.get_draft_contigs_output(TypePath.MEDIA_ROOT))
+        self.utils.remove_file(
+            sample.get_draft_contigs_output(TypePath.MEDIA_ROOT))
         self.utils.remove_file(
             sample.get_draft_contigs_abricate_output(TypePath.MEDIA_ROOT)
         )
@@ -531,6 +547,9 @@ class ProcessSGE(object):
                 else "",
             )
         ]
+
+        print("Processing: " + ";".join(vect_command))
+
         self.logger_production.info("Processing: " + ";".join(vect_command))
         self.logger_debug.info("Processing: " + ";".join(vect_command))
         out_dir = self.utils.get_temp_dir()
@@ -546,7 +565,7 @@ class ProcessSGE(object):
                     user, process_controler.get_name_sample(sample), sge_id
                 )
 
-            ### change flag to not finished
+            # change flag to not finished
             sample.is_ready_for_projects = False
             sample.is_sample_in_the_queue = True
             sample.save()
@@ -588,7 +607,7 @@ class ProcessSGE(object):
                     user, process_controler.get_name_sample(sample), sge_id
                 )
 
-            ### change flag to not finished
+            # change flag to not finished
             sample.is_ready_for_projects = False
             sample.is_sample_in_the_queue = True
             sample.save()
@@ -620,7 +639,7 @@ class ProcessSGE(object):
             Profile.SGE_PROCESS_link_files, Profile.SGE_LINK
         )
         sge_id = self._get_prefix_in_wait_queue(prefix_to_find)
-        if sge_id is None:  ## if prefix does not exist in queue need to submit new one
+        if sge_id is None:  # if prefix does not exist in queue need to submit new one
             (job_name_wait, job_name) = user.profile.get_name_sge_seq(
                 Profile.SGE_PROCESS_link_files, Profile.SGE_LINK
             )
@@ -636,7 +655,8 @@ class ProcessSGE(object):
                 sge_id = self.submitte_job(path_file)
                 if sge_id != None:
                     self.set_process_controlers(
-                        user, process_controler.get_name_link_files_user(user), sge_id
+                        user, process_controler.get_name_link_files_user(
+                            user), sge_id
                     )
             except:
                 raise Exception("Fail to submit the job.")
@@ -674,12 +694,12 @@ class ProcessSGE(object):
         sge_id = self.submitte_job(path_file)
         print(sge_id)
 
-        ## same has trimmomatic and minion
+        # same has trimmomatic and minion
         prefix_to_find = user.profile.get_prefix_name(
             Profile.SGE_PROCESS_collect_all_samples, Profile.SGE_REGULAR
         )
         # self._get_prefix_in_wait_queue(prefix_to_find)
-        if sge_id is None:  ## if prefix does not exist in queue need to submit new one
+        if sge_id is None:  # if prefix does not exist in queue need to submit new one
             (job_name_wait, job_name) = user.profile.get_name_sge_seq(
                 Profile.SGE_PROCESS_collect_all_samples, Profile.SGE_REGULAR
             )
@@ -689,7 +709,8 @@ class ProcessSGE(object):
                 if sge_id != None:
                     self.set_process_controlers(
                         user,
-                        process_controler.get_name_collect_all_samples_user(user),
+                        process_controler.get_name_collect_all_samples_user(
+                            user),
                         sge_id,
                     )
             except:
@@ -718,7 +739,7 @@ class ProcessSGE(object):
             Profile.SGE_PROCESS_collect_all_projects, Profile.SGE_REGULAR
         )
         sge_id = self._get_prefix_in_wait_queue(prefix_to_find)
-        if sge_id is None:  ## if prefix does not exist in queue need to submit new one
+        if sge_id is None:  # if prefix does not exist in queue need to submit new one
             (job_name_wait, job_name) = user.profile.get_name_sge_seq(
                 Profile.SGE_PROCESS_collect_all_projects, Profile.SGE_REGULAR
             )
@@ -735,7 +756,8 @@ class ProcessSGE(object):
                 if sge_id != None:
                     self.set_process_controlers(
                         user,
-                        process_controler.get_name_collect_all_projects_user(user),
+                        process_controler.get_name_collect_all_projects_user(
+                            user),
                         sge_id,
                     )
             except:
@@ -776,7 +798,8 @@ class ProcessSGE(object):
             sge_id = self.submitte_job(path_file)
             if sge_id != None:
                 self.set_process_controlers(
-                    user, process_controler.get_name_upload_files(upload_files), sge_id
+                    user, process_controler.get_name_upload_files(
+                        upload_files), sge_id
                 )
         except:
             raise Exception("Fail to submit the job.")
@@ -789,7 +812,8 @@ class ProcessSGE(object):
         process_controler = ProcessControler()
         vect_command = [
             "python3 {} update_metadata_sample_file --upload_files_id {} --user_id {}".format(
-                os.path.join(settings.BASE_DIR, "manage.py"), upload_files.pk, user.pk
+                os.path.join(settings.BASE_DIR,
+                             "manage.py"), upload_files.pk, user.pk
             )
         ]
         self.logger_production.info("Processing: " + ";".join(vect_command))
@@ -808,7 +832,8 @@ class ProcessSGE(object):
             sge_id = self.submitte_job(path_file)
             if sge_id != None:
                 self.set_process_controlers(
-                    user, process_controler.get_name_upload_files(upload_files), sge_id
+                    user, process_controler.get_name_upload_files(
+                        upload_files), sge_id
                 )
         except:
             raise Exception("Fail to submit the job.")
@@ -855,7 +880,8 @@ class ProcessSGE(object):
             print("project submitted, sge_id: " + str(sge_id))
             if sge_id != None:
                 self.set_process_controlers(
-                    user, process_controler.get_name_televir_project(project_pk), sge_id
+                    user, process_controler.get_name_televir_project(
+                        project_pk), sge_id
                 )
         except:
             raise Exception("Fail to submit the job.")
@@ -898,13 +924,14 @@ class ProcessSGE(object):
             print("project submitted, sge_id: " + str(sge_id))
             if sge_id != None:
                 self.set_process_controlers(
-                    user, process_controler.get_name_televir_map(reference_pk), sge_id
+                    user, process_controler.get_name_televir_map(
+                        reference_pk), sge_id
                 )
         except:
             raise Exception("Fail to submit the job.")
         return sge_id
 
-    ### only for tests
+    # only for tests
     def submit_dummy_sge(self, job_name="job_name"):
         """
         only for tests
@@ -992,7 +1019,7 @@ class ProcessSGE(object):
                 process_controler.is_running = True
             process_controler.save()
 
-    ##### set collect global files
+    # set collect global files
     def set_collect_dataset_global_files(self, dataset, user):
         """
         job_name = "job_name_<user_id>_<seq_id>"
@@ -1003,7 +1030,8 @@ class ProcessSGE(object):
         process_controler = ProcessControler()
         vect_command = [
             "python3 {} collect_global_dataset_files --dataset_id {} --user_id {}".format(
-                os.path.join(settings.BASE_DIR, "manage.py"), dataset.pk, user.pk
+                os.path.join(settings.BASE_DIR,
+                             "manage.py"), dataset.pk, user.pk
             )
         ]
         self.logger_production.info("Processing: " + ";".join(vect_command))
@@ -1030,7 +1058,7 @@ class ProcessSGE(object):
             raise Exception("Fail to submit the job.")
         return sge_id
 
-    ##### set collect global files
+    # set collect global files
     def set_collect_dataset_global_files_for_update_metadata(self, dataset, user):
         """
         job_name = "job_name_<user_id>_<seq_id>"
@@ -1039,14 +1067,15 @@ class ProcessSGE(object):
         process_controler = ProcessControler()
         vect_command = [
             "python3 {} collect_global_dataset_files_for_update_metadata --dataset_id {} --user_id {}".format(
-                os.path.join(settings.BASE_DIR, "manage.py"), dataset.pk, user.pk
+                os.path.join(settings.BASE_DIR,
+                             "manage.py"), dataset.pk, user.pk
             )
         ]
         self.logger_production.info("Processing: " + ";".join(vect_command))
         self.logger_debug.info("Processing: " + ";".join(vect_command))
         out_dir = self.utils.get_temp_dir()
 
-    ##### set collect global files
+    # set collect global files
     def set_collect_dataset_global_files(self, dataset, user):
         """
         job_name = "job_name_<user_id>_<seq_id>"
@@ -1057,7 +1086,8 @@ class ProcessSGE(object):
         process_controler = ProcessControler()
         vect_command = [
             "python3 {} collect_global_dataset_files --dataset_id {} --user_id {}".format(
-                os.path.join(settings.BASE_DIR, "manage.py"), dataset.pk, user.pk
+                os.path.join(settings.BASE_DIR,
+                             "manage.py"), dataset.pk, user.pk
             )
         ]
         self.logger_production.info("Processing: " + ";".join(vect_command))
@@ -1084,7 +1114,7 @@ class ProcessSGE(object):
             raise Exception("Fail to submit the job.")
         return sge_id
 
-    ##### set collect global files
+    # set collect global files
     def set_collect_dataset_global_files_for_update_metadata(self, dataset, user):
         """
         job_name = "job_name_<user_id>_<seq_id>"
@@ -1093,7 +1123,8 @@ class ProcessSGE(object):
         process_controler = ProcessControler()
         vect_command = [
             "python3 {} collect_global_dataset_files_for_update_metadata --dataset_id {} --user_id {}".format(
-                os.path.join(settings.BASE_DIR, "manage.py"), dataset.pk, user.pk
+                os.path.join(settings.BASE_DIR,
+                             "manage.py"), dataset.pk, user.pk
             )
         ]
         self.logger_production.info("Processing: " + ";".join(vect_command))

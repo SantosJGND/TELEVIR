@@ -31,6 +31,8 @@ class env_install:
             if os.path.isdir(cdir):
                 force = True
 
+            # print(cdir, ymlf, force)
+
             command = [
                 "conda",
                 "env",
@@ -49,6 +51,8 @@ class env_install:
 
             print("installing environment %s" % cdir)
 
+            print(command)
+
             subprocess.run(command)
 
     def fve_install(self, force_install=False):
@@ -56,7 +60,7 @@ class env_install:
         FastViromeExplorer installation.
         """
 
-        ### GIT CLONE
+        # GIT CLONE
         soft = "FastViromeExplorer/fve"
         sdir = soft.split("/")[0]
         git = self.git[soft]
@@ -77,7 +81,7 @@ class env_install:
 
             subprocess.run(command)
 
-            ## JAVA INSTALLATION.
+            # JAVA INSTALLATION.
             tmpsh = "fve_install.sh"
 
             bash_lines = [
@@ -220,7 +224,7 @@ class env_install:
         deSAMBA installation.
         """
 
-        ### GIT CLONE
+        # GIT CLONE
         soft = "classm_lc/deSAMBA"
         sdir = self.envsdir + soft.split("/")[0]
 
@@ -246,7 +250,7 @@ class env_install:
 
             subprocess.run(command)
 
-            ## INSTALLATION.
+            # INSTALLATION.
             ##
             tmpsh = "deSAMBA_install.sh"
 
@@ -287,7 +291,7 @@ class env_install:
         Trimmomatic installation.
         """
 
-        ### GIT CLONE
+        # GIT CLONE
         soft = "trimmomatic"
         sdir = self.envsdir + soft.split("/")[0] + "/"
 
@@ -320,7 +324,8 @@ class env_install:
 
         ln_target = sdir + "classes/trimmomatic.jar"
         ln_cmd = f"ln -s {sdir}{zip_name}/trimmomatic-0.39.jar " + ln_target
-        ln_targets_cmd = f"ln -s {sdir}{zip_name}/adapters/* " + sdir + "adapters/"
+        ln_targets_cmd = f"ln -s {sdir}{zip_name}/adapters/* " + \
+            sdir + "adapters/"
         print(ln_targets_cmd)
 
         os.system(ln_cmd)
@@ -333,7 +338,7 @@ class env_install:
         FastQC installation.
         """
 
-        ### GIT CLONE
+        # GIT CLONE
         soft = "FastQC"
         sdir = self.envsdir + soft.split("/")[0] + "/"
 
@@ -367,7 +372,7 @@ class env_install:
 
     def rabbitqc_insaflu_install(self):
 
-        ### GIT CLONE
+        # GIT CLONE
         soft = "RabbitQC"
         sdir = self.envsdir + soft.split("/")[0] + "/"
 

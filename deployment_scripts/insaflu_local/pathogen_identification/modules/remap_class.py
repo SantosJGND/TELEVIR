@@ -1509,7 +1509,7 @@ class Mapping_Instance:
         return self.reference.number_of_contigs_mapped > 0
 
     def assert_mapping_success(self):
-        ###
+
         if self.rpres and self.apres:
             success = "reads and contigs"
         elif self.rpres and not self.apres:
@@ -1853,7 +1853,7 @@ class Mapping_Manager(Tandem_Remap):
                     mapped_instance.assembly.cleanup_files()
 
             os.system("rm -rf " + mapped_instance.reference.rdir)
-            os.system("rm -rf " + mapped_instance.assembly.rdir)
+            # os.system("rm -rf " + mapped_instance.assembly.rdir)
 
     def move_igv_to_static(self, static_dir):
         self.logger.info("Moving IGV files to static")

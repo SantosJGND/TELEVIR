@@ -204,6 +204,7 @@ class Command(BaseCommand):
 
         sample = insaflu_cli.create_sample_from_fofn(
             sample_fofn, user, technology)
+
         project_sample = insaflu_cli.piproject_sample_from_sample(
             sample, project, user)
 

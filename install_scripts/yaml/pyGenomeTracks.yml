@@ -1,0 +1,10 @@
+name: genome track plots
+
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.7
+  - pygenometracks=3.5
