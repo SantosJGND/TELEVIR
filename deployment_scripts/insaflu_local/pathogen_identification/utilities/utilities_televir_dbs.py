@@ -100,17 +100,12 @@ class Utility_Repository:
 
         self.metadata.create_all(self.engine)
 
-    def engine_execute(self, string: str):
-        with self.engine.connect() as conn:
-            result = conn.execute(string)
-        return result
-
     def get_by_name(self, table_name, id):
         """
         Get a record by id from a table
         """
 
-        return self.engine_execute(f"SELECT * FROM {table_name} WHERE name='{id}'")
+        return self.engine.execute(f"SELECT * FROM {table_name} WHERE name='{id}'")
 
     def select_explicit(self, table_name, field, id):
         """
@@ -118,7 +113,7 @@ class Utility_Repository:
         """
         sql_statement = f"SELECT * FROM {table_name} WHERE {field}='{id}'"
 
-        find = self.engine_execute(sql_statement)
+        find = self.engine.execute(sql_statement)
 
         return find
 
@@ -127,7 +122,7 @@ class Utility_Repository:
         Get a list of tables
         """
 
-        find = self.engine_execute(
+        find = self.engine.execute(
             "SELECT name FROM sqlite_master WHERE type='table'")
         find = [i[0] for i in find]
         return find
@@ -137,7 +132,7 @@ class Utility_Repository:
         Get a list of unique values in a field
         """
 
-        find = self.engine_execute(f"SELECT DISTINCT {id} FROM {table_name}")
+        find = self.engine.execute(f"SELECT DISTINCT {id} FROM {table_name}")
 
         find = [i[0] for i in find]
         return find
@@ -161,7 +156,7 @@ class Utility_Repository:
         check_list = [f"'{i}'" for i in check_list]
         check_list = ",".join(check_list)
 
-        find = self.engine_execute(
+        find = self.engine.execute(
             f"SELECT * FROM {table_name} WHERE {field} IN ({check_list})"
         ).fetchall()
         find = len(find) > 0
@@ -176,7 +171,7 @@ class Utility_Repository:
         Add a record to a table
         """
 
-        self.engine_execute(
+        self.engine.execute(
             f"INSERT INTO software (name, path, database, installed, env_path) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.env_path}')"
         )
 
@@ -186,6 +181,6 @@ class Utility_Repository:
         Add a record to a table
         """
 
-        self.engine_execute(
+        self.engine.execute(
             f"INSERT INTO database (name, path, installed) VALUES ('{item.name}', '{item.path}', '{item.installed}')"
         )

@@ -1,19 +1,12 @@
 # from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey
 
+import os
 import datetime
 from abc import ABC, abstractmethod
 
 import sqlalchemy
-from sqlalchemy import (
-    Boolean,
-    Column,
-    ForeignKey,
-    Integer,
-    MetaData,
-    String,
-    Table,
-    create_engine,
-)
+from sqlalchemy import (Boolean, Column, ForeignKey, Integer, MetaData, String,
+                        Table, create_engine)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapper, sessionmaker
 
@@ -41,9 +34,6 @@ class database_item:
 
     def __repr__(self) -> str:
         return f"({self.name}, {self.path}, {self.installed})"
-
-
-import os
 
 
 class Utility_Repository:
@@ -112,7 +102,7 @@ class Utility_Repository:
             Column("date", String),
         )
 
-        self.engine.execute(
+        self.engine_execute(
             "CREATE TABLE IF NOT EXISTS software (name TEXT, path TEXT, database TEXT, installed BOOLEAN, env_path TEXT, date TEXT)"
         )
 
@@ -127,7 +117,7 @@ class Utility_Repository:
             Column("date", String),
         )
 
-        self.engine.execute(
+        self.engine_execute(
             "CREATE TABLE IF NOT EXISTS database (name TEXT, path TEXT, installed BOOLEAN, software TEXT, date TEXT)"
         )
 
@@ -137,17 +127,18 @@ class Utility_Repository:
 
     def delete_table(self, table_name):
         print("Deleting table: " + table_name)
-        self.engine.execute(f"DROP TABLE {table_name}")
+        self.engine_execute(f"DROP TABLE {table_name}")
 
     def clear_tables(self):
         self.clear_table("software")
         self.clear_table("database")
 
     def clear_table(self, table_name):
-        self.engine.execute(f"DELETE FROM {table_name}")
+        self.engine_execute(f"DELETE FROM {table_name}")
 
     def print_table_schema(self, table_name):
-        print(self.engine.execute(f"PRAGMA table_info({table_name})").fetchall())
+        print(self.engine_execute(
+            f"PRAGMA table_info({table_name})").fetchall())
 
     def reset_tables(self):
         """
@@ -156,6 +147,11 @@ class Utility_Repository:
         self.clear_tables()
 
         self.metadata.create_all(self.engine)
+
+    def engine_execute(self, string: str):
+        with self.engine.connect() as conn:
+            result = conn.execute(string)
+        return result
 
     def create_tables(self):
         """
@@ -186,14 +182,15 @@ class Utility_Repository:
         """
 
         if table_name not in self.tables:
-            print(f"Table {table_name} not found. Available tables: {self.tables}")
+            print(
+                f"Table {table_name} not found. Available tables: {self.tables}")
             return
 
         if not os.path.exists(directory):
             os.makedirs(directory, exist_ok=True)
 
         with open(os.path.join(directory, f"{table_name}.tsv"), "w") as f:
-            for row in self.engine.execute(f"SELECT * FROM {table_name}"):
+            for row in self.engine_execute(f"SELECT * FROM {table_name}"):
                 f.write("\t".join([str(x) for x in row]) + "\n")
 
     def get(self, table_name, id):
@@ -201,14 +198,14 @@ class Utility_Repository:
         Get a record by id from a table
         """
 
-        return self.engine.execute(f"SELECT * FROM {table_name} WHERE name='{id}'")
+        return self.engine_execute(f"SELECT * FROM {table_name} WHERE name='{id}'")
 
     def check_exists(self, table_name, id):
         """
         Check if a record exists in a table
         """
 
-        find = self.engine.execute(
+        find = self.engine_execute(
             f"SELECT * FROM {table_name} WHERE name='{id}'"
         ).fetchall()
         find = len(find) > 0
@@ -224,7 +221,7 @@ class Utility_Repository:
         """
         # print("adding software")
 
-        self.engine.execute(
+        self.engine_execute(
             f"INSERT INTO software (name, path, database, installed, env_path, date) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.env_path}', '{item.date}')"
         )
 
@@ -234,6 +231,6 @@ class Utility_Repository:
         Add a record to a table
         """
 
-        self.engine.execute(
+        self.engine_execute(
             f"INSERT INTO database (name, path, installed, date) VALUES ('{item.name}', '{item.path}', '{item.installed}', '{item.date}')"
         )
