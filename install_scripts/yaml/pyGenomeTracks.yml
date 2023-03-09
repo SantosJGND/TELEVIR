@@ -1,8 +1,8 @@
 name: genome track plots
 
 channels:
-  - bioconda
   - conda-forge
+  - bioconda
   - defaults
 
 dependencies:
