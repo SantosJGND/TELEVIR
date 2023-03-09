@@ -1,7 +1,7 @@
 # from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey
 
-import os
 import datetime
+import os
 from abc import ABC, abstractmethod
 
 import sqlalchemy
@@ -49,7 +49,6 @@ class Utility_Repository:
         self.metadata = MetaData()
 
         self.setup_engine(install_type)
-        print(self.engine)
 
         self.create_tables()
 
@@ -126,7 +125,6 @@ class Utility_Repository:
         self.delete_table("database")
 
     def delete_table(self, table_name):
-        print("Deleting table: " + table_name)
         self.engine_execute(f"DROP TABLE {table_name}")
 
     def clear_tables(self):

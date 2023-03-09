@@ -51,8 +51,6 @@ class env_install:
 
             print("installing environment %s" % cdir)
 
-            print(command)
-
             subprocess.run(command)
 
     def fve_install(self, force_install=False):

@@ -63,7 +63,7 @@ ENVS_PARAMS = {
         "remap/Renv": "Renv.yml",
         "Pyenv/pyenv": "pyenv.yml",
         "classm_lc/venvlc": "venvlc.txt",
-        "plots/pyGenomeTracks": "pyGenomeTracks.yml",
+        # "plots/pyGenomeTracks": "pyGenomeTracks.yml",
     },
     "GIT": {
         "FastViromeExplorer/fve": "https://github.com/saima-tithi/FastViromeExplorer.git",
