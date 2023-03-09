@@ -1262,8 +1262,8 @@ class setup_install(setup_dl):
         ]
 
         if ftp:
-            lib_command.append("--ftp")
-            tax_command.append("--ftp")
+            lib_command.append("--use-ftp")
+            tax_command.append("--use-ftp")
 
         try:
 

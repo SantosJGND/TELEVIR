@@ -188,7 +188,7 @@ class Utility_Repository:
             os.makedirs(directory, exist_ok=True)
 
         with open(os.path.join(directory, f"{table_name}.tsv"), "w") as f:
-            for row in self.engine_execute(f"SELECT * FROM {table_name}"):
+            for row in self.engine.execute(f"SELECT * FROM {table_name}"):
                 f.write("\t".join([str(x) for x in row]) + "\n")
 
     def get(self, table_name, id):
