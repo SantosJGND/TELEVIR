@@ -174,7 +174,8 @@ class main_setup:
         self.pdir = pdir
 
         self.setup_config()
-        self.utilities = repository(db_path=self.wdir.home, install_type=install_type)
+        self.utilities = repository(
+            db_path=self.wdir.home, install_type=install_type)
 
     @staticmethod
     def software_install_string(software_name: str):
@@ -374,7 +375,8 @@ class main_setup:
 
             success_hg38 = self.wdir.download_hg38()
             if success_hg38:
-                self.installed_databases.append(self.database_install_string("hg38"))
+                self.installed_databases.append(
+                    self.database_install_string("hg38"))
                 self.utilities.add_database(
                     self.utilities.database_item(
                         "hg38",
@@ -387,7 +389,8 @@ class main_setup:
 
             success_hg38 = self.wdir.download_grc38()
             if success_hg38:
-                self.installed_databases.append(self.database_install_string("grc38"))
+                self.installed_databases.append(
+                    self.database_install_string("grc38"))
                 self.utilities.add_database(
                     self.utilities.database_item(
                         "grc38",
@@ -464,7 +467,7 @@ class main_setup:
         :return: None
         """
 
-        ## install databases using organism name only.
+        # install databases using organism name only.
         sofprep = self.setup_install_class(
             INSTALL_PARAMS, taxdump=taxdump, test=test, organism=self.organism
         )
@@ -511,7 +514,8 @@ class main_setup:
         if self.layout.install_clark:
             success_install = sofprep.clark_install(dbname=self.organism)
             if success_install:
-                self.installed_software.append(self.software_install_string("clark"))
+                self.installed_software.append(
+                    self.software_install_string("clark"))
 
                 self.utilities.add_software(
                     self.utilities.software_item(
@@ -526,7 +530,8 @@ class main_setup:
         ########################## kraken2 ###############################
 
         if self.layout.install_kraken2:
-            success_install = sofprep.kraken2_install(dbname=self.organism)
+            success_install = sofprep.kraken2_two_strategies_install(
+                dbname=self.organism)
             krlib = f"kraken2-{self.organism}-library.fna.gz"
             if os.path.isfile(sofprep.dbs["kraken2"]["fasta"]):
                 os.system(
@@ -541,7 +546,8 @@ class main_setup:
 
             if success_install:
 
-                self.installed_software.append(self.software_install_string("kraken2"))
+                self.installed_software.append(
+                    self.software_install_string("kraken2"))
 
                 self.utilities.add_software(
                     self.utilities.software_item(
@@ -570,12 +576,13 @@ class main_setup:
                     )
                 )
 
-        ### install viral specific databases
+        # install viral specific databases
         if self.organism == "viral":
 
             if self.layout.install_kaiju:
                 sofprep.kaiju_viral_install()
-                self.installed_software.append(self.software_install_string("kaiju"))
+                self.installed_software.append(
+                    self.software_install_string("kaiju"))
 
                 self.utilities.add_software(
                     self.utilities.software_item(
@@ -587,12 +594,13 @@ class main_setup:
                     )
                 )
 
-        ### install host dbs.
+        # install host dbs.
 
         for fname, fpath in prepdl.fastas["host"].items():
             bwa_install = sofprep.bwa_install(dbname=fname, reference=fpath)
             if bwa_install:
-                self.installed_software.append(self.software_install_string("bwa"))
+                self.installed_software.append(
+                    self.software_install_string("bwa"))
                 self.utilities.add_software(
                     self.utilities.software_item(
                         "bwa",
@@ -604,7 +612,8 @@ class main_setup:
                 )
 
             if self.layout.install_bowtie2:
-                bowtie2_install = sofprep.bowtie2_index(dbname=fname, reference=fpath)
+                bowtie2_install = sofprep.bowtie2_index(
+                    dbname=fname, reference=fpath)
                 if bowtie2_install:
                     self.installed_software.append(
                         self.software_install_string("bowtie2")
@@ -629,7 +638,7 @@ class main_setup:
                 )
             )
 
-        ### install prot databases using local files.
+        # install prot databases using local files.
         for fname, fdb in prepdl.fastas["prot"].items():
 
             if self.layout.install_diamond:
@@ -677,7 +686,7 @@ class main_setup:
                             )
                         )
 
-        ### install nuc databases using local files.
+        # install nuc databases using local files.
         for fname, fdb in prepdl.fastas["nuc"].items():
 
             if self.layout.install_fastviromeexplorer:
@@ -698,7 +707,8 @@ class main_setup:
                             sofprep.dbs["fastviromeexplorer"]["db"],
                             fname,
                             True,
-                            sofprep.envs["ROOT"] + sofprep.envs["fastviromeexplorer"],
+                            sofprep.envs["ROOT"] +
+                            sofprep.envs["fastviromeexplorer"],
                         )
                     )
 
@@ -812,7 +822,8 @@ if __name__ == "__main__":
         level=logging.INFO,
     )
 
-    metagen_prep = main_setup(env_install, setup_dl, setup_install, Utility_Repository)
+    metagen_prep = main_setup(env_install, setup_dl,
+                              setup_install, Utility_Repository)
     metagen_prep.user_input()
 
     metagen_prep.setup_envs_conda()

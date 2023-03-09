@@ -1196,6 +1196,55 @@ class setup_install(setup_dl):
             logging.info(f"failed to download CLARK db {dbname}")
             return False
 
+    def kraken2_download_install(
+            self,
+            dbname="viral",
+            id="kraken2",
+            dbdir="kraken2",
+    ):
+        odir = self.dbdir + dbdir + "/"
+        source = "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20221209.tar.gz"
+
+        if os.path.isfile(odir + dbname + "/taxo.k2d"):
+            logging.info(
+                f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
+
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
+                "db": odir + dbname,
+            }
+            return True
+        else:
+            if self.test:
+                logging.info(f"Kraken2 db {dbname} is not installed.")
+                return False
+            else:
+                logging.info(
+                    f"Kraken2 db {dbname} is not installed. Downloading from {source}.")
+
+        subprocess.run(["mkdir", "-p", odir])
+        subprocess.run(["wget", "-P", odir, source])
+        subprocess.run(
+            ["tar", "-xvzf", odir + "k2_viral_20221209.tar.gz", "-C", odir])
+        subprocess.run(["rm", odir + "k2_viral_20221209.tar.gz"])
+
+        self.dbs[id] = {
+            "dir": odir,
+            "dbname": dbname,
+            "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
+            "db": odir + dbname,
+        }
+
+        if os.path.isfile(odir + dbname + "/taxo.k2d"):
+            logging.info(
+                f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
+            return True
+        else:
+            logging.info(f"failed to download Kraken2 db {dbname}")
+            return False
+
     def kraken2_install(
         self,
         dbname="viral",
@@ -1203,7 +1252,7 @@ class setup_install(setup_dl):
         id="kraken2",
         dbdir="kraken2",
         build_args="--max-db-size 18000000000 --kmer-len 31",
-        ftp=True,
+        ftp=False,
     ):
 
         odir = self.dbdir + dbdir + "/"
@@ -1306,7 +1355,46 @@ class setup_install(setup_dl):
             return True
         except subprocess.CalledProcessError:
             logging.info(f"failed to download Kraken2 db {dbname}")
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
+                "db": odir + dbname,
+            }
             return False
+
+    def kraken2_two_strategies_install(
+        self,
+        dbname="viral",
+        threads="5",
+        id="kraken2",
+        dbdir="kraken2",
+        build_args="--max-db-size 18000000000 --kmer-len 31",
+        ftp=False,
+    ):
+
+        traditional_install = self.kraken2_install(
+            dbname=dbname,
+            threads=threads,
+            id=id,
+            dbdir=dbdir,
+            build_args=build_args,
+            ftp=ftp,
+        )
+
+        if traditional_install:
+            return True
+
+        kraken2_download_install = self.kraken2_download_install(
+            dbname=dbname,
+            id=id,
+            dbdir=dbdir,
+        )
+
+        if kraken2_download_install:
+            return True
+
+        return False
 
     def diamond_install(
         self, id="diamond", dbdir="diamond", dbname="swissprot", db="swissprot.gz"
