@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 import sqlalchemy
 from sqlalchemy import (Boolean, Column, ForeignKey, Integer, MetaData, String,
-                        Table, create_engine)
+                        Table, create_engine, text)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapper, sessionmaker
 
@@ -147,8 +147,9 @@ class Utility_Repository:
         self.metadata.create_all(self.engine)
 
     def engine_execute(self, string: str):
+        sql = text(string)
         with self.engine.connect() as conn:
-            result = conn.execute(string)
+            result = conn.execute(sql)
         return result
 
     def create_tables(self):

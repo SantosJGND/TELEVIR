@@ -198,7 +198,17 @@ class main_setup:
 
             self.layout = Televir_Layout_full()
 
-        if self.install_config == "minimal":
+        elif self.install_config == "docker":
+
+            try:
+                from install_scripts.config import Televir_Layout_docker
+            except ModuleNotFoundError as e:
+                print("check install config.py exists")
+                sys.exit()
+
+            self.layout = Televir_Layout_docker()
+
+        else:
 
             try:
                 from install_scripts.config import Televir_Layout_minimal
