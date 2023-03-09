@@ -46,7 +46,8 @@ def entrez_ncbi_taxid_command(lines, tempfile, outdir, outfile):
 def entrez_fetch_sequence(accid, outfile):
     """return fasta from ncbi nuccore db using accid"""
 
-    os.system(f"esearch -db nuccore -query {accid} | efetch -format fasta >> {outfile}")
+    os.system(
+        f"esearch -db nuccore -query {accid} | efetch -format fasta >> {outfile}")
 
 
 def entrez_ncbi_taxid(file, outdir, outfile, nmax=500):
@@ -195,7 +196,8 @@ class setup_dl:
                 return False
             else:
                 logging.info(f"{f} not found. downloading...")
-                subprocess.run(["wget", f"ftp://{host}/{source}{f}", "-P", self.seqdir])
+                subprocess.run(
+                    ["wget", f"ftp://{host}/{source}{f}", "-P", self.seqdir])
                 self.fastas["host"]["hg38"] = self.seqdir + f
                 return True
 
@@ -226,7 +228,8 @@ class setup_dl:
         try:
             ftp = FTP(host)
         except Exception as e:
-            logging.info(f"{fname} ftp attempt failed. Check internet connection.")
+            logging.info(
+                f"{fname} ftp attempt failed. Check internet connection.")
             return False
 
         ftp.login()
@@ -244,7 +247,8 @@ class setup_dl:
                 return False
             else:
                 logging.info(f"{f} not found. downloading...")
-                subprocess.run(["wget", f"ftp://{host}/{source}{f}", "-P", self.seqdir])
+                subprocess.run(
+                    ["wget", f"ftp://{host}/{source}{f}", "-P", self.seqdir])
                 self.fastas["host"][fname] = self.seqdir + f
                 return True
 
@@ -307,7 +311,8 @@ class setup_dl:
         try:
             ftp = FTP(host)
         except:
-            logging.info("refseq ftp attempt failed. Check internet connection.")
+            logging.info(
+                "refseq ftp attempt failed. Check internet connection.")
             return False
 
         ftp.login()
@@ -451,7 +456,8 @@ class setup_dl:
                 logging.info("uniref{}.fasta not found.".format(vs))
                 return False
             else:
-                logging.info("uniref{}.fasta not found. downloading...".format(vs))
+                logging.info(
+                    "uniref{}.fasta not found. downloading...".format(vs))
                 subprocess.run(["wget", fl, "-P", self.seqdir])
         else:
             logging.info("uniref{}.fasta found.".format(vs))
@@ -497,7 +503,8 @@ class setup_dl:
                 logging.info("U-RVDBv{}.fasta.xz not found.".format(vs))
                 return False
             else:
-                logging.info("U-RVDBv{}.fasta.xz not found. downloading...".format(vs))
+                logging.info(
+                    "U-RVDBv{}.fasta.xz not found. downloading...".format(vs))
                 subprocess.run(["wget", "-P", self.seqdir, fl])
                 fl = self.seqdir + os.path.basename(fl)
                 subprocess.run(["unxz", fl])
@@ -581,7 +588,8 @@ class setup_dl:
                 return
             else:
                 if self.test:
-                    logging.info("acc2taxid.tsv not found for {}".format(check))
+                    logging.info(
+                        "acc2taxid.tsv not found for {}".format(check))
                     return
                 else:
                     logging.info(
@@ -672,7 +680,7 @@ class setup_dl:
             return
 
         def retrieve_within_square_brackets(string):
-            return string[string.find("[") + 1 : string.find("]")]
+            return string[string.find("[") + 1: string.find("]")]
 
         def retrieve_acc_string(string):
             return string.split()[0][1:]
@@ -686,7 +694,8 @@ class setup_dl:
                     lines.append([acc, description])
 
         df = pd.DataFrame(lines, columns=["acc", "description"])
-        tax2description = pd.read_csv(f"{self.metadir}/taxid2desc.tsv", sep="\t")
+        tax2description = pd.read_csv(
+            f"{self.metadir}/taxid2desc.tsv", sep="\t")
 
         df = df.merge(tax2description, on="description", how="left")
         df = df[["acc", "taxid"]]
@@ -709,7 +718,8 @@ class setup_dl:
             id_files = {i: [] for i in dict_ids}
 
             threads = [
-                Thread(target=self.prot2taxid_parse, args=(dci, dict_ids, acc2tax_dir))
+                Thread(target=self.prot2taxid_parse,
+                       args=(dci, dict_ids, acc2tax_dir))
                 for dci in range(1, 11)
             ]
             for th in threads:
@@ -719,12 +729,14 @@ class setup_dl:
 
             for dbi in list(id_files):
                 id_files[dbi] = [
-                    pd.read_csv(self.metadir + f"{dbi}_a2p_{dci}.tsv", sep="\t")
+                    pd.read_csv(self.metadir +
+                                f"{dbi}_a2p_{dci}.tsv", sep="\t")
                     for dci in range(1, 11)
                 ]
                 fdb = pd.concat(id_files[dbi], axis=0)
                 #
-                fdb.to_csv(self.metadir + f"{dbi}_acc2taxid.tsv", sep="\t", index=False)
+                fdb.to_csv(self.metadir +
+                           f"{dbi}_acc2taxid.tsv", sep="\t", index=False)
                 report = pd.merge(
                     fdb, dict_ids[dbi], on="acc", how="outer", indicator=True
                 )
@@ -736,7 +748,8 @@ class setup_dl:
                 )
                 #
                 for dci in range(1, 11):
-                    os.system("rm {}".format(self.metadir + f"{dbi}_a2p_{dci}.tsv"))
+                    os.system("rm {}".format(
+                        self.metadir + f"{dbi}_a2p_{dci}.tsv"))
 
                 self.meta[dbi] = "refseq_prot"
 
@@ -767,7 +780,8 @@ class setup_dl:
             docf.columns = ["acc", "taxid"]
             for dbi, ids in meta_dict.items():
 
-                rnv = pd.merge(left=ids, right=docf, left_on="acc", right_on="acc")
+                rnv = pd.merge(left=ids, right=docf,
+                               left_on="acc", right_on="acc")
                 mchunks[dbi].append(rnv)
 
             processed += docf.shape[0]
@@ -776,7 +790,8 @@ class setup_dl:
 
         for dbi in mchunks.keys():
             chk = pd.concat(mchunks[dbi])
-            chk.to_csv(self.metadir + f"{dbi}_a2p_{dci}.tsv", sep="\t", index=False)
+            chk.to_csv(self.metadir +
+                       f"{dbi}_a2p_{dci}.tsv", sep="\t", index=False)
 
     def generate_main_protacc_to_taxid(self):
         """
@@ -819,14 +834,16 @@ class setup_dl:
             outfile = self.metadir + f"{dbs}_acc2taxid.tsv"
             if os.path.isfile(outfile):
                 self.meta[dbs] = outfile
-                logging.info(f"acc2taxid map file {outfile} exists, continuing.")
+                logging.info(
+                    f"acc2taxid map file {outfile} exists, continuing.")
                 continue
             else:
                 if self.test:
                     logging.info(f"acc2taxid map file {outfile} not found.")
                     continue
                 else:
-                    logging.info(f"acc2taxid map file {outfile} not found. creating")
+                    logging.info(
+                        f"acc2taxid map file {outfile} not found. creating")
 
             kept = []
             with gzip.open(fl, "rb") as fn:
@@ -1002,7 +1019,8 @@ class setup_install(setup_dl):
                 logging.info(f"Centrifuge db {dbname} is not installed.")
                 return False
             else:
-                logging.info(f"Centrifuge db {dbname} is not installed. Installing...")
+                logging.info(
+                    f"Centrifuge db {dbname} is not installed. Installing...")
 
         subprocess.run(["mkdir", "-p", odir])
         #
@@ -1050,7 +1068,8 @@ class setup_install(setup_dl):
         ###
         try:
             subprocess.run(tax_command)
-            os.system(" ".join(seqmap_command) + f" > {odir}{dbname}.seq2taxid.map")
+            os.system(" ".join(seqmap_command) +
+                      f" > {odir}{dbname}.seq2taxid.map")
 
             os.system(f"cat {sdir}/*fna > {sdir}/complete.fna")
 
@@ -1074,7 +1093,8 @@ class setup_install(setup_dl):
                         subprocess.run(cmd_dl_taxonomy)
 
                     else:
-                        shutil.copy(self.taxdump, f"{odir}{dbname}/taxdump.tar.gz")
+                        shutil.copy(
+                            self.taxdump, f"{odir}{dbname}/taxdump.tar.gz")
 
                     subprocess.run(
                         [
@@ -1134,7 +1154,8 @@ class setup_install(setup_dl):
                 logging.info(f"CLARK db {dbname} is not installed.")
                 return False
             else:
-                logging.info(f"CLARK db {dbname} is not installed. Installing...")
+                logging.info(
+                    f"CLARK db {dbname} is not installed. Installing...")
 
         subprocess.run(["mkdir", "-p", odir])
         ##
@@ -1182,14 +1203,15 @@ class setup_install(setup_dl):
         id="kraken2",
         dbdir="kraken2",
         build_args="--max-db-size 18000000000 --kmer-len 31",
-        ftp=False,
+        ftp=True,
     ):
 
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
 
         if os.path.isfile(odir + dbname + "/taxo.k2d"):
-            logging.info(f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
+            logging.info(
+                f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
             krk2_fasta = odir + dbname + "/library/" + dbname + "/library.fna.gz"
             if os.path.isfile(os.path.splitext(krk2_fasta)[0]):
                 os.system("bgzip " + os.path.splitext(krk2_fasta)[0])
@@ -1206,7 +1228,8 @@ class setup_install(setup_dl):
                 logging.info(f"Kraken2 db {dbname} is not installed.")
                 return False
             else:
-                logging.info(f"Kraken2 db {dbname} is not installed. Installing...")
+                logging.info(
+                    f"Kraken2 db {dbname} is not installed. Installing...")
 
         subprocess.run(["mkdir", "-p", odir])
         ##
@@ -1271,7 +1294,8 @@ class setup_install(setup_dl):
 
             subprocess.call(" ".join(build_command), shell=True)
             untax_get(self.taxdump, odir, dbname)
-            os.system("bgzip " + odir + dbname + "/library/" + dbname + "/library.fna")
+            os.system("bgzip " + odir + dbname +
+                      "/library/" + dbname + "/library.fna")
 
             self.dbs[id] = {
                 "dir": odir,
@@ -1310,7 +1334,8 @@ class setup_install(setup_dl):
         try:
 
             subprocess.run(["mkdir", "-p", odir])
-            command = [bin + "diamond", "makedb", "--in", db, "--db", odir + dbname]
+            command = [bin + "diamond", "makedb",
+                       "--in", db, "--db", odir + dbname]
 
             subprocess.call(" ".join(command), shell=True)
 
@@ -1347,7 +1372,8 @@ class setup_install(setup_dl):
             }
 
             if not os.path.isfile(f"{self.metadir}/protein_acc2protid.tsv"):
-                seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
+                seqmap = pd.read_csv(
+                    f"{odir + dbname}/seqid2taxid.map", sep="\t")
                 seqmap.columns = ["acc", "protid", "genid", "description"]
                 seqmap.to_csv(
                     f"{self.metadir}/protein_acc2protid.tsv",
@@ -1411,7 +1437,8 @@ class setup_install(setup_dl):
 
             map_orig_file = f"{odir + dbname}/seqid2taxid.map.orig"
             if os.path.exists(map_orig_file):
-                seqid = pd.read_csv(f"{odir + dbname}/seqid2taxid.map.orig", sep="\t")
+                seqid = pd.read_csv(
+                    f"{odir + dbname}/seqid2taxid.map.orig", sep="\t")
                 seqid.columns = ["refseq", "taxid", "merge"]
                 seqid[["GTDB", "description"]] = seqid["merge"].str.split(
                     " ", 1, expand=True
@@ -1427,7 +1454,8 @@ class setup_install(setup_dl):
             map_file = f"{odir + dbname}/seqid2taxid.map"
 
             if os.path.exists(map_file):
-                seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
+                seqmap = pd.read_csv(
+                    f"{odir + dbname}/seqid2taxid.map", sep="\t")
                 seqmap.columns = ["acc", "protid"]
                 seqmap.to_csv(
                     f"{self.metadir}/protein_acc2protid.tsv",
@@ -1464,13 +1492,15 @@ class setup_install(setup_dl):
 
                 return False
             else:
-                logging.info(f"Kaiju {dbname} db is not installed. Installing...")
+                logging.info(
+                    f"Kaiju {dbname} db is not installed. Installing...")
 
         try:
 
             subprocess.run(["mkdir", "-p", odir])
 
-            subprocess.run(["wget", "-P", subdb, db_online, "--no-check-certificate"])
+            subprocess.run(["wget", "-P", subdb, db_online,
+                           "--no-check-certificate"])
             CWD = os.getcwd()
             os.chdir(subdb)
             subprocess.run(["tar", "-zxvf", file])
@@ -1660,7 +1690,8 @@ class setup_install(setup_dl):
                 logging.info(f"BWA db {dbname} is not installed.")
                 return False
             else:
-                logging.info(f"BWA db {dbname} is not installed. Installing...")
+                logging.info(
+                    f"BWA db {dbname} is not installed. Installing...")
 
         subprocess.run(["mkdir", "-p", sdir])
 
@@ -1672,7 +1703,8 @@ class setup_install(setup_dl):
             reference = os.path.splitext(reference)[0]
             subprocess.run(["samtools", "faidx", reference])
 
-        command = [bin + "bwa", "index", "-p", f"{odir}{dbname}/{dbname}", reference]
+        command = [bin + "bwa", "index", "-p",
+                   f"{odir}{dbname}/{dbname}", reference]
 
         try:
             subprocess.run(command)
@@ -1777,12 +1809,14 @@ class setup_install(setup_dl):
         fidx = subdir + dbname + ".idx"
 
         if os.path.isfile(fidx):
-            logging.info(f"FastViromeExplorer index for {reference} is installed.")
+            logging.info(
+                f"FastViromeExplorer index for {reference} is installed.")
             self.dbs[id] = {"dir": odir, "dbname": dbname, "db": fidx}
             return True
         else:
             if self.test:
-                logging.info(f"FastViromeExplorer {reference} index is not installed.")
+                logging.info(
+                    f"FastViromeExplorer {reference} index is not installed.")
                 return False
             else:
                 logging.info(
@@ -1865,7 +1899,8 @@ class setup_install(setup_dl):
                 logging.info(f"deSAMBA db {dbname} is not installed.")
                 return False
             else:
-                logging.info(f"deSAMBA db {dbname} is not installed. Installing...")
+                logging.info(
+                    f"deSAMBA db {dbname} is not installed. Installing...")
 
         try:
             subprocess.run(["mkdir", "-p", odir])
