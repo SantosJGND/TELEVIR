@@ -1228,7 +1228,7 @@ class setup_install(setup_dl):
         subprocess.run(["mkdir", "-p", sdir])
         subprocess.run(["wget", "-P", sdir, source])
         subprocess.run(
-            ["tar", "-xvzf", sdir + "k2_viral_20221209.tar.gz", "-C", odir])
+            ["tar", "-xvzf", sdir + "k2_viral_20221209.tar.gz", "-C", sdir])
         subprocess.run(["rm", sdir + "k2_viral_20221209.tar.gz"])
 
         self.dbs[id] = {
