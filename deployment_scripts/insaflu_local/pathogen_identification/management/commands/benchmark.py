@@ -209,9 +209,7 @@ class Command(BaseCommand):
             sample, project, user)
 
         software_tree = self.generate_modular_software_tree(technology)
-        print(software_tree.compress_dag_dict)
-        print(software_tree.nodes_compress)
-        print(software_tree.node_index)
+
         software_tree.node_index.to_csv("node_index.csv")
 
         deployment_tree = Tree_Progress(software_tree, project_sample, project)

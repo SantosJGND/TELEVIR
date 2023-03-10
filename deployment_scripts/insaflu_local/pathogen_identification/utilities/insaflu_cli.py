@@ -74,7 +74,7 @@ class Insaflu_Cli:
 
         r1, r2 = self.read_fofn(fofn)
         name = os.path.basename(fofn)
-        name = os.path.splitext(fofn)[0]
+        name = os.path.splitext(name)[0]
 
         try:
             sample = Sample.objects.get(name=name, owner=user)
