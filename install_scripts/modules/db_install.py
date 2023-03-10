@@ -1347,13 +1347,26 @@ class setup_install(setup_dl):
             os.system("bgzip " + odir + dbname +
                       "/library/" + dbname + "/library.fna")
 
-            self.dbs[id] = {
-                "dir": odir,
-                "dbname": dbname,
-                "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
-                "db": odir + dbname,
-            }
-            return True
+            if os.path.isfile(odir + dbname + "/taxo.k2d"):
+                logging.info(
+                    f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
+                self.dbs[id] = {
+                    "dir": odir,
+                    "dbname": dbname,
+                    "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
+                    "db": odir + dbname,
+                }
+                return True
+            else:
+                logging.info(f"failed to download Kraken2 db {dbname}")
+                self.dbs[id] = {
+                    "dir": odir,
+                    "dbname": dbname,
+                    "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
+                    "db": odir + dbname,
+                }
+                return False
+
         except subprocess.CalledProcessError:
             logging.info(f"failed to download Kraken2 db {dbname}")
             self.dbs[id] = {
