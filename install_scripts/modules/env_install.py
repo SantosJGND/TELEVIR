@@ -298,12 +298,13 @@ class env_install:
 
         ln_target = sdir + "classes/trimmomatic.jar"
         exists = os.path.exists(ln_target)
+        print(ln_target, exists)
         if exists:
             return True
 
-        os.mkdir(sdir)
-        os.mkdir(sdir + "classes")
-        os.mkdir(sdir + "adapters")
+        os.makedirs(sdir, exist_ok=True)
+        os.makedirs(sdir + "classes", exist_ok=True)
+        os.makedirs(sdir + "adapters", exist_ok=True)
 
         os.chdir(sdir)
         zip_source = "http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.39.zip"
