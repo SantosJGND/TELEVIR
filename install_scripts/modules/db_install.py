@@ -1224,11 +1224,12 @@ class setup_install(setup_dl):
                 logging.info(
                     f"Kraken2 db {dbname} is not installed. Downloading from {source}.")
 
-        subprocess.run(["mkdir", "-p", odir])
-        subprocess.run(["wget", "-P", odir, source])
+        sdir = odir + dbname + "/"
+        subprocess.run(["mkdir", "-p", sdir])
+        subprocess.run(["wget", "-P", sdir, source])
         subprocess.run(
-            ["tar", "-xvzf", odir + "k2_viral_20221209.tar.gz", "-C", odir])
-        subprocess.run(["rm", odir + "k2_viral_20221209.tar.gz"])
+            ["tar", "-xvzf", sdir + "k2_viral_20221209.tar.gz", "-C", odir])
+        subprocess.run(["rm", sdir + "k2_viral_20221209.tar.gz"])
 
         self.dbs[id] = {
             "dir": odir,
@@ -1372,6 +1373,7 @@ class setup_install(setup_dl):
         build_args="--max-db-size 18000000000 --kmer-len 31",
         ftp=False,
     ):
+        odir = self.dbdir + dbdir + "/"
 
         traditional_install = self.kraken2_install(
             dbname=dbname,
@@ -1384,6 +1386,10 @@ class setup_install(setup_dl):
 
         if traditional_install:
             return True
+
+        # if traditional install fails, try to download and install
+        # remove the dbdir and try again
+        os.system("rm -rf " + odir)
 
         kraken2_download_install = self.kraken2_download_install(
             dbname=dbname,
