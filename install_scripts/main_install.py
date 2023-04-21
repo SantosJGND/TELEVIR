@@ -586,6 +586,21 @@ class main_setup:
                     )
                 )
 
+            success_install = sofprep.kuniq_install(dbname="fungi")
+            if success_install:
+                self.installed_software.append(
+                    self.software_install_string("krakenuniq")
+                )
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "krakenuniq",
+                        sofprep.dbs["krakenuniq"]["db"],
+                        "default",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["krakenuniq"],
+                    )
+                )
+
         # install viral specific databases
         if self.organism == "viral":
 
