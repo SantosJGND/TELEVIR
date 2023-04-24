@@ -55,16 +55,27 @@ class PipelineTree:
     makeup: int
 
     def __init__(
-        self, technology: str, nodes: list, edges: dict, leaves: list, makeup: int
+        self, technology: str, node_index: list, edges: dict, leaves: list, makeup: int, software_tree_pk: int = 0
     ):
         self.technology = technology
-        self.nodes = nodes
+        self.node_index = pd.DataFrame(node_index, columns=["index", "node"])
+        self.node_index.set_index("index", inplace=True)
+        self.nodes = [x[1] for x in node_index]
         self.edges = edges
         self.leaves = leaves
         self.edge_dict = [(x[0], x[1]) for x in self.edges]
         self.makeup = makeup
-
+        self.software_tree_pk = software_tree_pk
         self.logger = logging.getLogger(__name__)
+
+        self.dag_dict = {
+            z: [
+                self.edge_dict[x][1]
+                for x in range(len(self.edge_dict))
+                if self.edge_dict[x][0] == z
+            ]
+            for z in self.node_index.index
+        }
 
     def __eq__(self, other):
 
@@ -871,7 +882,7 @@ class Utility_Pipeline_Manager:
 
         return PipelineTree(
             technology=self.technology,
-            nodes=[x[1] for x in node_index],
+            node_index=node_index,
             edges=edge_dict,
             leaves=leaves,
             makeup=self.pipeline_makeup,
@@ -1446,7 +1457,7 @@ class Parameter_DB_Utility:
 
         return PipelineTree(
             technology=technology,
-            nodes=[x[1] for x in sorted(nodes)],
+            node_index=nodes,
             edges=edges,
             leaves=leaves,
             makeup=global_index,
@@ -1826,7 +1837,7 @@ class Utils_Manager:
         if len(combined_table) == 0 or "can_change" not in combined_table.columns:
             return PipelineTree(
                 technology=technology,
-                nodes=[],
+                nodes_index=[],
                 edges={},
                 leaves=[],
                 makeup=tree_makeup,
@@ -1844,7 +1855,7 @@ class Utils_Manager:
         if not input_success:
             return PipelineTree(
                 technology=technology,
-                nodes=[],
+                node_index=[],
                 edges={},
                 leaves=[],
                 makeup=tree_makeup,
@@ -1888,7 +1899,7 @@ class Utils_Manager:
         if not input_success:
             return PipelineTree(
                 technology=technology,
-                nodes=[],
+                node_index=[],
                 edges={},
                 leaves=[],
                 makeup=0,
