@@ -12,18 +12,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         ###
-        try:
-            user_system = User.objects.get(username="system")
-        except User.DoesNotExist:
-            user_system = User.objects.create_user(
-                username="system",
-            )
-
+        user_system = User.objects.get(username="system")
         default_software = DefaultSoftware()
         default_software.test_all_defaults_pathogen_identification(user_system)
 
         utils = Utils_Manager()
-        utils.generate_default_trees()
+        utils.generate_default_trees(user_system)
 
         default_software.remove_all_parameters(user_system)
-        user_system.delete()
