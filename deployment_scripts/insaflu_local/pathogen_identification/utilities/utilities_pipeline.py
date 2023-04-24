@@ -21,7 +21,8 @@ from pathogen_identification.utilities.utilities_televir_dbs import \
 from settings.constants_settings import ConstantsSettings as CS
 from settings.models import Parameter, PipelineStep, Software, Technology
 
-tree = lambda: defaultdict(tree)
+
+def tree(): return defaultdict(tree)
 
 
 def make_tree(lst):
@@ -117,7 +118,8 @@ class PipelineTree:
 
         self.generate_graph()
         all_paths = list(nx.all_simple_paths(self.graph, 0, self.leaves))
-        all_paths_explicit = [self.get_path_explicit(path) for path in all_paths]
+        all_paths_explicit = [
+            self.get_path_explicit(path) for path in all_paths]
 
         path_dict = {
             all_paths_explicit[x][-1][0]: self.df_from_path(path)
@@ -186,9 +188,327 @@ class PipelineTree:
                         value,
                     ]
                 )
-        df = pd.DataFrame(df, columns=["module", "software", "parameter", "value"])
+        df = pd.DataFrame(
+            df, columns=["module", "software", "parameter", "value"])
 
         return df
+
+    def leaves_from_node_compress(self, node):
+        """ """
+        leaves = []
+        if len(self.compress_dag_dict[node]) == 0:
+            return [node]
+
+        for n in self.compress_dag_dict[node]:
+            leaves.extend(self.leaves_from_node_compress(n))
+
+        return leaves
+
+    def leaves_from_node(self, node):
+        """ """
+        leaves = []
+        if len(self.dag_dict[node]) == 0:
+            return [node]
+
+        for n in self.dag_dict[node]:
+            leaves.extend(self.leaves_from_node(n))
+
+        return leaves
+
+    def reduced_tree(self, leaves_list: list):
+        """trims paths not leading to provided leaves"""
+        root_node = ("root", None, None)
+
+        if len(leaves_list) == 0:
+            return self.dag_dict
+
+        for n in leaves_list:
+            if n not in self.leaves:
+                self.logger.info(f"Node {n} is not a leaf")
+                return self.dag_dict
+
+        paths = self.get_all_graph_paths_explicit()
+        compressed_paths = {z: paths[z] for z in leaves_list}
+
+        new_nodes = it.chain(*[x for x in compressed_paths.values()])
+
+        new_nodes = sorted(new_nodes, key=lambda x: x[0])
+        new_nodes_index = [x[0] for x in new_nodes]
+        new_nodes = [x[1] for x in new_nodes if x[1] != root_node]
+        new_nodes_no_duplicates_same_order = list(dict.fromkeys(new_nodes))
+        new_nodes = new_nodes_no_duplicates_same_order
+
+        new_node_index = self.node_index[self.node_index.index.isin(
+            new_nodes_index)]
+        new_dag_dict = {
+            parent: [
+                child
+                for child in self.dag_dict[parent]
+                if child in new_node_index.index
+            ]
+            for parent in new_node_index.index
+        }
+
+        return new_dag_dict, new_node_index
+
+    def simplify_tree(self, links, root, party: list, nodes_compress=[], edge_keep=[]):
+        """ """
+        party.append(root)
+
+        if root in self.leaves:
+            nodes_compress.append([party[0], tuple(party)])
+            return
+
+        subix = {}
+
+        if len(links) > 1:
+            nnode = tuple(party)
+            ori = nnode[0]
+            nodes_compress.append([ori, nnode])
+
+        for i, g in enumerate(links):
+
+            if len(links) != 1:
+                edge_keep.append([ori, g])
+                party = []
+
+            self.simplify_tree(
+                self.dag_dict[g],
+                g,
+                party,
+                nodes_compress=nodes_compress,
+                edge_keep=edge_keep,
+            )
+
+        return nodes_compress, edge_keep
+
+    def compress_tree(self):
+        """ """
+        nodes_compress, edges_compress = self.simplify_tree(
+            self.dag_dict[0], 0, [], nodes_compress=[], edge_keep=[]
+        )
+        #
+        self.nodes_compress = nodes_compress
+        self.edge_compress = edges_compress
+
+        self.compress_dag_dict = {
+            x[0]: [y[1] for y in self.edge_compress if y[0] == x[0]]
+            for x in self.nodes_compress
+        }
+
+    def split_modules(self):
+
+        if self.nodes_compress is None:
+            self.compress_tree()
+
+        nodes_compress = self.nodes_compress
+        edge_compress = self.edge_compress
+
+        new_nodes = []
+        for node in nodes_compress:
+            internal_nodes = []
+            internal_edges = []
+
+            internal_splits = [0]
+
+            for ix, internal_node in enumerate(node[1]):
+                internal_name = self.node_index.loc[internal_node].node
+                is_module = internal_name[2] == "module"
+
+                if is_module and ix != 0:
+                    internal_splits.append(ix)
+
+            if len(internal_splits) > 1:
+                internal_splits.append(len(node[1]))
+                node_connections = [
+                    x for x in edge_compress if x[0] == node[0]]
+                node_children = [x[1] for x in node_connections]
+                for ix, split in enumerate(internal_splits[:-1]):
+                    internal_nodes.append(
+                        [node[1][split],
+                            (node[1][split: internal_splits[ix + 1]])]
+                    )
+
+                for ix, split in enumerate(internal_nodes[:-1]):
+                    internal_edges.append(
+                        [split[0], internal_nodes[ix + 1][0]])
+
+                edge_compress = [
+                    x for x in edge_compress if x not in node_connections]
+                new_nodes.extend(internal_nodes)
+                edge_compress.extend(internal_edges)
+                edge_compress.extend(
+                    [[new_nodes[-1][0], child] for child in node_children]
+                )
+
+            else:
+                new_nodes.append(node)
+
+        self.nodes_compress = new_nodes
+        self.edge_compress = edge_compress
+
+        self.compress_dag_dict = {
+            z: [
+                self.edge_compress[x][1]
+                for x in range(len(self.edge_compress))
+                if self.edge_compress[x][0] == z
+            ]
+            for z in list(set([x[0] for x in self.nodes_compress]))
+        }
+
+    def same_module_children(self, node, party, branches=[]):
+        """ """
+        children = self.compress_dag_dict[node]
+
+        if len(children) == 0:
+            return branches
+
+        for child in children:
+            child_name = self.node_index.loc[child].node
+            new_party = party.copy()
+
+            if child_name[2] != "module":
+                new_party.append(child)
+                self.same_module_children(child, new_party, branches=branches)
+
+            else:
+                if len(new_party) > 0:
+                    branches.append(
+                        {"branch": tuple(new_party), "exit": (node, child)})
+                new_party = []
+
+        return branches
+
+    def get_module_tree(self):
+
+        if self.nodes_compress is None:
+            self.compress_tree()
+            self.split_modules()
+
+        original_nodes = pd.DataFrame(
+            self.nodes_compress, columns=["node", "branch"])
+        nodes_df = original_nodes.copy()
+        original_edge_df = pd.DataFrame(
+            self.edge_compress, columns=["parent", "child"])
+        edge_df = original_edge_df.copy()
+
+        def edit_branches(
+            node,
+            branches,
+            nodes_df_small,
+            edge_df_small,
+            parent_node,
+            original_nodes_df,
+        ):
+            """ """
+            new_edges = []
+            new_nodes = []
+            for branch_meta in branches:
+                branch = branch_meta["branch"]
+                exit_edge = branch_meta["exit"]
+                if len(branch) == 1:
+                    continue
+
+                recovered_branch = []
+                for node in branch:
+                    internal_nodes = original_nodes_df[
+                        original_nodes_df.node == node
+                    ].branch.values[0]
+                    recovered_branch.extend(internal_nodes)
+
+                recovered_branch = tuple(set(recovered_branch))
+                branch = sorted(recovered_branch)
+                nodes_df_small = nodes_df_small[~nodes_df_small.node.isin(
+                    branch)]
+                edge_df_small = edge_df_small[
+                    ~edge_df_small.parent.isin(
+                        [x for x in branch if x != exit_edge[0]])
+                ]
+                edge_df_small = edge_df_small[~edge_df_small.child.isin(
+                    branch)]
+
+                new_edges.append([parent_node, exit_edge[0]])
+                new_nodes.append([exit_edge[0], tuple(branch)])
+
+            return new_nodes, new_edges, nodes_df_small, edge_df_small
+
+        def merge_new_branches(new_nodes, new_edges, nodes_df, edge_df):
+
+            new_nodes = pd.DataFrame(new_nodes, columns=["node", "branch"])
+            new_edges = pd.DataFrame(new_edges, columns=["parent", "child"])
+
+            nodes_df = pd.concat([nodes_df, new_nodes], ignore_index=True)
+            edge_df = pd.concat([edge_df, new_edges], ignore_index=True)
+
+            return nodes_df, edge_df
+
+        print(edge_df)
+
+        print(self.nodes_compress)
+
+        for node in self.nodes_compress:
+            node_name = self.node_index.loc[node[0]].node
+
+            if not node_name[1] is None:
+                if not node_name[2] == "module":
+                    continue
+
+            parent_node = original_edge_df[
+                original_edge_df.child == node[0]
+            ].parent.values
+            child_node = original_edge_df[
+                original_edge_df.parent == node[0]
+            ].child.values
+
+            if len(parent_node) == 0:
+                parent_node = [0]
+
+            parent_node = parent_node[0]
+
+            same_module_branches = self.same_module_children(
+                node[0], [node[0]], branches=[]
+            )
+
+            if node_name == ("root", None, None):
+                same_module_branches = [
+                    {
+                        "branch": [[node[0], self.compress_dag_dict[node[0]][0]]],
+                        "exit": (0, self.compress_dag_dict[node[0]][0]),
+                    }
+                ]
+
+            print("#########")
+            print("node", node)
+            print("parent_node", parent_node)
+            print("child_node", child_node)
+            print("same_module_branches", same_module_branches)
+
+            new_nodes, new_edges, nodes_df, edge_df = edit_branches(
+                node[0],
+                same_module_branches,
+                nodes_df,
+                edge_df,
+                parent_node,
+                original_nodes,
+            )
+
+            nodes_df, edge_df = merge_new_branches(
+                new_nodes, new_edges, nodes_df, edge_df
+            )
+
+        self.nodes_compress = (
+            nodes_df.drop_duplicates(subset=["node"]).to_numpy().tolist()
+        )
+        self.edge_compress = edge_df.drop_duplicates().to_numpy().tolist()
+
+        self.compress_dag_dict = {
+            z: [
+                self.edge_compress[x][1]
+                for x in range(len(self.edge_compress))
+                if self.edge_compress[x][0] == z
+            ]
+            for z in list(set([x[0] for x in self.nodes_compress]))
+        }
 
 
 class Utility_Pipeline_Manager:
@@ -260,7 +580,8 @@ class Utility_Pipeline_Manager:
             self.logger.info("No pipeline makeup found")
             return False
 
-        self.pipeline_order = pipe_makeup_manager.get_makeup(self.pipeline_makeup)
+        self.pipeline_order = pipe_makeup_manager.get_makeup(
+            self.pipeline_makeup)
 
         self.existing_pipeline_order = [
             x for x in self.pipeline_order if x in pipelines_available
@@ -442,7 +763,8 @@ class Utility_Pipeline_Manager:
         """
         Generate a dictionary of software and parameters
         """
-        step_dict = {c: g for c, g in self.combined_table.groupby("pipeline_step")}
+        step_dict = {c: g for c,
+                     g in self.combined_table.groupby("pipeline_step")}
 
         step_software_dict = {
             step: g.software_name.unique().tolist() for step, g in step_dict.items()
@@ -501,7 +823,8 @@ class Utility_Pipeline_Manager:
 
                 soft_dict[soft] = param_tree
             else:
-                soft_dict[soft] = {(f"{soft.upper()}_ARGS", "None", "param"): {}}
+                soft_dict[soft] = {
+                    (f"{soft.upper()}_ARGS", "None", "param"): {}}
 
         return {
             (current, soft, "module"): self.fill_dict(ix + 1, g)
@@ -564,7 +887,8 @@ class Utility_Pipeline_Manager:
             nodes_dict[parent].append(child)
 
         nodes_dict = {
-            x: pd.DataFrame([[z] for z in y], columns=["child"]).set_index("child")
+            x: pd.DataFrame([[z] for z in y], columns=[
+                            "child"]).set_index("child")
             for x, y in nodes_dict.items()
         }
 
@@ -627,7 +951,8 @@ class Utility_Pipeline_Manager:
                 )
 
             except KeyError:
-                self.logger.info(f"{parent_main} not in parent tree edge dictionary.")
+                self.logger.info(
+                    f"{parent_main} not in parent tree edge dictionary.")
                 return None
 
             self.logger.info(f"Child main: {child_main}")
@@ -670,7 +995,8 @@ class Parameter_DB_Utility:
         """
 
         technologies_available = (
-            Software.objects.filter(type_of_use=Software.TYPE_OF_USE_televir_global)
+            Software.objects.filter(
+                type_of_use=Software.TYPE_OF_USE_televir_global)
             .values_list("technology__name", flat=True)
             .distinct()
         )
@@ -684,7 +1010,8 @@ class Parameter_DB_Utility:
         Get software list available for a user
         """
         software_list = (
-            Software.objects.filter(type_of_use=Software.TYPE_OF_USE_televir_global)
+            Software.objects.filter(
+                type_of_use=Software.TYPE_OF_USE_televir_global)
             .values_list("name", flat=True)
             .distinct()
         )
@@ -829,7 +1156,8 @@ class Parameter_DB_Utility:
             }
         )
 
-        combined_table = combined_table[combined_table.type_of_use.isin([5, 6])]
+        combined_table = combined_table[combined_table.type_of_use.isin([
+                                                                        5, 6])]
 
         combined_table["pipeline_step"] = combined_table["pipeline_step_id"].apply(
             lambda x: PipelineStep.objects.get(id=int(x)).name
@@ -881,7 +1209,8 @@ class Parameter_DB_Utility:
                 project.technology, owner
             )
 
-        merged_table = self.merge_software_tables(software_table, parameters_table)
+        merged_table = self.merge_software_tables(
+            software_table, parameters_table)
 
         return merged_table
 
@@ -1071,7 +1400,8 @@ class Parameter_DB_Utility:
         Get the index of a node in a software tree.
         """
 
-        software_tree_index = self.get_software_tree_index(technology, global_index)
+        software_tree_index = self.get_software_tree_index(
+            technology, global_index)
 
         if software_tree_index:
             try:
@@ -1100,7 +1430,8 @@ class Parameter_DB_Utility:
             .last()
         )
 
-        tree_nodes = SoftwareTreeNode.objects.filter(software_tree=software_tree)
+        tree_nodes = SoftwareTreeNode.objects.filter(
+            software_tree=software_tree)
 
         edges = []
         nodes = []
@@ -1255,12 +1586,14 @@ class Utils_Manager:
 
         pipeline_tree = utils.generate_software_tree(technology, tree_makeup)
 
-        pipeline_tree_index = utils.get_software_tree_index(technology, tree_makeup)
+        pipeline_tree_index = utils.get_software_tree_index(
+            technology, tree_makeup)
 
-        ### MANAGEMENT
+        # MANAGEMENT
 
         matched_paths = {
-            leaf: utils.utility_manager.match_path_to_tree_safe(path, pipeline_tree)
+            leaf: utils.utility_manager.match_path_to_tree_safe(
+                path, pipeline_tree)
             for leaf, path in local_paths.items()
         }
         available_paths = {
@@ -1281,7 +1614,8 @@ class Utils_Manager:
         Collect all samples from a project
         """
         samples = PIProject_Sample.objects.filter(project=project)
-        submission_dict = {sample: [] for sample in samples if not sample.is_deleted}
+        submission_dict = {sample: []
+                           for sample in samples if not sample.is_deleted}
         return submission_dict
 
     def check_runs_to_deploy_project(self, user: User, project: Projects) -> dict:
@@ -1319,7 +1653,7 @@ class Utils_Manager:
         self, submission_dict: dict, available_path_nodes: dict, project: Projects
     ):
         utils = Utils_Manager()
-        ### SUBMISSION
+        # SUBMISSION
         runs_to_deploy = 0
         samples_available = []
         samples_leaf_dict = {sample: [] for sample in submission_dict.keys()}
@@ -1388,7 +1722,6 @@ class Utils_Manager:
         else:
             raise Exception("No software tree for technology")
 
-
     def tree_subset(self, tree: PipelineTree, leaves: list) -> PipelineTree:
         """
         Return a subset of a tree
@@ -1438,7 +1771,6 @@ class Utils_Manager:
                 technology, tree_makeup),
         )
 
-
     def check_pipeline_possible(self, combined_table: pd.DataFrame, tree_makeup: int):
         """
         Check if a pipeline is possible
@@ -1448,7 +1780,8 @@ class Utils_Manager:
         makeup_steps = pipeline_setup.get_makeup(tree_makeup)
 
         pipelines_available = combined_table.pipeline_step.unique().tolist()
-        pipelines_available = [x for x in pipelines_available if x in makeup_steps]
+        pipelines_available = [
+            x for x in pipelines_available if x in makeup_steps]
         self.pipeline_makeup = pipeline_setup.match_makeup_name_from_list(
             pipelines_available
         )
@@ -1487,7 +1820,8 @@ class Utils_Manager:
             technology, user
         )
 
-        combined_table = combined_table[combined_table.pipeline_step.isin(makeup_steps)]
+        combined_table = combined_table[combined_table.pipeline_step.isin(
+            makeup_steps)]
 
         if len(combined_table) == 0 or "can_change" not in combined_table.columns:
             return PipelineTree(
@@ -1504,7 +1838,8 @@ class Utils_Manager:
             combined_table, software_db_dict=self.utility_manager.software_dbs_dict
         )
 
-        input_success = self.utility_manager.input(full_table, technology=technology)
+        input_success = self.utility_manager.input(
+            full_table, technology=technology)
 
         if not input_success:
             return PipelineTree(
@@ -1547,7 +1882,8 @@ class Utils_Manager:
         )
 
         utility_drone = Utility_Pipeline_Manager()
-        input_success = utility_drone.input(combined_table, technology=technology)
+        input_success = utility_drone.input(
+            combined_table, technology=technology)
 
         if not input_success:
             return PipelineTree(
