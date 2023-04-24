@@ -519,6 +519,37 @@ class main_setup:
                             sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
                         )
                     )
+    
+        if self.layout.install_centrifuge:
+            install_success = sofprep.centrifuge_install(dbname="bacteria")
+            centlib = f"refseq-bacteria.dust.fna.gz"
+            if os.path.isfile(sofprep.dbs["centrifuge"]["fasta"]):
+                os.system(
+                    f"mv {sofprep.dbs['centrifuge']['fasta']} {prepdl.seqdir}{centlib}"
+                )
+
+            else:
+                if not os.path.isfile(f"{prepdl.seqdir}{centlib}"):
+                    logging.info("centrifuge database not found.")
+            if os.path.isfile(f"{prepdl.seqdir}{centlib}"):
+                prepdl.fastas["nuc"][
+                    "centrifuge"
+                ] = f"{prepdl.seqdir}{centlib}"  # add to fastas dict
+
+                if install_success:
+                    self.installed_software.append(
+                        self.software_install_string("centrifuge")
+                    )
+
+                    self.utilities.add_software(
+                        self.utilities.software_item(
+                            "centrifuge",
+                            sofprep.dbs["centrifuge"]["db"],
+                            "bacteria",
+                            True,
+                            sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
+                        )
+                    )
 
         ########################## clark ##################################
         if self.layout.install_clark:
@@ -595,7 +626,7 @@ class main_setup:
                     self.utilities.software_item(
                         "krakenuniq",
                         sofprep.dbs["krakenuniq"]["db"],
-                        "default",
+                        "fungi",
                         True,
                         sofprep.envs["ROOT"] + sofprep.envs["krakenuniq"],
                     )

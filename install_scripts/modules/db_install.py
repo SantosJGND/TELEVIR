@@ -1001,7 +1001,8 @@ class setup_install(setup_dl):
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
         sdir = odir + dbname + "/" + dbname
-        if os.path.isfile(odir + dbname + "/index.1.cf"):
+        index_file_prefix= f"{odir}{dbname}/{dbname}_index"
+        if os.path.isfile(index_file_prefix + ".1.cf"):
             logging.info(f"Centrifuge db {dbname} index is installed.")
             centrifuge_fasta = f"{sdir}/complete.fna.gz"
             if os.path.isfile(os.path.splitext(centrifuge_fasta)[0]):
@@ -1011,7 +1012,7 @@ class setup_install(setup_dl):
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": f"{sdir}/complete.fna.gz",
-                "db": f"{odir}{dbname}/index",
+                "db": index_file_prefix,
             }
             return True
         else:
@@ -1062,7 +1063,7 @@ class setup_install(setup_dl):
             "--name-table",
             f"{odir}{dbname}/names.dmp",
             f"{sdir}/complete.fna",
-            f"{odir}{dbname}/index",
+            index_file_prefix,
         ]
 
         ###
@@ -1114,7 +1115,7 @@ class setup_install(setup_dl):
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": f"{sdir}/complete.fna.gz",
-                "db": f"{odir}{dbname}/index",
+                "db": index_file_prefix,
             }
             return True
         except subprocess.CalledProcessError:
