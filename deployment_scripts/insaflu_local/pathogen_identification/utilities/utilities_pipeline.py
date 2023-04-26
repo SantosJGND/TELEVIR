@@ -59,9 +59,10 @@ class PipelineTree:
         self, technology: str, node_index: list, edges: dict, leaves: list, makeup: int, software_tree_pk: int = 0
     ):
         self.technology = technology
-        self.node_index = pd.DataFrame(node_index, columns=["index", "node"])
-        self.node_index.set_index("index", inplace=True)
-        self.nodes = [x[1] for x in node_index]
+        self.node_index = pd.DataFrame(
+            node_index, columns=["index", "node"]).sort_values("index")
+
+        self.nodes = self.node_index.node.tolist()
         self.edges = edges
         self.leaves = leaves
         self.edge_dict = [(x[0], x[1]) for x in self.edges]
@@ -1058,7 +1059,21 @@ class Parameter_DB_Utility:
 
             if not row.parameter:
                 return [""]
-            if not row.can_change or not row.range_available:
+            if not row.can_change:
+                return [row.parameter]
+
+            if row.parameter_name == "--db" and software_db_dict:
+                software_name = row.software_name
+                possibilities = [software_name, software_name.lower()]
+                if "_" in software_name:
+                    possibilities.append(software_name.split("_")[0])
+
+                for p in possibilities:
+                    if p in software_db_dict.keys():
+                        new_range = software_db_dict[p]
+                        return new_range
+
+            if not row.range_available:
                 return [row.parameter]
 
             else:
@@ -1085,17 +1100,6 @@ class Parameter_DB_Utility:
                         str(round(x, 2))
                         for x in np.arange(range_min, range_max, range_step)
                     ]
-
-                if row.parameter_name == "--db" and software_db_dict:
-                    software_name = row.software_name
-                    possibilities = [software_name, software_name.lower()]
-                    if "_" in software_name:
-                        possibilities.append(software_name.split("_")[0])
-
-                    for p in possibilities:
-                        if p in software_db_dict:
-                            new_range = software_db_dict[p]
-                            break
 
                 return new_range
 
