@@ -5,17 +5,11 @@ from typing import List
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from managing_files.models import ProcessControler
-from pathogen_identification.models import (
-    PIProject_Sample,
-    Projects,
-    SoftwareTree,
-    SoftwareTreeNode,
-)
+from pathogen_identification.models import (PIProject_Sample, Projects,
+                                            SoftwareTree, SoftwareTreeNode)
 from pathogen_identification.utilities.tree_deployment import Tree_Progress
 from pathogen_identification.utilities.utilities_pipeline import (
-    Utility_Pipeline_Manager,
-    Utils_Manager,
-)
+    Utility_Pipeline_Manager, Utils_Manager)
 from utils.process_SGE import ProcessSGE
 
 
@@ -44,13 +38,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         ###
-        #### SETUP
+        # SETUP
 
         user = User.objects.get(pk=options["user_id"])
         project = Projects.objects.get(pk=options["project_id"])
         technology = project.technology
 
-        ### PROCESS CONTROLER
+        # PROCESS CONTROLER
         process_controler = ProcessControler()
         process_SGE = ProcessSGE()
 
@@ -62,7 +56,8 @@ class Command(BaseCommand):
 
         process = ProcessControler.objects.filter(
             owner__id=user.pk,
-            name=process_controler.get_name_televir_project(project_pk=project.pk),
+            name=process_controler.get_name_televir_project(
+                project_pk=project.pk),
         )
 
         print(process)
@@ -75,7 +70,7 @@ class Command(BaseCommand):
         else:
             print("Process does not exist")
 
-        ### UTILITIES
+        # UTILITIES
         utils = Utils_Manager()
         samples = PIProject_Sample.objects.filter(project=project)
         local_tree = utils.generate_project_tree(technology, project, user)
@@ -85,16 +80,21 @@ class Command(BaseCommand):
 
         pipeline_tree = utils.generate_software_tree(technology, tree_makeup)
 
-        ### MANAGEMENT
+        # MANAGEMENT
         matched_paths = {
-            leaf: utils.utility_manager.match_path_to_tree_safe(path, pipeline_tree)
+            leaf: utils.utility_manager.match_path_to_tree_safe(
+                path, pipeline_tree)
             for leaf, path in local_paths.items()
         }
-        ### SUBMISSION
+
+        matched_paths = {k: v for k,
+                         v in matched_paths.items() if v is not None}
+        # SUBMISSION
 
         pipeline_utils = Utility_Pipeline_Manager()
 
-        reduced_tree = utils.tree_subset(pipeline_tree, list(matched_paths.values()))
+        reduced_tree = utils.tree_subset(
+            pipeline_tree, list(matched_paths.values()))
 
         module_tree = pipeline_utils.compress_software_tree(reduced_tree)
 
@@ -119,7 +119,8 @@ class Command(BaseCommand):
 
             process_SGE.set_process_controler(
                 user,
-                process_controler.get_name_televir_project(project_pk=project.pk),
+                process_controler.get_name_televir_project(
+                    project_pk=project.pk),
                 ProcessControler.FLAG_FINISHED,
             )
 
@@ -127,7 +128,8 @@ class Command(BaseCommand):
             print(e)
             process_SGE.set_process_controler(
                 user,
-                process_controler.get_name_televir_project(project_pk=project.pk),
+                process_controler.get_name_televir_project(
+                    project_pk=project.pk),
                 ProcessControler.FLAG_ERROR,
             )
             raise e

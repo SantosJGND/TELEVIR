@@ -2,6 +2,7 @@ import itertools as it
 import logging
 import os
 from collections import defaultdict
+from typing import List, Tuple
 
 import networkx as nx
 import numpy as np
@@ -226,17 +227,19 @@ class PipelineTree:
 
         return leaves
 
-    def reduced_tree(self, leaves_list: list):
+    def reduced_tree(self, leaves_list: list) -> Tuple[dict, dict]:
         """trims paths not leading to provided leaves"""
         root_node = ("root", None, None)
 
-        if len(leaves_list) == 0:
-            return self.dag_dict
-
-        for n in leaves_list:
+        for i, n in enumerate(leaves_list):
             if n not in self.leaves:
+
                 self.logger.info(f"Node {n} is not a leaf")
-                return self.dag_dict
+
+                leaves_list.remove(n)
+
+        if len(leaves_list) == 0:
+            return self.dag_dict, {}
 
         paths = self.get_all_graph_paths_explicit()
         compressed_paths = {z: paths[z] for z in leaves_list}
@@ -784,7 +787,6 @@ class Utility_Pipeline_Manager:
             step: {
                 software.lower(): {
                     f"{software.upper()}_ARGS": self.generate_argument_combinations(g),
-                    # f"{software.upper()}_DB": self.software_dbs_dict[software.lower()],
                 }
                 for software, g in g.groupby("software_name")
             }
@@ -983,6 +985,27 @@ class Utility_Pipeline_Manager:
 
             parent = child
             parent_main = child_main
+
+    def compress_software_tree(self, software_tree: PipelineTree):
+
+        software_tree.compress_tree()
+
+        print("COMPRESS TREE")
+        print(software_tree.compress_dag_dict)
+        print(software_tree.nodes_compress)
+        print(software_tree.node_index)
+        print("######")
+
+        software_tree.split_modules()
+
+        print("SPLIT TREE")
+        print(software_tree.compress_dag_dict)
+        print(software_tree.nodes_compress)
+        print(software_tree.node_index)
+        print("######")
+        software_tree.get_module_tree()
+
+        return software_tree
 
 
 class Parameter_DB_Utility:
@@ -1585,7 +1608,7 @@ class Utils_Manager:
         """
         Get all pathnodes for a project
         """
-        print("NMOIE")
+
         utils = Utils_Manager()
         technology = project.technology
         user = project.owner

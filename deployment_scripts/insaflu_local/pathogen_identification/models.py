@@ -1,13 +1,13 @@
 import codecs
 import os
 
+from django import forms
 from django.contrib.auth.models import User
+from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.safestring import mark_safe
-from managing_files.models import Sample
-from django.core.validators import RegexValidator
 from django.utils.translation import gettext_lazy as _
-from django import forms
+from managing_files.models import Sample
 
 # Create your models here.
 
@@ -44,19 +44,20 @@ class Projects(models.Model):
     creation_date = models.DateTimeField(
         "uploaded date", db_index=True, auto_now_add=True
     )
-    last_change_date = models.DateTimeField("Last change date", blank=True, null=True)
+    last_change_date = models.DateTimeField(
+        "Last change date", blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     number_passed_sequences = models.SmallIntegerField(
         default=-1
-    )  ### has the number of sequences that passed the filters in this project
+    )  # has the number of sequences that passed the filters in this project
 
-    ### if is deleted in file system
+    # if is deleted in file system
     is_deleted_in_file_system = models.BooleanField(
         default=False
-    )  ## if this file was removed in file system
+    )  # if this file was removed in file system
     date_deleted = models.DateTimeField(
         blank=True, null=True, verbose_name="Date attached"
-    )  ## this date has the time of deleted by web page
+    )  # this date has the time of deleted by web page
 
     results = models.CharField(
         max_length=200, db_index=True, blank=True, null=True, verbose_name="Results"
@@ -75,7 +76,8 @@ class SoftwareTree(models.Model):
     """"""
 
     version = models.IntegerField(default=0)
-    date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    date_created = models.DateTimeField(
+        auto_now_add=True, blank=True, null=True)
 
     global_index = models.IntegerField(default=0)
     technology = models.CharField(
@@ -126,7 +128,7 @@ class SoftwareTreeNode(models.Model):
     )
     node_place = models.SmallIntegerField(
         default=INTERNAL_node
-    )  ### if it is a software, a parameter or a parameter value
+    )  # if it is a software, a parameter or a parameter value
 
     class Meta:
         ordering = ["name"]
@@ -162,12 +164,13 @@ class PIProject_Sample(models.Model):
     )  # Create your models here. # Name of the sample
     name_extended = models.CharField(
         max_length=200, db_index=True, blank=True, null=True
-    )  ## extra name to show in the settings HTML table
+    )  # extra name to show in the settings HTML table
 
     type = models.CharField(
         max_length=10, blank=True, null=True
     )  # sample type: SE or PE
-    combinations = models.IntegerField(blank=True, default=0)  # number of combinations
+    combinations = models.IntegerField(
+        blank=True, default=0)  # number of combinations
     input = models.TextField(blank=True, null=True)  #
     technology = models.CharField(
         max_length=100,
@@ -176,36 +179,37 @@ class PIProject_Sample(models.Model):
         null=True,
     )  # encoding
 
-    report = models.CharField(max_length=1000, blank=True, null=True)  # report file
+    report = models.CharField(
+        max_length=1000, blank=True, null=True)  # report file
 
     creation_date = models.DateTimeField("uploaded date", auto_now_add=True)
     is_finished = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
-    is_error = models.BooleanField(default=False)  ## if some problem occurs
+    is_error = models.BooleanField(default=False)  # if some problem occurs
     is_mask_consensus_sequences = models.BooleanField(
         default=False
-    )  ### True if the consensus is masked with SoftwareNames.SOFTWARE_MSA_MASKER
+    )  # True if the consensus is masked with SoftwareNames.SOFTWARE_MSA_MASKER
     alert_first_level = models.IntegerField(
         default=0
-    )  ## has the number of alerts for high errors
+    )  # has the number of alerts for high errors
     alert_second_level = models.IntegerField(
         default=0
-    )  ## has the number of alerts for low errors
+    )  # has the number of alerts for low errors
     seq_name_all_consensus = models.CharField(
         blank=True, null=True, max_length=200
-    )  ## name of the sample when saved in AllConsensus.fasta file
+    )  # name of the sample when saved in AllConsensus.fasta file
 
-    ### if is deleted in file system
+    # if is deleted in file system
     is_deleted_in_file_system = models.BooleanField(
         default=False
-    )  ## if this file was removed in file system
+    )  # if this file was removed in file system
     date_deleted = models.DateTimeField(
         blank=True, null=True, verbose_name="Date attached"
-    )  ## this date has the time of deleted by web page
+    )  # this date has the time of deleted by web page
 
     running_processes = models.IntegerField(
         default=0
-    )  ## has the number of running processes
+    )  # has the number of running processes
 
     class Meta:
         ordering = ["project__id", "-creation_date"]
@@ -221,6 +225,7 @@ class ParameterSet(models.Model):
     STATUS_FINISHED = 2
     STATUS_ERROR = 3
     STATUS_QUEUED = 4
+    STATUS_KILLED = 5
     STATUS_CHOICES = (
         (STATUS_NOT_STARTED, "Not started"),
         (STATUS_RUNNING, "Running"),
@@ -231,9 +236,11 @@ class ParameterSet(models.Model):
 
     sample = models.ForeignKey(PIProject_Sample, on_delete=models.PROTECT)
     project = models.ForeignKey(Projects, on_delete=models.CASCADE, null=True)
-    leaf = models.ForeignKey(SoftwareTreeNode, on_delete=models.PROTECT, null=True)
+    leaf = models.ForeignKey(
+        SoftwareTreeNode, on_delete=models.PROTECT, null=True)
 
-    status = models.IntegerField(choices=STATUS_CHOICES, default=STATUS_NOT_STARTED)
+    status = models.IntegerField(
+        choices=STATUS_CHOICES, default=STATUS_NOT_STARTED)
 
     def register_subprocess(self):
         self.status = self.STATUS_RUNNING
@@ -279,8 +286,9 @@ class SampleQC(models.Model):
 
     sample = models.ForeignKey(
         PIProject_Sample, blank=True, null=True, on_delete=models.CASCADE
-    )  ## sample
-    software = models.CharField(max_length=100, blank=True, null=True)  # software used
+    )  # sample
+    software = models.CharField(
+        max_length=100, blank=True, null=True)  # software used
 
     qc_type = models.CharField(
         max_length=100, name="qc_type", blank=True, null=True
@@ -348,11 +356,13 @@ class QC_REPORT(models.Model):
 
     sample = models.ForeignKey(
         PIProject_Sample, blank=True, null=True, on_delete=models.CASCADE
-    )  ## sample
+    )  # sample
 
-    report_source = models.CharField(max_length=200, blank=True, null=True)  # qc type
+    report_source = models.CharField(
+        max_length=200, blank=True, null=True)  # qc type
 
-    QC_report = models.CharField(max_length=250, blank=True, null=True)  # qc type
+    QC_report = models.CharField(
+        max_length=250, blank=True, null=True)  # qc type
 
     class Meta:
         ordering = [
@@ -370,7 +380,8 @@ class RunIndex(models.Model):
         blank=True,
         on_delete=models.CASCADE,
     )
-    sample = models.ForeignKey(Sample, blank=True, null=True, on_delete=models.CASCADE)
+    sample = models.ForeignKey(
+        Sample, blank=True, null=True, on_delete=models.CASCADE)
     name = models.CharField(
         max_length=100, db_index=True, blank=True, null=True
     )  # Create your models here.
@@ -410,7 +421,8 @@ class RunMain(models.Model):
     enrichment = models.CharField(
         max_length=20, blank=True, null=True
     )  # enrichment method if any
-    enrichment_performed = models.BooleanField(blank=True)  # enrichment performed
+    enrichment_performed = models.BooleanField(
+        blank=True)  # enrichment performed
     enrichment_args = models.CharField(
         max_length=50, blank=True, null=True
     )  # enrichment args
@@ -455,14 +467,16 @@ class RunMain(models.Model):
         max_length=50, blank=True, null=True
     )  # read classification method if any
 
-    contig_classification = models.CharField(max_length=50, blank=True, null=True)
+    contig_classification = models.CharField(
+        max_length=50, blank=True, null=True)
 
     remap = models.CharField(
         max_length=50, blank=True, null=True
     )  # remap method if any
     remap_args = models.CharField(max_length=50, blank=True, null=True)
 
-    finished = models.CharField(max_length=10, blank=True, null=True)  # SE or PE
+    finished = models.CharField(
+        max_length=10, blank=True, null=True)  # SE or PE
     runtime = models.CharField(max_length=100, blank=True, null=True)
 
     report = models.CharField(max_length=1000, blank=True, null=True)
@@ -489,7 +503,8 @@ class RunDetail(models.Model):
         PIProject_Sample, blank=True, null=True, on_delete=models.CASCADE
     )
 
-    run = models.ForeignKey(RunMain, blank=True, null=True, on_delete=models.CASCADE)
+    run = models.ForeignKey(RunMain, blank=True,
+                            null=True, on_delete=models.CASCADE)
 
     max_depth = models.FloatField(blank=True, null=True)
     max_depthR = models.FloatField(blank=True, null=True)
@@ -499,9 +514,11 @@ class RunDetail(models.Model):
 
     input = models.CharField(max_length=300, blank=True, null=True)
     enriched_reads = models.IntegerField(blank=True, null=True, default=0)
-    enriched_reads_percent = models.FloatField(blank=True, null=True, default=0)
+    enriched_reads_percent = models.FloatField(
+        blank=True, null=True, default=0)
     depleted_reads = models.IntegerField(blank=True, null=True, default=0)
-    depleted_reads_percent = models.FloatField(blank=True, null=True, default=0)
+    depleted_reads_percent = models.FloatField(
+        blank=True, null=True, default=0)
 
     processed = models.CharField(max_length=300, blank=True, null=True)
     processed_percent = models.FloatField(blank=True, null=True)
@@ -527,7 +544,8 @@ class RunDetail(models.Model):
 
 class RunAssembly(models.Model):
 
-    run = models.ForeignKey(RunMain, blank=True, null=True, on_delete=models.CASCADE)
+    run = models.ForeignKey(RunMain, blank=True,
+                            null=True, on_delete=models.CASCADE)
     sample = models.ForeignKey(
         PIProject_Sample, blank=True, null=True, on_delete=models.CASCADE
     )
@@ -540,7 +558,8 @@ class RunAssembly(models.Model):
         max_length=20, blank=True, null=True
     )  # assembly method if any
 
-    args = models.CharField(max_length=50, blank=True, null=True)  # assembly args
+    args = models.CharField(max_length=50, blank=True,
+                            null=True)  # assembly args
 
     contig_number = models.IntegerField(blank=True, null=True)
 
@@ -569,7 +588,8 @@ class RunAssembly(models.Model):
 
 class ReadClassification(models.Model):
 
-    run = models.ForeignKey(RunMain, blank=True, null=True, on_delete=models.CASCADE)
+    run = models.ForeignKey(RunMain, blank=True,
+                            null=True, on_delete=models.CASCADE)
     sample = models.ForeignKey(
         PIProject_Sample, blank=True, null=True, on_delete=models.CASCADE
     )
@@ -607,7 +627,8 @@ class ReadClassification(models.Model):
 
 class ContigClassification(models.Model):
 
-    run = models.ForeignKey(RunMain, blank=True, null=True, on_delete=models.CASCADE)
+    run = models.ForeignKey(RunMain, blank=True,
+                            null=True, on_delete=models.CASCADE)
     sample = models.ForeignKey(
         PIProject_Sample, blank=True, null=True, on_delete=models.CASCADE
     )
@@ -656,19 +677,23 @@ class RawReference(models.Model):
         (STATUS_MAPPING, "Mapping"),
     )
 
-    run = models.ForeignKey(RunMain, blank=True, null=True, on_delete=models.CASCADE)
-    status = models.IntegerField(choices=STATUS_CHOICES, default=STATUS_UNMAPPED)
+    run = models.ForeignKey(RunMain, blank=True,
+                            null=True, on_delete=models.CASCADE)
+    status = models.IntegerField(
+        choices=STATUS_CHOICES, default=STATUS_UNMAPPED)
 
     taxid = models.CharField(max_length=100, blank=True, null=True)
     accid = models.CharField(max_length=100, blank=True, null=True)
     description = models.CharField(max_length=100, blank=True, null=True)
     counts = models.CharField(max_length=100, blank=True, null=True)
-    classification_source = models.CharField(max_length=15, blank=True, null=True)
+    classification_source = models.CharField(
+        max_length=15, blank=True, null=True)
 
 
 class RunRemapMain(models.Model):
 
-    run = models.ForeignKey(RunMain, blank=True, null=True, on_delete=models.CASCADE)
+    run = models.ForeignKey(RunMain, blank=True,
+                            null=True, on_delete=models.CASCADE)
     sample = models.ForeignKey(
         PIProject_Sample, blank=True, null=True, on_delete=models.CASCADE
     )
@@ -702,13 +727,15 @@ class ReferenceMap_Main(models.Model):
         max_length=100, db_index=True, blank=True, null=True
     )  # Create your models here.
 
-    run = models.ForeignKey(RunMain, blank=True, null=True, on_delete=models.CASCADE)
+    run = models.ForeignKey(RunMain, blank=True,
+                            null=True, on_delete=models.CASCADE)
 
     sample = models.ForeignKey(
         PIProject_Sample, blank=True, null=True, on_delete=models.CASCADE
     )
     taxid = models.CharField(max_length=20, blank=True, null=True)
-    reference_contig_str = models.CharField(max_length=100, blank=True, null=True)
+    reference_contig_str = models.CharField(
+        max_length=100, blank=True, null=True)
 
     report = models.CharField(max_length=1000, blank=True, null=True)
 
@@ -720,8 +747,10 @@ class ReferenceMap_Main(models.Model):
     fai_file_path = models.CharField(max_length=1000, blank=True, null=True)
     mapped_subset_r1 = models.CharField(max_length=1000, blank=True, null=True)
     mapped_subset_r2 = models.CharField(max_length=1000, blank=True, null=True)
-    mapped_subset_r1_fasta = models.CharField(max_length=1000, blank=True, null=True)
-    mapped_subset_r2_fasta = models.CharField(max_length=1000, blank=True, null=True)
+    mapped_subset_r1_fasta = models.CharField(
+        max_length=1000, blank=True, null=True)
+    mapped_subset_r2_fasta = models.CharField(
+        max_length=1000, blank=True, null=True)
     vcf = models.CharField(max_length=1000, blank=True, null=True)
 
     class Meta:
@@ -736,7 +765,8 @@ class ReferenceMap_Main(models.Model):
 
 class FinalReport(models.Model):
 
-    run = models.ForeignKey(RunMain, blank=True, null=True, on_delete=models.CASCADE)
+    run = models.ForeignKey(RunMain, blank=True,
+                            null=True, on_delete=models.CASCADE)
     sample = models.ForeignKey(
         PIProject_Sample, blank=True, null=True, on_delete=models.CASCADE
     )
@@ -753,7 +783,8 @@ class FinalReport(models.Model):
     description = models.CharField(max_length=450, blank=True, null=True)
 
     ref_db = models.CharField(max_length=400, blank=True, null=True)
-    reference_contig_str = models.CharField(max_length=100, blank=True, null=True)
+    reference_contig_str = models.CharField(
+        max_length=100, blank=True, null=True)
 
     accid = models.CharField(max_length=20, blank=True, null=True)
     coverage = models.FloatField(blank=True, null=True)
@@ -765,7 +796,8 @@ class FinalReport(models.Model):
     mapped_proportion = models.FloatField(blank=True, null=True)
     ngaps = models.IntegerField(blank=True, null=True)
     mapping_success = models.CharField(max_length=20, blank=True, null=True)
-    classification_success = models.CharField(max_length=20, blank=True, null=True)
+    classification_success = models.CharField(
+        max_length=20, blank=True, null=True)
 
     refa_dotplot = models.TextField(blank=True, null=True)
     refa_dotplot_exists = models.BooleanField(default=False)
@@ -774,9 +806,12 @@ class FinalReport(models.Model):
     bam_path = models.CharField(max_length=1000, blank=True, null=True)
     bai_path = models.CharField(max_length=1000, blank=True, null=True)
     reference_path = models.CharField(max_length=1000, blank=True, null=True)
-    reference_index_path = models.CharField(max_length=1000, blank=True, null=True)
-    reference_assembly_paf = models.CharField(max_length=1000, blank=True, null=True)
-    mapped_scaffolds_path = models.CharField(max_length=1000, blank=True, null=True)
+    reference_index_path = models.CharField(
+        max_length=1000, blank=True, null=True)
+    reference_assembly_paf = models.CharField(
+        max_length=1000, blank=True, null=True)
+    mapped_scaffolds_path = models.CharField(
+        max_length=1000, blank=True, null=True)
     mapped_scaffolds_index_path = models.CharField(
         max_length=1000, blank=True, null=True
     )
@@ -787,7 +822,8 @@ class ReferenceContigs(models.Model):
     reference = models.ForeignKey(
         ReferenceMap_Main, blank=True, null=True, on_delete=models.CASCADE
     )
-    run = models.ForeignKey(RunMain, blank=True, null=True, on_delete=models.CASCADE)
+    run = models.ForeignKey(RunMain, blank=True,
+                            null=True, on_delete=models.CASCADE)
     contig = models.CharField(max_length=100, blank=True, null=True)
     # length = models.CharField(max_length=100, blank=True, null=True)
     depth = models.CharField(max_length=100, blank=True, null=True)

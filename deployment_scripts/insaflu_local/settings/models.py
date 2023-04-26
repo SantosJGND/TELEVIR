@@ -9,10 +9,11 @@ from pathogen_identification.models import Projects as TelevirProject
 
 class Technology(models.Model):
 
-    name = models.CharField(max_length=100, db_index=True, blank=True, null=True)
+    name = models.CharField(
+        max_length=100, db_index=True, blank=True, null=True)
     name_extended = models.CharField(
         max_length=100, db_index=True, blank=True, null=True
-    )  ## extra name to show in the settings HTML table
+    )  # extra name to show in the settings HTML table
 
     class Meta:
         ordering = [
@@ -29,13 +30,14 @@ class PipelineStep(models.Model):
     Each software must belong to a Pipeline...
     """
 
-    name = models.CharField(max_length=100, db_index=True, blank=True, null=True)
+    name = models.CharField(
+        max_length=100, db_index=True, blank=True, null=True)
     name_extended = models.CharField(
         max_length=100, db_index=True, blank=True, null=True
-    )  ## extra name to show in the settings HTML table
+    )  # extra name to show in the settings HTML table
 
-    ###  small description of this pipeline step
-    help_text = models.TextField(default="")  ## show in a modal dialog
+    # small description of this pipeline step
+    help_text = models.TextField(default="")  # show in a modal dialog
 
     class Meta:
         ordering = [
@@ -51,34 +53,38 @@ class Software(models.Model):
     Each user has it software parameters
     """
 
-    ### where is going to be used
-    TYPE_OF_USE_global = 0  ### Used in the samples
-    TYPE_OF_USE_project = 1  ### Used in a particular project
-    TYPE_OF_USE_project_sample = 2  ### Used in a particular project sample
-    TYPE_OF_USE_sample = 3  ### Used in a particular sample
-    TYPE_OF_USE_qc = 4  ### Used for  quality control
-    TYPE_OF_USE_televir_global = 5  ### used for pathogen_identification.
-    TYPE_OF_USE_televir_project = 6  ### Used for  pathogen_identification_projects.
-    TYPE_OF_USE_dataset = 7  ### Used in a particular dataset
-    ### if it is a software parameter or a general parameter (INSaFLU parameter)
-    TYPE_SOFTWARE = 0  ### normal software
-    TYPE_INSAFLU_PARAMETER = 1  ### it is a general parameter (INSaFLU parameter)
+    # where is going to be used
+    TYPE_OF_USE_global = 0  # Used in the samples
+    TYPE_OF_USE_project = 1  # Used in a particular project
+    TYPE_OF_USE_project_sample = 2  # Used in a particular project sample
+    TYPE_OF_USE_sample = 3  # Used in a particular sample
+    TYPE_OF_USE_qc = 4  # Used for  quality control
+    TYPE_OF_USE_televir_global = 5  # used for pathogen_identification.
+    # Used for  pathogen_identification_projects.
+    TYPE_OF_USE_televir_project = 6
+    TYPE_OF_USE_dataset = 7  # Used in a particular dataset
+    # if it is a software parameter or a general parameter (INSaFLU parameter)
+    TYPE_SOFTWARE = 0  # normal software
+    TYPE_INSAFLU_PARAMETER = 1  # it is a general parameter (INSaFLU parameter)
 
-    name = models.CharField(max_length=100, db_index=True, blank=True, null=True)
+    name = models.CharField(
+        max_length=100, db_index=True, blank=True, null=True)
     name_extended = models.CharField(
         max_length=100, db_index=True, blank=True, null=True
-    )  ## extra name to show in the settings HTML table
-    version = models.CharField(max_length=100, db_index=True, blank=True, null=True)
+    )  # extra name to show in the settings HTML table
+    version = models.CharField(
+        max_length=100, db_index=True, blank=True, null=True)
     version_parameters = models.SmallIntegerField(
         default=0
-    )  ### every time you add/remove parameters that can be changed by a user, add a unit here.
+    )  # every time you add/remove parameters that can be changed by a user, add a unit here.
     type_of_use = models.SmallIntegerField(
         default=TYPE_OF_USE_global
-    )  ### where is possible to define
+    )  # where is possible to define
     type_of_software = models.SmallIntegerField(
         default=TYPE_SOFTWARE
-    )  ### it is a software or a general parameter
-    is_obsolete = models.BooleanField(default=False)  ## set to True if it's obsolete
+    )  # it is a software or a general parameter
+    is_obsolete = models.BooleanField(
+        default=False)  # set to True if it's obsolete
     owner = models.ForeignKey(
         User,
         related_name="software_settings",
@@ -94,19 +100,19 @@ class Software(models.Model):
         on_delete=models.PROTECT,
     )
 
-    ### if this software is to run (also if the software can be ON/OFF in pipelines)
+    # if this software is to run (also if the software can be ON/OFF in pipelines)
     can_be_on_off_in_pipeline = models.BooleanField(
         default=False
-    )  ## set to True if can be ON/OFF in pipeline, otherwise always ON
-    ### this flag is only used on global settings. For sample, project and project_sample is on parameters...
+    )  # set to True if can be ON/OFF in pipeline, otherwise always ON
+    # this flag is only used on global settings. For sample, project and project_sample is on parameters...
     is_to_run = models.BooleanField(
         default=True
-    )  ## set to True if it is going to run, for example Trimmomatic can run or not
+    )  # set to True if it is going to run, for example Trimmomatic can run or not
 
-    ###  small description of software
+    # small description of software
     help_text = models.TextField(default="")
 
-    ###  which part of pipeline is going to run
+    # which part of pipeline is going to run
     pipeline_step = models.ForeignKey(
         PipelineStep,
         related_name="software_settings",
@@ -152,21 +158,25 @@ class Parameter(models.Model):
     PARAMETER_int = 0
     PARAMETER_float = 1
     PARAMETER_char = 2
-    PARAMETER_null = 3  ### its like only to show, not editable, Example: (TOPHRED33)
-    PARAMETER_char_list = 4  ### combo list
-    PARAMETER_check_box = 5  ### check box
-    PARAMETER_none = 6  ### This case is when some "software/procedure" doesn't have parameters at all
-    ### It is only has one parameter. Example: "Generate consensus"
-    ### "Generate consensus" -> it is used for set ON/OFF consensus in the AllConsensus File
+    # its like only to show, not editable, Example: (TOPHRED33)
+    PARAMETER_null = 3
+    PARAMETER_char_list = 4  # combo list
+    PARAMETER_check_box = 5  # check box
+    # This case is when some "software/procedure" doesn't have parameters at all
+    PARAMETER_none = 6
+    # It is only has one parameter. Example: "Generate consensus"
+    # "Generate consensus" -> it is used for set ON/OFF consensus in the AllConsensus File
 
-    name = models.CharField(max_length=100, db_index=True, blank=True, null=True)
-    parameter = models.CharField(max_length=150, db_index=True, blank=True, null=True)
+    name = models.CharField(
+        max_length=100, db_index=True, blank=True, null=True)
+    parameter = models.CharField(
+        max_length=150, db_index=True, blank=True, null=True)
     type_data = models.SmallIntegerField()
     software = models.ForeignKey(
         Software, related_name="parameter", on_delete=models.PROTECT
     )
 
-    ### this allow to have software parameters in projects
+    # this allow to have software parameters in projects
     project = models.ForeignKey(
         Project,
         related_name="parameter",
@@ -181,7 +191,7 @@ class Parameter(models.Model):
         blank=True,
         null=True,
     )
-    ### this allow to have software parameters in project sample
+    # this allow to have software parameters in project sample
     project_sample = models.ForeignKey(
         ProjectSample,
         related_name="parameter",
@@ -189,7 +199,7 @@ class Parameter(models.Model):
         blank=True,
         null=True,
     )
-    ### this allow software to use in sample
+    # this allow software to use in sample
     sample = models.ForeignKey(
         Sample,
         related_name="parameter",
@@ -197,7 +207,7 @@ class Parameter(models.Model):
         blank=True,
         null=True,
     )
-    ### this allow to have software parameters in datasets
+    # this allow to have software parameters in datasets
     dataset = models.ForeignKey(
         Dataset,
         related_name="parameter",
@@ -208,33 +218,33 @@ class Parameter(models.Model):
 
     union_char = models.CharField(
         max_length=10, default=""
-    )  ### ":" in the case LEADING:3
+    )  # ":" in the case LEADING:3
     can_change = models.BooleanField(
         default=True
-    )  ### TOPHRED33 can change, and it is not to show in change dialog
+    )  # TOPHRED33 can change, and it is not to show in change dialog
     sequence_out = models.SmallIntegerField()
     range_available = models.CharField(
         max_length=50, default=""
-    )  ## description of the range
+    )  # description of the range
 
     range_max = models.CharField(
         max_length=50, default=""
-    )  ## only used in int and float fields
+    )  # only used in int and float fields
     range_min = models.CharField(
         max_length=50, default=""
-    )  ## only used in int and float fields
+    )  # only used in int and float fields
     description = models.CharField(
         max_length=500, default=""
-    )  ## description of this size
+    )  # description of this size
     not_set_value = models.CharField(
         max_length=50, db_index=True, blank=True, null=True
-    )  ## don't define value, in execution string, if this value
+    )  # don't define value, in execution string, if this value
 
-    ## if the software it run or not for the sample, project or project_sample
-    ## The first parameter is mandatory, the others don't be take into account
+    # if the software it run or not for the sample, project or project_sample
+    # The first parameter is mandatory, the others don't be take into account
     is_to_run = models.BooleanField(
         default=True
-    )  ## set to True if it is going to run, for example Trimmomatic can run or not
+    )  # set to True if it is going to run, for example Trimmomatic can run or not
 
     def __str__(self):
         return self.name
