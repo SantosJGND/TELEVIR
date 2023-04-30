@@ -11,6 +11,7 @@ from random import randint
 from threading import Thread
 
 import pandas as pd
+from fastq_filter import fastq_records_to_file, file_to_fastq_records
 from numpy import int0
 
 
@@ -24,6 +25,14 @@ def grep_sequence_identifiers(input, output):
             input, output  # | grep -v 'GENE\|gene'
         )
     )
+
+
+def compress_using_xopen(fq_in: str, fq_out: str):
+    """
+    compress using fastq_filter generator"""
+
+    records = file_to_fastq_records(fq_in)
+    fastq_records_to_file(records, fq_out)
 
 
 def sed_out_after_dot(file):
@@ -1113,7 +1122,9 @@ class setup_install(setup_dl):
 
                 subprocess.run(build_command)
 
-            os.system(f"bgzip {sdir}/complete.fna")
+            # os.system(f"bgzip {sdir}/complete.fna")
+            compress_using_xopen(f"{sdir}/complete.fna",
+                                 f"{sdir}/complete.fna.gz")
 
             self.dbs[id] = {
                 "dir": odir,
