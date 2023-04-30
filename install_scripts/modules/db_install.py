@@ -13,6 +13,7 @@ from threading import Thread
 import pandas as pd
 from fastq_filter import fastq_records_to_file, file_to_fastq_records
 from numpy import int0
+from xopen import xopen
 
 
 def grep_sequence_identifiers(input, output):
@@ -32,7 +33,13 @@ def compress_using_xopen(fq_in: str, fq_out: str):
     compress using fastq_filter generator"""
 
     records = file_to_fastq_records(fq_in)
-    fastq_records_to_file(records, fq_out)
+    with xopen(fq_out, mode='wb', threads=0, compresslevel=2) as output_h:
+        for record in records:
+            header = ">" + record.name + "\n"
+            header = header.encode("ascii")
+            output_h.write(header)
+            sequence = record.sequence + "\n"
+            output_h.write(sequence.encode("ascii"))
 
 
 def sed_out_after_dot(file):
