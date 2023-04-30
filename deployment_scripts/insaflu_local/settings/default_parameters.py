@@ -10,9 +10,7 @@ from constants.meta_key_and_values import MetaKeyAndValue
 from constants.software_names import SoftwareNames
 from django.conf import settings
 from pathogen_identification.utilities.utilities_pipeline import (
-    Parameter_DB_Utility,
-    Utility_Pipeline_Manager,
-)
+    Parameter_DB_Utility, Utility_Pipeline_Manager)
 from settings.constants_settings import ConstantsSettings
 from settings.models import Parameter, PipelineStep, Software, Technology
 from utils.lock_atomic_transaction import LockedAtomicTransaction
@@ -25,28 +23,28 @@ class DefaultParameters(object):
 
     software_names = SoftwareNames()
 
-    ### used in snippy
+    # used in snippy
     SNIPPY_COVERAGE_NAME = "--mincov"
     SNIPPY_MAPQUAL_NAME = "--mapqual"
 
-    ### used in NANOfilt
+    # used in NANOfilt
     NANOfilt_quality_read = "-q"
 
-    ### used in Medaka
+    # used in Medaka
     MEDAKA_model = "-m"
 
-    ### used in mask consensus
+    # used in mask consensus
     MASK_CONSENSUS_threshold = "Threshold"
 
-    ### used when the parameters are passed in other way
-    ### parameters values has the META_KEY of the metakey_projectsample/metakey_project
+    # used when the parameters are passed in other way
+    # parameters values has the META_KEY of the metakey_projectsample/metakey_project
     MASK_DONT_care = "dont_care"
     MASK_not_applicable = "Not applicable"
 
-    ### clean human reads
+    # clean human reads
     MASK_CLEAN_HUMAN_READS = software_names.SOFTWARE_CLEAN_HUMAN_READS_name
 
-    ### MINIMUN of MAX of NanoFilt
+    # MINIMUN of MAX of NanoFilt
     NANOFILT_MINIMUN_MAX = 100
 
     def __init__(self):
@@ -72,14 +70,14 @@ class DefaultParameters(object):
 
         if software_name == SoftwareNames.SOFTWARE_FREEBAYES_name:
             return 1
-        ## all others remain zero, didn't change anything
+        # all others remain zero, didn't change anything
         return 0
 
     def _get_software_obsolete(self):
         """
         Return all softwares/parameters version obsolete
         """
-        vect_return = []  ## [[name, version], [name, version], ...]
+        vect_return = []  # [[name, version], [name, version], ...]
         vect_return.append([SoftwareNames.SOFTWARE_TRIMMOMATIC_name, 0])
         vect_return.append([SoftwareNames.SOFTWARE_FREEBAYES_name, 0])
         return vect_return
@@ -125,11 +123,11 @@ class DefaultParameters(object):
             parameter.software = software
             parameter.save()
 
-            ## set sequential number
+            # set sequential number
             dt_out_sequential[parameter.sequence_out] = 1
 
     #####################################
-    #### TODO
+    # TODO
     # update settings_parameter set software_id = 229 where software_id = 50
     # update settings_parameter set software_id = 228 where software_id = 49
     # delete from settings_software where id = 49
@@ -159,7 +157,8 @@ class DefaultParameters(object):
             owner=user,
             type_of_use=type_of_use,
             technology__name=technology_name,
-            version_parameters=self.get_software_parameters_version(software_name),
+            version_parameters=self.get_software_parameters_version(
+                software_name),
             pipeline_step__name=pipeline_step,
             parameter__televir_project=televir_project,
         )
@@ -169,7 +168,8 @@ class DefaultParameters(object):
                 name=software_name,
                 owner=user,
                 type_of_use=type_of_use,
-                version_parameters=self.get_software_parameters_version(software_name),
+                version_parameters=self.get_software_parameters_version(
+                    software_name),
                 pipeline_step__name=pipeline_step,
                 parameter__televir_project=televir_project,
             )
@@ -190,7 +190,8 @@ class DefaultParameters(object):
             owner=user,
             type_of_use=type_of_use,
             technology__name=technology_name,
-            version_parameters=self.get_software_parameters_version(software_name),
+            version_parameters=self.get_software_parameters_version(
+                software_name),
             parameter__televir_project=televir_project,
         )
 
@@ -199,7 +200,8 @@ class DefaultParameters(object):
                 name=software_name,
                 owner=user,
                 type_of_use=type_of_use,
-                version_parameters=self.get_software_parameters_version(software_name),
+                version_parameters=self.get_software_parameters_version(
+                    software_name),
                 parameter__televir_project=televir_project,
             )
 
@@ -227,7 +229,8 @@ class DefaultParameters(object):
         # logger.debug("Get parameters: software-{} user-{} typeofuse-{} project-{} psample-{} sample-{} tec-{} dataset-{}",software_name, user, type_of_use, project, project_sample, sample, technology_name, dataset)
 
         if self.check_software_is_polyvalent(software_name):
-            prefered_pipeline = self.get_polyvalent_software_pipeline(software_name)
+            prefered_pipeline = self.get_polyvalent_software_pipeline(
+                software_name)
 
             software = self.get_software_global_with_step(
                 user,
@@ -258,7 +261,7 @@ class DefaultParameters(object):
 
         # logger.debug("Get parameters: software-{} user-{} typeofuse-{} project-{} psample-{} sample-{} tec-{} dataset-{}",software, user, type_of_use, project, project_sample, sample, technology_name, dataset)
 
-        ## get parameters for a specific user
+        # get parameters for a specific user
         parameters = Parameter.objects.filter(
             software=software,
             project=project,
@@ -270,25 +273,25 @@ class DefaultParameters(object):
 
         # logger.debug("Get parameters: {}".format(parameters))
 
-        ### if only one parameter and it is don't care, return dont_care
+        # if only one parameter and it is don't care, return dont_care
         if len(list(parameters)) == 1 and list(parameters)[0].name in [
             DefaultParameters.MASK_not_applicable,
             DefaultParameters.MASK_DONT_care,
         ]:
             return DefaultParameters.MASK_not_applicable
 
-        ### parse them
+        # parse them
         dict_out = {}
         vect_order_ouput = []
         for parameter in parameters:
-            ### don't set the not set parameters
+            # don't set the not set parameters
             if (
                 not parameter.not_set_value is None
                 and parameter.parameter == parameter.not_set_value
             ):
                 continue
 
-            ### create a dict with parameters
+            # create a dict with parameters
             if parameter.name in dict_out:
                 dict_out[parameter.name][1].append(parameter.parameter)
                 dict_out[parameter.name][0].append(parameter.union_char)
@@ -305,7 +308,7 @@ class DefaultParameters(object):
                 return_parameter += " {}".format(par_name)
             else:
                 return_parameter += " {}".format(par_name)
-                ### exception SOFTWARE_TRIMMOMATIC_illuminaclip SOFTWARE_TRIMMOMATIC_name
+                # exception SOFTWARE_TRIMMOMATIC_illuminaclip SOFTWARE_TRIMMOMATIC_name
                 if (
                     software_name == SoftwareNames.SOFTWARE_TRIMMOMATIC_name
                     and par_name == SoftwareNames.SOFTWARE_TRIMMOMATIC_illuminaclip
@@ -330,7 +333,7 @@ class DefaultParameters(object):
                             dict_out[par_name][0][_], dict_out[par_name][1][_]
                         )
         # logger.debug("Get parameters return output: {}".format(return_parameter))
-        #### This is the case where all the options can be "not to set"
+        # This is the case where all the options can be "not to set"
         if len(return_parameter.strip()) == 0 and len(parameters) == 0:
             return None
         return return_parameter.strip()
@@ -355,7 +358,8 @@ class DefaultParameters(object):
                 owner=user,
                 type_of_use=type_of_use,
                 technology__name=technology_name,
-                version_parameters=self.get_software_parameters_version(software_name),
+                version_parameters=self.get_software_parameters_version(
+                    software_name),
             )
         except Software.DoesNotExist:
             if type_of_use == Software.TYPE_OF_USE_global:
@@ -373,7 +377,7 @@ class DefaultParameters(object):
             else:
                 return None
 
-        ## get parameters for a specific user
+        # get parameters for a specific user
         parameters = Parameter.objects.filter(
             software=software,
             project=project,
@@ -382,7 +386,7 @@ class DefaultParameters(object):
             dataset=dataset,
         )
 
-        ### if only one parameter and it is don't care, return dont_care
+        # if only one parameter and it is don't care, return dont_care
         return list(parameters)
 
     def is_software_to_run(
@@ -403,7 +407,8 @@ class DefaultParameters(object):
                 owner=user,
                 type_of_use=type_of_use,
                 technology__name=technology_name,
-                version_parameters=self.get_software_parameters_version(software_name),
+                version_parameters=self.get_software_parameters_version(
+                    software_name),
             )
         except Software.DoesNotExist:
             if type_of_use == Software.TYPE_OF_USE_global:
@@ -434,15 +439,15 @@ class DefaultParameters(object):
                 else:
                     return True
 
-        ### if it is Global it is software that is mandatory
+        # if it is Global it is software that is mandatory
         if type_of_use == Software.TYPE_OF_USE_global:
             return software.is_to_run
 
-        ### if it is Global it is software that is mandatory
+        # if it is Global it is software that is mandatory
         if type_of_use == Software.TYPE_OF_USE_qc:
             return software.is_to_run
 
-        ## get parameters for a specific sample, project or project_sample
+        # get parameters for a specific sample, project or project_sample
         parameters = Parameter.objects.filter(
             software=software,
             project=project,
@@ -451,7 +456,7 @@ class DefaultParameters(object):
             dataset=dataset,
         )
 
-        ### Try to find the parameter of sequence_out == 1. It is the one that has the flag to run or not.
+        # Try to find the parameter of sequence_out == 1. It is the one that has the flag to run or not.
         for parameter in parameters:
             if parameter.sequence_out == 1:
                 return parameter.is_to_run
@@ -478,7 +483,8 @@ class DefaultParameters(object):
                 owner=user,
                 type_of_use=type_of_use,
                 technology__name=technology_name,
-                version_parameters=self.get_software_parameters_version(software_name),
+                version_parameters=self.get_software_parameters_version(
+                    software_name),
             )
         except Software.DoesNotExist:
             if type_of_use == Software.TYPE_OF_USE_global:
@@ -496,7 +502,7 @@ class DefaultParameters(object):
             else:
                 return False
 
-        ## if the software can not be change return False
+        # if the software can not be change return False
         if not software.can_be_on_off_in_pipeline:
             return False
 
@@ -526,7 +532,7 @@ class DefaultParameters(object):
 
         with LockedAtomicTransaction(Software), LockedAtomicTransaction(Parameter):
 
-            ## get parameters for a specific sample, project or project_sample
+            # get parameters for a specific sample, project or project_sample
             parameters = Parameter.objects.filter(
                 software=software,
                 project=project,
@@ -536,7 +542,7 @@ class DefaultParameters(object):
                 dataset=dataset,
             )
 
-            ## if None need to take the value from database
+            # if None need to take the value from database
             if is_to_run is None:
                 if software.type_of_use in [
                     Software.TYPE_OF_USE_qc,
@@ -550,7 +556,7 @@ class DefaultParameters(object):
                 else:
                     is_to_run = not software.is_to_run
 
-            ## if the software can not be change return False
+            # if the software can not be change return False
             if not software.can_be_on_off_in_pipeline:
                 if software.type_of_use in [
                     Software.TYPE_OF_USE_qc,
@@ -563,8 +569,8 @@ class DefaultParameters(object):
                     return parameters[0].is_to_run
                 return True
 
-            ### if it is Global it is software that is mandatory
-            ### only can change if TYPE_OF_USE_global, other type_of_use is not be tested
+            # if it is Global it is software that is mandatory
+            # only can change if TYPE_OF_USE_global, other type_of_use is not be tested
             if software.type_of_use in [
                 Software.TYPE_OF_USE_qc,
                 Software.TYPE_OF_USE_global,
@@ -574,7 +580,7 @@ class DefaultParameters(object):
                 software.is_to_run = is_to_run
                 software.save()
 
-            ## get parameters for a specific sample, project or project_sample
+            # get parameters for a specific sample, project or project_sample
             parameters = Parameter.objects.filter(
                 software=software,
                 project=project,
@@ -584,7 +590,7 @@ class DefaultParameters(object):
                 dataset=dataset,
             )
 
-            ### Try to find the parameter of sequence_out == 1. It is the one that has the flag to run or not.
+            # Try to find the parameter of sequence_out == 1. It is the one that has the flag to run or not.
             for parameter in parameters:
                 parameter.is_to_run = is_to_run
                 parameter.save()
@@ -681,7 +687,7 @@ class DefaultParameters(object):
             return self.get_nextstrain_default(software.owner)
 
         ####
-        #### PATHOGEN IDENTIFICATION
+        # PATHOGEN IDENTIFICATION
         ####
         elif software.name == SoftwareNames.SOFTWARE_CENTRIFUGE_name:
             return self.get_centrifuge_default(
@@ -849,14 +855,15 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            False  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            False  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
-        software.is_to_run = True  ## set to True if it is going to run, for example Trimmomatic can run or not
+        # set to True if it is going to run, for example Trimmomatic can run or not
+        software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run
+        # which part of pipeline is going to run
         software.pipeline_step = self._get_pipeline(pipeline_step)
         software.owner = user
 
@@ -871,7 +878,7 @@ class DefaultParameters(object):
         parameter.project_sample = project_sample
         parameter.union_char = " "
         parameter.can_change = True
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 1
         parameter.range_available = "[0:100]"
         parameter.range_max = "100"
@@ -936,14 +943,15 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
-        software.is_to_run = True  ## set to True if it is going to run, for example Trimmomatic can run or not
+        # set to True if it is going to run, for example Trimmomatic can run or not
+        software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run
+        # which part of pipeline is going to run
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_intra_host_minor_variant_detection
         )
@@ -960,7 +968,7 @@ class DefaultParameters(object):
         parameter.project_sample = project_sample
         parameter.union_char = " "
         parameter.can_change = False
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 1
         parameter.range_available = "[10:50]"
         parameter.range_max = "50"
@@ -1084,16 +1092,18 @@ class DefaultParameters(object):
         software.version_parameters = self.get_software_parameters_version(
             software.name
         )
-        software.technology = self.get_technology(ConstantsSettings.TECHNOLOGY_generic)
+        software.technology = self.get_technology(
+            ConstantsSettings.TECHNOLOGY_generic)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
-        software.is_to_run = True  ## set to True if it is going to run, for example Trimmomatic can run or not
+        # set to True if it is going to run, for example Trimmomatic can run or not
+        software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run
+        # which part of pipeline is going to run
         software.pipeline_step = None
         software.owner = user
 
@@ -1136,14 +1146,15 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            False  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            False  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
-        software.is_to_run = True  ## set to True if it is going to run, for example Trimmomatic can run or not
+        # set to True if it is going to run, for example Trimmomatic can run or not
+        software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run
+        # which part of pipeline is going to run
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_coverage_analysis
         )
@@ -1160,7 +1171,7 @@ class DefaultParameters(object):
         parameter.project_sample = project_sample
         parameter.union_char = ":"
         parameter.can_change = True
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 1
         parameter.range_available = "[50:100]"
         parameter.range_max = "100"
@@ -1184,14 +1195,15 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
-        software.is_to_run = True  ## set to True if it is going to run, for example Trimmomatic can run or not
+        # set to True if it is going to run, for example Trimmomatic can run or not
+        software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run
+        # which part of pipeline is going to run
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_read_quality_analysis
         )
@@ -1206,7 +1218,7 @@ class DefaultParameters(object):
         parameter.software = software
         parameter.union_char = ": "
         parameter.can_change = True
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 1
         parameter.description = "Clean human reads from fastq files."
         vect_parameters.append(parameter)
@@ -1234,14 +1246,15 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            False  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            False  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
-        software.is_to_run = True  ## set to True if it is going to run, for example Trimmomatic can run or not
+        # set to True if it is going to run, for example Trimmomatic can run or not
+        software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run
+        # which part of pipeline is going to run
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_variant_detection
         )
@@ -1258,7 +1271,7 @@ class DefaultParameters(object):
         parameter.project_sample = project_sample
         parameter.union_char = ":"
         parameter.can_change = True
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 1
         parameter.range_available = "[4:100]"
         parameter.range_max = "100"
@@ -1287,14 +1300,15 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            False  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            False  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
-        software.is_to_run = True  ## set to True if it is going to run, for example Trimmomatic can run or not
+        # set to True if it is going to run, for example Trimmomatic can run or not
+        software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run
+        # which part of pipeline is going to run
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_variant_detection
         )
@@ -1311,7 +1325,7 @@ class DefaultParameters(object):
         parameter.project_sample = project_sample
         parameter.union_char = ":"
         parameter.can_change = True
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 1
         parameter.range_available = "[0.10:1.0]"
         parameter.range_max = "1.0"
@@ -1340,14 +1354,15 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            False  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            False  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
-        software.is_to_run = False  ## set to True if it is going to run, for example Trimmomatic can run or not
+        # set to True if it is going to run, for example Trimmomatic can run or not
+        software.is_to_run = False
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run
+        # which part of pipeline is going to run
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_variant_detection
         )
@@ -1359,14 +1374,14 @@ class DefaultParameters(object):
         parameter.name = "-m"
         parameter.parameter = (
             SoftwareNames.SOFTWARE_Medaka_default_model
-        )  ## default model
+        )  # default model
         parameter.type_data = Parameter.PARAMETER_char_list
         parameter.software = software
         parameter.project = project
         parameter.project_sample = project_sample
         parameter.union_char = " "
         parameter.can_change = True
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 1
         parameter.description = (
             "Medaka models are named to indicate: "
@@ -1397,14 +1412,15 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
-        software.is_to_run = True  ## set to True if it is going to run, for example Trimmomatic can run or not
+        # set to True if it is going to run, for example Trimmomatic can run or not
+        software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run
+        # which part of pipeline is going to run
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_read_quality_analysis
         )
@@ -1420,7 +1436,7 @@ class DefaultParameters(object):
         parameter.sample = sample
         parameter.union_char = " "
         parameter.can_change = True
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 1
         parameter.range_available = "[5:30]"
         parameter.range_max = "30"
@@ -1518,14 +1534,15 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            False  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            False  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
-        software.is_to_run = True  ## set to True if it is going to run, for example Trimmomatic can run or not
+        # set to True if it is going to run, for example Trimmomatic can run or not
+        software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run; NEED TO CHECK
+        # which part of pipeline is going to run; NEED TO CHECK
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_coverage_analysis
         )
@@ -1536,14 +1553,14 @@ class DefaultParameters(object):
 
         parameter = Parameter()
         parameter.name = "-q"
-        parameter.parameter = "0"  ## default model
+        parameter.parameter = "0"  # default model
         parameter.type_data = Parameter.PARAMETER_int
         parameter.software = software
         parameter.project = project
         parameter.project_sample = project_sample
         parameter.union_char = " "
         parameter.can_change = False
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 1
         parameter.range_available = "[0:100]"
         parameter.range_max = "100"
@@ -1554,7 +1571,7 @@ class DefaultParameters(object):
 
         parameter = Parameter()
         parameter.name = "-Q"
-        parameter.parameter = "0"  ## default model
+        parameter.parameter = "0"  # default model
         parameter.type_data = Parameter.PARAMETER_int
         parameter.software = software
         parameter.project = project
@@ -1571,7 +1588,7 @@ class DefaultParameters(object):
 
         parameter = Parameter()
         parameter.name = "-aa"
-        parameter.parameter = ""  ## default model
+        parameter.parameter = ""  # default model
         parameter.type_data = Parameter.PARAMETER_null
         parameter.software = software
         parameter.project = project
@@ -1599,14 +1616,15 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
-        software.is_to_run = True  ## set to True if it is going to run, for example Trimmomatic can run or not
+        # set to True if it is going to run, for example Trimmomatic can run or not
+        software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run
+        # which part of pipeline is going to run
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_read_quality_analysis
         )
@@ -1624,7 +1642,7 @@ class DefaultParameters(object):
         parameter.not_set_value = SoftwareNames.SOFTWARE_TRIMMOMATIC_addapter_not_apply
         parameter.union_char = ":"
         parameter.can_change = True
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 1
         parameter.description = (
             "To clip the Illumina adapters or PCR primers from the input file using the adapter / primer sequences.\n"
@@ -1749,7 +1767,7 @@ class DefaultParameters(object):
         parameter.description = "MINLEN:<length> This module removes reads that fall below the specified minimal length."
         vect_parameters.append(parameter)
 
-        ##        Only available in 0.30 version
+        # Only available in 0.30 version
         #
         #         parameter = Parameter()
         #         parameter.name = "AVGQUAL"
@@ -1808,19 +1826,19 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = is_to_run
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run; NEED TO CHECK
+        # which part of pipeline is going to run; NEED TO CHECK
         software.pipeline_step = self._get_pipeline(pipeline_step)
 
         software.owner = user
 
-        ### software db
+        # software db
         dbs_available = self.televir_db_manager.software_dbs_dict.get(
             software.name.lower(), ["None"]
         )
@@ -1837,7 +1855,7 @@ class DefaultParameters(object):
         parameter.sample = sample
         parameter.union_char = " "
         parameter.can_change = False
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 1
         parameter.range_available = "[16:30]"
         parameter.range_max = "30"
@@ -1853,7 +1871,7 @@ class DefaultParameters(object):
         parameter.sample = sample
         parameter.union_char = " "
         parameter.can_change = False
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 2
         parameter.range_available = "[1:5]"
         parameter.range_max = "3"
@@ -1900,19 +1918,19 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = False
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run; NEED TO CHECK
+        # which part of pipeline is going to run; NEED TO CHECK
         software.pipeline_step = self._get_pipeline(pipeline_step)
 
         software.owner = user
 
-        ### software db
+        # software db
         dbs_available = self.televir_db_manager.software_dbs_dict.get(
             software.name.lower(), ["None"]
         )
@@ -1957,14 +1975,14 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run; NEED TO CHECK
+        # which part of pipeline is going to run; NEED TO CHECK
         software.pipeline_step = self._get_pipeline(pipeline_step)
 
         software.owner = user
@@ -2024,14 +2042,14 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = False
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run; NEED TO CHECK
+        # which part of pipeline is going to run; NEED TO CHECK
         software.pipeline_step = self._get_pipeline(pipeline_step)
 
         software.owner = user
@@ -2111,19 +2129,19 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run; NEED TO CHECK
+        # which part of pipeline is going to run; NEED TO CHECK
         software.pipeline_step = self._get_pipeline(pipeline_step)
 
         software.owner = user
 
-        ### software db
+        # software db
         dbs_available = self.televir_db_manager.software_dbs_dict.get(
             software.name.lower(), ["None"]
         )
@@ -2140,7 +2158,7 @@ class DefaultParameters(object):
         parameter.sample = sample
         parameter.union_char = " "
         parameter.can_change = False
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 1
         parameter.description = "quick operation mode"
         vect_parameters.append(parameter)
@@ -2153,7 +2171,7 @@ class DefaultParameters(object):
         parameter.sample = sample
         parameter.union_char = " "
         parameter.can_change = False
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 2
         parameter.range_available = "[0.4:1.0]"
         parameter.range_max = "1.0"
@@ -2168,7 +2186,7 @@ class DefaultParameters(object):
         parameter.software = software
         parameter.sample = sample
         parameter.union_char = " "
-        parameter.can_change = False
+        parameter.can_change = True
         parameter.is_to_run = True
         parameter.sequence_out = 4
         parameter.range_available = ""
@@ -2200,19 +2218,19 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run; NEED TO CHECK
+        # which part of pipeline is going to run; NEED TO CHECK
         software.pipeline_step = self._get_pipeline(pipeline_step)
 
         software.owner = user
 
-        ### software db
+        # software db
         dbs_available = self.televir_db_manager.software_dbs_dict.get(
             software.name.lower(), ["None"]
         )
@@ -2300,14 +2318,14 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run; NEED TO CHECK
+        # which part of pipeline is going to run; NEED TO CHECK
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_read_classification
         )
@@ -2425,19 +2443,19 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run; NEED TO CHECK
+        # which part of pipeline is going to run; NEED TO CHECK
         software.pipeline_step = self._get_pipeline(pipeline_step)
 
         software.owner = user
 
-        ### dbs
+        # dbs
         dbs_available = self.televir_db_manager.software_dbs_dict.get(
             software.name.lower(), ["None"]
         )
@@ -2514,11 +2532,11 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = False
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_host_depletion
@@ -2565,19 +2583,19 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run; NEED TO CHECK
+        # which part of pipeline is going to run; NEED TO CHECK
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_contig_classification
         )
 
-        ### dbs available
+        # dbs available
         dbs_available = self.televir_db_manager.software_dbs_dict.get(
             software.name.lower(), ["None"]
         )
@@ -2656,14 +2674,14 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = False
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run; NEED TO CHECK
+        # which part of pipeline is going to run; NEED TO CHECK
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_read_classification
         )
@@ -2768,14 +2786,14 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run; NEED TO CHECK
+        # which part of pipeline is going to run; NEED TO CHECK
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_read_classification
         )
@@ -2839,14 +2857,14 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run; NEED TO CHECK
+        # which part of pipeline is going to run; NEED TO CHECK
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_assembly
         )
@@ -2920,14 +2938,14 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run; NEED TO CHECK
+        # which part of pipeline is going to run; NEED TO CHECK
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_assembly
         )
@@ -3022,14 +3040,14 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run; NEED TO CHECK
+        # which part of pipeline is going to run; NEED TO CHECK
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_remapping
         )
@@ -3089,7 +3107,7 @@ class DefaultParameters(object):
         return vect_parameters
 
     ##############################
-    ############################## END OF PI SOFTWARE DEFAULTS.
+    # END OF PI SOFTWARE DEFAULTS.
 
     def get_abricate_default(self, user, type_of_use, technology_name, sample=None):
 
@@ -3104,14 +3122,14 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
         software.is_to_run = False
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run
+        # which part of pipeline is going to run
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_type_and_subtype_analysis
         )
@@ -3126,7 +3144,7 @@ class DefaultParameters(object):
         parameter.sample = sample
         parameter.union_char = " "
         parameter.can_change = False
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 1
         parameter.range_available = "[1:100]"
         parameter.range_max = "100"
@@ -3142,7 +3160,7 @@ class DefaultParameters(object):
         parameter.sample = sample
         parameter.union_char = " "
         parameter.can_change = False
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 2
         parameter.range_available = "[0:100]"
         parameter.range_max = "100"
@@ -3170,14 +3188,15 @@ class DefaultParameters(object):
         )
         software.technology = self.get_technology(technology_name)
         software.can_be_on_off_in_pipeline = (
-            False  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            False  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
-        software.is_to_run = True  ## set to True if it is going to run, for example Trimmomatic can run or not
+        # set to True if it is going to run, for example Trimmomatic can run or not
+        software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run
+        # which part of pipeline is going to run
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_variant_detection
         )
@@ -3194,7 +3213,7 @@ class DefaultParameters(object):
         parameter.project_sample = project_sample
         parameter.union_char = ""
         parameter.can_change = False
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 1
         parameter.range_available = ""
         parameter.range_max = ""
@@ -3216,16 +3235,18 @@ class DefaultParameters(object):
         software.version_parameters = self.get_software_parameters_version(
             software.name
         )
-        software.technology = self.get_technology(ConstantsSettings.TECHNOLOGY_generic)
+        software.technology = self.get_technology(
+            ConstantsSettings.TECHNOLOGY_generic)
         software.can_be_on_off_in_pipeline = (
-            True  ## set to True if can be ON/OFF in pipeline, otherwise always ON
+            True  # set to True if can be ON/OFF in pipeline, otherwise always ON
         )
-        software.is_to_run = True  ## set to True if it is going to run, for example Trimmomatic can run or not
+        # set to True if it is going to run, for example Trimmomatic can run or not
+        software.is_to_run = True
 
-        ###  small description of software
+        # small description of software
         software.help_text = ""
 
-        ###  which part of pipeline is going to run
+        # which part of pipeline is going to run
         software.pipeline_step = self._get_pipeline(
             ConstantsSettings.PIPELINE_NAME_variant_detection
         )
@@ -3241,7 +3262,7 @@ class DefaultParameters(object):
         parameter.project_sample = project_sample
         parameter.union_char = ""
         parameter.can_change = False
-        parameter.is_to_run = True  ### by default it's True
+        parameter.is_to_run = True  # by default it's True
         parameter.sequence_out = 1
         parameter.range_available = ""
         parameter.range_max = ""
@@ -3251,4 +3272,4 @@ class DefaultParameters(object):
         return vect_parameters
 
 
-### "Generate consensus" -> it is used for set ON/OFF consensus in the AllConsensus File
+# "Generate consensus" -> it is used for set ON/OFF consensus in the AllConsensus File
