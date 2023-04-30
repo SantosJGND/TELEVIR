@@ -1059,6 +1059,7 @@ class Parameter_DB_Utility:
 
             if not row.parameter:
                 return [""]
+
             if not row.can_change:
                 return [row.parameter]
 

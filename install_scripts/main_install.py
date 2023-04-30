@@ -520,7 +520,7 @@ class main_setup:
                         )
                     )
 
-        if self.layout.install_centrifuge:
+        if 1 == 2:
             install_success = sofprep.centrifuge_install(dbname="bacteria")
             centlib = f"refseq-bacteria.dust.fna.gz"
             if os.path.isfile(sofprep.dbs["centrifuge"]["fasta"]):
@@ -595,6 +595,36 @@ class main_setup:
                         "kraken2",
                         sofprep.dbs["kraken2"]["db"],
                         "default",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
+                    )
+                )
+
+        if self.layout.install_kraken2:
+            success_install = sofprep.kraken2_download_install(
+                dbname="bacteria")
+            krlib = f"kraken2-bacteria-library.fna.gz"
+            if os.path.isfile(sofprep.dbs["kraken2"]["fasta"]):
+                os.system(
+                    f"mv {sofprep.dbs['kraken2']['fasta']} {prepdl.seqdir}{krlib}"
+                )
+            else:
+                if not os.path.isfile(f"{prepdl.seqdir}{krlib}"):
+                    logging.info("kraken2 database fasta not found.")
+
+            if os.path.isfile(f"{prepdl.seqdir}{krlib}"):
+                prepdl.fastas["nuc"]["kraken2-bacteria"] = f"{prepdl.seqdir}{krlib}"
+
+            if success_install:
+
+                self.installed_software.append(
+                    self.software_install_string("kraken2"))
+
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "kraken2",
+                        sofprep.dbs["kraken2"]["db"],
+                        "bacteria",
                         True,
                         sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
                     )

@@ -1001,7 +1001,7 @@ class setup_install(setup_dl):
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
         sdir = odir + dbname + "/" + dbname
-        index_file_prefix= f"{odir}{dbname}/{dbname}_index"
+        index_file_prefix = f"{odir}{dbname}/{dbname}_index"
         if os.path.isfile(index_file_prefix + ".1.cf"):
             logging.info(f"Centrifuge db {dbname} index is installed.")
             centrifuge_fasta = f"{sdir}/complete.fna.gz"
@@ -1072,7 +1072,11 @@ class setup_install(setup_dl):
             os.system(" ".join(seqmap_command) +
                       f" > {odir}{dbname}.seq2taxid.map")
 
-            os.system(f"cat {sdir}/*fna > {sdir}/complete.fna")
+            # iterate over .fna files and concatenate them into one file
+            fna_files = [f for f in os.listdir(sdir) if f.endswith(".fna")]
+            for f in fna_files:
+                os.system(f"cat {sdir}/{f} >> {sdir}/complete.fna")
+            #
 
             try:
                 subprocess.run(build_command)
@@ -1204,7 +1208,11 @@ class setup_install(setup_dl):
             dbdir="kraken2",
     ):
         odir = self.dbdir + dbdir + "/"
-        source = "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20221209.tar.gz"
+
+        if dbname == "viral":
+            source = "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20221209.tar.gz"
+        elif dbname == "bacteria":
+            source = "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_16gb_20230314.tar.gz"
 
         if os.path.isfile(odir + dbname + "/taxo.k2d"):
             logging.info(
@@ -1551,6 +1559,7 @@ class setup_install(setup_dl):
                 seqid[["GTDB", "description"]] = seqid["merge"].str.split(
                     " ", 1, expand=True
                 )
+
                 seqid = seqid.drop("merge", 1)
                 seqid.to_csv(
                     f"{odir + dbname}/seqid2taxid.map.orig",

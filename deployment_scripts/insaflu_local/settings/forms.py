@@ -7,24 +7,23 @@ import os
 
 from constants.software_names import SoftwareNames
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Button, ButtonHolder, Div, Fieldset, Layout, Submit
+from crispy_forms.layout import (Button, ButtonHolder, Div, Fieldset, Layout,
+                                 Submit)
 from datasets.models import Dataset
 from django import forms
 from django.urls import reverse
 from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
 from managing_files.models import Project, ProjectSample
-from pathogen_identification.utilities.utilities_pipeline import (
-    Utility_Pipeline_Manager,
-)
 from pathogen_identification.models import Projects as TelevirProject
-from utils.utils import Utils
-
+from pathogen_identification.utilities.utilities_pipeline import \
+    Utility_Pipeline_Manager
 from settings.default_parameters import DefaultParameters
 from settings.models import Parameter, Sample, Software
+from utils.utils import Utils
 
 
-## https://kuanyui.github.io/2015/04/13/django-crispy-inline-form-layout-with-bootstrap/
+# https://kuanyui.github.io/2015/04/13/django-crispy-inline-form-layout-with-bootstrap/
 class SoftwareForm(forms.ModelForm):
     """
     Reference form, name, isolate_name and others
@@ -39,16 +38,16 @@ class SoftwareForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop("request")
-        ## try to get project or project sample, for settings update
+        # try to get project or project sample, for settings update
         pk_project = kwargs.get("pk_project")
         pk_televir_project = kwargs.get("pk_televir_project")
         project = None
         televir_project = None
 
         ###
-        self.televir_utiltity = Utility_Pipeline_Manager()
-        self.televir_utiltity.get_software_list()
-        self.televir_utiltity.get_software_db_dict()
+        self.televir_utility = Utility_Pipeline_Manager()
+        self.televir_utility.get_software_list()
+        self.televir_utility.get_software_db_dict()
         ###
         if not pk_project is None:
             kwargs.pop("pk_project")
@@ -76,10 +75,10 @@ class SoftwareForm(forms.ModelForm):
             kwargs.pop("pk_dataset")
             dataset = Dataset.objects.get(pk=pk_dataset)
 
-        ## end
+        # end
         super(SoftwareForm, self).__init__(*args, **kwargs)
 
-        ### return the parameters that is possible to change
+        # return the parameters that is possible to change
         paramers = Parameter.objects.filter(
             software=self.instance,
             project=project,
@@ -114,7 +113,8 @@ class SoftwareForm(forms.ModelForm):
                             parameter.not_set_value
                         )
                     )
-                dt_fields[parameter.get_unique_id()].help_text = escape(help_text)
+                dt_fields[parameter.get_unique_id(
+                )].help_text = escape(help_text)
 
             elif parameter.is_float():
                 dt_fields[parameter.get_unique_id()] = forms.FloatField(
@@ -131,8 +131,9 @@ class SoftwareForm(forms.ModelForm):
                             parameter.not_set_value
                         )
                     )
-                dt_fields[parameter.get_unique_id()].help_text = escape(help_text)
-            ### this is use for Medaka and Trimmomatic
+                dt_fields[parameter.get_unique_id(
+                )].help_text = escape(help_text)
+            # this is use for Medaka and Trimmomatic
             elif parameter.is_char_list():
 
                 if parameter.software.name == SoftwareNames.SOFTWARE_NEXTSTRAIN_name:
@@ -167,11 +168,11 @@ class SoftwareForm(forms.ModelForm):
                 elif (
                     parameter.name == "--db"
                     and parameter.software.pipeline_step.name
-                    in self.televir_utiltity.steps_db_dependant
+                    in self.televir_utility.steps_db_dependant
                 ):
                     list_data = [
                         [data_, os.path.basename(data_)]
-                        for data_ in self.televir_utiltity.get_from_software_db_dict(
+                        for data_ in self.televir_utility.get_from_software_db_dict(
                             parameter.software.name.lower(), []
                         )
                     ]
@@ -184,9 +185,11 @@ class SoftwareForm(forms.ModelForm):
                 dt_fields[parameter.get_unique_id()].empty_label = None
 
                 help_text = parameter.description
-                dt_fields[parameter.get_unique_id()].help_text = escape(help_text)
+                dt_fields[parameter.get_unique_id(
+                )].help_text = escape(help_text)
             else:
-                dt_fields[parameter.get_unique_id()] = forms.CharField(required=True)
+                dt_fields[parameter.get_unique_id()] = forms.CharField(
+                    required=True)
                 help_text = parameter.description
                 if not parameter.not_set_value is None:
                     help_text += (
@@ -194,16 +197,19 @@ class SoftwareForm(forms.ModelForm):
                             parameter.not_set_value
                         )
                     )
-                dt_fields[parameter.get_unique_id()].help_text = escape(help_text)
+                dt_fields[parameter.get_unique_id(
+                )].help_text = escape(help_text)
 
             dt_fields[parameter.get_unique_id()].label = parameter.name
             if not parameter.can_change and len(parameter.parameter) == 0:
                 dt_fields[parameter.get_unique_id()].initial = parameter.name
             else:
-                dt_fields[parameter.get_unique_id()].initial = parameter.parameter
-            vect_divs.append(Div(parameter.get_unique_id(), css_class="col-sm-4"))
+                dt_fields[parameter.get_unique_id(
+                )].initial = parameter.parameter
+            vect_divs.append(
+                Div(parameter.get_unique_id(), css_class="col-sm-4"))
 
-        ### set all fields
+        # set all fields
         self.fields.update(dt_fields)
 
         vect_rows_divs = []
@@ -227,7 +233,7 @@ class SoftwareForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.form_method = "POST"
 
-        #### message in form
+        # message in form
         form_message = "Update {} parameters for -{}-".format(
             "software" if self.instance.is_software() else "INSaFLU", self.instance.name
         )
@@ -261,7 +267,8 @@ class SoftwareForm(forms.ModelForm):
 
         if len(vect_rows_divs) == 1:
             self.helper.layout = Layout(
-                Fieldset(form_message, vect_rows_divs[0], css_class="article-content"),
+                Fieldset(form_message,
+                         vect_rows_divs[0], css_class="article-content"),
                 ButtonHolder(
                     Submit("save", "Save", css_class="btn-primary"),
                     Button(
@@ -390,7 +397,7 @@ class SoftwareForm(forms.ModelForm):
         """
 
         cleaned_data = super(SoftwareForm, self).clean()
-        #### THIS is only for NanoFilt
+        # THIS is only for NanoFilt
         if "--maxlength_5" in self.cleaned_data and "-l_2" in self.cleaned_data:
             max_length = self.cleaned_data.get("--maxlength_5")
             min_length = self.cleaned_data.get("-l_2")
@@ -414,6 +421,6 @@ class SoftwareForm(forms.ModelForm):
                         )
                     ),
                 )
-        #### END for NanoFilt
+        # END for NanoFilt
 
         return cleaned_data
