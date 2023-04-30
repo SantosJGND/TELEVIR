@@ -1214,6 +1214,8 @@ class setup_install(setup_dl):
         elif dbname == "bacteria":
             source = "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_16gb_20230314.tar.gz"
 
+        source_file = source.split("/")[-1]
+
         if os.path.isfile(odir + dbname + "/taxo.k2d"):
             logging.info(
                 f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
@@ -1237,8 +1239,8 @@ class setup_install(setup_dl):
         subprocess.run(["mkdir", "-p", sdir])
         subprocess.run(["wget", "-P", sdir, source])
         subprocess.run(
-            ["tar", "-xvzf", sdir + "k2_viral_20221209.tar.gz", "-C", sdir])
-        subprocess.run(["rm", sdir + "k2_viral_20221209.tar.gz"])
+            ["tar", "-xvzf", sdir + source_file, "-C", sdir])
+        subprocess.run(["rm", sdir + source_file])
 
         self.dbs[id] = {
             "dir": odir,
