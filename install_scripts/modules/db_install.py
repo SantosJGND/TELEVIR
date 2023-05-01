@@ -1022,7 +1022,8 @@ class setup_install(setup_dl):
             logging.info(f"Centrifuge db {dbname} index is installed.")
             centrifuge_fasta = f"{sdir}/complete.fna.gz"
             if os.path.isfile(os.path.splitext(centrifuge_fasta)[0]):
-                os.system(f"bgzip {os.path.splitext(centrifuge_fasta)[0]}")
+                compress_using_xopen(f"{sdir}/complete.fna",
+                                     f"{sdir}/complete.fna.gz")
 
             self.dbs[id] = {
                 "dir": odir,

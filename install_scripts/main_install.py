@@ -521,7 +521,8 @@ class main_setup:
                     )
 
         if self.layout.install_centrifuge:
-            install_success = sofprep.centrifuge_install(dbname="bacteria")
+            install_success = sofprep.centrifuge_install(
+                dbname="bacteria", threads="16")
             centlib = f"refseq-bacteria.dust.fna.gz"
             if os.path.isfile(sofprep.dbs["centrifuge"]["fasta"]):
                 os.system(
