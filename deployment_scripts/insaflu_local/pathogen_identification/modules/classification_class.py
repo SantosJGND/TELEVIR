@@ -597,7 +597,7 @@ class run_centrifuge(Classifier_init):
             quoting=csv.QUOTE_NONE,
         ).rename(columns={0: "qseqid", 2: "taxid"})
 
-        report = report[report.acc != "unclassified"][["qseqid", "taxid"]]
+        report = report[report.taxid != "unclassified"][["qseqid", "taxid"]]
         return pd.DataFrame(report)
 
 
