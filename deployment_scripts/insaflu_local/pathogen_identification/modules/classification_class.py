@@ -593,11 +593,11 @@ class run_centrifuge(Classifier_init):
             self.full_report_path,
             sep="\t",
             header=None,
-            usecols=[0, 6],
+            usecols=[0, 2],
             quoting=csv.QUOTE_NONE,
-        ).rename(columns={0: "qseqid", 6: "acc"})
+        ).rename(columns={0: "qseqid", 2: "taxid"})
 
-        report = report[report.acc != "unclassified"][["qseqid", "acc"]]
+        report = report[report.acc != "unclassified"][["qseqid", "taxid"]]
         return pd.DataFrame(report)
 
 

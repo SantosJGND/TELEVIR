@@ -64,7 +64,7 @@ class SoftwaresTable(tables.Table):
         self.televir_project = televir_project
 
         self.count_project_sample = 0
-        ### get number of samples inside of this project, if project exist
+        # get number of samples inside of this project, if project exist
         if not project is None:
             self.count_project_sample = ProjectSample.objects.filter(
                 project=project, is_deleted=False
@@ -87,14 +87,14 @@ class SoftwaresTable(tables.Table):
         return record.name if record.name_extended is None else record.name_extended
 
     def render_select_to_run(self, value, record):
-        ## test if its to run and get IDs from others
+        # test if its to run and get IDs from others
         is_to_run, sz_ids = self._is_to_run(record)
-        ### When in sample you can not turn ON|OFF the software
+        # When in sample you can not turn ON|OFF the software
         b_enable_options = self.b_enable_options
         if not self.sample is None:
             b_enable_options = True
 
-        ### check if can ON/OFF SOFTWARE_GENERATE_CONSENSUS_name (consensus make exist)
+        # check if can ON/OFF SOFTWARE_GENERATE_CONSENSUS_name (consensus make exist)
         if (
             not self.project_sample is None
             and record.name == SoftwareNames.SOFTWARE_GENERATE_CONSENSUS_name
@@ -103,7 +103,7 @@ class SoftwaresTable(tables.Table):
                 self.project_sample.get_consensus_file(TypePath.MEDIA_ROOT)
             )
 
-        ## need to remove # in href, otherwise still active
+        # need to remove # in href, otherwise still active
         sz_href = (
             '<a href="{}id_turn_software_on_off" {} '.format(
                 "#" if record.can_be_on_off_in_pipeline and b_enable_options else "",
@@ -166,7 +166,8 @@ class SoftwaresTable(tables.Table):
             #    technology_name=ConstantsSettings.TECHNOLOGY_generic, dataset=self.dataset)
             # logger.debug("Dataset parameters:{}".format(parameters))
             # return parameters
-            parameters_list = Parameter.objects.filter(dataset__name=self.dataset)
+            parameters_list = Parameter.objects.filter(
+                dataset__name=self.dataset)
 
             if len(list(parameters_list)) == 1:
                 return list(parameters_list)[0].parameter
@@ -214,7 +215,6 @@ class SoftwaresTable(tables.Table):
                 technology_name,
             )
         elif not self.televir_project is None:
-            print(self.televir_project)
             default_software_projects = DefaultProjectSoftware()
             return default_software_projects.get_parameters(
                 record.name,
@@ -238,8 +238,8 @@ class SoftwaresTable(tables.Table):
 
     def render_options(self, record):
 
-        ### if project
-        ## Edit
+        # if project
+        # Edit
         from crequest.middleware import CrequestMiddleware
 
         current_request = CrequestMiddleware.get_request()
@@ -250,15 +250,15 @@ class SoftwaresTable(tables.Table):
         except Profile.DoesNotExist:
             pass
 
-        ### define tooltip message
+        # define tooltip message
         tooltip_reset = "Set default parameters"
         if record.name == SoftwareNames.SOFTWARE_MASK_CONSENSUS_BY_SITE_name:
             tooltip_reset = "Clean all positions"
 
-        ## start define links
+        # start define links
         b_enable_options = self.b_enable_options
-        if not self.televir_project is None:  ## for televir projects
-            if b_enable_options:  ## If b_enable_options is False it's false to All
+        if not self.televir_project is None:  # for televir projects
+            if b_enable_options:  # If b_enable_options is False it's false to All
                 default_software_projects = DefaultProjectSoftware()
                 b_enable_options = (
                     default_software_projects.can_change_values_for_this_software(
@@ -310,13 +310,13 @@ class SoftwaresTable(tables.Table):
                 + "{}".format("" if b_enable_options else "disable_fa_icon")
                 + '"></i></span></a>'
             )
-        elif not self.project is None:  ## for projects
-            ### turn on/off buttons
+        elif not self.project is None:  # for projects
+            # turn on/off buttons
             if (
                 record.name == SoftwareNames.SOFTWARE_MASK_CONSENSUS_BY_SITE_name
-            ):  ### allways true for this software
+            ):  # allways true for this software
                 b_enable_options = True
-            elif b_enable_options:  ## If b_enable_options is False it's false to All
+            elif b_enable_options:  # If b_enable_options is False it's false to All
                 default_software_projects = DefaultProjectSoftware()
                 b_enable_options = (
                     default_software_projects.can_change_values_for_this_software(
@@ -382,9 +382,9 @@ class SoftwaresTable(tables.Table):
                 + "{}".format("" if b_enable_options else "disable_fa_icon")
                 + '"></i></span></a>'
             )
-        elif not self.dataset is None:  ## for datasets
-            ### turn on/off buttons
-            if b_enable_options:  ## If b_enable_options is False it's false to All
+        elif not self.dataset is None:  # for datasets
+            # turn on/off buttons
+            if b_enable_options:  # If b_enable_options is False it's false to All
                 default_software_projects = DefaultProjectSoftware()
                 b_enable_options = (
                     default_software_projects.can_change_values_for_this_software(
@@ -398,7 +398,8 @@ class SoftwaresTable(tables.Table):
 
             str_links = (
                 "<a href="
-                + reverse("software-dataset-update", args=[record.pk, self.dataset.pk])
+                + reverse("software-dataset-update",
+                          args=[record.pk, self.dataset.pk])
                 + ' data-toggle="tooltip" title="Edit parameters" '
                 + "{}".format(
                     "" if b_enable_options else "onclick='return false;' disable"
@@ -433,8 +434,8 @@ class SoftwaresTable(tables.Table):
                 + "{}".format("" if b_enable_options else "disable_fa_icon")
                 + '"></i></span></a>'
             )
-        elif not self.project_sample is None:  ## for project samples
-            if b_enable_options:  ## If b_enable_options is False it's false to All
+        elif not self.project_sample is None:  # for project samples
+            if b_enable_options:  # If b_enable_options is False it's false to All
                 default_software_projects = DefaultProjectSoftware()
                 b_enable_options = (
                     default_software_projects.can_change_values_for_this_software(
@@ -463,7 +464,7 @@ class SoftwaresTable(tables.Table):
                     )
                 )
                 b_enable_options = (
-                    True  ## because for MaskConsensusBySite is always active
+                    True  # because for MaskConsensusBySite is always active
                 )
             else:
                 str_links = (
@@ -506,11 +507,11 @@ class SoftwaresTable(tables.Table):
                 + "{}".format("" if b_enable_options else "disable_fa_icon")
                 + '"></i></span></a>'
             )
-        elif not self.sample is None:  ## for samples
+        elif not self.sample is None:  # for samples
             is_to_run, sz_ids = self._is_to_run(record)
             if (
                 b_enable_options and is_to_run
-            ):  ## If b_enable_options is False it's false to All
+            ):  # If b_enable_options is False it's false to All
                 default_software_projects = DefaultProjectSoftware()
                 b_enable_options = (
                     default_software_projects.can_change_values_for_this_software(
@@ -521,7 +522,8 @@ class SoftwaresTable(tables.Table):
                 b_enable_options = False
             str_links = (
                 "<a href="
-                + reverse("software-sample-update", args=[record.pk, self.sample.pk])
+                + reverse("software-sample-update",
+                          args=[record.pk, self.sample.pk])
                 + ' data-toggle="tooltip" title="Edit parameters" '
                 + "{}".format(
                     "" if b_enable_options else "onclick='return false;' disable"
@@ -555,9 +557,9 @@ class SoftwaresTable(tables.Table):
                 + "{}".format("" if b_enable_options else "disable_fa_icon")
                 + '"></i></span></a>'
             )
-        else:  ## for all
-            ### test if all parameters are ON/OFF
-            if b_enable_options:  ## If b_enable_options is False it's false to All
+        else:  # for all
+            # test if all parameters are ON/OFF
+            if b_enable_options:  # If b_enable_options is False it's false to All
                 default_software_projects = DefaultProjectSoftware()
                 b_enable_options = (
                     default_software_projects.can_change_values_for_this_software(
@@ -575,7 +577,7 @@ class SoftwaresTable(tables.Table):
                 + "{}".format("" if b_enable_options else "disable_fa_icon")
                 + '"></i></span></a>'
             )
-            ## set default values
+            # set default values
             str_links += (
                 '<a href="{}"'.format(
                     "#id_set_default_modal" if b_enable_options else ""
@@ -586,7 +588,8 @@ class SoftwaresTable(tables.Table):
                 + ' ref_name="'
                 + record.name
                 + '"'
-                "{}".format("" if b_enable_options else "onclick='return false;'")
+                "{}".format(
+                    "" if b_enable_options else "onclick='return false;'")
                 + ' type_software="{}'.format(
                     "software" if record.is_software() else "INSaFLU"
                 )
@@ -727,7 +730,7 @@ class INSaFLUParametersTable(tables.Table):
         self.b_enable_options = b_enable_options
 
         self.count_project_sample = 0
-        ### get number of samples inside of this project, if project exist
+        # get number of samples inside of this project, if project exist
         if not project is None:
             self.count_project_sample = ProjectSample.objects.filter(
                 project=project, is_deleted=False
@@ -735,7 +738,8 @@ class INSaFLUParametersTable(tables.Table):
 
     class Meta:
         model = Software()
-        fields = ("select_to_run", "software", "technology", "parameters", "options")
+        fields = ("select_to_run", "software",
+                  "technology", "parameters", "options")
         attrs = {"class": "table-striped table-bordered"}
         empty_text = "There are no INSaFLU parameters to show..."
 
@@ -814,8 +818,8 @@ class INSaFLUParametersTable(tables.Table):
 
     def render_options(self, record):
 
-        ### if project
-        ## Edit
+        # if project
+        # Edit
         from crequest.middleware import CrequestMiddleware
 
         current_request = CrequestMiddleware.get_request()
@@ -829,7 +833,8 @@ class INSaFLUParametersTable(tables.Table):
         if not self.project is None:
             str_links = (
                 "<a href="
-                + reverse("software-project-update", args=[record.pk, self.project.pk])
+                + reverse("software-project-update",
+                          args=[record.pk, self.project.pk])
                 + ' data-toggle="tooltip" title="Edit parameters" '
                 + "{}".format(
                     "" if self.b_enable_options else "onclick='return false;' disable"
@@ -908,7 +913,7 @@ class INSaFLUParametersTable(tables.Table):
                 + '><span><i class="fa fa-2x fa-pencil padding-button-table '
                 + '"></i></span></a>'
             )
-            ## Remove
+            # Remove
             str_links += (
                 '<a href="{}"'.format(
                     "#id_set_default_modal" if self.b_enable_options else ""

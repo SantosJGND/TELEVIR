@@ -5,9 +5,7 @@ from typing import List
 import pandas as pd
 from pathogen_identification.modules.object_classes import Remap_Target
 from pathogen_identification.utilities.utilities_general import (
-    merge_classes,
-    scrape_description,
-)
+    merge_classes, scrape_description)
 
 
 class Metadata_handler:
@@ -117,12 +115,14 @@ class Metadata_handler:
         """
         Clean report.
         """
+
         if df.shape[0] > 0:
             for target_col in ["acc", "protid", "prot_acc", "taxid"]:
                 if target_col in df.columns:
                     df = df.dropna(subset=[target_col])
                     df = df.drop_duplicates(subset=[target_col])
                     df = df.reset_index(drop=True)
+
         return df
 
     def results_process(self, df: pd.DataFrame, sift: bool = True) -> pd.DataFrame:
@@ -191,7 +191,8 @@ class Metadata_handler:
                 self.input_protein_accession_to_taxid_path, sep="\t", header=0
             )
         except:
-            self.protein_accession_to_taxid = pd.DataFrame(columns=["acc", "taxid"])
+            self.protein_accession_to_taxid = pd.DataFrame(
+                columns=["acc", "taxid"])
             self.logger.info("No protein accession to taxid file found.")
 
         self.logger.info("Finished retrieving metadata")
@@ -232,7 +233,8 @@ class Metadata_handler:
                     "No taxid, accid or protid in the dataframe, unable to retrieve description."
                 )
 
-        df = self.merge_check_column_types(df, self.taxonomy_to_description, "taxid")
+        df = self.merge_check_column_types(
+            df, self.taxonomy_to_description, "taxid")
         df.taxid = df.taxid.astype(int)
 
         return df
@@ -396,14 +398,16 @@ class Metadata_handler:
 
         print("TAXID LIMIT: ", taxid_limit)
 
-        targets, raw_targets = merge_classes(self.rclass, self.aclass, maxt=taxid_limit)
+        targets, raw_targets = merge_classes(
+            self.rclass, self.aclass, maxt=taxid_limit)
         raw_targets["accid"] = raw_targets["taxid"].apply(
             self.get_taxid_representative_accid
         )
         raw_targets["description"] = raw_targets["taxid"].apply(
             self.get_taxid_representative_description
         )
-        raw_targets["status"] = raw_targets["taxid"].isin(targets["taxid"].to_list())
+        raw_targets["status"] = raw_targets["taxid"].isin(
+            targets["taxid"].to_list())
 
         self.raw_targets = raw_targets
         self.merged_targets = targets
@@ -470,7 +474,8 @@ class Metadata_handler:
                         self.taxonomy_to_description.taxid.astype(int)
                     )
                     description = self.taxonomy_to_description[
-                        self.taxonomy_to_description.taxid.astype(int) == int(taxid)
+                        self.taxonomy_to_description.taxid.astype(
+                            int) == int(taxid)
                     ].description.unique()
 
                     if len(description) == 0:
