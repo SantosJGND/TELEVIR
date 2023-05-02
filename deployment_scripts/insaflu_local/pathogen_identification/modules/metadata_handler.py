@@ -262,7 +262,7 @@ class Metadata_handler:
         if df2[column_two].dtype != str:
             df2[column_two] = df2[column_two].astype(str)
 
-        return pd.merge(df1, df2, left_on=column, right_on=column_two)
+        return pd.merge(df1, df2, left_on=column, right_on=column_two, how="left")
 
     @staticmethod
     def sift_report_filter(df, query: str = "phage"):
