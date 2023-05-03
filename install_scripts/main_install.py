@@ -77,7 +77,8 @@ def check_proceed(filepath: str, file_template: str, max_file_size: int = 100000
     files_predict = predict_files_split(
         filepath, max_file_size=max_file_size, file_template=file_template)
 
-    files_exist = [os.path.exists(file) for file in files_predict]
+    files_exist = [(os.path.exists(file) and os.path.getsize(file) > 100)
+                   for file in files_predict]
     if all(files_exist):
         return False
     else:
@@ -802,6 +803,10 @@ class main_setup:
 
         # install host dbs.
 
+    def db_generate_from_exiting(
+        self, INSTALL_PARAMS, prepdl, nanopore=False, taxdump="", test=False
+    ):
+
         for fname, fpath in prepdl.fastas["host"].items():
             bwa_install = sofprep.bwa_install(dbname=fname, reference=fpath)
             if bwa_install:
@@ -990,6 +995,14 @@ class main_setup:
                 self.wdir.fastas["nuc"] = process_nuc_fasta_dict(
                     self.wdir.fastas["nuc"], max_file_size=4000000000
                 )
+
+                self.db_generate_from_exiting(
+                    self.INSTALL_PARAMS,
+                    self.wdir,
+                    nanopore=self.nanopore,
+                    taxdump=self.taxdump,
+                )
+
                 self.dl_metadata_nuc()
 
             if self.seqdl:
