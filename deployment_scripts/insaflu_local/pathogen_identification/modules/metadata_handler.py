@@ -139,6 +139,9 @@ class Metadata_handler:
 
         df = self.map_hit_report(df)
 
+        # replace nan by "NA" in description column
+        df["description"] = df["description"].fillna("NA")
+
         if sift:
             sifted_df = self.sift_report_filter(df, query=self.sift_query)
             self.sift_report = self.sift_summary(df, sifted_df)

@@ -13,7 +13,7 @@ def entrez_ncbi_taxid_command(lines, tempfile, outdir, outfile):
         ftemp.write(lines)
 
     os.system(
-        f"cat {tempfile} | epost -db nuccore | esummary -db nuccore | xtract -pattern DocumentSummary -element TaxId,Title >> {outdir}{outfile}"
+        f"cat {tempfile} | epost -db nuccore | esummary -db nuccore | xtract -pattern DocumentSummary -element TaxId,Title > {outdir}{outfile}"
     )
 
 
@@ -67,24 +67,34 @@ def main():
     args = get_args()
 
     new_descriptions = pd.DataFrame(columns=["taxid", "description"])
+    chunksize = 1000
 
-    input_df = pd.read_csv(args.infile, sep="\t")
+    # read file in chunks using pandas
+    d = 0
 
-    # analyze pandas dataframe by chuncks of 5000 rows
-    for i in range(0, len(input_df), 5000):
+    for chunk in pd.read_csv(args.infile, chunksize=chunksize, header=None, sep="\t"):
 
-        # get the lines of the dataframe
-        lines = "\n".join(input_df["acc"][i:i+5000])
+        print(f"Processing chunk {d}")
+        chunk = chunk[0].tolist()
+        chunk = "\n".join(chunk)
 
         entrez_ncbi_taxid_command(
-            lines, args.tempfile, args.outdir, args.outfile)
+            chunk, args.tempfile, args.outdir, args.outfile)
 
-        # read the output file
-        new_df = pd.read_csv(
-            f"{args.outdir}{args.outfile}", sep="\t", header=None).rename(columns={0: "taxid", 1: "description"})
+        new_names = pd.read_csv(
+            f"{args.outdir}{args.outfile}",
+            sep="\t",
+            header=None,
+            names=["taxid", "description"],
+        )
+        new_names = new_names.drop_duplicates()
 
-        # append the new dataframe to the old one
-        new_descriptions = pd.concat([new_descriptions, new_df])
+        new_descriptions = pd.concat([new_descriptions, new_names])
+        new_descriptions = new_descriptions.drop_duplicates()
 
-        # remove the output file
-        os.remove(f"{args.outdir}{args.outfile}")
+    new_descriptions.to_csv(
+        f"{args.outdir}{args.outfile}", sep="\t", index=False)
+
+
+if __name__ == "__main__":
+    main()
