@@ -6,7 +6,7 @@ import sys
 from distutils.command.install import install
 from pathlib import Path
 from re import I
-from typing import Iterable, List, dict
+from typing import Iterable, List
 
 import dnaio
 import xopen
@@ -109,6 +109,18 @@ def process_file_list(file_list: List[str], max_file_size: int = 1000000000) -> 
     output_files = []
     for filepath in file_list:
         output_files += split_file(filepath, max_file_size=max_file_size)
+
+    return output_files
+
+
+def process_nuc_fasta_dict(nuc_fasta_dict: dict, max_file_size: int = 1000000000) -> dict:
+    """
+    split files in file_list into smaller files"""
+
+    output_files = {}
+    for software, file_list in nuc_fasta_dict.items():
+        output_files[software] = process_file_list(
+            file_list, max_file_size=max_file_size)
 
     return output_files
 
@@ -437,7 +449,7 @@ class main_setup:
                 self.utilities.add_database(
                     self.utilities.database_item(
                         "requests",
-                        self.wdir.fastas["nuc"]["requests"],
+                        self.wdir.fastas["nuc"]["requests"][0],
                         True,
                     )
                 )
@@ -467,7 +479,7 @@ class main_setup:
                 self.utilities.add_database(
                     self.utilities.database_item(
                         "refseq_gen",
-                        self.wdir.fastas["nuc"]["refseq"],
+                        self.wdir.fastas["nuc"]["refseq"][0],
                         True,
                     )
                 )
@@ -527,7 +539,7 @@ class main_setup:
                     self.utilities.add_database(
                         self.utilities.database_item(
                             "virosaurus",
-                            self.wdir.fastas["nuc"]["virosaurus"],
+                            self.wdir.fastas["nuc"]["virosaurus"][0],
                             True,
                         )
                     )
@@ -609,7 +621,7 @@ class main_setup:
             if os.path.isfile(f"{prepdl.seqdir}{centlib}"):
                 prepdl.fastas["nuc"][
                     "centrifuge"
-                ] = f"{prepdl.seqdir}{centlib}"  # add to fastas dict
+                ] = [f"{prepdl.seqdir}{centlib}"]  # add to fastas dict
 
                 if install_success:
                     self.installed_software.append(
@@ -641,7 +653,7 @@ class main_setup:
             if os.path.isfile(f"{prepdl.seqdir}{centlib}"):
                 prepdl.fastas["nuc"][
                     "centrifuge_bacteria"
-                ] = f"{prepdl.seqdir}{centlib}"  # add to fastas dict
+                ] = [f"{prepdl.seqdir}{centlib}"]  # add to fastas dict
 
                 if install_success:
                     self.installed_software.append(
@@ -690,7 +702,7 @@ class main_setup:
                     logging.info("kraken2 database fasta not found.")
 
             if os.path.isfile(f"{prepdl.seqdir}{krlib}"):
-                prepdl.fastas["nuc"]["kraken2"] = f"{prepdl.seqdir}{krlib}"
+                prepdl.fastas["nuc"]["kraken2"] = [f"{prepdl.seqdir}{krlib}"]
 
             if success_install:
 
@@ -720,7 +732,8 @@ class main_setup:
                     logging.info("kraken2 database fasta not found.")
 
             if os.path.isfile(f"{prepdl.seqdir}{krlib}"):
-                prepdl.fastas["nuc"]["kraken2-bacteria"] = f"{prepdl.seqdir}{krlib}"
+                prepdl.fastas["nuc"]["kraken2-bacteria"] = [
+                    f"{prepdl.seqdir}{krlib}"]
 
             if success_install:
 
@@ -974,7 +987,7 @@ class main_setup:
                     nanopore=self.nanopore,
                     taxdump=self.taxdump,
                 )
-                self.wdir.fastas["nuc"] = process_file_list(
+                self.wdir.fastas["nuc"] = process_nuc_fasta_dict(
                     self.wdir.fastas["nuc"], max_file_size=4000000000
                 )
                 self.dl_metadata_nuc()

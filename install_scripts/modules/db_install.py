@@ -301,7 +301,7 @@ class setup_dl:
 
         if os.path.isfile(references_file) and os.path.getsize(references_file):
             os.system(f"bgzip {references_file}")
-            self.fastas["nuc"]["requests"] = references_file
+            self.fastas["nuc"]["requests"] = [references_file]
             logging.info("request sequences prepped.")
             return True
         else:
@@ -371,7 +371,7 @@ class setup_dl:
         fnuc_suf = os.path.splitext(fnuc)[0]
 
         if os.path.isfile(self.seqdir + fnuc):
-            self.fastas["nuc"]["refseq"] = self.seqdir + fnuc
+            self.fastas["nuc"]["refseq"] = [self.seqdir + fnuc]
             logging.info(f"{fnuc_suf} found.")
             return True
 
@@ -408,7 +408,7 @@ class setup_dl:
         else:
             logging.info(f"{fnuc_suf} found.")
 
-        self.fastas["nuc"]["refseq"] = self.seqdir + fnuc
+        self.fastas["nuc"]["refseq"] = [self.seqdir + fnuc]
         return True
 
     def get_concat(self, flist, outf, host, source):
@@ -582,7 +582,7 @@ class setup_dl:
         else:
             logging.info("virosaurus90_vertebrate_20200330.fas found.")
 
-        self.fastas["nuc"]["virosaurus"] = self.seqdir + os.path.basename(fl)
+        self.fastas["nuc"]["virosaurus"] = [self.seqdir + os.path.basename(fl)]
 
         return True
 
@@ -594,10 +594,11 @@ class setup_dl:
         if os.path.isfile(self.metadir + outfile):
             acc2tax = pd.read_csv(self.metadir + outfile, sep="\t")
             check = []
-            for dbs, fl in self.fastas["nuc"].items():
-                flb = os.path.basename(fl)
-                if flb not in acc2tax.file.values:
-                    check.append(flb)
+            for dbs, fl_list in self.fastas["nuc"].items():
+                for fl in fl_list:
+                    flb = os.path.basename(fl)
+                    if flb not in acc2tax.file.values:
+                        check.append(flb)
 
             if len(check) == 0:
                 logging.info("acc2taxid.tsv found for all nuc files.")
@@ -621,53 +622,53 @@ class setup_dl:
         ###
         tax2acc = []
 
-        for dbs, fl in self.fastas["nuc"].items():
+        for dbs, fl_list in self.fastas["nuc"].items():
+            for fl in fl_list:
+                temp_file = self.metadir + dbs + "_temp.tsv"
 
-            temp_file = self.metadir + dbs + "_temp.tsv"
+                grep_sequence_identifiers(fl, temp_file)
 
-            grep_sequence_identifiers(fl, temp_file)
+                if dbs == "kraken2":
+                    dbacc = pd.read_csv(
+                        temp_file, sep="|", names=["suffix", "taxid", "acc"]
+                    )
+                    dbacc["taxid"] = dbacc["taxid"].astype(str)
+                    dbacc["file"] = os.path.basename(fl)
+                    dbacc["acc_in_file"] = dbacc[["suffix", "taxid", "acc"]].agg(
+                        "|".join, axis=1
+                    )
 
-            if dbs == "kraken2":
+                    dbacc = dbacc[["acc", "taxid", "file", "acc_in_file"]]
+
+                    tax2acc.append(dbacc)
+                    continue
+
+                sed_out_after_dot(temp_file)
+
+                entrez_ncbi_taxid(temp_file, self.metadir, "nuc_tax.tsv")
+
                 dbacc = pd.read_csv(
-                    temp_file, sep="|", names=["suffix", "taxid", "acc"]
-                )
-                dbacc["taxid"] = dbacc["taxid"].astype(str)
-                dbacc["file"] = os.path.basename(fl)
-                dbacc["acc_in_file"] = dbacc[["suffix", "taxid", "acc"]].agg(
-                    "|".join, axis=1
+                    "{}nuc_tax.tsv".format(self.metadir), sep="\t", header=None
                 )
 
-                dbacc = dbacc[["acc", "taxid", "file", "acc_in_file"]]
+                dbacc = dbacc.rename(columns={0: "acc", 1: "taxid"})
+                dbacc["file"] = os.path.basename(fl)
+
+                if dbs == "virosaurus":
+
+                    def viro_acc(x):
+                        acc = x.split(".")[0]
+                        return f"{acc}:{acc};"
+
+                    dbacc["acc_in_file"] = dbacc.acc.apply(viro_acc)
+
+                else:
+                    dbacc["acc_in_file"] = dbacc.acc
 
                 tax2acc.append(dbacc)
-                continue
 
-            sed_out_after_dot(temp_file)
-
-            entrez_ncbi_taxid(temp_file, self.metadir, "nuc_tax.tsv")
-
-            dbacc = pd.read_csv(
-                "{}nuc_tax.tsv".format(self.metadir), sep="\t", header=None
-            )
-
-            dbacc = dbacc.rename(columns={0: "acc", 1: "taxid"})
-            dbacc["file"] = os.path.basename(fl)
-
-            if dbs == "virosaurus":
-
-                def viro_acc(x):
-                    acc = x.split(".")[0]
-                    return f"{acc}:{acc};"
-
-                dbacc["acc_in_file"] = dbacc.acc.apply(viro_acc)
-
-            else:
-                dbacc["acc_in_file"] = dbacc.acc
-
-            tax2acc.append(dbacc)
-
-            os.system(f"rm {temp_file}")
-            os.system("rm {}".format("{}nuc_tax.tsv".format(self.metadir)))
+                os.system(f"rm {temp_file}")
+                os.system("rm {}".format("{}nuc_tax.tsv".format(self.metadir)))
 
         tax2acc = pd.concat(tax2acc)
 
