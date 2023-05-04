@@ -250,6 +250,7 @@ class DefaultParameters(object):
                 type_of_use,
                 televir_project=televir_project,
             )
+
         print(self.get_software_parameters_version(software_name))
         print("software: {}".format(software))
         print("type of use:: {}".format(type_of_use))
