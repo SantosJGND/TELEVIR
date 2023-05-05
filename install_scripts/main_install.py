@@ -868,7 +868,7 @@ class main_setup:
         return sofprep
 
     def db_generate_external(
-        self, INSTALL_PARAMS, prepdl, sofprep, nanopore=False, taxdump="", test=False
+        self, prepdl, sofprep, nanopore=False, taxdump="", test=False
     ):
 
         # sofprep = self.setup_install_class(
@@ -1067,7 +1067,6 @@ class main_setup:
                 )
 
                 self.db_generate_external(
-                    self.INSTALL_PARAMS,
                     self.wdir,
                     sofprep,
                     nanopore=self.nanopore,

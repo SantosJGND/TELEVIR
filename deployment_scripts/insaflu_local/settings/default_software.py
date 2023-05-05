@@ -6,14 +6,12 @@ Created on 03/05/2020
 from curses.ascii import SO
 
 from constants.software_names import SoftwareNames
-from pathogen_identification.utilities.utilities_pipeline import (
-    Utility_Pipeline_Manager,
-)
-from utils.lock_atomic_transaction import LockedAtomicTransaction
-
+from pathogen_identification.utilities.utilities_pipeline import \
+    Utility_Pipeline_Manager
 from settings.constants_settings import ConstantsSettings
 from settings.default_parameters import DefaultParameters
 from settings.models import Parameter, Software
+from utils.lock_atomic_transaction import LockedAtomicTransaction
 
 
 class DefaultSoftware(object):
@@ -27,7 +25,7 @@ class DefaultSoftware(object):
         """change values"""
         self.default_parameters = DefaultParameters()
         self.televir_utiltity = Utility_Pipeline_Manager()
-        self.change_values_software = {}  ### the key is the name of the software
+        self.change_values_software = {}  # the key is the name of the software
 
     def remove_all_parameters(self, user):
         """remove all parameters"""
@@ -41,7 +39,7 @@ class DefaultSoftware(object):
 
     def test_all_defaults(self, user):
 
-        ### test all defaults
+        # test all defaults
         self.test_default_db(
             SoftwareNames.SOFTWARE_TRIMMOMATIC_name,
             self.default_parameters.get_trimmomatic_default(
@@ -81,7 +79,7 @@ class DefaultSoftware(object):
         #                 self.default_parameters.get_clean_human_reads_default(user,
         #                 Software.TYPE_OF_USE_global, ConstantsSettings.TECHNOLOGY_illumina), user)
 
-        ## ONT software
+        # ONT software
         self.test_default_db(
             SoftwareNames.INSAFLU_PARAMETER_MASK_CONSENSUS_name,
             self.default_parameters.get_mask_consensus_threshold_default(
@@ -136,7 +134,7 @@ class DefaultSoftware(object):
         #                 Software.TYPE_OF_USE_global, ConstantsSettings.TECHNOLOGY_minion), user)
 
         #############
-        ############# PATHOGEN IDENTIFICATION SOFTWARE
+        # PATHOGEN IDENTIFICATION SOFTWARE
         #############
 
         self.test_all_defaults_pathogen_identification(user)
@@ -162,7 +160,16 @@ class DefaultSoftware(object):
             ),
             user,
         )
-
+        self.test_default_db(
+            SoftwareNames.SOFTWARE_CENTRIFUGE_name,
+            self.default_parameters.get_centrifuge_default(
+                user,
+                Software.TYPE_OF_USE_televir_global,
+                ConstantsSettings.TECHNOLOGY_illumina,
+                pipeline_step=ConstantsSettings.PIPELINE_NAME_read_classification,
+            ),
+            user,
+        )
         self.test_default_db(
             SoftwareNames.SOFTWARE_CENTRIFUGE_name,
             self.default_parameters.get_centrifuge_default(
@@ -264,8 +271,8 @@ class DefaultSoftware(object):
             user,
         )
 
-        ########################### hslib19 in centos 7 is too old for this
-        ########################### uncomment in ubuntu
+        # hslib19 in centos 7 is too old for this
+        # uncomment in ubuntu
         # self.test_default_db(
         #    SoftwareNames.SOFTWARE_DESAMBA_name,
         #    self.default_parameters.get_desamba_default(
@@ -363,7 +370,7 @@ class DefaultSoftware(object):
         if not self.assess_db_dependency_met(vect_parameters, software_name):
             return
 
-        ## lock because more than one process can duplicate software names
+        # lock because more than one process can duplicate software names
         with LockedAtomicTransaction(Software), LockedAtomicTransaction(Parameter):
 
             try:
@@ -377,8 +384,9 @@ class DefaultSoftware(object):
                     ),
                     pipeline_step__name=vect_parameters[0].software.pipeline_step,
                 )
-            except Software.DoesNotExist:  ### if not exist save it
-                self.default_parameters.persist_parameters(vect_parameters, type_of_use)
+            except Software.DoesNotExist:  # if not exist save it
+                self.default_parameters.persist_parameters(
+                    vect_parameters, type_of_use)
 
     def get_trimmomatic_parameters(self, user):
         result = self.default_parameters.get_parameters(
@@ -513,7 +521,7 @@ class DefaultSoftware(object):
         return "" if result is None else result
 
     ###
-    ### PATHOGEN DETECTION PARAMETERS
+    # PATHOGEN DETECTION PARAMETERS
 
     def get_kaiju_parameters(self, user, technology_name):
         result = self.default_parameters.get_parameters(
@@ -722,7 +730,7 @@ class DefaultSoftware(object):
             if parameter.can_change:
                 for parameter_to_set_default in vect_parameters:
                     if parameter_to_set_default.sequence_out == parameter.sequence_out:
-                        ###   if change software name
+                        # if change software name
                         if parameter.parameter != parameter_to_set_default.parameter:
                             self.change_values_software[key_value] = True
                             parameter.parameter = parameter_to_set_default.parameter
@@ -1081,12 +1089,14 @@ class DefaultSoftware(object):
         vect_software.append(
             self.software_names.get_insaflu_parameter_mask_consensus_name()
         )
-        vect_software.append(self.software_names.get_medaka_name_extended_consensus())
+        vect_software.append(
+            self.software_names.get_medaka_name_extended_consensus())
         vect_software.append(self.software_names.get_samtools_name_depth_ONT())
         vect_software.append(
             self.software_names.get_insaflu_parameter_limit_coverage_name()
         )
-        vect_software.append(self.software_names.get_insaflu_parameter_freq_vcf_name())
+        vect_software.append(
+            self.software_names.get_insaflu_parameter_freq_vcf_name())
         vect_software.append(self.software_names.get_abricate_name())
         return vect_software
 
