@@ -751,6 +751,68 @@ class main_setup:
                     )
                 )
 
+        if self.layout.install_kraken2:
+            success_install = sofprep.kraken2_download_install(
+                dbname="standard")
+            krlib = f"kraken2-standard-library.fna.gz"
+            if os.path.isfile(sofprep.dbs["kraken2"]["fasta"]):
+                os.system(
+                    f"mv {sofprep.dbs['kraken2']['fasta']} {prepdl.seqdir}{krlib}"
+                )
+            else:
+                if not os.path.isfile(f"{prepdl.seqdir}{krlib}"):
+                    logging.info("kraken2 database fasta not found.")
+
+            if os.path.isfile(f"{prepdl.seqdir}{krlib}"):
+                prepdl.fastas["nuc"]["kraken2-standard"] = [
+                    f"{prepdl.seqdir}{krlib}"]
+
+            if success_install:
+
+                self.installed_software.append(
+                    self.software_install_string("kraken2"))
+
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "kraken2",
+                        sofprep.dbs["kraken2"]["db"],
+                        "standard",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
+                    )
+                )
+
+        if self.layout.install_kraken2:
+            success_install = sofprep.kraken2_download_install(
+                dbname="ribo16s")
+            krlib = f"kraken2-ribo16s-library.fna.gz"
+            if os.path.isfile(sofprep.dbs["kraken2"]["fasta"]):
+                os.system(
+                    f"mv {sofprep.dbs['kraken2']['fasta']} {prepdl.seqdir}{krlib}"
+                )
+            else:
+                if not os.path.isfile(f"{prepdl.seqdir}{krlib}"):
+                    logging.info("kraken2 database fasta not found.")
+
+            if os.path.isfile(f"{prepdl.seqdir}{krlib}"):
+                prepdl.fastas["nuc"]["kraken2-ribo16s"] = [
+                    f"{prepdl.seqdir}{krlib}"]
+
+            if success_install:
+
+                self.installed_software.append(
+                    self.software_install_string("kraken2"))
+
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "kraken2",
+                        sofprep.dbs["kraken2"]["db"],
+                        "ribo16s",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
+                    )
+                )
+
         ########################## krakenuniq ###############################
         if self.layout.install_krakenuniq:
             success_install = sofprep.kuniq_install(dbname=self.organism)

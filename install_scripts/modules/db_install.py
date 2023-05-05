@@ -1231,8 +1231,12 @@ class setup_install(setup_dl):
 
         if dbname == "viral":
             source = "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20221209.tar.gz"
+        elif dbname == "standard":
+            source = "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20230314.tar.gz"
         elif dbname == "bacteria":
             source = "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_16gb_20230314.tar.gz"
+        elif dbname == "ribo16s":
+            source = "https://genome-idx.s3.amazonaws.com/kraken/16S_RDP11.5_20200326.tgz"
 
         source_file = source.split("/")[-1]
 
