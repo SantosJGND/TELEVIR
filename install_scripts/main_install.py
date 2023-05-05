@@ -865,13 +865,15 @@ class main_setup:
 
         # install host dbs.
 
+        return sofprep
+
     def db_generate_external(
-        self, INSTALL_PARAMS, prepdl, nanopore=False, taxdump="", test=False
+        self, INSTALL_PARAMS, prepdl, sofprep, nanopore=False, taxdump="", test=False
     ):
 
-        sofprep = self.setup_install_class(
-            INSTALL_PARAMS, taxdump=taxdump, test=test, organism=self.organism
-        )
+        # sofprep = self.setup_install_class(
+        #    INSTALL_PARAMS, taxdump=taxdump, test=test, organism=self.organism
+        # )
 
         logging.info("install prepped")
 
@@ -1054,7 +1056,7 @@ class main_setup:
 
             if self.soft:
 
-                self.db_generate_intrinsic(
+                sofprep = self.db_generate_intrinsic(
                     self.INSTALL_PARAMS,
                     self.wdir,
                     nanopore=self.nanopore,
@@ -1067,6 +1069,7 @@ class main_setup:
                 self.db_generate_external(
                     self.INSTALL_PARAMS,
                     self.wdir,
+                    sofprep,
                     nanopore=self.nanopore,
                     taxdump=self.taxdump,
                 )
