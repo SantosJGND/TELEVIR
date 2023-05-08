@@ -682,7 +682,6 @@ class run_kraken2(Classifier_init):
             f"{threads}",
             "--db",
             self.db_path,
-            "--fastq-input",
             "--gzip-compressed",
             "--output",
             self.report_path,
@@ -702,14 +701,13 @@ class run_kraken2(Classifier_init):
         """
         run paired read files classification.
         """
-        cmd = f"kraken2 --threads 4 --db {self.db_path} --fastq-input --gzip-compressed --output {self.out_path} {self.query_path} {self.r2}"
+        cmd = f"kraken2 --threads 4 --db {self.db_path} --gzip-compressed --output {self.out_path} {self.query_path} {self.r2}"
         cmd = [
             "kraken2",
             "--threads",
             f"{threads}",
             "--db",
             self.db_path,
-            "--fastq-input",
             "--gzip-compressed",
             "--output",
             self.report_path,
