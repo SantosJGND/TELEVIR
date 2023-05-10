@@ -8,7 +8,7 @@ class Televir_Layout_docker:
     install_virosaurus = True
     install_hg38 = True
     install_grc38 = False
-    install_request_sequences = False
+    install_request_sequences = True
 
     # host mappers
     install_bowtie2 = False
@@ -85,7 +85,7 @@ class Televir_Layout_minimal:
     install_virosaurus = True
     install_hg38 = True
     install_grc38 = False
-    install_request_sequences = False
+    install_request_sequences = True
 
     # host mappers
     install_bowtie2 = True

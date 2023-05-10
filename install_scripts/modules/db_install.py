@@ -277,8 +277,8 @@ class setup_dl:
 
         references_file = os.path.join(self.seqdir, "request_references.fa")
 
-        if os.path.isfile(references_file):
-            self.fastas["nuc"]["requests"] = [references_file]
+        if os.path.isfile(references_file + ".gz"):
+            self.fastas["nuc"]["requests"] = [references_file + ".gz"]
             return True
 
         if self.requests["ACCID"]:
