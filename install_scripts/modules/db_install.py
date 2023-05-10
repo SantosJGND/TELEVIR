@@ -1852,6 +1852,7 @@ class setup_install(setup_dl):
 
         command = [bin + "bwa", "index", "-p",
                    f"{odir}{dbname}/{dbname}", reference]
+        command = " ".join(command)
 
         try:
             subprocess.run(command)

@@ -982,104 +982,108 @@ class main_setup:
                         )
 
         # install nuc databases using local files.
-        for fname, fdb in prepdl.fastas["nuc"].items():
+        for fname, fd_list in prepdl.fastas["nuc"].items():
 
-            bwa_install = sofprep.bwa_install(dbname=fname, reference=fdb)
-            if bwa_install:
-                self.installed_software.append(
-                    self.software_install_string("bwa"))
+            for fdb in fd_list:
+
+                bwa_install = sofprep.bwa_install(dbname=fname, reference=fdb)
+                if bwa_install:
+                    self.installed_software.append(
+                        self.software_install_string("bwa"))
+                    self.utilities.add_software(
+                        self.utilities.software_item(
+                            "bwa",
+                            sofprep.dbs["bwa"]["fasta"],
+                            fname,
+                            True,
+                            sofprep.envs["ROOT"] + sofprep.envs["bwa"],
+                        )
+                    )
+
                 self.utilities.add_software(
                     self.utilities.software_item(
-                        "bwa",
-                        sofprep.dbs["bwa"]["fasta"],
-                        fname,
+                        "minimap2",
+                        fdb,
+                        fdb,
                         True,
                         sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                     )
                 )
 
-            self.utilities.add_software(
-                self.utilities.software_item(
-                    "minimap2",
-                    fdb,
-                    fdb,
-                    True,
-                    sofprep.envs["ROOT"] + sofprep.envs["bwa"],
-                )
-            )
-
-            if self.layout.install_fastviromeexplorer:
-                install_success = sofprep.fve_install(
-                    reference=fdb,
-                    dbname=fname,
-                    virus_list=sofprep.metadir + f"{fname}-list.txt",
-                    list_create=True,
-                )
-                if install_success:
-                    self.installed_software.append(
-                        self.software_install_string("fastviromeexplorer")
-                    )
-
-                    self.utilities.add_software(
-                        self.utilities.software_item(
-                            "fastviromeexplorer",
-                            sofprep.dbs["fastviromeexplorer"]["db"],
-                            fname,
-                            True,
-                            sofprep.envs["ROOT"] +
-                            sofprep.envs["fastviromeexplorer"],
-                        )
-                    )
-
-            if self.layout.install_blast:
-
-                if fname == "refseq":
-                    install_success = sofprep.blast_install(
-                        reference=fdb,
-                        dbname=f"refseq_{self.organism}_genome",
-                        nuc=True,
-                        taxid_map=sofprep.metadir + "acc2taxid.nuc.map",
-                        args="-parse_seqids",
-                        title=f"refseq {self.organism} genome",
-                    )
-
-                    if install_success:
-                        self.installed_software.append(
-                            self.software_install_string("blastn")
-                        )
-
-                        self.utilities.add_software(
-                            self.utilities.software_item(
-                                "blastn",
-                                sofprep.dbs["blast"]["db"],
-                                f"refseq_{self.organism}_genome",
-                                True,
-                                sofprep.envs["ROOT"] + sofprep.envs["blast"],
-                            )
-                        )
-
-            if nanopore:
-
-                if self.layout.install_desamba:
-                    install_success = sofprep.deSAMBA_install(
+                if self.layout.install_fastviromeexplorer:
+                    install_success = sofprep.fve_install(
                         reference=fdb,
                         dbname=fname,
+                        virus_list=sofprep.metadir + f"{fname}-list.txt",
+                        list_create=True,
                     )
-
                     if install_success:
                         self.installed_software.append(
-                            self.software_install_string("desamba")
+                            self.software_install_string("fastviromeexplorer")
                         )
 
                         self.utilities.add_software(
                             self.utilities.software_item(
-                                "desamba",
-                                sofprep.dbs["desamba"]["db"],
+                                "fastviromeexplorer",
+                                sofprep.dbs["fastviromeexplorer"]["db"],
                                 fname,
                                 True,
-                                sofprep.envs["ROOT"] + sofprep.envs["desamba"],
+                                sofprep.envs["ROOT"] +
+                                sofprep.envs["fastviromeexplorer"],
                             )
                         )
+
+                if self.layout.install_blast:
+
+                    if fname == "refseq":
+                        install_success = sofprep.blast_install(
+                            reference=fdb,
+                            dbname=f"refseq_{self.organism}_genome",
+                            nuc=True,
+                            taxid_map=sofprep.metadir + "acc2taxid.nuc.map",
+                            args="-parse_seqids",
+                            title=f"refseq {self.organism} genome",
+                        )
+
+                        if install_success:
+                            self.installed_software.append(
+                                self.software_install_string("blastn")
+                            )
+
+                            self.utilities.add_software(
+                                self.utilities.software_item(
+                                    "blastn",
+                                    sofprep.dbs["blast"]["db"],
+                                    f"refseq_{self.organism}_genome",
+                                    True,
+                                    sofprep.envs["ROOT"] +
+                                    sofprep.envs["blast"],
+                                )
+                            )
+
+                if nanopore:
+
+                    if self.layout.install_desamba:
+                        install_success = sofprep.deSAMBA_install(
+                            reference=fdb,
+                            dbname=fname,
+                        )
+
+                        if install_success:
+                            self.installed_software.append(
+                                self.software_install_string("desamba")
+                            )
+
+                            self.utilities.add_software(
+                                self.utilities.software_item(
+                                    "desamba",
+                                    sofprep.dbs["desamba"]["db"],
+                                    fname,
+                                    True,
+                                    sofprep.envs["ROOT"] +
+                                    sofprep.envs["desamba"],
+                                )
+                            )
 
     def setup_soft(self):
 
