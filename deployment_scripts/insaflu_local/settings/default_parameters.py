@@ -2748,7 +2748,7 @@ class DefaultParameters(object):
         parameter.software = software
         parameter.sample = sample
         parameter.union_char = " "
-        parameter.can_change = True
+        parameter.can_change = False
         parameter.is_to_run = True
         parameter.sequence_out = 3
         parameter.range_available = "[0.1:0.4]"

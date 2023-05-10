@@ -68,7 +68,7 @@ class PipelineTree:
         self.technology = technology
         self.node_index = pd.DataFrame(node_index, columns=["index", "node"])
         self.node_index.set_index("index", inplace=True)
-        self.nodes = [x[1] for x in node_index]
+        self.nodes = [[x[1]] for x in node_index]
         self.edges = edges
         self.leaves = leaves
         self.edge_dict = [(x[0], x[1]) for x in self.edges]
@@ -895,7 +895,7 @@ class Utility_Pipeline_Manager:
 
         return PipelineTree(
             technology=self.technology,
-            node_index=node_index,
+            node_index=[[i, x] for i, x in enumerate(node_index)],
             edges=edge_dict,
             leaves=leaves,
             makeup=self.pipeline_makeup,

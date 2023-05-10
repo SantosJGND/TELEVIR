@@ -788,11 +788,11 @@ class Utility_Pipeline_Manager:
         step_software_parameter_dict = {
             step: {
                 software.lower(): {
-                    f"{software.upper()}_ARGS": self.generate_argument_combinations(g),
+                    f"{software.upper()}_ARGS": self.generate_argument_combinations(soft_frame),
                 }
-                for software, g in g.groupby("software_name")
+                for software, soft_frame in step_frame.groupby("software_name")
             }
-            for step, g in step_dict.items()
+            for step, step_frame in step_dict.items()
         }
         self.params_lookup = step_software_parameter_dict
         self.pipeline_software = {
