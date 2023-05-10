@@ -985,6 +985,9 @@ class main_setup:
         for fname, fd_list in prepdl.fastas["nuc"].items():
 
             for fdb in fd_list:
+                # skip if file size > 15GB
+                if os.path.getsize(fdb) > 15000000000:
+                    continue
 
                 bwa_install = sofprep.bwa_install(dbname=fname, reference=fdb)
                 if bwa_install:

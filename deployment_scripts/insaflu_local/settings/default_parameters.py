@@ -2520,7 +2520,10 @@ class DefaultParameters(object):
 
         return vect_parameters
 
-    def get_bwa_default(self, user, type_of_use, technology_name, sample=None):
+    def get_bwa_default(self, user, type_of_use, technology_name, sample=None, pipeline_step=""):
+
+        if not pipeline_step:
+            pipeline_step = ConstantsSettings.PIPELINE_NAME_host_depletion
 
         software = Software()
         software.name = SoftwareNames.SOFTWARE_BWA_name
@@ -2540,7 +2543,7 @@ class DefaultParameters(object):
         # small description of software
         software.help_text = ""
         software.pipeline_step = self._get_pipeline(
-            ConstantsSettings.PIPELINE_NAME_host_depletion
+            pipeline_step
         )
 
         software.owner = user
