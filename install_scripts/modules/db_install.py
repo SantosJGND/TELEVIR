@@ -1998,7 +1998,7 @@ class setup_install(setup_dl):
             ]
 
             try:
-                if list_create or not virus_list:
+                if list_create or not os.path.exists(virus_list):
                     os.system(f"chmod +x {genlistbin}")
                     subprocess.call(" ".join(comm_vlist), shell=True)
 

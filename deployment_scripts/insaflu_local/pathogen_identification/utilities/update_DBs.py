@@ -6,24 +6,14 @@ from typing import Type
 from django.contrib.auth.models import User
 from django.core.files import File
 from django.db import IntegrityError, transaction
-from pathogen_identification.models import (
-    QC_REPORT,
-    ContigClassification,
-    FinalReport,
-    ParameterSet,
-    PIProject_Sample,
-    Projects,
-    RawReference,
-    ReadClassification,
-    ReferenceContigs,
-    ReferenceMap_Main,
-    RunAssembly,
-    RunDetail,
-    RunIndex,
-    RunMain,
-    RunRemapMain,
-    SampleQC,
-)
+from pathogen_identification.models import (QC_REPORT, ContigClassification,
+                                            FinalReport, ParameterSet,
+                                            PIProject_Sample, Projects,
+                                            RawReference, ReadClassification,
+                                            ReferenceContigs,
+                                            ReferenceMap_Main, RunAssembly,
+                                            RunDetail, RunIndex, RunMain,
+                                            RunRemapMain, SampleQC)
 from pathogen_identification.modules.object_classes import Sample_runClass
 from pathogen_identification.modules.remap_class import Mapping_Instance
 from pathogen_identification.modules.run_main import RunMain_class
@@ -164,7 +154,8 @@ def Update_sample_qc(sample_class: Sample_runClass):
             ],
             percent_gc=sample_class.qcdata["processed"].loc["%GC"]["value"],
             input_fastqc_report=File(
-                input_report, name=os.path.basename(sample_class.input_fastqc_report)
+                input_report, name=os.path.basename(
+                    sample_class.input_fastqc_report)
             ),
             processed_fastqc_report=File(
                 processed_report,
@@ -198,7 +189,8 @@ def Update_QC_report(sample_class: Sample_runClass, parameter_set: ParameterSet)
     )
 
     try:
-        qc_report = QC_REPORT.objects.get(sample=sample, report_source=QC_REPORT.RAW)
+        qc_report = QC_REPORT.objects.get(
+            sample=sample, report_source=QC_REPORT.RAW)
     except QC_REPORT.DoesNotExist:
         qc_report = QC_REPORT(
             sample=sample,
@@ -378,13 +370,15 @@ def retrieve_number_of_runs(project_name, sample_name, username):
     user = User.objects.get(username=username)
 
     try:
-        project = Projects.objects.get(name=project_name, owner=user, is_deleted=False)
+        project = Projects.objects.get(
+            name=project_name, owner=user, is_deleted=False)
     except Projects.DoesNotExist:
         print(f"project {project_name} does not exist")
         return 0
 
     try:
-        sample = PIProject_Sample.objects.get(name=sample_name, project=project)
+        sample = PIProject_Sample.objects.get(
+            name=sample_name, project=project)
     except PIProject_Sample.DoesNotExist:
         return 0
 
@@ -674,7 +668,8 @@ def Update_Run_Detail_noCheck(run_class: RunMain_class, parameter_set: Parameter
     if sample is None or runmain is None:
         return
 
-    run_detail_exists = RunDetail.objects.filter(run=runmain, sample=sample).exists()
+    run_detail_exists = RunDetail.objects.filter(
+        run=runmain, sample=sample).exists()
 
     if run_detail_exists:
         run_detail = RunDetail.objects.get(run=runmain, sample=sample)
@@ -814,7 +809,8 @@ def Update_Run_Classification(run_class: RunMain_class, parameter_set: Parameter
     sample, runmain, _ = get_run_parents(run_class, parameter_set)
 
     try:
-        read_classification = ReadClassification.objects.get(run=runmain, sample=sample)
+        read_classification = ReadClassification.objects.get(
+            run=runmain, sample=sample)
 
         read_classification.read_classification_report = (
             run_class.read_classification_summary
@@ -1030,7 +1026,8 @@ def Update_Sample_Runs_DB(run_class: RunMain_class, parameter_set: ParameterSet)
         run_assembly.save()
 
     try:
-        read_classification = ReadClassification.objects.get(run=runmain, sample=sample)
+        read_classification = ReadClassification.objects.get(
+            run=runmain, sample=sample)
     except ReadClassification.DoesNotExist:
 
         read_classification = ReadClassification(
@@ -1174,23 +1171,7 @@ def Update_RefMap_DB(run_class: RunMain_class, parameter_set: ParameterSet):
     """
     print(f"updating refmap_dbs run {run_class.prefix}")
 
-    user = User.objects.get(username=run_class.username)
-    project = Projects.objects.get(
-        name=run_class.project_name, owner=user, is_deleted=False
-    )
-
-    sample = PIProject_Sample.objects.get(
-        name=run_class.sample.sample_name,
-        project=project,
-    )
-
-    run = RunMain.objects.get(
-        project=project,
-        suprun=run_class.suprun,
-        name=run_class.prefix,
-        sample=sample,
-        parameter_set=parameter_set,
-    )
+    sample, run, _ = get_run_parents(run_class, parameter_set)
 
     for ref_map in run_class.remap_manager.mapped_instances:
 

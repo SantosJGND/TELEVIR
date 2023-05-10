@@ -993,6 +993,24 @@ class main_setup:
                         )
                     )
 
+            if self.layout.install_diamond:
+                install_success = sofprep.diamond_install(dbname=fname, db=fdb)
+
+                if install_success:
+                    self.installed_software.append(
+                        self.software_install_string("diamond")
+                    )
+
+                    self.utilities.add_software(
+                        self.utilities.software_item(
+                            "diamond",
+                            sofprep.dbs["diamond"]["db"],
+                            fname,
+                            True,
+                            sofprep.envs["ROOT"] + sofprep.envs["diamond"],
+                        )
+                    )
+
             if self.layout.install_blast:
 
                 if fname == "refseq":
@@ -1062,15 +1080,16 @@ class main_setup:
                     nanopore=self.nanopore,
                     taxdump=self.taxdump,
                 )
-                self.wdir.fastas["nuc"] = process_nuc_fasta_dict(
-                    self.wdir.fastas["nuc"], max_file_size=4000000000
-                )
 
                 self.db_generate_external(
                     self.wdir,
                     sofprep,
                     nanopore=self.nanopore,
                     taxdump=self.taxdump,
+                )
+
+                self.wdir.fastas["nuc"] = process_nuc_fasta_dict(
+                    self.wdir.fastas["nuc"], max_file_size=4000000000
                 )
 
                 self.dl_metadata_nuc()

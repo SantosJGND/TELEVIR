@@ -4,19 +4,16 @@ import os
 
 import pandas as pd
 from braces.views import FormValidMessageMixin, LoginRequiredMixin
-from constants.constants import Constants, FileExtensions, FileType, TypeFile, TypePath
+from constants.constants import (Constants, FileExtensions, FileType, TypeFile,
+                                 TypePath)
 from constants.meta_key_and_values import MetaKeyAndValue
 from django import forms
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
 from django.forms.models import model_to_dict
-from django.http import (
-    Http404,
-    HttpResponseNotFound,
-    HttpResponseRedirect,
-    JsonResponse,
-)
+from django.http import (Http404, HttpResponseNotFound, HttpResponseRedirect,
+                         JsonResponse)
 from django.http.response import HttpResponse
 from django.shortcuts import render
 from django.template.defaultfilters import filesizeformat, pluralize
@@ -32,28 +29,16 @@ from managing_files.manage_database import ManageDatabase
 from managing_files.models import Sample
 from managing_files.tables import SampleToProjectsTable
 from pathogen_identification.constants_settings import ConstantsSettings
-from pathogen_identification.models import (
-    ContigClassification,
-    FinalReport,
-    PIProject_Sample,
-    Projects,
-    RawReference,
-    ReadClassification,
-    ReferenceContigs,
-    ReferenceMap_Main,
-    RunAssembly,
-    RunDetail,
-    RunMain,
-    RunRemapMain,
-    Sample,
-)
-from pathogen_identification.tables import (
-    ContigTable,
-    ProjectTable,
-    RawReferenceTable,
-    RunMainTable,
-    SampleTable,
-)
+from pathogen_identification.models import (ContigClassification, FinalReport,
+                                            PIProject_Sample, Projects,
+                                            RawReference, ReadClassification,
+                                            ReferenceContigs,
+                                            ReferenceMap_Main, RunAssembly,
+                                            RunDetail, RunMain, RunRemapMain,
+                                            Sample)
+from pathogen_identification.tables import (ContigTable, ProjectTable,
+                                            RawReferenceTable, RunMainTable,
+                                            SampleTable)
 from settings.constants_settings import ConstantsSettings as CS
 from settings.default_software_project_sample import DefaultProjectSoftware
 from settings.models import Technology
@@ -66,7 +51,7 @@ def clean_check_box_in_session(request):
     check all check boxes on samples/references to add samples
     """
     utils = Utils()
-    ## clean all check unique
+    # clean all check unique
     if Constants.CHECK_BOX_ALL in request.session:
         del request.session[Constants.CHECK_BOX_ALL]
     vect_keys_to_remove = []
@@ -89,7 +74,7 @@ def is_all_check_box_in_session(vect_check_to_test, request):
     utils = Utils()
     dt_data = {}
 
-    ## get the dictonary
+    # get the dictonary
     for key in request.session.keys():
         if (
             key.startswith(Constants.CHECK_BOX)
@@ -102,7 +87,7 @@ def is_all_check_box_in_session(vect_check_to_test, request):
     if len(vect_check_to_test) != len(dt_data):
         b_different = True
 
-    ## test the vector
+    # test the vector
     if not b_different:
         for key in vect_check_to_test:
             if key not in dt_data:
@@ -110,11 +95,11 @@ def is_all_check_box_in_session(vect_check_to_test, request):
                 break
 
     if b_different:
-        ## remove all
+        # remove all
         for key in dt_data:
             del request.session[key]
 
-        ## create new
+        # create new
         for key in vect_check_to_test:
             request.session[key] = False
         return False
@@ -166,7 +151,7 @@ class PathId_ProjectsView(LoginRequiredMixin, ListView):
     model = Projects
     template_name = "pathogen_identification/projects.html"
     context_object_name = "projects"
-    ##	group_required = u'company-user' security related with GroupRequiredMixin
+    # group_required = u'company-user' security related with GroupRequiredMixin
 
     def get_context_data(self, **kwargs):
         context = super(PathId_ProjectsView, self).get_context_data(**kwargs)
@@ -196,17 +181,19 @@ class PathId_ProjectsView(LoginRequiredMixin, ListView):
         if self.request.GET.get(tag_search) != None:
             context[tag_search] = self.request.GET.get(tag_search)
 
-        ### clean check box in the session
-        clean_check_box_in_session(self.request)  ## for both samples and references
+        # clean check box in the session
+        # for both samples and references
+        clean_check_box_in_session(self.request)
 
-        ### clean project name session
+        # clean project name session
         if Constants.PROJECT_NAME_SESSION in self.request.session:
             del self.request.session[Constants.PROJECT_NAME_SESSION]
 
         context["table"] = table
 
         context["nav_project"] = True
-        context["show_paginatior"] = query_set.count() > Constants.PAGINATE_NUMBER
+        context["show_paginatior"] = query_set.count(
+        ) > Constants.PAGINATE_NUMBER
         context["query_set_count"] = query_set.count()
         context["show_info_main_page"] = ShowInfoMainPage()
         context["query_set_count"] = query_set.count()
@@ -232,16 +219,17 @@ class PathID_ProjectCreateView(LoginRequiredMixin, generic.CreateView):
         return kw
 
     def get_context_data(self, **kwargs):
-        context = super(PathID_ProjectCreateView, self).get_context_data(**kwargs)
+        context = super(PathID_ProjectCreateView,
+                        self).get_context_data(**kwargs)
 
-        ### get project name
+        # get project name
         project_name = (
             self.request.session[Constants.PROJECT_NAME_SESSION]
             if Constants.PROJECT_NAME_SESSION in self.request.session
             else ""
         )
 
-        ## clean the check box in the session
+        # clean the check box in the session
         if Constants.PROJECT_NAME in self.request.session:
             context[Constants.PROJECT_NAME] = self.request.session[
                 Constants.PROJECT_NAME
@@ -262,14 +250,14 @@ class PathID_ProjectCreateView(LoginRequiredMixin, generic.CreateView):
         context["nav_project"] = True
         context[
             "show_info_main_page"
-        ] = ShowInfoMainPage()  ## show main information about the institute
+        ] = ShowInfoMainPage()  # show main information about the institute
         return context
 
     def form_valid(self, form):
         """
         Validate the form
         """
-        ### test anonymous account
+        # test anonymous account
         try:
             profile = Profile.objects.get(user=self.request.user)
             if profile.only_view_project:
@@ -301,7 +289,7 @@ class PathID_ProjectCreateView(LoginRequiredMixin, generic.CreateView):
             b_error = True
         except Projects.DoesNotExist:
             pass
-        ### exists an error
+        # exists an error
         if b_error:
             return super(PathID_ProjectCreateView, self).form_invalid(form)
 
@@ -316,7 +304,7 @@ class PathID_ProjectCreateView(LoginRequiredMixin, generic.CreateView):
 
         return super(PathID_ProjectCreateView, self).form_valid(form)
 
-    form_valid_message = ""  ## need to have this, even empty
+    form_valid_message = ""  # need to have this, even empty
 
 
 class AddSamples_PIProjectsView(
@@ -337,9 +325,10 @@ class AddSamples_PIProjectsView(
 
     def get_context_data(self, **kwargs):
 
-        context = super(AddSamples_PIProjectsView, self).get_context_data(**kwargs)
+        context = super(AddSamples_PIProjectsView,
+                        self).get_context_data(**kwargs)
 
-        ### test if the user is the same of the page
+        # test if the user is the same of the page
         project = Projects.objects.get(pk=self.kwargs["pk"])
         technology = None
 
@@ -353,7 +342,7 @@ class AddSamples_PIProjectsView(
             context["error_cant_see"] = "1"
             return context
 
-        ## catch everything that is not in connection with project
+        # catch everything that is not in connection with project
         count_active_projects = PIProject_Sample.objects.filter(
             project=project, is_deleted=False, is_error=False
         ).count()
@@ -382,37 +371,39 @@ class AddSamples_PIProjectsView(
             tag_search
         table = SampleToProjectsTable(query_set)
 
-        ### set the check_box
+        # set the check_box
         if Constants.CHECK_BOX_ALL not in self.request.session:
             self.request.session[Constants.CHECK_BOX_ALL] = False
             is_all_check_box_in_session(
-                ["{}_{}".format(Constants.CHECK_BOX, key.id) for key in query_set],
+                ["{}_{}".format(Constants.CHECK_BOX, key.id)
+                 for key in query_set],
                 self.request,
             )
 
         context[Constants.CHECK_BOX_ALL] = self.request.session[Constants.CHECK_BOX_ALL]
-        ## need to clean all the others if are reject in filter
+        # need to clean all the others if are reject in filter
         dt_sample_id_add_temp = {}
         if context[Constants.CHECK_BOX_ALL]:
             for sample in query_set:
                 dt_sample_id_add_temp[
                     sample.id
-                ] = 1  ## add the ids that are in the tables
+                ] = 1  # add the ids that are in the tables
             for key in self.request.session.keys():
                 if (
                     key.startswith(Constants.CHECK_BOX)
                     and len(key.split("_")) == 3
                     and self.utils.is_integer(key.split("_")[2])
                 ):
-                    ### this is necessary because of the search. Can occur some checked box that are out of filter.
+                    # this is necessary because of the search. Can occur some checked box that are out of filter.
                     if int(key.split("_")[2]) not in dt_sample_id_add_temp:
                         self.request.session[key] = False
                     else:
                         self.request.session[key] = True
-        ## END need to clean all the others if are reject in filter
+        # END need to clean all the others if are reject in filter
 
-        ### check if it show already the settings message
-        key_session_name_project_settings = "project_settings_{}".format(project.name)
+        # check if it show already the settings message
+        key_session_name_project_settings = "project_settings_{}".format(
+            project.name)
         if not key_session_name_project_settings in self.request.session:
             self.request.session[key_session_name_project_settings] = True
         else:
@@ -425,17 +416,18 @@ class AddSamples_PIProjectsView(
             context[tag_search] = self.request.GET.get(tag_search)
         context["televir_sample"] = True
         context["table"] = table
-        context["show_paginatior"] = query_set.count() > Constants.PAGINATE_NUMBER
+        context["show_paginatior"] = query_set.count(
+        ) > Constants.PAGINATE_NUMBER
         context["query_set_count"] = query_set.count()
         context["project_name"] = project.name
-        context["nav_modal"] = True  ## short the size of modal window
+        context["nav_modal"] = True  # short the size of modal window
         context[
             "show_info_main_page"
-        ] = ShowInfoMainPage()  ## show main information about the institute
+        ] = ShowInfoMainPage()  # show main information about the institute
         context["show_message_change_settings"] = (
             count_active_projects == 0
             and self.request.session[key_session_name_project_settings]
-        )  ## Show message to change settings to the project
+        )  # Show message to change settings to the project
         context["add_all_samples_message"] = "Add {} sample{}".format(
             query_set.count(), pluralize(query_set.count(), ",s")
         )
@@ -450,7 +442,7 @@ class AddSamples_PIProjectsView(
         Validate the form
         """
 
-        ### test anonymous account
+        # test anonymous account
         try:
             profile = Profile.objects.get(user=self.request.user)
             if profile.only_view_project:
@@ -470,10 +462,10 @@ class AddSamples_PIProjectsView(
             manageDatabase = ManageDatabase()
             process_SGE = ProcessSGE()
 
-            ### get project sample..
+            # get project sample..
             context = self.get_context_data()
 
-            ### get project
+            # get project
             project = Projects.objects.get(pk=self.kwargs["pk"])
 
             vect_sample_id_add_temp = []
@@ -489,13 +481,13 @@ class AddSamples_PIProjectsView(
                         and len(key.split("_")) == 3
                         and self.utils.is_integer(key.split("_")[2])
                     ):
-                        ### this is necessary because of the search. Can occur some checked box that are out of filter.
+                        # this is necessary because of the search. Can occur some checked box that are out of filter.
                         if int(key.split("_")[2]) in vect_sample_id_add_temp:
                             vect_sample_id_add.append(int(key.split("_")[2]))
             elif "submit_all" in self.request.POST:
                 vect_sample_id_add = vect_sample_id_add_temp
 
-            ### get samples already out
+            # get samples already out
             dt_sample_out = {}
             for project_sample in PIProject_Sample.objects.filter(
                 project__id=project.id,
@@ -505,11 +497,11 @@ class AddSamples_PIProjectsView(
             ):
                 dt_sample_out[project_sample.sample.id] = 1
 
-            ### start adding...
+            # start adding...
             (job_name_wait, job_name) = ("", "")
             project_sample_add = 0
             for id_sample in vect_sample_id_add:
-                ## keep track of samples out
+                # keep track of samples out
                 if id_sample in dt_sample_out:
                     continue
                 dt_sample_out[id_sample] = 1
@@ -517,7 +509,7 @@ class AddSamples_PIProjectsView(
                 try:
                     sample = Sample.objects.get(pk=id_sample)
                 except Sample.DoesNotExist:
-                    ## log
+                    # log
                     self.logger_production.error(
                         "Fail to get sample_id {} in ProjectSample".format(
                             key.split("_")[2]
@@ -530,17 +522,17 @@ class AddSamples_PIProjectsView(
                     )
                     continue
 
-                ## the sample can be deleted by other session
+                # the sample can be deleted by other session
                 if sample.is_deleted:
                     continue
 
-                ## get project sample
+                # get project sample
                 try:
                     project_sample = PIProject_Sample.objects.get(
                         project__id=project.id, sample__id=sample.id
                     )
 
-                    ### if exist can be deleted, pass to active
+                    # if exist can be deleted, pass to active
                     if (
                         project_sample.is_deleted
                         and not project_sample.is_error
@@ -568,7 +560,8 @@ class AddSamples_PIProjectsView(
             if project_sample_add == 0:
                 messages.warning(
                     self.request,
-                    "No sample was added to the project '{}'".format(project.name),
+                    "No sample was added to the project '{}'".format(
+                        project.name),
                 )
             else:
                 if project_sample_add > 1:
@@ -589,7 +582,7 @@ class AddSamples_PIProjectsView(
         else:
             return super(AddSamples_PIProjectsView, self).form_invalid(form)
 
-    form_valid_message = ""  ## need to have this, even empty
+    form_valid_message = ""  # need to have this, even empty
 
 
 class MainPage(LoginRequiredMixin, generic.CreateView):
@@ -642,7 +635,8 @@ class MainPage(LoginRequiredMixin, generic.CreateView):
         context["project_name"] = project_name
         context["nav_sample"] = True
         context["total_items"] = query_set.count()
-        context["show_paginatior"] = query_set.count() > Constants.PAGINATE_NUMBER
+        context["show_paginatior"] = query_set.count(
+        ) > Constants.PAGINATE_NUMBER
         context["show_info_main_page"] = ShowInfoMainPage()
         context["query_set_count"] = query_set.count()
         print(self.request.user.username)
@@ -700,7 +694,8 @@ class Sample_main(LoginRequiredMixin, generic.CreateView):
         runs_table = RunMainTable(runs)
 
         RequestConfig(
-            self.request, paginate={"per_page": ConstantsSettings.PAGINATE_NUMBER}
+            self.request, paginate={
+                "per_page": ConstantsSettings.PAGINATE_NUMBER}
         ).configure(runs_table)
 
         context = {
@@ -857,14 +852,16 @@ class Sample_detail(LoginRequiredMixin, generic.CreateView):
         sample_main = run_main.sample
         #
 
-        raw_references = RawReference.objects.filter(run=run_main).order_by("status")
+        raw_references = RawReference.objects.filter(
+            run=run_main).order_by("status")
 
         raw_reference_table = RawReferenceTable(raw_references)
 
         #
         run_detail = RunDetail.objects.get(sample=sample_main, run=run_main)
         #
-        run_assembly = RunAssembly.objects.get(sample=sample_main, run=run_main)
+        run_assembly = RunAssembly.objects.get(
+            sample=sample_main, run=run_main)
         #
         run_remap = RunRemapMain.objects.get(sample=sample_main, run=run_main)
         #
@@ -994,7 +991,8 @@ def download_file_igv(requestdst):
         if form.is_valid():
             filepath = form.cleaned_data.get("file_path")
 
-            BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            BASE_DIR = os.path.dirname(
+                os.path.dirname(os.path.abspath(__file__)))
             DLDIR = os.path.join(BASE_DIR, STATICFILES_DIRS[0], "igv_files")
             filepath = os.path.join(DLDIR, filepath)
 
@@ -1025,7 +1023,8 @@ def download_file(requestdst):
         if form.is_valid():
             filepath = form.cleaned_data.get("file_path")
 
-            BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            BASE_DIR = os.path.dirname(
+                os.path.dirname(os.path.abspath(__file__)))
 
             if "//" in filepath:
                 filepath = "/" + filepath.split("//")[1]
@@ -1087,7 +1086,8 @@ def download_file_ref(requestdst):
             else:
                 return HttpResponseNotFound(f"file {file_request} not found")
 
-            BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            BASE_DIR = os.path.dirname(
+                os.path.dirname(os.path.abspath(__file__)))
 
             # filepath = BASE_DIR + filepath
 

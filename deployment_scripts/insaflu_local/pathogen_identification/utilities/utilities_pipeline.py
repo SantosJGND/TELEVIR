@@ -60,7 +60,8 @@ class PipelineTree:
     ):
         self.technology = technology
         self.node_index = pd.DataFrame(
-            node_index, columns=["index", "node"]).sort_values("index")
+            [x[1] for x in node_index], columns=["node"])
+        self.node_index.index = [x[0] for x in node_index]
 
         self.nodes = self.node_index.node.tolist()
         self.edges = edges
