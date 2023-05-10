@@ -277,6 +277,10 @@ class setup_dl:
 
         references_file = os.path.join(self.seqdir, "request_references.fa")
 
+        if os.path.isfile(references_file):
+            self.fastas["nuc"]["requests"] = [references_file]
+            return True
+
         if self.requests["ACCID"]:
             acc_tsv = self.requests["ACCID"]
             tempfile = os.path.join(self.metadir, "accession_requests.tsv")

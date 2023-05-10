@@ -528,6 +528,20 @@ class main_setup:
                     )
                 )
 
+        if self.layout.install_request_sequences:
+            request_success = self.wdir.install_requests()
+            if request_success:
+                self.installed_databases.append(
+                    self.database_install_string("requests")
+                )
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        "requests",
+                        self.wdir.fastas["nuc"]["requests"][0],
+                        True,
+                    )
+                )
+
         if self.organism == "viral":
 
             if self.layout.install_virosaurus:
@@ -970,6 +984,30 @@ class main_setup:
         # install nuc databases using local files.
         for fname, fdb in prepdl.fastas["nuc"].items():
 
+            bwa_install = sofprep.bwa_install(dbname=fname, reference=fdb)
+            if bwa_install:
+                self.installed_software.append(
+                    self.software_install_string("bwa"))
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "bwa",
+                        sofprep.dbs["bwa"]["fasta"],
+                        fname,
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["bwa"],
+                    )
+                )
+
+            self.utilities.add_software(
+                self.utilities.software_item(
+                    "minimap2",
+                    fdb,
+                    fdb,
+                    True,
+                    sofprep.envs["ROOT"] + sofprep.envs["bwa"],
+                )
+            )
+
             if self.layout.install_fastviromeexplorer:
                 install_success = sofprep.fve_install(
                     reference=fdb,
@@ -990,24 +1028,6 @@ class main_setup:
                             True,
                             sofprep.envs["ROOT"] +
                             sofprep.envs["fastviromeexplorer"],
-                        )
-                    )
-
-            if self.layout.install_diamond:
-                install_success = sofprep.diamond_install(dbname=fname, db=fdb)
-
-                if install_success:
-                    self.installed_software.append(
-                        self.software_install_string("diamond")
-                    )
-
-                    self.utilities.add_software(
-                        self.utilities.software_item(
-                            "diamond",
-                            sofprep.dbs["diamond"]["db"],
-                            fname,
-                            True,
-                            sofprep.envs["ROOT"] + sofprep.envs["diamond"],
                         )
                     )
 
