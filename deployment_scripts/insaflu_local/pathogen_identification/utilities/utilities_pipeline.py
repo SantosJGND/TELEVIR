@@ -894,6 +894,12 @@ class Utility_Pipeline_Manager:
 
     def generate_explicit_edge_dict(self, pipeline_tree: PipelineTree) -> dict:
         """ """
+
+        tree_nodes = []
+        if pipeline_tree.nodes[0] != ("root", None, None):
+            tree_nodes.append(("root", None, None))
+        tree_nodes.extend(pipeline_tree.nodes)
+
         nodes_dict = {(i, x): [] for i, x in enumerate(pipeline_tree.nodes)}
 
         for edge in pipeline_tree.edges:
@@ -1483,6 +1489,8 @@ class Parameter_DB_Utility:
             nodes.append((node.index, (node.name, node.value, node.node_type)))
             if node.node_place == 1:
                 leaves.append(node.index)
+
+        nodes = sorted(nodes, key=lambda x: x[0])
 
         return PipelineTree(
             technology=technology,

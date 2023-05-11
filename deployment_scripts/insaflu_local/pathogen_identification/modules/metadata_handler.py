@@ -238,6 +238,9 @@ class Metadata_handler:
 
         df = self.merge_check_column_types(
             df, self.taxonomy_to_description, "taxid")
+
+        df = df.dropna(subset=["taxid"])
+        df.taxid = df.taxid.astype(float)
         df.taxid = df.taxid.astype(int)
 
         return df
