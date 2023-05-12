@@ -241,6 +241,7 @@ class Metadata_handler:
 
         df = df.dropna(subset=["taxid"])
         df.taxid = df.taxid.astype(float)
+        df = df.dropna(subset=["taxid"])
         df.taxid = df.taxid.astype(int)
 
         return df

@@ -909,14 +909,23 @@ class RunMain_class(Run_Deployment_Methods):
 
     def Run_Classification(self):
 
-        if self.read_classification:
+        if self.classification:
             self.deploy_READ_CLASSIFICATION()
-            self.read_classification_performed = True
-
-        if self.contig_classification:
             self.deploy_CONTIG_CLASSIFICATION()
-            self.contig_classification_performed = True
 
+            self.metadata_tool.match_and_select_targets(
+                self.read_classification_drone.classification_report,
+                self.contig_classification_drone.classification_report,
+                self.max_remap,
+                self.taxid_limit,
+            )
+            self.aclass_summary = self.metadata_tool.aclass
+            self.rclass_summary = self.metadata_tool.rclass
+            self.merged_targets = self.metadata_tool.merged_targets
+            self.raw_targets = self.metadata_tool.raw_targets
+            self.remap_plan = self.metadata_tool.remap_plan
+
+            self.export_intermediate_reports()
         self.Update_exec_time()
         self.generate_output_data_classes()
 
