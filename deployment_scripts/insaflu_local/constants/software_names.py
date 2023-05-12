@@ -781,7 +781,7 @@ class SoftwareNames(object):
         ],
         SOFTWARE_BWA_name: [
             ConstantsSettings.PIPELINE_NAME_host_depletion,
-            ConstantsSettings.PIPELINE_NAME_read_classification,
+            ConstantsSettings.PIPELINE_NAME_read_classification,]
     }
 
     ###################################
@@ -1603,9 +1603,9 @@ class SoftwareNames(object):
     # version must be obtain from ManagingFiles.Software.Version
 
     def get_pangolin_all_names_version(self):
-        dt_return_version= {}
+        dt_return_version = {}
         for name in self.VECT_PANGOLIN_TO_TEST:
-            dt_return_version[name]= self.get_pangolin_version(name)
+            dt_return_version[name] = self.get_pangolin_version(name)
         return dt_return_version
 
     # version must be obtain from ManagingFiles.Software.Version
