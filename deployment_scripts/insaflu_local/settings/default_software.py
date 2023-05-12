@@ -546,7 +546,7 @@ class DefaultSoftware(object):
         )
         return "" if result is None else result
 
-    def get_centrifuge_parameters(self, user, technology_name):
+    def get_centrifuge_parameters(self, user, technology_name, pipeline_step=None):
         result = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_CENTRIFUGE_name,
             user,
@@ -555,10 +555,11 @@ class DefaultSoftware(object):
             None,
             None,
             technology_name,
+            pipeline_step=pipeline_step
         )
         return "" if result is None else result
 
-    def get_bwa_parameters(self, user, technology_name):
+    def get_bwa_parameters(self, user, technology_name, pipeline_step=None):
         result = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_BWA_name,
             user,
@@ -567,6 +568,7 @@ class DefaultSoftware(object):
             None,
             None,
             technology_name,
+            pipeline_step=pipeline_step
         )
         return "" if result is None else result
 
@@ -756,7 +758,7 @@ class DefaultSoftware(object):
         return self.change_values_software.get(key_value, False)
 
     def get_parameters(
-        self, software_name, user, technology_name=ConstantsSettings.TECHNOLOGY_illumina
+        self, software_name, user, technology_name=ConstantsSettings.TECHNOLOGY_illumina, pipeline_step=None
     ):
         """
         Return the parameters for a software
@@ -928,7 +930,7 @@ class DefaultSoftware(object):
                 ),
                 user,
             )
-            return self.get_centrifuge_parameters(user, technology_name)
+            return self.get_centrifuge_parameters(user, technology_name, pipeline_step=pipeline_step)
 
         if software_name == SoftwareNames.SOFTWARE_MINIMAP2_REMAP_ONT_name:
             self.test_default_db(
@@ -990,7 +992,7 @@ class DefaultSoftware(object):
                 ),
                 user,
             )
-            return self.get_bwa_parameters(user, technology_name)
+            return self.get_bwa_parameters(user, technology_name, pipeline_step=pipeline_step)
 
         if software_name == SoftwareNames.SOFTWARE_DIAMOND_name:
             self.test_default_db(

@@ -155,7 +155,7 @@ class SoftwaresTable(tables.Table):
             and self.televir_project is None
         ):
             default_software = DefaultSoftware()
-            return default_software.get_parameters(record.name, user, technology_name)
+            return default_software.get_parameters(record.name, user, technology_name, pipeline_step=record.pipeline_step)
         elif self.dataset is not None:
 
             # default_software_projects = DefaultProjectSoftware()
