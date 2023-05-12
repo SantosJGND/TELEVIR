@@ -17,11 +17,11 @@ class SoftwareNames(object):
 
     """
 
-    ## Simple tags, Yes, No
+    # Simple tags, Yes, No
     SOFTWARE_TAG_yes = "Yes"
     SOFTWARE_TAG_no = "No"
 
-    ## some software is distributed by snippy
+    # some software is distributed by snippy
     DIR_SOFTWARE_SNIPPY = os.path.join(settings.DIR_SOFTWARE, "snippy")
     SOFTWARE_DEPTH_SAMTOOLS_file_flag = "DEPTH_SAMTOOLS"
     SOFTWARE_SAMTOOLS = os.path.join(DIR_SOFTWARE_SNIPPY, "bin/samtools")
@@ -44,7 +44,8 @@ class SoftwareNames(object):
     SOFTWARE_TABIX_name = "tabix"
     SOFTWARE_TABIX_VERSION = "1.3"
     SOFTWARE_TABIX_PARAMETERS = ""
-    SOFTWARE_IGVTOOLS = os.path.join(settings.DIR_SOFTWARE, "IGVTools/igvtools.jar")
+    SOFTWARE_IGVTOOLS = os.path.join(
+        settings.DIR_SOFTWARE, "IGVTools/igvtools.jar")
     SOFTWARE_IGVTOOLS_name = "igvtools"
     SOFTWARE_IGVTOOLS_VERSION = "2.3.98"
     SOFTWARE_IGVTOOLS_PARAMETERS = ""
@@ -55,14 +56,16 @@ class SoftwareNames(object):
     #     SOFTWARE_SPAdes = os.path.join(settings.DIR_SOFTWARE, "SPAdes-3.13.0-Linux/bin/spades.py")
     SOFTWARE_SPAdes_name = "SPAdes"
     SOFTWARE_SPAdes_name_extended = "SPAdes"
-    SOFTWARE_SPAdes_VERSION = "3.11.1"  ### older version change at 25/11/2109 to 3.
+    # older version change at 25/11/2109 to 3.
+    SOFTWARE_SPAdes_VERSION = "3.11.1"
     #     SOFTWARE_SPAdes_VERSION = "3.13.0"
     SOFTWARE_SPAdes_PARAMETERS = "--only-assembler"
-    SOFTWARE_SPAdes_PARAMETERS_single = "--only-assembler"  ## same at this point
+    SOFTWARE_SPAdes_PARAMETERS_single = "--only-assembler"  # same at this point
     SOFTWARE_SPAdes_CLEAN_HITS_BELLOW_VALUE = (
-        3  ## clean the values bellow of this value "NODE_128_length_572_cov_3.682785"
+        3  # clean the values bellow of this value "NODE_128_length_572_cov_3.682785"
     )
-    SOFTWARE_ABRICATE = os.path.join(settings.DIR_SOFTWARE, "abricate/bin/abricate")
+    SOFTWARE_ABRICATE = os.path.join(
+        settings.DIR_SOFTWARE, "abricate/bin/abricate")
     SOFTWARE_ABRICATE_name = "Abricate"
     SOFTWARE_ABRICATE_name_extended = "Abricate"
     SOFTWARE_ABRICATE_DB = os.path.join(settings.DIR_SOFTWARE, "abricate/db")
@@ -73,7 +76,8 @@ class SoftwareNames(object):
     SOFTWARE_FASTQ_VERSION = "0.11.9"
     SOFTWARE_FASTQ_PARAMETERS = ""
     SOFTWARE_FASTQ = os.path.join(
-        settings.DIR_SOFTWARE, "FastQC/fastqc"  # .format(SOFTWARE_FASTQ_VERSION)
+        # .format(SOFTWARE_FASTQ_VERSION)
+        settings.DIR_SOFTWARE, "FastQC/fastqc"
     )
     SOFTWARE_TRIMMOMATIC = os.path.join(
         settings.DIR_SOFTWARE, "trimmomatic/classes/trimmomatic.jar"
@@ -114,7 +118,7 @@ class SoftwareNames(object):
         "MPXV_MT903345_Yale_PrimalSeq_v.1.fa",
         "MPXV_comb-ccc7sszn.fa",
     ]
-    ### collect stat data for ILLUMINA, in form of key value
+    # collect stat data for ILLUMINA, in form of key value
     SOFTWARE_ILLUMINA_stat = "illumina_stat"
     SOFTWARE_ILLUMINA_stat_collect = [
         "Number of reads R1",
@@ -131,11 +135,12 @@ class SoftwareNames(object):
         "Total reads",
     ]
 
-    SOFTWARE_RabbitQC = os.path.join(settings.DIR_SOFTWARE, "RabbitQC/rabbit_qc")
+    SOFTWARE_RabbitQC = os.path.join(
+        settings.DIR_SOFTWARE, "RabbitQC/rabbit_qc")
     SOFTWARE_RabbitQC_name = "RabbitQC"
     SOFTWARE_RabbitQC_name_extended = "Quality analysis and control (RabbitQC)"
     SOFTWARE_RabbitQC_VERSION = "0.0.1"
-    SOFTWARE_RabbitQC_PARAMETERS = "-w 3 -D"  ## for long reads
+    SOFTWARE_RabbitQC_PARAMETERS = "-w 3 -D"  # for long reads
     SOFTWARE_NanoStat = "NanoStat"
     SOFTWARE_NanoStat_name = "NanoStat"
     SOFTWARE_NanoStat_name_extended = (
@@ -143,7 +148,7 @@ class SoftwareNames(object):
     )
     SOFTWARE_NanoStat_VERSION = "1.4.0"
     SOFTWARE_NanoStat_PARAMETERS = (
-        ""  ## -o temp -n temp.txt --fastq ERR4082025_1.fastq.gz
+        ""  # -o temp -n temp.txt --fastq ERR4082025_1.fastq.gz
     )
     SOFTWARE_NANOSTAT_vect_info_to_collect = [
         "Mean read length",
@@ -168,7 +173,8 @@ class SoftwareNames(object):
         "Filtering and trimming of ONT sequencing data (NanoFilt)"
     )
     SOFTWARE_NanoFilt_VERSION = "2.6.0"
-    SOFTWARE_NanoFilt_PARAMETERS = "-l 50 -q 10 --headcrop 70 --tailcrop 70"  ## gzip -cd ERR4082025_1.fastq.gz | NanoFilt -q 10 --headcrop 40 --tailcrop 50 | gzip > trimmed-reads.fastq.gz
+    # gzip -cd ERR4082025_1.fastq.gz | NanoFilt -q 10 --headcrop 40 --tailcrop 50 | gzip > trimmed-reads.fastq.gz
+    SOFTWARE_NanoFilt_PARAMETERS = "-l 50 -q 10 --headcrop 70 --tailcrop 70"
     SOFTWARE_Medaka_Env = ". {};".format(
         os.path.join(settings.DIR_SOFTWARE, "medaka/bin/activate")
     )
@@ -181,7 +187,8 @@ class SoftwareNames(object):
     SOFTWARE_Medaka_name_extended_consensus = "Consensus Generation (Medaka)"
     SOFTWARE_Medaka_name_extended_variant = "Call Variants (Medaka)"
     SOFTWARE_Medaka_PARAMETERS_variant = "--verbose"
-    SOFTWARE_Medaka_PARAMETERS_consensus = "-m {}".format(SOFTWARE_Medaka_default_model)
+    SOFTWARE_Medaka_PARAMETERS_consensus = "-m {}".format(
+        SOFTWARE_Medaka_default_model)
     SOFTWARE_Medaka_VERSION = "1.2.1"
 
     SOFTWARE_Pangolin_Env = ". {};".format(
@@ -189,11 +196,11 @@ class SoftwareNames(object):
     )
     SOFTWARE_Pangolin = "pangolin"
     # SOFTWARE_Pangolin_VERSION = "v3.1.14"  ## Version Name: pangolin
-    SOFTWARE_Pangolin_VERSION = "v4.0.6"  ## Version Name: pangolin
-    SOFTWARE_Pangolin_name = "Pangolin"  ## Pangolin
-    SOFTWARE_Pangolin_analysis_mode = "Analysis mode (Pangolin)"  ## Pangolin
+    SOFTWARE_Pangolin_VERSION = "v4.0.6"  # Version Name: pangolin
+    SOFTWARE_Pangolin_name = "Pangolin"  # Pangolin
+    SOFTWARE_Pangolin_analysis_mode = "Analysis mode (Pangolin)"  # Pangolin
     SOFTWARE_Pangolin_name_search_name = (
-        "Pango"  ## only to help on the search of Pango Name in output
+        "Pango"  # only to help on the search of Pango Name in output
     )
 
     #    SOFTWARE_Pangolin_name_search_name = "Pango"        ## only to help on the search of Pango Name in output
@@ -216,40 +223,41 @@ class SoftwareNames(object):
     #         SOFTWARE_Pangolin_scorpio_name,
     #         ]
 
-    SOFTWARE_BCFTOOLS = os.path.join(settings.DIR_SOFTWARE, "medaka/bin/bcftools")
+    SOFTWARE_BCFTOOLS = os.path.join(
+        settings.DIR_SOFTWARE, "medaka/bin/bcftools")
     SOFTWARE_BCFTOOLS_name = "bcftools"
     SOFTWARE_BCFTOOLS_VERSION = "1.9"
     SOFTWARE_BCFTOOLS_NEX_PARAMETERS = ""
 
-    ## --nano-raw ../flu_minion/test_minion_seq.fastq.gz --no-alt-contigs -o temp -t 4
-    ## ll temp/assembly.fasta
+    # --nano-raw ../flu_minion/test_minion_seq.fastq.gz --no-alt-contigs -o temp -t 4
+    # ll temp/assembly.fasta
     SOFTWARE_FLYE = os.path.join(settings.DIR_SOFTWARE, "flye/flye.sh")
     SOFTWARE_FLYE_name = "flye"
     SOFTWARE_FLYE_name_extended = "Assembly ONT (Flye)"
     SOFTWARE_FLYE_VERSION = "2.9.1-b1780"
     SOFTWARE_FLYE_PARAMETERS = (
-        "--no-alt-contigs "  ## genomeSize=<number>[g|m|k] file1 file2
+        "--no-alt-contigs "  # genomeSize=<number>[g|m|k] file1 file2
     )
 
-    ### used to create a file with variations table
-    ## git: https://github.com/SantosJGND/INSA
-    ## python algn2pheno.py --db DB_COG_UK_antigenic_mutations_2022-05-30.tsv -g S --algn Alignment_aa_SARS_CoV_2_S.fasta -r <referenceName inside Alignment> --odir algn2pheno --output COG_UK_antigenic_mutations
+    # used to create a file with variations table
+    # git: https://github.com/SantosJGND/INSA
+    # python algn2pheno.py --db DB_COG_UK_antigenic_mutations_2022-05-30.tsv -g S --algn Alignment_aa_SARS_CoV_2_S.fasta -r <referenceName inside Alignment> --odir algn2pheno --output COG_UK_antigenic_mutations
     ####
-    ## outputs to provide to the users:
-    ## ...._final_report.tsv
-    ## ...._flagged_mutation_report.tsv
-    ## (if possible, add the Lineage column to these two reports)
-    ## ....log
+    # outputs to provide to the users:
+    # ...._final_report.tsv
+    # ...._flagged_mutation_report.tsv
+    # (if possible, add the Lineage column to these two reports)
+    # ....log
     SOFTWARE_Alignment2phenotype_Env = ". {};".format(
         os.path.join(settings.DIR_SOFTWARE, "Alignment2phenotype/bin/activate")
     )
     SOFTWARE_Alignment2phenotype = "algn2pheno.py"
-    SOFTWARE_Alignment2phenotype_VERSION = "v1.0"  ## Version Name: pangolin
-    SOFTWARE_Alignment2phenotype_name = "Alignment2phenotype"  ## Alignment2phenotype
+    SOFTWARE_Alignment2phenotype_VERSION = "v1.0"  # Version Name: pangolin
+    SOFTWARE_Alignment2phenotype_name = "Alignment2phenotype"  # Alignment2phenotype
     SOFTWARE_Alignment2phenotype_analysis_mode = (
-        "Analysis mode (Alignment2phenotype)"  ## Alignment2phenotype
+        "Analysis mode (Alignment2phenotype)"  # Alignment2phenotype
     )
-    SOFTWARE_Alignment2phenotype_parameters = "-g S"  ## Alignment2phenotype
+    SOFTWARE_Alignment2phenotype_parameters = "-g S"  # Alignment2phenotype
 
     SOFTWARE_SNIPPY = os.path.join(DIR_SOFTWARE_SNIPPY, "bin/snippy")
     SOFTWARE_SNIPPY_name = "Snippy"
@@ -257,7 +265,7 @@ class SoftwareNames(object):
     SOFTWARE_SNIPPY_VERSION = "3.2-dev"
     SOFTWARE_SNIPPY_PARAMETERS = "--mapqual 20 --mincov 10 --minfrac 0.51"
 
-    #### VERY important, change in snippy-vcf
+    # VERY important, change in snippy-vcf
     #     mmp@california:/usr/local/software/insaflu/snippy/bin$ diff snippy-vcf_to_tab_add_freq snippy-vcf_to_tab_add_freq~
     # 57c57
     # < print join("\t", qw(CHROM POS TYPE REF ALT FREQ), @ANNO), "\n";
@@ -278,17 +286,19 @@ class SoftwareNames(object):
     SOFTWARE_SNIPPY_VCF_TO_TAB_AND_EVIDENCE_VERSION = "3.2-dev"
     SOFTWARE_SNIPPY_VCF_TO_TAB_AND_EVIDENCE_PARAMETERS = ""
     SOFTWARE_SNP_EFF = os.path.join(DIR_SOFTWARE_SNIPPY, "bin/snpEff")
-    SOFTWARE_SNP_EFF_config = os.path.join(DIR_SOFTWARE_SNIPPY, "etc/snpeff.config")
+    SOFTWARE_SNP_EFF_config = os.path.join(
+        DIR_SOFTWARE_SNIPPY, "etc/snpeff.config")
     SOFTWARE_SNP_EFF_name = "snpEff"
     SOFTWARE_SNP_EFF_VERSION = "4.3p"
     SOFTWARE_SNP_EFF_PARAMETERS = (
         "-no-downstream -no-upstream -no-intergenic -no-utr -noStats"
     )
 
-    SOFTWARE_MSA_MASKER = os.path.join(DIR_SOFTWARE_SNIPPY, "bin/msa_masker.py")
+    SOFTWARE_MSA_MASKER = os.path.join(
+        DIR_SOFTWARE_SNIPPY, "bin/msa_masker.py")
     SOFTWARE_MSA_MASKER_name = "MSA Masker"
     SOFTWARE_MSA_MASKER_VERSION = "1.0"
-    ##    SOFTWARE_MSA_MASKER_PARAMETERS = "--g --c"    ### other possibility (--g If the process should mask gaps)
+    # SOFTWARE_MSA_MASKER_PARAMETERS = "--g --c"    ### other possibility (--g If the process should mask gaps)
     SOFTWARE_MSA_MASKER_PARAMETERS = "--c"
 
     SOFTWARE_FREEBAYES = os.path.join(DIR_SOFTWARE_SNIPPY, "bin/freebayes")
@@ -328,7 +338,8 @@ class SoftwareNames(object):
         "ref_PREFIX_FILES_OUT --gcode " + str(Constants.TRANSLATE_TABLE_NUMBER)
     )
 
-    SOFTWARE_MAUVE = os.path.join(settings.DIR_SOFTWARE, "mauve/progressiveMauve")
+    SOFTWARE_MAUVE = os.path.join(
+        settings.DIR_SOFTWARE, "mauve/progressiveMauve")
     SOFTWARE_MAUVE_name = "Mauve"
     SOFTWARE_MAUVE_VERSION = "2.4.0, Feb 13 2015"
     SOFTWARE_MAUVE_PARAMETERS = ""
@@ -364,7 +375,8 @@ class SoftwareNames(object):
     SOFTWARE_MAFFT_PARAMETERS_PROTEIN = "--preservecase --amino --quiet"
     SOFTWARE_MAFFT_PARAMETERS = "--preservecase --quiet"
 
-    SOFTWARE_CLUSTALO = os.path.join(settings.DIR_SOFTWARE, "clustalo/clustalo")
+    SOFTWARE_CLUSTALO = os.path.join(
+        settings.DIR_SOFTWARE, "clustalo/clustalo")
     SOFTWARE_CLUSTALO_name = "clustalo"
     SOFTWARE_CLUSTALO_VERSION = "1.2.4"
     SOFTWARE_CLUSTALO_PARAMETERS = ""
@@ -377,7 +389,8 @@ class SoftwareNames(object):
     #     SOFTWARE_FASTTREE = os.path.join(DIR_SOFTWARE, "fasttree/FastTree")
     #     SOFTWARE_FASTTREE_name = "FastTree"
     #     SOFTWARE_FASTTREE_VERSION = "2.1.10 SSE3"
-    SOFTWARE_FASTTREE = os.path.join(settings.DIR_SOFTWARE, "fasttree/FastTreeDbl")
+    SOFTWARE_FASTTREE = os.path.join(
+        settings.DIR_SOFTWARE, "fasttree/FastTreeDbl")
     SOFTWARE_FASTTREE_name = "FastTreeDbl"
     SOFTWARE_FASTTREE_VERSION = "2.1.10 Double precision"
     SOFTWARE_FASTTREE_PARAMETERS = "-gtr -boot 1000 -nt"
@@ -390,7 +403,7 @@ class SoftwareNames(object):
     SOFTWARE_FASTQ_TOOLS_SAMPLE_VERSION = "0.8"
     SOFTWARE_FASTQ_TOOLS_SAMPLE_PARAMETERS = ""
 
-    ### not necessary to install, it's a caveat for older versions, before 1/07/2018
+    # not necessary to install, it's a caveat for older versions, before 1/07/2018
     SOFTWARE_CREATE_NEW_REFERENCE_TO_SNIPPY = os.path.join(
         settings.DIR_SOFTWARE, "scripts/create_new_reference_to_snippy.pl"
     )
@@ -398,10 +411,10 @@ class SoftwareNames(object):
     SOFTWARE_CREATE_NEW_REFERENCE_TO_SNIPPY_vesion = "1"
     SOFTWARE_CREATE_NEW_REFERENCE_TO_SNIPPY_parameters = ""
 
-    ### software to produce alignments
-    ## nextalign --sequences sequences.fasta --reference SARS_CoV_2_COVID_19_Wuhan_Hu_1_MN908947.fasta --genemap covid.gff3 --genes S --output-dir output
-    ## output/sequences.aligned.fasta
-    ## output/sequences.gene.S.fasta
+    # software to produce alignments
+    # nextalign --sequences sequences.fasta --reference SARS_CoV_2_COVID_19_Wuhan_Hu_1_MN908947.fasta --genemap covid.gff3 --genes S --output-dir output
+    # output/sequences.aligned.fasta
+    # output/sequences.gene.S.fasta
     SOFTWARE_NEXTALIGN = os.path.join(
         settings.DIR_SOFTWARE, "nextalign/1.7.0/nextalign"
     )
@@ -409,7 +422,7 @@ class SoftwareNames(object):
     SOFTWARE_NEXTALIGN_vesion = "1.7.0"
     SOFTWARE_NEXTALIGN_parameters = ""
 
-    ### genebank to perl
+    # genebank to perl
     SOFTWARE_genbank_to_perl = os.path.join(
         settings.DIR_SOFTWARE, "scripts/bp_genbank2gff3.pl"
     )
@@ -417,21 +430,22 @@ class SoftwareNames(object):
     SOFTWARE_MASK_CONSENSUS_BY_SITE_name = "Mask consensus by sites"
     SOFTWARE_MASK_CONSENSUS_BY_SITE_name_extended = "Mask consensus by sites"
     SOFTWARE_MASK_CONSENSUS_BY_SITE_vesion = "1"
-    SOFTWARE_MASK_CONSENSUS_BY_SITE_parameters = ""  ## don't have anything by default
+    SOFTWARE_MASK_CONSENSUS_BY_SITE_parameters = ""  # don't have anything by default
 
-    ### set consensus on AllConsensus file ON|OFF
+    # set consensus on AllConsensus file ON|OFF
     SOFTWARE_GENERATE_CONSENSUS_name = "Generate consensus"
     SOFTWARE_GENERATE_CONSENSUS_name_extended = "Generate consensus"
     SOFTWARE_GENERATE_CONSENSUS_vesion = "1"
-    SOFTWARE_GENERATE_CONSENSUS_parameters = ""  ## don't have anything by default
+    SOFTWARE_GENERATE_CONSENSUS_parameters = ""  # don't have anything by default
 
-    ### algn2pheno
-    SOFTWARE_ALN2PHENO = os.path.join(settings.DIR_SOFTWARE, "aln2pheno/aln2pheno.sh")
+    # algn2pheno
+    SOFTWARE_ALN2PHENO = os.path.join(
+        settings.DIR_SOFTWARE, "aln2pheno/aln2pheno.sh")
     SOFTWARE_ALN2PHENO_README = os.path.join(
         settings.DIR_SOFTWARE, "aln2pheno/algn2pheno_readme.txt"
     )
 
-    ### Nextstrain
+    # Nextstrain
     SOFTWARE_NEXTSTRAIN_VERSION = "0.1"
     SOFTWARE_NEXTSTRAIN = os.path.join(
         settings.DIR_SOFTWARE, "nextstrain/nextstrain.sh"
@@ -440,7 +454,7 @@ class SoftwareNames(object):
         settings.DIR_SOFTWARE, "nextstrain/nextstrain_mpx.sh"
     )
 
-    ### Several types of builds for NEXTSTRAIN
+    # Several types of builds for NEXTSTRAIN
     SOFTWARE_NEXTSTRAIN_BUILDS_BASE = os.path.join(
         settings.DIR_SOFTWARE, "nextstrain/nextstrain_builds/"
     )
@@ -472,8 +486,10 @@ class SoftwareNames(object):
     SOFTWARE_NEXTSTRAIN_BUILDS_DESC = [
         [SOFTWARE_NEXTSTRAIN_BUILDS_generic, "Generic"],
         [SOFTWARE_NEXTSTRAIN_BUILDS_ncov, "SARS-CoV-2"],
-        [SOFTWARE_NEXTSTRAIN_BUILDS_flu_h3n2_12y, "Influenza (H3N2 HA 12years)"],
-        [SOFTWARE_NEXTSTRAIN_BUILDS_flu_h1n1pdm_12y, "Influenza (H1N1PDM HA 12years)"],
+        [SOFTWARE_NEXTSTRAIN_BUILDS_flu_h3n2_12y,
+            "Influenza (H3N2 HA 12years)"],
+        [SOFTWARE_NEXTSTRAIN_BUILDS_flu_h1n1pdm_12y,
+            "Influenza (H1N1PDM HA 12years)"],
         [SOFTWARE_NEXTSTRAIN_BUILDS_flu_vic_12y, "Influenza (Vic HA 12years)"],
         [SOFTWARE_NEXTSTRAIN_BUILDS_flu_yam_12y, "Influenza (Yam HA 12years)"],
         [SOFTWARE_NEXTSTRAIN_BUILDS_mpx, "Monkeypox"],
@@ -484,7 +500,7 @@ class SoftwareNames(object):
     SOFTWARE_NEXTSTRAIN_name = "Nextstrain"
     SOFTWARE_NEXTSTRAIN_name_extended = "Nextstrain pathogen evolution"
 
-    ### PATHOGEN IDENTIFICATION SOFTWARE
+    # PATHOGEN IDENTIFICATION SOFTWARE
 
     PATHOGEN_IDENTIFICATION_name = "Pathogen Identification"
     PATHOGEN_IDENTIFICATION_deplete = True
@@ -494,7 +510,7 @@ class SoftwareNames(object):
     PATHOGEN_IDENTIFICATION_assemble = True
     PATHOGEN_IDENTIFICATION_remap = True
 
-    ### CENTRIFUGE
+    # CENTRIFUGE
     SOFTWARE_CENTRIFUGE = os.path.join(
         settings.DIR_SOFTWARE,
         "host_depletion/hostdep_env/bin/centrifuge",
@@ -506,7 +522,7 @@ class SoftwareNames(object):
     SOFTWARE_CENTRIFUGE_parameters = "-p 4 --time -k 3 --out-fmt sam"
     SOFTWARE_CENTRIFUGE_PARAMETERS_TWO_SEQUENCES = "-p 4 --time -k 3 --out-fmt sam"
 
-    ### BWA
+    # BWA
     SOFTWARE_BWA = os.path.join(
         settings.DIR_SOFTWARE,
         "preprocess/preproc/bin/bwa",
@@ -520,7 +536,7 @@ class SoftwareNames(object):
         "mem -t 4 -M -R '@RG\tID:foo\tSM:bar\tPL:illumina'"
     )
 
-    ### KRAKEN2
+    # KRAKEN2
     SOFTWARE_KRAKEN2 = os.path.join(
         settings.DIR_SOFTWARE, "kraken2/kraken_env/bin/kraken2"
     )
@@ -531,7 +547,7 @@ class SoftwareNames(object):
     SOFTWARE_KRAKEN2_PARAMETERS_TWO_SEQUENCES = (
         "--threads 4 --gzip-compressed  --confidence .5"
     )
-    ### KRAKENUNIQ
+    # KRAKENUNIQ
     SOFTARE_KRAKENUNIQ = os.path.join(
         settings.DIR_SOFTWARE,
         "host_depletion/hostdep_env/bin/krakenuniq",
@@ -546,7 +562,7 @@ class SoftwareNames(object):
         "--threads 4 --gzip-compressed --fastq-input --hll-precision 12"
     )
 
-    ### FAST VIROME EXPLORER
+    # FAST VIROME EXPLORER
 
     SOFTWARE_FASTVIROMEEXPLORER_name = "FastViromeExplorer"
     SOFTWARE_FASTVIROMEEXPLORER_name_extended = "FastViromeExplorer"
@@ -557,7 +573,7 @@ class SoftwareNames(object):
     SOFTWARE_FASTVIROMEEXPLORER_VERSION = "1.3"
     SOFTWARE_FASTVIROMEEXPLORER_parameters = ""
 
-    ### DIAMOND
+    # DIAMOND
     SOFTWARE_DIAMOND_name = "Diamond"
     SOFTWARE_DIAMOND_name_extended = "Diamond"
     SOFTWARE_DIAMOND = os.path.join(
@@ -569,7 +585,7 @@ class SoftwareNames(object):
         "-p 5 --top 5 -e 0.01 --id 65 --query-cover 50 --sensitive"
     )
 
-    ### BLASTN
+    # BLASTN
     SOFTWARE_BLAST_name = "Blastn"
     SOFTWARE_BLAST_name_extended = "Blastn"
     SOFTWARE_BLAST = os.path.join(
@@ -578,7 +594,7 @@ class SoftwareNames(object):
     SOFTWARE_BLAST_VERSION = "2.12.0"
     SOFTWARE_BLAST_parameters = "-num_threads 5 -outfmt 6"
 
-    ### KAIJU
+    # KAIJU
     SOFTWARE_KAIJU = os.path.join(
         settings.DIR_SOFTWARE,
         "hostDepletion/hostdep_env/bin/kaiju",
@@ -590,7 +606,7 @@ class SoftwareNames(object):
         "-t 4 -z -f kaiju_db/nodes.dmp -i kaiju_db/kaiju_db.fmi -o -v -x -u -v"
     )
 
-    ### DESAMBA
+    # DESAMBA
 
     SOFTWARE_DESAMBA = os.path.join(
         settings.DIR_SOFTWARE,
@@ -600,15 +616,16 @@ class SoftwareNames(object):
     SOFTWARE_DESAMBA_name_extended = "deSAMBA"
     SOFTWARE_DESAMBA_VERSION = "1.0.0"
     SOFTWARE_DESAMBA_parameters = ""
-    ### RAVEN
+    # RAVEN
 
     SOFTWARE_RAVEN_name = "Raven"
     SOFTWARE_RAVEN_name_extended = "Raven"
-    SOFTWARE_RAVEN = os.path.join(settings.DIR_SOFTWARE, "assembly/assembly/bin/raven")
+    SOFTWARE_RAVEN = os.path.join(
+        settings.DIR_SOFTWARE, "assembly/assembly/bin/raven")
     SOFTWARE_RAVEN_VERSION = "1.8.1"
     SOFTWARE_RAVEN_parameters = "--threads 4 --gzip-compressed -p2"
 
-    ### SNIPPY
+    # SNIPPY
 
     SOFTWARE_SNIPPY_PI_name = "Snippy_PI"
     SOFTWARE_SNIPPY_PI_name_extended = "Snippy"
@@ -619,7 +636,7 @@ class SoftwareNames(object):
     SOFTWARE_SNIPPY_PI_VERSION = "3.2_dev"
     SOFTWARE_SNIPPY_PI_parameters = "--cpus 4 mapqual=40 --mincov 10 --minfrac 0.1"
 
-    ### MINIMAP2 REMAP
+    # MINIMAP2 REMAP
 
     SOFTWARE_MINIMAP2_REMAP_ONT_name = "Minimap2"
     SOFTWARE_MINIMAP2_REMAP_ONT_name_extended = "Minimap2"
@@ -630,7 +647,7 @@ class SoftwareNames(object):
     SOFTWARE_MINIMAP2_REMAP_ONT_VERSION = "2.24"
     SOFTWARE_MINIMAP2_REMAP_ONT_parameters = "-a -x map-ont -t 4"
 
-    ### MINIMAP2 DEPLETE
+    # MINIMAP2 DEPLETE
 
     SOFTWARE_MINIMAP2_DEPLETE_ONT_name = "Minimap2_ONT"
     SOFTWARE_MINIMAP2_DEPLETE_ONT_name_extended = "Minimap2"
@@ -641,7 +658,7 @@ class SoftwareNames(object):
     SOFTWARE_MINIMAP2_DEPLETE_ONT_VERSION = "2.24"
     SOFTWARE_MINIMAP2_DEPLETE_ONT_parameters = "-a -x map-ont -t 4"
 
-    ### Bowtie2 DEPLETE
+    # Bowtie2 DEPLETE
 
     SOFTWARE_BOWTIE2_DEPLETE_name = "Bowtie2"
     SOFTWARE_BOWTIE2_DEPLETE_name_extended = "Bowtie2"
@@ -655,7 +672,7 @@ class SoftwareNames(object):
     ###################################
     ###################################
     #####
-    #####    Global parameters for INSaFLU
+    # Global parameters for INSaFLU
     #####
 
     INSAFLU_PARAMETER_MASK_CONSENSUS_name = "Threshold to mask consensus sequences"
@@ -674,7 +691,7 @@ class SoftwareNames(object):
     INSAFLU_PARAMETER_LIMIT_COVERAGE_ONT_vesion = "1"
     INSAFLU_PARAMETER_LIMIT_COVERAGE_ONT_parameters = "Threshold:30"
 
-    ### It also put Ns on positions where variations are below this threshold (masking consensus on ONT)
+    # It also put Ns on positions where variations are below this threshold (masking consensus on ONT)
     INSAFLU_PARAMETER_VCF_FREQ_ONT_name = "Minimum proportion for variant evidence"
     INSAFLU_PARAMETER_VCF_FREQ_ONT_name_extended = (
         "Minimum proportion for variant evidence (minfrac)"
@@ -682,7 +699,7 @@ class SoftwareNames(object):
     INSAFLU_PARAMETER_VCF_FREQ_ONT_vesion = "1"
     INSAFLU_PARAMETER_VCF_FREQ_ONT_parameters = "Threshold:0.51"
 
-    ### clean human reads
+    # clean human reads
     SOFTWARE_CLEAN_HUMAN_READS_name = "Clean human reads"
     SOFTWARE_CLEAN_HUMAN_READS_extended = "Remove human reads on fastq files"
     SOFTWARE_CLEAN_HUMAN_READS_VERSION = "1"
@@ -692,7 +709,7 @@ class SoftwareNames(object):
         SOFTWARE_TAG_no,
     ]
 
-    ### Extend Parameters names in output tables, "csv" and "tst"
+    # Extend Parameters names in output tables, "csv" and "tst"
     VECT_INSAFLU_PARAMETER = [
         INSAFLU_PARAMETER_MASK_CONSENSUS_name,
         #                 SOFTWARE_CLEAN_HUMAN_READS_name,
@@ -700,14 +717,14 @@ class SoftwareNames(object):
     #         INSAFLU_PARAMETER_LIMIT_COVERAGE_ONT_name]
 
     #####
-    #####    END Global parameters for INSaFLU
+    # END Global parameters for INSaFLU
     #####
     ###################################
 
     ###################################
     ###################################
     ###
-    ###        Relation between Technology -> Software
+    # Relation between Technology -> Software
     ###
     DICT_SOFTWARE_RELATION = {
         ConstantsSettings.TECHNOLOGY_illumina: [
@@ -742,10 +759,11 @@ class SoftwareNames(object):
     ###
     ###################################
 
-    ### software with application in multiple pipeline_steps:
+    # software with application in multiple pipeline_steps:
     polyvalent_software = [
         SOFTWARE_CENTRIFUGE_name,
         SOFTWARE_SNIPPY_name,
+        SOFTWARE_BWA_name,
     ]
     # pipeline_steps per software, for software with multiple pipeline_steps.
     polyvalent_software_pipelines = {
@@ -761,6 +779,9 @@ class SoftwareNames(object):
             ConstantsSettings.PIPELINE_NAME_remapping,
             ConstantsSettings.PIPELINE_NAME_host_depletion,
         ],
+        SOFTWARE_BWA_name: [
+            ConstantsSettings.PIPELINE_NAME_host_depletion,
+            ConstantsSettings.PIPELINE_NAME_read_classification,
     }
 
     ###################################
@@ -1242,7 +1263,7 @@ class SoftwareNames(object):
         return self.SOFTWARE_BCFTOOLS_PARAMETERS
 
     """
-    return 
+    return
     ### not necessary to install, it's a caveat for older versions, before 1/07/2018
     """
 
@@ -1297,7 +1318,7 @@ class SoftwareNames(object):
         return self.SOFTWARE_GENERATE_CONSENSUS_parameters
 
     """
-    return 
+    return
     ### nextalign
     """
 
@@ -1335,7 +1356,7 @@ class SoftwareNames(object):
     def get_Alignment2phenotype_parameters(self):
         return self.SOFTWARE_Alignment2phenotype_PARAMETERS
 
-    ###### START minion software
+    # START minion software
     ###
     def get_rabbitQC(self):
         return self.SOFTWARE_RabbitQC
@@ -1434,9 +1455,9 @@ class SoftwareNames(object):
         return self.SOFTWARE_FLYE_PARAMETERS
 
     ###
-    ###### END minion software
+    # END minion software
 
-    ### START PATHOGEN IDENTIFIGATION SOFTWARE
+    # START PATHOGEN IDENTIFIGATION SOFTWARE
 
     def get_centrifuge(self):
         return self.SOFTWARE_CENTRIFUGE
@@ -1515,14 +1536,15 @@ class SoftwareNames(object):
 
     ###################################
     #####
-    #####    Global parameters for INSaFLU
+    # Global parameters for INSaFLU
     #####
     """
     ### it's a way to define a threshold to mask consensus sequences, with regions with low coverage, obtained by snippy
     ### It's a global parameter for INSaFLU
     """
-    ### Define the Minimum percentage of horizontal coverage to generate consensus, otherwise drop sequence
-    ##def get_insaflu_parameter_mask_consensus(self): return ""
+    # Define the Minimum percentage of horizontal coverage to generate consensus, otherwise drop sequence
+    # def get_insaflu_parameter_mask_consensus(self): return ""
+
     def get_insaflu_parameter_mask_consensus_name(self):
         return self.INSAFLU_PARAMETER_MASK_CONSENSUS_name
 
@@ -1535,8 +1557,8 @@ class SoftwareNames(object):
     def get_insaflu_parameter_mask_consensus_parameters(self):
         return self.INSAFLU_PARAMETER_MASK_CONSENSUS_parameters
 
-    ### Define the minimum coverage
-    ##def get_insaflu_parameter_limit_coverage(self): return ""
+    # Define the minimum coverage
+    # def get_insaflu_parameter_limit_coverage(self): return ""
     def get_insaflu_parameter_limit_coverage_name(self):
         return self.INSAFLU_PARAMETER_LIMIT_COVERAGE_ONT_name
 
@@ -1549,8 +1571,8 @@ class SoftwareNames(object):
     def get_insaflu_parameter_limit_coverage_parameters(self):
         return self.INSAFLU_PARAMETER_LIMIT_COVERAGE_ONT_parameters
 
-    ### Define the minimum freq
-    ##def get_insaflu_parameter_limit_freq_cov(self): return ""
+    # Define the minimum freq
+    # def get_insaflu_parameter_limit_freq_cov(self): return ""
     def get_insaflu_parameter_freq_vcf_name(self):
         return self.INSAFLU_PARAMETER_VCF_FREQ_ONT_name
 
@@ -1563,7 +1585,7 @@ class SoftwareNames(object):
     def get_insaflu_parameter_freq_vcf_parameters(self):
         return self.INSAFLU_PARAMETER_VCF_FREQ_ONT_parameters
 
-    ### get pangolin
+    # get pangolin
     def get_pangolin_env(self):
         return self.SOFTWARE_Pangolin_Env
 
@@ -1578,12 +1600,12 @@ class SoftwareNames(object):
             return SoftwareNames.SOFTWARE_Pangolin_VERSION
         return ""
 
-    ## version must be obtain from ManagingFiles.Software.Version
+    # version must be obtain from ManagingFiles.Software.Version
 
     def get_pangolin_all_names_version(self):
-        dt_return_version = {}
+        dt_return_version= {}
         for name in self.VECT_PANGOLIN_TO_TEST:
-            dt_return_version[name] = self.get_pangolin_version(name)
+            dt_return_version[name]= self.get_pangolin_version(name)
         return dt_return_version
 
-    ## version must be obtain from ManagingFiles.Software.Version
+    # version must be obtain from ManagingFiles.Software.Version

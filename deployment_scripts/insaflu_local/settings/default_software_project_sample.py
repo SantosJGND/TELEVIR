@@ -7,12 +7,11 @@ import logging
 
 from constants.software_names import SoftwareNames
 from managing_files.models import Project, ProjectSample, Sample
-from utils.lock_atomic_transaction import LockedAtomicTransaction
-
 from settings.constants_settings import ConstantsSettings
 from settings.default_parameters import DefaultParameters
 from settings.default_software import DefaultSoftware
 from settings.models import Parameter, Software
+from utils.lock_atomic_transaction import LockedAtomicTransaction
 
 
 class DefaultProjectSoftware(object):
@@ -25,14 +24,14 @@ class DefaultProjectSoftware(object):
     def __init__(self):
         """change values"""
         self.default_parameters = DefaultParameters()
-        self.change_values_software = {}  ### the key is the name of the software
+        self.change_values_software = {}  # the key is the name of the software
 
     def test_all_defaults(self, user, project, project_sample, sample, dataset=None):
         """
         test all defaults for all software available
         """
 
-        ## only for project and for all technology
+        # only for project and for all technology
         if not project is None:
             self.test_default_db(
                 SoftwareNames.SOFTWARE_SNIPPY_name,
@@ -98,7 +97,7 @@ class DefaultProjectSoftware(object):
                 ConstantsSettings.TECHNOLOGY_minion,
             )
 
-            ### SOFTWARE_MASK_CONSENSUS_BY_SITE_name can be both
+            # SOFTWARE_MASK_CONSENSUS_BY_SITE_name can be both
             self.test_default_db(
                 SoftwareNames.SOFTWARE_MASK_CONSENSUS_BY_SITE_name,
                 user,
@@ -117,9 +116,9 @@ class DefaultProjectSoftware(object):
                 None,
                 ConstantsSettings.TECHNOLOGY_minion,
             )
-            ## TELEVIR SOFTWARE
+            # TELEVIR SOFTWARE
 
-            ############# PATHOGEN IDENTIFICATION SOFTWARE
+            # PATHOGEN IDENTIFICATION SOFTWARE
             #############
             # self.test_default_db(
             #    SoftwareNames.SOFTWARE_CENTRIFUGE_name,
@@ -142,10 +141,10 @@ class DefaultProjectSoftware(object):
                 dataset=dataset,
             )
 
-            ## only for project sample and by technology
+            # only for project sample and by technology
         elif not project_sample is None:
 
-            ### both technologies
+            # both technologies
             self.test_default_db(
                 SoftwareNames.SOFTWARE_MASK_CONSENSUS_BY_SITE_name,
                 user,
@@ -165,7 +164,7 @@ class DefaultProjectSoftware(object):
                 ConstantsSettings.TECHNOLOGY_generic,
             )
 
-            ### illumina
+            # illumina
             if project_sample.sample.is_type_fastq_gz_sequencing():
                 self.test_default_db(
                     SoftwareNames.SOFTWARE_SNIPPY_name,
@@ -195,7 +194,7 @@ class DefaultProjectSoftware(object):
                     ConstantsSettings.TECHNOLOGY_illumina,
                 )
 
-            else:  ## ONT
+            else:  # ONT
                 self.test_default_db(
                     SoftwareNames.INSAFLU_PARAMETER_MASK_CONSENSUS_name,
                     user,
@@ -242,7 +241,7 @@ class DefaultProjectSoftware(object):
                     ConstantsSettings.TECHNOLOGY_minion,
                 )
 
-        ### only for sample and ONT technology
+        # only for sample and ONT technology
         elif not sample is None:
             if sample.is_type_fastq_gz_sequencing(Sample.TYPE_OF_FASTQ_minion):
                 self.test_default_db(
@@ -298,7 +297,7 @@ class DefaultProjectSoftware(object):
         """
         test if exist, if not persist in database
         """
-        ## lock because more than one process can duplicate software names
+        # lock because more than one process can duplicate software names
         with LockedAtomicTransaction(Software), LockedAtomicTransaction(Parameter):
             list_software = Software.objects.filter(
                 name=software_name,
@@ -318,7 +317,7 @@ class DefaultProjectSoftware(object):
             # logger = logging.getLogger("fluWebVirus.debug")
             # logger.debug("Test default db: {} ({})".format(list_software, len(list_software)))
 
-            ### if not exist need to save
+            # if not exist need to save
             if len(list_software) == 0:
                 vect_parameters = self._get_default_parameters(
                     software_name,
@@ -330,7 +329,7 @@ class DefaultProjectSoftware(object):
                     technology_name,
                     dataset,
                 )
-                if len(vect_parameters) > 0:  ### persist
+                if len(vect_parameters) > 0:  # persist
                     self.default_parameters.persist_parameters(
                         vect_parameters, type_of_use
                     )
@@ -349,7 +348,7 @@ class DefaultProjectSoftware(object):
         if software_name == SoftwareNames.SOFTWARE_SNIPPY_name:
             vect_parameters = self.default_parameters.get_snippy_default(
                 user, type_of_use, technology_name, project, project_sample
-            )  ### base values
+            )  # base values
             if not project is None:
                 vect_parameters = self._get_default_project(
                     user,
@@ -357,7 +356,7 @@ class DefaultProjectSoftware(object):
                     None,
                     vect_parameters,
                     technology_name,
-                )  ### base values
+                )  # base values
             if not project_sample is None:
                 vect_parameters = self._get_default_project(
                     user,
@@ -365,7 +364,7 @@ class DefaultProjectSoftware(object):
                     project_sample.project,
                     vect_parameters,
                     technology_name,
-                )  ### base values
+                )  # base values
             return vect_parameters
         elif software_name == SoftwareNames.SOFTWARE_FREEBAYES_name:
             vect_parameters = self.default_parameters.get_freebayes_default(
@@ -378,7 +377,7 @@ class DefaultProjectSoftware(object):
                     None,
                     vect_parameters,
                     technology_name,
-                )  ### base values
+                )  # base values
             if not project_sample is None:
                 vect_parameters = self._get_default_project(
                     user,
@@ -386,7 +385,7 @@ class DefaultProjectSoftware(object):
                     project_sample.project,
                     vect_parameters,
                     technology_name,
-                )  ### base values
+                )  # base values
             return vect_parameters
         elif software_name == SoftwareNames.INSAFLU_PARAMETER_MASK_CONSENSUS_name:
             vect_parameters = (
@@ -397,7 +396,7 @@ class DefaultProjectSoftware(object):
             if not project is None:
                 vect_parameters = self._get_default_project(
                     user, software_name, None, vect_parameters, technology_name
-                )  ### base values
+                )  # base values
             if not project_sample is None:
                 vect_parameters = self._get_default_project(
                     user,
@@ -405,7 +404,7 @@ class DefaultProjectSoftware(object):
                     project_sample.project,
                     vect_parameters,
                     technology_name,
-                )  ### base values
+                )  # base values
             return vect_parameters
         elif software_name == SoftwareNames.SOFTWARE_MASK_CONSENSUS_BY_SITE_name:
             vect_parameters = (
@@ -416,7 +415,7 @@ class DefaultProjectSoftware(object):
             if not project is None:
                 vect_parameters = self._get_default_project(
                     user, software_name, None, vect_parameters, technology_name
-                )  ### base values
+                )  # base values
             if not project_sample is None:
                 vect_parameters = self._get_default_project(
                     user,
@@ -424,7 +423,7 @@ class DefaultProjectSoftware(object):
                     project_sample.project,
                     vect_parameters,
                     technology_name,
-                )  ### base values
+                )  # base values
             return vect_parameters
         elif software_name == SoftwareNames.SOFTWARE_GENERATE_CONSENSUS_name:
             vect_parameters = self.default_parameters.get_generate_consensus_default(
@@ -440,7 +439,7 @@ class DefaultProjectSoftware(object):
             if not project is None:
                 vect_parameters = self._get_default_project(
                     user, software_name, None, vect_parameters, technology_name
-                )  ### base values
+                )  # base values
             if not project_sample is None:
                 vect_parameters = self._get_default_project(
                     user,
@@ -448,7 +447,7 @@ class DefaultProjectSoftware(object):
                     project_sample.project,
                     vect_parameters,
                     technology_name,
-                )  ### base values
+                )  # base values
             return vect_parameters
         elif software_name == SoftwareNames.INSAFLU_PARAMETER_VCF_FREQ_ONT_name:
             vect_parameters = (
@@ -459,7 +458,7 @@ class DefaultProjectSoftware(object):
             if not project is None:
                 vect_parameters = self._get_default_project(
                     user, software_name, None, vect_parameters, technology_name
-                )  ### base values
+                )  # base values
             if not project_sample is None:
                 vect_parameters = self._get_default_project(
                     user,
@@ -467,7 +466,7 @@ class DefaultProjectSoftware(object):
                     project_sample.project,
                     vect_parameters,
                     technology_name,
-                )  ### base values
+                )  # base values
             return vect_parameters
         elif software_name == SoftwareNames.SOFTWARE_Medaka_name_consensus:
             vect_parameters = self.default_parameters.get_medaka_model_default(
@@ -476,7 +475,7 @@ class DefaultProjectSoftware(object):
             if not project is None:
                 vect_parameters = self._get_default_project(
                     user, software_name, None, vect_parameters, technology_name
-                )  ### base values
+                )  # base values
             if not project_sample is None:
                 vect_parameters = self._get_default_project(
                     user,
@@ -484,7 +483,7 @@ class DefaultProjectSoftware(object):
                     project_sample.project,
                     vect_parameters,
                     technology_name,
-                )  ### base values
+                )  # base values
             return vect_parameters
         elif software_name == SoftwareNames.SOFTWARE_SAMTOOLS_name_depth_ONT:
             vect_parameters = self.default_parameters.get_samtools_depth_default_ONT(
@@ -493,7 +492,7 @@ class DefaultProjectSoftware(object):
             if not project is None:
                 vect_parameters = self._get_default_project(
                     user, software_name, None, vect_parameters, technology_name
-                )  ### base values
+                )  # base values
             if not project_sample is None:
                 vect_parameters = self._get_default_project(
                     user,
@@ -501,7 +500,7 @@ class DefaultProjectSoftware(object):
                     project_sample.project,
                     vect_parameters,
                     technology_name,
-                )  ### base values
+                )  # base values
             return vect_parameters
         elif software_name == SoftwareNames.SOFTWARE_NanoFilt_name:
             vect_parameters = self.default_parameters.get_nanofilt_default(
@@ -510,7 +509,7 @@ class DefaultProjectSoftware(object):
             if not sample is None:
                 vect_parameters = self._get_default_project(
                     user, software_name, None, vect_parameters, technology_name
-                )  ### base values
+                )  # base values
             return vect_parameters
         elif software_name == SoftwareNames.SOFTWARE_TRIMMOMATIC_name:
             vect_parameters = self.default_parameters.get_trimmomatic_default(
@@ -519,7 +518,7 @@ class DefaultProjectSoftware(object):
             if not sample is None:
                 vect_parameters = self._get_default_project(
                     user, software_name, None, vect_parameters, technology_name
-                )  ### base values
+                )  # base values
             return vect_parameters
         elif software_name == SoftwareNames.SOFTWARE_ABRICATE_name:
             vect_parameters = self.default_parameters.get_abricate_default(
@@ -528,7 +527,7 @@ class DefaultProjectSoftware(object):
             if not sample is None:
                 vect_parameters = self._get_default_project(
                     user, software_name, None, vect_parameters, technology_name
-                )  ### base values
+                )  # base values
             return vect_parameters
         elif software_name == SoftwareNames.SOFTWARE_NEXTSTRAIN_name:
             vect_parameters = self.default_parameters.get_nextstrain_default(
@@ -539,7 +538,7 @@ class DefaultProjectSoftware(object):
 
     #####################################################
     #####
-    #####        snippy
+    # snippy
     #####
 
     def get_snippy_parameters(self, user, type_of_use, project, project_sample):
@@ -561,7 +560,7 @@ class DefaultProjectSoftware(object):
         get snippy parameters for project_sample, project and default
         """
 
-        ### Test project_sample first
+        # Test project_sample first
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_SNIPPY_name,
             user,
@@ -574,7 +573,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### Test project
+        # Test project
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_SNIPPY_name,
             user,
@@ -587,7 +586,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
         parameters = default_software.get_snippy_parameters(user)
         if len(parameters) > 0:
@@ -601,7 +600,7 @@ class DefaultProjectSoftware(object):
         get snippy parameters only for project or default
         """
 
-        ### Test project
+        # Test project
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_SNIPPY_name,
             user,
@@ -614,7 +613,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
         parameters = default_software.get_snippy_parameters(user)
         if len(parameters) > 0:
@@ -626,7 +625,8 @@ class DefaultProjectSoftware(object):
         :param parameter_name -> Only these two possibilities available SNIPPY_COVERAGE_NAME; SNIPPY_MAPQUAL_NAME
         :return value of parameter
         """
-        vect_parameters = self.default_parameters.get_snippy_default(None, None, None)
+        vect_parameters = self.default_parameters.get_snippy_default(
+            None, None, None)
         for parameters in vect_parameters:
             if parameters.name == parameter_name:
                 return parameters.parameter
@@ -707,13 +707,13 @@ class DefaultProjectSoftware(object):
         return None
 
     #####
-    #####        END snippy
+    # END snippy
     #####
     #####################################################
 
     #####################################################
     #####
-    #####        BEGIN -- Freebayes
+    # BEGIN -- Freebayes
     #####
 
     def get_freebayes_parameters(self, user, type_of_use, project, project_sample):
@@ -736,7 +736,7 @@ class DefaultProjectSoftware(object):
         test if freebayes is to run
         """
 
-        ### Test project_sample first
+        # Test project_sample first
         return self.default_parameters.is_software_to_run(
             SoftwareNames.SOFTWARE_FREEBAYES_name,
             user,
@@ -763,13 +763,13 @@ class DefaultProjectSoftware(object):
         )
 
     #####
-    #####        END -- Freebayes
+    # END -- Freebayes
     #####
     #####################################################
 
     #####################################################
     #####
-    #####        nanofilt
+    # nanofilt
     #####
 
     def get_nanofilt_parameters(self, user, type_of_use, sample):
@@ -791,7 +791,7 @@ class DefaultProjectSoftware(object):
         get nanofilt parameters for project_sample, project and default
         """
 
-        ### Test project_sample first
+        # Test project_sample first
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_NanoFilt_name,
             user,
@@ -804,7 +804,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
         parameters = default_software.get_nanofilt_parameters(user)
         if len(parameters) > 0:
@@ -818,7 +818,7 @@ class DefaultProjectSoftware(object):
         test if nanofilt is to run
         """
 
-        ### Test project_sample first
+        # Test project_sample first
         return self.default_parameters.is_software_to_run(
             SoftwareNames.SOFTWARE_NanoFilt_name,
             user,
@@ -849,7 +849,7 @@ class DefaultProjectSoftware(object):
         get nanofilt parameters only for project or default
         """
 
-        ### Test project
+        # Test project
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_NanoFilt_name,
             user,
@@ -862,7 +862,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
         parameters = default_software.get_nanofilt_parameters(user)
         if len(parameters) > 0:
@@ -874,7 +874,8 @@ class DefaultProjectSoftware(object):
         :param parameter_name -> NANOfilt_quality_read
         :return value of parameter
         """
-        vect_parameters = self.default_parameters.get_nanofilt_default(None, None, None)
+        vect_parameters = self.default_parameters.get_nanofilt_default(
+            None, None, None)
         for parameters in vect_parameters:
             if parameters.name == parameter_name:
                 return parameters.parameter
@@ -891,7 +892,8 @@ class DefaultProjectSoftware(object):
         if value_default_parameter is None:
             return False
 
-        parameter_defined = self.get_nanofilt_single_parameter(sample, parameter_name)
+        parameter_defined = self.get_nanofilt_single_parameter(
+            sample, parameter_name)
         if (
             not parameter_defined is None
             and parameter_defined == value_default_parameter
@@ -953,13 +955,13 @@ class DefaultProjectSoftware(object):
         return None
 
     #####
-    #####        END nanofilt
+    # END nanofilt
     #####
     #####################################################
 
     #####################################################
     #####
-    #####        Trimmomatic
+    # Trimmomatic
     #####
 
     def get_trimmomatic_parameters(self, user, type_of_use, sample):
@@ -981,7 +983,7 @@ class DefaultProjectSoftware(object):
         get trimmomatic parameters for project_sample, project and default
         """
 
-        ### Test project_sample first
+        # Test project_sample first
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_TRIMMOMATIC_name,
             user,
@@ -994,7 +996,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
         parameters = default_software.get_trimmomatic_parameters(user)
         if len(parameters) > 0:
@@ -1008,7 +1010,7 @@ class DefaultProjectSoftware(object):
         test if trimmomatic is to run
         """
 
-        ### Test project_sample first
+        # Test project_sample first
         return self.default_parameters.is_software_to_run(
             SoftwareNames.SOFTWARE_TRIMMOMATIC_name,
             user,
@@ -1039,7 +1041,7 @@ class DefaultProjectSoftware(object):
         get trimmomatic parameters only for project or default
         """
 
-        ### Test project
+        # Test project
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_TRIMMOMATIC_name,
             user,
@@ -1052,7 +1054,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
         parameters = default_software.get_trimmomatic_parameters(user)
         if len(parameters) > 0:
@@ -1149,13 +1151,13 @@ class DefaultProjectSoftware(object):
         return None
 
     #####
-    #####        END trimmomatic
+    # END trimmomatic
     #####
     #####################################################
 
     #####################################################
     #####
-    #####        Abricate
+    # Abricate
     #####
 
     def get_abricate_parameters(self, user, type_of_use, sample, technology_name):
@@ -1177,7 +1179,7 @@ class DefaultProjectSoftware(object):
         test if abricate is to run
         """
 
-        ### Test project_sample first
+        # Test project_sample first
         return self.default_parameters.is_software_to_run(
             SoftwareNames.SOFTWARE_ABRICATE_name,
             user,
@@ -1193,7 +1195,7 @@ class DefaultProjectSoftware(object):
         test if abricate is to run
         """
 
-        ### Test project_sample first
+        # Test project_sample first
         return self.default_parameters.set_software_to_run(
             SoftwareNames.SOFTWARE_ABRICATE_name,
             user,
@@ -1210,7 +1212,7 @@ class DefaultProjectSoftware(object):
         get abricate parameters for sample
         """
 
-        ### Test project_sample first
+        # Test project_sample first
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_ABRICATE_name,
             user,
@@ -1223,9 +1225,10 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
-        parameters = default_software.get_abricate_parameters(user, technology_name)
+        parameters = default_software.get_abricate_parameters(
+            user, technology_name)
         if len(parameters) > 0:
             return parameters
 
@@ -1237,7 +1240,7 @@ class DefaultProjectSoftware(object):
         get abricate parameters only for project or default
         """
 
-        ### Test project
+        # Test project
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_ABRICATE_name,
             user,
@@ -1250,9 +1253,10 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
-        parameters = default_software.get_abricate_parameters(user, technology_name)
+        parameters = default_software.get_abricate_parameters(
+            user, technology_name)
         if len(parameters) > 0:
             return parameters
         return None
@@ -1261,7 +1265,8 @@ class DefaultProjectSoftware(object):
         """
         :return value of parameter
         """
-        vect_parameters = self.default_parameters.get_abricate_default(None, None, None)
+        vect_parameters = self.default_parameters.get_abricate_default(
+            None, None, None)
         for parameters in vect_parameters:
             if parameters.name == parameter_name:
                 return parameters.parameter
@@ -1346,13 +1351,13 @@ class DefaultProjectSoftware(object):
         return None
 
     #####
-    #####        END abricate
+    # END abricate
     #####
     #####################################################
 
     #####################################################
     #####
-    #####        Medaka
+    # Medaka
     #####
 
     def get_medaka_parameters(self, user, type_of_use, project, project_sample):
@@ -1375,7 +1380,7 @@ class DefaultProjectSoftware(object):
         get the model to run, this is the only possibility
         """
 
-        ### Test project_sample first
+        # Test project_sample first
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_Medaka_name_consensus,
             user,
@@ -1388,7 +1393,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### Test project
+        # Test project
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_Medaka_name_consensus,
             user,
@@ -1401,7 +1406,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
         parameters = default_software.get_medaka_parameters_consensus(user)
         if len(parameters) > 0:
@@ -1415,7 +1420,7 @@ class DefaultProjectSoftware(object):
         get medaka parameters only for project or default
         """
 
-        ### Test project
+        # Test project
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_Medaka_name_consensus,
             user,
@@ -1428,7 +1433,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
         parameters = default_software.get_medaka_parameters_consensus(user)
         if len(parameters) > 0:
@@ -1523,13 +1528,13 @@ class DefaultProjectSoftware(object):
         return None
 
     #####
-    #####        END medaka
+    # END medaka
     #####
     #####################################################
 
     #####################################################
     #####
-    #####        Samtools ONT
+    # Samtools ONT
     #####
 
     def get_samtools_parameters_ONT(self, user, type_of_use, project, project_sample):
@@ -1552,7 +1557,7 @@ class DefaultProjectSoftware(object):
         get the model to run, this is the only possibility
         """
 
-        ### Test project_sample first
+        # Test project_sample first
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_SAMTOOLS_name_depth_ONT,
             user,
@@ -1565,7 +1570,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### Test project
+        # Test project
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_SAMTOOLS_name_depth_ONT,
             user,
@@ -1578,7 +1583,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
         parameters = default_software.get_samtools_parameters_depth_ONT(user)
         if len(parameters) > 0:
@@ -1592,7 +1597,7 @@ class DefaultProjectSoftware(object):
         get samtools parameters only for project or default
         """
 
-        ### Test project
+        # Test project
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.SOFTWARE_SAMTOOLS_name_depth_ONT,
             user,
@@ -1605,7 +1610,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
         parameters = default_software.get_samtools_parameters_depth_ONT(user)
         if len(parameters) > 0:
@@ -1702,13 +1707,13 @@ class DefaultProjectSoftware(object):
         return None
 
     #####
-    #####        END samtools ONT
+    # END samtools ONT
     #####
     #####################################################
 
     #####################################################
     #####
-    #####        Mask consensus
+    # Mask consensus
     #####
 
     def get_mask_consensus_parameters(
@@ -1734,7 +1739,7 @@ class DefaultProjectSoftware(object):
         get mask_consensus parameters for project and default
         """
 
-        ### Test project_sample first
+        # Test project_sample first
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.INSAFLU_PARAMETER_MASK_CONSENSUS_name,
             user,
@@ -1747,7 +1752,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### Test project
+        # Test project
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.INSAFLU_PARAMETER_MASK_CONSENSUS_name,
             user,
@@ -1760,7 +1765,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
         parameters = default_software.get_mask_consensus_threshold_parameters(
             user, technology_name
@@ -1776,7 +1781,7 @@ class DefaultProjectSoftware(object):
         get mask_consensus parameters only for project or default
         """
 
-        ### Test project
+        # Test project
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.INSAFLU_PARAMETER_MASK_CONSENSUS_name,
             user,
@@ -1789,7 +1794,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
         parameters = default_software.get_mask_consensus_threshold_parameters(
             user, technology_name
@@ -1894,13 +1899,13 @@ class DefaultProjectSoftware(object):
         return None
 
     #####
-    #####        END Mask consensus
+    # END Mask consensus
     #####
     #####################################################
 
     #####################################################
     #####
-    #####        Generate consensus
+    # Generate consensus
     #####
 
     def include_consensus(self, project_sample):
@@ -1908,7 +1913,7 @@ class DefaultProjectSoftware(object):
         get mask_consensus parameters for project and default
         """
 
-        ### Test project_sample first
+        # Test project_sample first
         vect_parameters = self.default_parameters.get_list_parameters(
             SoftwareNames.SOFTWARE_GENERATE_CONSENSUS_name,
             project_sample.sample.owner,
@@ -1923,13 +1928,13 @@ class DefaultProjectSoftware(object):
         return True
 
     #####
-    #####        END Generate consensus
+    # END Generate consensus
     #####
     #####################################################
 
     #####################################################
     #####
-    #####        Coverage limit ONT
+    # Coverage limit ONT
     #####
 
     def get_limit_coverage_ONT_parameters(
@@ -1953,7 +1958,7 @@ class DefaultProjectSoftware(object):
         get limit_coverage parameters for project and default
         """
 
-        ### Test project_sample first
+        # Test project_sample first
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.INSAFLU_PARAMETER_LIMIT_COVERAGE_ONT_name,
             user,
@@ -1966,7 +1971,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### Test project
+        # Test project
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.INSAFLU_PARAMETER_LIMIT_COVERAGE_ONT_name,
             user,
@@ -1979,7 +1984,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
         parameters = default_software.get_limit_coverage_ONT_parameters(user)
         if len(parameters) > 0:
@@ -1993,7 +1998,7 @@ class DefaultProjectSoftware(object):
         get limit_coverage_ONT parameters only for project or default
         """
 
-        ### Test project
+        # Test project
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.INSAFLU_PARAMETER_LIMIT_COVERAGE_ONT_name,
             user,
@@ -2006,7 +2011,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
         parameters = default_software.get_limit_coverage_ONT_parameters(user)
         if len(parameters) > 0:
@@ -2109,13 +2114,13 @@ class DefaultProjectSoftware(object):
         return None
 
     #####
-    #####        END Coverage limit ONT
+    # END Coverage limit ONT
     #####
     #####################################################
 
     #####################################################
     #####
-    #####        FREQ VCF ONT
+    # FREQ VCF ONT
     #####
 
     def get_freq_vcf_ONT_parameters(self, user, type_of_use, project, project_sample):
@@ -2137,7 +2142,7 @@ class DefaultProjectSoftware(object):
         get freq_vcf parameters for project and default
         """
 
-        ### Test project_sample first
+        # Test project_sample first
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.INSAFLU_PARAMETER_VCF_FREQ_ONT_name,
             user,
@@ -2150,7 +2155,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### Test project
+        # Test project
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.INSAFLU_PARAMETER_VCF_FREQ_ONT_name,
             user,
@@ -2163,7 +2168,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one
+        # can be a default one
         default_software = DefaultSoftware()
         parameters = default_software.get_freq_vcf_ONT_parameters(user)
         if len(parameters) > 0:
@@ -2177,7 +2182,7 @@ class DefaultProjectSoftware(object):
         get freq_vcf_ONT parameters only for project or default
         """
 
-        ### Test project
+        # Test project
         parameters = self.default_parameters.get_parameters(
             SoftwareNames.INSAFLU_PARAMETER_VCF_FREQ_ONT_name,
             user,
@@ -2190,7 +2195,7 @@ class DefaultProjectSoftware(object):
         if not parameters is None:
             return parameters
 
-        ### can be a default one_get_freq_vcf
+        # can be a default one_get_freq_vcf
         default_software = DefaultSoftware()
         parameters = default_software.get_freq_vcf_ONT_parameters(user)
         if len(parameters) > 0:
@@ -2287,7 +2292,7 @@ class DefaultProjectSoftware(object):
         return None
 
     #####
-    #####        END -- FREQ VCF ONT
+    # END -- FREQ VCF ONT
     #####
     #####################################################
 
@@ -2324,7 +2329,7 @@ class DefaultProjectSoftware(object):
             if parameter.can_change:
                 for parameter_to_set_default in vect_parameters:
                     if parameter_to_set_default.sequence_out == parameter.sequence_out:
-                        ###   if change software name
+                        # if change software name
                         if parameter.parameter != parameter_to_set_default.parameter:
                             self.change_values_software[key_value] = True
                             parameter.parameter = parameter_to_set_default.parameter
@@ -2333,7 +2338,8 @@ class DefaultProjectSoftware(object):
 
     def is_change_values_for_software(self, software_name, technology_name, user_name):
         """Return if the software has a value changed"""
-        key_value = "{}_{}_{}".format(software_name, technology_name, user_name)
+        key_value = "{}_{}_{}".format(
+            software_name, technology_name, user_name)
         return self.change_values_software.get(key_value, False)
 
     def can_change_values_for_this_software(
@@ -2363,6 +2369,7 @@ class DefaultProjectSoftware(object):
         technology_name=ConstantsSettings.TECHNOLOGY_illumina,
         dataset=None,
         televir_project=None,
+        pipeline_step=None,
     ):
         """ """
         self.test_default_db(
@@ -2385,6 +2392,7 @@ class DefaultProjectSoftware(object):
             technology_name,
             dataset,
             televir_project=televir_project,
+            pipeline_step=pipeline_step,
         )
 
     def get_all_software(self):
@@ -2403,7 +2411,8 @@ class DefaultProjectSoftware(object):
         vect_software.append(
             self.software_names.get_insaflu_parameter_limit_coverage_name()
         )
-        vect_software.append(self.software_names.get_insaflu_parameter_freq_vcf_name())
+        vect_software.append(
+            self.software_names.get_insaflu_parameter_freq_vcf_name())
         vect_software.append(self.software_names.get_abricate_name())
         vect_software.append(self.software_names.get_freebayes_name())
         return vect_software
@@ -2419,12 +2428,12 @@ class DefaultProjectSoftware(object):
         type_of_use = Software.TYPE_OF_USE_global
         if project is None:
             type_of_use = Software.TYPE_OF_USE_global
-            if(software_name==self.software_names.get_abricate_name()):
+            if (software_name == self.software_names.get_abricate_name()):
                 type_of_use = Software.TYPE_OF_USE_qc
-            if(software_name==self.software_names.get_trimmomatic_name()):
-                type_of_use = Software.TYPE_OF_USE_qc 
-            if(software_name==self.software_names.get_NanoFilt_name()):
-                type_of_use = Software.TYPE_OF_USE_qc   
+            if (software_name == self.software_names.get_trimmomatic_name()):
+                type_of_use = Software.TYPE_OF_USE_qc
+            if (software_name == self.software_names.get_NanoFilt_name()):
+                type_of_use = Software.TYPE_OF_USE_qc
         elif type(project) is Project:
             type_of_use = Software.TYPE_OF_USE_project
         elif type(project) is ProjectSample:
@@ -2445,26 +2454,28 @@ class DefaultProjectSoftware(object):
         except Software.DoesNotExist:
             return vect_parameters
 
-        ## get parameters for a specific user and software
+        # get parameters for a specific user and software
         if project is None:
             parameters = Parameter.objects.filter(software=software)
         elif type(project) is Project:
-            parameters = Parameter.objects.filter(software=software, project=project)
+            parameters = Parameter.objects.filter(
+                software=software, project=project)
         elif type(project) is ProjectSample:
             parameters = Parameter.objects.filter(
                 software=software, project_sample=project
             )
         elif type(project) is Sample:
-            parameters = Parameter.objects.filter(software=software, sample=project)
+            parameters = Parameter.objects.filter(
+                software=software, sample=project)
 
-        ### parse them
+        # parse them
         for parameter in parameters:
             for previous_parameter in vect_parameters:
                 if previous_parameter.sequence_out == parameter.sequence_out:
                     previous_parameter.is_to_run = parameter.is_to_run
                     previous_parameter.software.is_to_run = parameter.is_to_run
 
-                    ### don't set the not set parameters
+                    # don't set the not set parameters
                     if (
                         not parameter.not_set_value is None
                         and parameter.parameter == parameter.not_set_value
