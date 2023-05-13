@@ -11,6 +11,11 @@ from typing import Iterable, List
 import dnaio
 import xopen
 from fastq_filter import fastq_records_to_file, file_to_fastq_records
+from modules.db_install import setup_install
+
+from install_scripts.modules.db_install import setup_dl, setup_install
+from install_scripts.modules.env_install import env_install
+from install_scripts.modules.utility_manager import Utility_Repository
 
 
 def fastq_records_to_files(records: Iterable[dnaio.Sequence], filepath_template: str = "test",
@@ -261,6 +266,11 @@ class main_setup:
 
     installed_software = []
     installed_databases = []
+
+    wdir: setup_install
+    utilities: Utility_Repository
+    env_install_class: env_install
+    setup_install_class: setup_install
 
     def __init__(
         self,

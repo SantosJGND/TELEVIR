@@ -871,7 +871,22 @@ class RunMain_class(Run_Deployment_Methods):
         if self.depletion:
             self.deploy_HD()
 
-            # hd_cleaner=
+            hd_metadata_tool = Metadata_handler(
+                self.config, sift_query=self.config["sift_query"], prefix=self.prefix
+            )
+            hd_clean = hd_metadata_tool.results_process(
+                self.depletion_drone.classification_report,
+            )
+
+            proxy_aclass = pd.DataFrame(
+                columns=["taxid", "description", "file", "counts"])
+            hd_metadata_tool.rclass = hd_clean
+            hd_metadata_tool.aclass = proxy_aclass
+            hd_metadata_tool.merge_reports_clean(self.taxid_limit)
+            print("################################# HD REPORT")
+            print(hd_metadata_tool.merged_targets)
+            print(hd_metadata_tool.raw_targets)
+            print("#################################")
 
             self.sample.r1.deplete(self.depletion_drone.classified_reads_list)
             self.sample.r2.deplete(self.depletion_drone.classified_reads_list)
