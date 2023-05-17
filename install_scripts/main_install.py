@@ -11,7 +11,6 @@ from typing import Iterable, List
 import dnaio
 import xopen
 from fastq_filter import fastq_records_to_file, file_to_fastq_records
-from modules.db_install import setup_install
 
 from install_scripts.modules.db_install import setup_dl, setup_install
 from install_scripts.modules.env_install import env_install

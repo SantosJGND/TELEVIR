@@ -95,7 +95,7 @@ def main():
         SOURCE = "/opt/conda/etc/profile.d/conda.sh"
         SOURCE_DIR = "/opt/conda/"
         HOME = "/televir/mngs_benchmark/"
-        ENVDIR = "/televir/mngs_benchmark/mngs_environments/"
+        ENVDIR = "/televir/mngs_benchmark/televir_envs/"
         DEPLOYMENT_DIR = "/televir/mngs_benchmark/app/"
         DATABASE = "insaflu_db"
         TECH = "nanopore"
