@@ -554,7 +554,7 @@ class Utility_Pipeline_Manager:
 
         self.utility_repository = Utility_Repository(
             db_path=Televir_Directories.docker_app_directory,
-            install_type="docker",
+            install_type="local",
         )
 
         self.steps_db_dependant = ConstantsSettings.PIPELINE_STEPS_DB_DEPENDENT
@@ -1592,7 +1592,7 @@ class Utils_Manager:
 
         self.utility_repository = Utility_Repository(
             db_path=Televir_Directories.docker_app_directory,
-            install_type="docker",
+            install_type="local",
         )
 
         self.utility_technologies = self.parameter_util.get_technologies_available()
