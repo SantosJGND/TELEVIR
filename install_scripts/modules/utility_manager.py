@@ -149,8 +149,10 @@ class Utility_Repository:
     def engine_execute(self, string: str):
         sql = text(string)
         with self.engine.connect() as conn:
-            result = conn.execute(sql)
-            result = result.fetchall()
+
+            cursor = conn.execute(sql)
+            result = cursor.fetchall()
+
             # conn.commit()
 
         return result
