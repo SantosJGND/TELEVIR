@@ -150,8 +150,7 @@ class Utility_Repository:
         sql = text(string)
         with self.engine.connect() as conn:
 
-            cursor = conn.execute(sql)
-            result = cursor.fetchall()
+            result = conn.execute(sql)
 
             # conn.commit()
 
@@ -170,7 +169,6 @@ class Utility_Repository:
         """
         Dump the software table to a tsv file
         """
-
         self.dump_table_tsv("software", directory)
 
     def dump_database(self, directory: str):
@@ -193,7 +191,7 @@ class Utility_Repository:
         if not os.path.exists(directory):
             os.makedirs(directory, exist_ok=True)
 
-        table_rows = self.engine_execute(f"SELECT * FROM {table_name}")
+        table_rows = self.engine.execute(f"SELECT * FROM {table_name}")
         print("### TABLE ROWS ###")
         print(table_rows)
 
