@@ -150,6 +150,7 @@ class Utility_Repository:
         sql = text(string)
         with self.engine.connect() as conn:
             result = conn.execute(sql)
+            result = result.fetchall()
             # conn.commit()
 
         return result
