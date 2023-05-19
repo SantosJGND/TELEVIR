@@ -190,8 +190,12 @@ class Utility_Repository:
         if not os.path.exists(directory):
             os.makedirs(directory, exist_ok=True)
 
+        table_rows = self.engine_execute(f"SELECT * FROM {table_name}")
+        print("### TABLE ROWS ###")
+        print(table_rows)
+
         with open(os.path.join(directory, f"{table_name}.tsv"), "w") as f:
-            for row in self.engine_execute(f"SELECT * FROM {table_name}"):
+            for row in table_rows:
                 f.write("\t".join([str(x) for x in row]) + "\n")
 
     def get(self, table_name, id):
