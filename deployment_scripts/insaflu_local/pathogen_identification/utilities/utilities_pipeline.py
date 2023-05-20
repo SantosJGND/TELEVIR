@@ -207,17 +207,6 @@ class PipelineTree:
 
         return df
 
-    def leaves_from_node_compress(self, node):
-        """ """
-        leaves = []
-        if len(self.compress_dag_dict[node]) == 0:
-            return [node]
-
-        for n in self.compress_dag_dict[node]:
-            leaves.extend(self.leaves_from_node_compress(n))
-
-        return leaves
-
     def leaves_from_node(self, node):
         """ """
         leaves = []
@@ -226,6 +215,17 @@ class PipelineTree:
 
         for n in self.dag_dict[node]:
             leaves.extend(self.leaves_from_node(n))
+
+        return leaves
+
+    def leaves_from_node_compress(self, node):
+        """ """
+        leaves = []
+        if len(self.compress_dag_dict[node]) == 0:
+            return [node]
+
+        for n in self.compress_dag_dict[node]:
+            leaves.extend(self.leaves_from_node_compress(n))
 
         return leaves
 
