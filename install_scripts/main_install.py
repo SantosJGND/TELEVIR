@@ -743,7 +743,7 @@ class main_setup:
                     )
                 )
 
-        if self.layout.install_kraken2:
+        if self.layout.install_kraken2_bacteria:
             success_install = sofprep.kraken2_download_install(
                 dbname="bacteria")
             krlib = f"kraken2-bacteria-library.fna.gz"

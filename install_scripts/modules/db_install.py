@@ -1850,9 +1850,6 @@ class setup_install(setup_dl):
             reference = os.path.splitext(reference)[0]
             subprocess.run(["samtools", "faidx", reference])
 
-        print("bwa bin exists: ", os.path.exists(bin + "bwa"))
-        print("referece exists: ", os.path.exists(reference))
-        print("sdir exists: ", os.path.exists(f"{odir}{dbname}"))
         command = [bin + "bwa", "index", "-p",
                    f"{odir}{dbname}/{dbname}", reference]
         # command = " ".join(command)
