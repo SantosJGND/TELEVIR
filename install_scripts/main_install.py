@@ -662,7 +662,7 @@ class main_setup:
                         )
                     )
 
-        if self.layout.install_centrifuge:
+        if self.layout.install_centrifuge_bacteria:
             install_success = sofprep.centrifuge_install(
                 dbname="bacteria", threads="16")
             centlib = f"refseq-bacteria.dust.fna.gz"
