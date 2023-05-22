@@ -14,3 +14,4 @@ dependencies:
   - seqkit=2.2.0
   - seqtk=1.3
   - biopython=1.79
+  - prinseq-plus-plus=1.2.4

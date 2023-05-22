@@ -32,6 +32,7 @@ INSTALL_PARAMS = {
         "clark": "classification/Clark",
         "bwa": "remap/remap",
         "bowtie2": "remap/remap",
+        "prinseq": "preprocess/prinseq",
     },
     "BINDIR": {"deSAMBA": "classm_lc/deSAMBA"},
     "REQUEST_REFERENCES": {
@@ -63,6 +64,7 @@ ENVS_PARAMS = {
         "remap/Renv": "Renv.yml",
         "Pyenv/pyenv": "pyenv.yml",
         "classm_lc/venvlc": "venvlc.txt",
+        "preprocess/prinseq": "prinseq.yml",
         # "plots/pyGenomeTracks": "pyGenomeTracks.yml",
     },
     "GIT": {
