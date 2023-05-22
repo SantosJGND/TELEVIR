@@ -791,6 +791,7 @@ class main_setup:
                     )
                 )
 
+        if self.layout.install_krakenuniq_fungi:
             success_install = sofprep.kuniq_install(dbname="fungi")
             if success_install:
                 self.installed_software.append(

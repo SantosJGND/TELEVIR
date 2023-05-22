@@ -18,6 +18,7 @@ class Televir_Layout_docker:
     install_centrifuge = True
     install_kraken2 = True
     install_krakenuniq = True
+    install_krakenuniq_fungi = False
     install_kaiju = True
     install_diamond = False
     install_minimap2 = False
@@ -56,6 +57,7 @@ class Televir_Layout_full:
     install_centrifuge = True
     install_kraken2 = False
     install_krakenuniq = True
+    install_krakenuniq_fungi = False
     install_kaiju = True
     install_diamond = True
     install_minimap2 = True
@@ -95,6 +97,7 @@ class Televir_Layout_minimal:
     install_centrifuge = True
     install_kraken2 = True
     install_krakenuniq = True
+    install_krakenuniq_fungi = False
     install_kaiju = True
     install_diamond = False
     install_minimap2 = False

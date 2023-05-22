@@ -376,7 +376,7 @@ class setup_dl:
 
         if os.path.isfile(self.seqdir + fnuc):
             self.fastas["nuc"]["refseq"] = [self.seqdir + fnuc]
-            logging.info(f"{fnuc_suf} found.")
+            logging.info(f"{fnuc} found.")
             return True
 
         try:
@@ -1843,6 +1843,7 @@ class setup_install(setup_dl):
         subprocess.run(["mkdir", "-p", sdir])
 
         gzipped = False
+        print("BWA reference: ", reference)
 
         if reference[-3:] == ".gz":
             gzipped = True
