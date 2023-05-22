@@ -1855,7 +1855,7 @@ class setup_install(setup_dl):
         print("sdir exists: ", os.path.exists(f"{odir}{dbname}"))
         command = [bin + "bwa", "index", "-p",
                    f"{odir}{dbname}/{dbname}", reference]
-        command = " ".join(command)
+        # command = " ".join(command)
 
         try:
             subprocess.run(command)
@@ -1868,7 +1868,7 @@ class setup_install(setup_dl):
             }
             return True
         except subprocess.CalledProcessError:
-            logging.info(f"failed to download bwa db {dbname}")
+            logging.info(f"failed to index bwa db {dbname}")
             return False
         finally:
             if gzipped:
