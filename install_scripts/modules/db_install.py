@@ -1846,13 +1846,13 @@ class setup_install(setup_dl):
 
         if reference[-3:] == ".gz":
             gzipped = True
-            print("gunzip " + reference)
             subprocess.run(["gunzip", reference])
             reference = os.path.splitext(reference)[0]
             subprocess.run(["samtools", "faidx", reference])
-            print("reference: " + reference)
-            print("reference exists: " + str(os.path.exists(reference)))
 
+        print("bwa bin exists: ", os.path.exists(bin + "bwa"))
+        print("referece exists: ", os.path.exists(reference))
+        print("sdir exists: ", os.path.exists(f"{odir}{dbname}"))
         command = [bin + "bwa", "index", "-p",
                    f"{odir}{dbname}/{dbname}", reference]
         command = " ".join(command)
