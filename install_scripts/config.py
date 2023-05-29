@@ -20,7 +20,7 @@ class Televir_Layout_docker:
     install_kraken2 = True
     install_kraken2_bacteria = True
     install_krakenuniq = True
-    install_krakenuniq_fungi = False
+    install_krakenuniq_fungi = True
     install_kaiju = True
     install_diamond = False
     install_minimap2 = False
