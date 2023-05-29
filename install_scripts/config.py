@@ -16,7 +16,7 @@ class Televir_Layout_docker:
 
     # classification software.
     install_centrifuge = True
-    install_centrifuge_bacteria = False
+    install_centrifuge_bacteria = True
     install_kraken2 = True
     install_kraken2_bacteria = True
     install_krakenuniq = True
@@ -99,7 +99,7 @@ class Televir_Layout_minimal:
 
     # classification software.
     install_centrifuge = True
-    install_centrifuge_bacteria = False
+    install_centrifuge_bacteria = True
     install_kraken2 = True
     install_kraken2_bacteria = True
     install_krakenuniq = True
