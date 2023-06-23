@@ -2,7 +2,6 @@ from settings.constants_settings import ConstantsSettings as CS
 
 
 class Params_Illumina:
-
     DATA_TYPE = "illumina"
 
     # CONSTANT PARAMS
@@ -16,7 +15,6 @@ class Params_Illumina:
     }
 
     # SOFTWARE
-
     SOFTWARE = {
         CS.PIPELINE_NAME_read_quality_analysis: ["trimmomatic"],  # trimmomatic
         CS.PIPELINE_NAME_viral_enrichment: [

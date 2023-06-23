@@ -22,7 +22,6 @@ class Assembly_init:
         log_dir: str = "",
         prefix: str = "",
     ):
-
         self.r1 = r1
         self.r2 = r2
         self.assembly_dir = assembly_dir
@@ -211,7 +210,6 @@ class Assembly_raven(Assembly_init):
 
 
 class Assembly_class:
-
     assemblers_available = {
         "spades": Assembly_spades,
         "raven": Assembly_raven,
@@ -370,7 +368,6 @@ class Assembly_class:
         self.assembly_index_exists = self.assembly_file_check_index()
 
     def assembly_file_check_index(self):
-
         if os.path.isfile(self.assembly_file_fasta_gz_index):
             return True
         else:
@@ -439,7 +436,6 @@ class Assembly_class:
 
             with open(self.assembly_file_fasta, "w") as handle:
                 for record in short_seq_iterator:
-
                     handle.write("{}\n".format(record.format("fasta")))
 
     def get_contig_summary(self):

@@ -7,23 +7,30 @@ from typing import List
 import pandas as pd
 from constants.constants import Televir_Metadata_Constants as Televir_Metadata
 from constants.constants import TypePath
-from pathogen_identification.constants_settings import \
-    ConstantsSettings as PIConstants
-from pathogen_identification.models import (ParameterSet, PIProject_Sample,
-                                            Projects, SoftwareTree,
-                                            SoftwareTreeNode)
+from pathogen_identification.constants_settings import ConstantsSettings as PIConstants
+from pathogen_identification.models import (
+    ParameterSet,
+    PIProject_Sample,
+    Projects,
+    SoftwareTree,
+    SoftwareTreeNode,
+)
 from pathogen_identification.modules.remap_class import Mapping_Instance
 from pathogen_identification.modules.run_main import RunMain_class
 from pathogen_identification.utilities.update_DBs import (
-    Update_Assembly, Update_Classification, Update_Remap,
-    Update_RunMain_Initial, Update_RunMain_Secondary, get_run_parents)
+    Update_Assembly,
+    Update_Classification,
+    Update_Remap,
+    Update_RunMain_Initial,
+    Update_RunMain_Secondary,
+    get_run_parents,
+)
 from pathogen_identification.utilities.utilities_pipeline import PipelineTree
 from settings.constants_settings import ConstantsSettings
 from utils.utils import Utils
 
 
 class PathogenIdentification_Deployment_Manager:
-
     project: str
     prefix: str
     rdir: str
@@ -52,7 +59,6 @@ class PathogenIdentification_Deployment_Manager:
         dir_branch: str = "deployment",
         threads: int = 3,
     ) -> None:
-
         self.username = username
         self.project = project.name
         self.sample = sample.name
@@ -65,11 +71,9 @@ class PathogenIdentification_Deployment_Manager:
         self.install_registry = Televir_Metadata
 
         self.threads = threads
-        self.file_r1 = sample.sample.get_fastq_available(
-            TypePath.MEDIA_ROOT, True)
+        self.file_r1 = sample.sample.get_fastq_available(TypePath.MEDIA_ROOT, True)
         if sample.sample.exist_file_2():
-            self.file_r2 = sample.sample.get_fastq_available(
-                TypePath.MEDIA_ROOT, False)
+            self.file_r2 = sample.sample.get_fastq_available(TypePath.MEDIA_ROOT, False)
         else:
             self.file_r2 = ""
 
@@ -97,8 +101,7 @@ class PathogenIdentification_Deployment_Manager:
         self.config["sample_name"] = self.sample
         self.config["r1"] = new_r1_path
         self.config["r2"] = new_r2_path
-        self.config["type"] = ["SE", "PE"][int(
-            os.path.isfile(self.config["r2"]))]
+        self.config["type"] = ["SE", "PE"][int(os.path.isfile(self.config["r2"]))]
 
         return True
 
@@ -110,7 +113,6 @@ class PathogenIdentification_Deployment_Manager:
             self.constants = PIConstants.CONSTANTS_ONT
 
     def generate_config_file(self):
-
         self.config = {
             "project": self.project,
             "source": self.install_registry.SOURCE,
@@ -167,17 +169,14 @@ class PathogenIdentification_Deployment_Manager:
         self.run_params_db = run_params_db
 
     def run_main_prep(self):
-
         if self.prepped or self.run_params_db.empty:
             return
 
-        self.run_engine = RunMain_class(
-            self.config, self.run_params_db, self.username)
+        self.run_engine = RunMain_class(self.config, self.run_params_db, self.username)
         self.run_engine.Prep_deploy()
         self.prepped = True
 
     def run_main(self):
-
         self.run_engine.Run_QC()
         self.run_engine.Run_PreProcess()
         self.run_engine.Sanitize_reads()
@@ -210,7 +209,6 @@ class PathogenIdentification_Deployment_Manager:
         """delete project record in database"""
 
         if self.prepped:
-
             _, runmain, _ = get_run_parents(self.run_engine, parameter_set)
 
             if runmain is not None:
@@ -236,7 +234,6 @@ class Tree_Node:
     parameter_set: ParameterSet
 
     def __init__(self, pipe_tree: PipelineTree, node_index: int, software_tree_pk: int):
-
         node_metadata = pipe_tree.node_index.loc[node_index].node
 
         self.module = node_metadata[0]
@@ -266,7 +263,6 @@ class Tree_Node:
         return len(self.children) == 0
 
     def generate_software_tree_node_entry(self, pipe_tree: PipelineTree):
-
         if not self._is_node_leaf():
             return
 
@@ -297,7 +293,6 @@ class Tree_Node:
     def setup_parameterset(
         self, project: Projects, sample: PIProject_Sample, node: SoftwareTreeNode
     ):
-
         try:
             parameter_set = ParameterSet.objects.get(
                 project=project, sample=sample, leaf=node
@@ -350,7 +345,6 @@ class Tree_Node:
         return True
 
     def register(self, project: Projects, sample: PIProject_Sample, tree: PipelineTree):
-
         tree_node = self.generate_software_tree_node_entry(tree)
         if tree_node is None:
             return False
@@ -366,10 +360,8 @@ class Tree_Node:
         return True
 
     def determine_params(self, pipe_tree):
-
         arguments_list = []
         for node in self.branch:
-
             node_metadata = pipe_tree.node_index.loc[node].node
             arguments_list.append(node_metadata)
 
@@ -474,7 +466,6 @@ class Tree_Progress:
         return deployment_manager
 
     def register_node_leaves(self, node: Tree_Node):
-
         print("registering node: ", node.node_index, "leaves: ", node.leaves)
 
         if node.node_index in node.leaves:
@@ -487,13 +478,11 @@ class Tree_Progress:
             self.submit_node_run(leaf_node)
 
     def register_finished(self, node: Tree_Node):
-
         registration_success = node.register_finished(
             self.project, self.sample, self.tree
         )
 
     def register_failed_children(self, node: Tree_Node):
-
         if node.node_index in node.leaves:
             # self.submit_node_run(node)
             registration_success = node.register_failed(
@@ -527,7 +516,6 @@ class Tree_Progress:
         self.current_module = self.current_nodes[0].module
 
     def spawn_node_child(self, node: Tree_Node, child: int):
-
         new_node = Tree_Node(self.tree, child, node.software_tree_pk)
         run_manager_copy = copy.deepcopy(node.run_manager)
         new_node.receive_run_manager(run_manager_copy)
@@ -541,13 +529,11 @@ class Tree_Progress:
         if node.run_manager.sent:
             return False
 
-        registraction_success = node.register(
-            self.project, self.sample, self.tree)
+        registraction_success = node.register(self.project, self.sample, self.tree)
 
         return registraction_success
 
     def update_node_dbs(self, node: Tree_Node, step="initial"):
-
         try:
             db_updated = Update_RunMain_Initial(
                 node.run_manager.run_engine, node.parameter_set
@@ -600,7 +586,6 @@ class Tree_Progress:
             return False
 
     def submit_node_run(self, node: Tree_Node):
-
         print("Submitting node run: " + str(node.node_index))
 
         registration_success = self.register_node(node)
@@ -616,37 +601,30 @@ class Tree_Progress:
             n.run_manager.run_engine.merged_targets for n in self.current_nodes
         ]
         node_merged_targets = pd.concat(node_merged_targets, axis=0)
-        node_merged_targets = node_merged_targets.drop_duplicates(subset=[
-                                                                  "taxid"])
+        node_merged_targets = node_merged_targets.drop_duplicates(subset=["taxid"])
 
         return node_merged_targets
 
     @staticmethod
     def get_remap_plans(nodes: List[Tree_Node]):
-
         for n in nodes:
-
             n.run_manager.run_engine.plan_remap_prep()
 
         return nodes
 
     def merge_node_targets_list(self, targetdf_list: List[Tree_Node]):
-
         node_merged_targets = [
             n.run_manager.run_engine.merged_targets for n in targetdf_list
         ]
 
-        node_merged_targets = pd.concat(
-            node_merged_targets, axis=0).reset_index()
+        node_merged_targets = pd.concat(node_merged_targets, axis=0).reset_index()
 
         return node_merged_targets
 
     def get_node_node_targets(self, nodes_list: List[Tree_Node]):
-
         node_merged_targets = self.merge_node_targets_list(nodes_list)
 
-        node_merged_targets = self.process_mapping_managerdf(
-            node_merged_targets)
+        node_merged_targets = self.process_mapping_managerdf(node_merged_targets)
 
         return node_merged_targets
 
@@ -671,7 +649,6 @@ class Tree_Progress:
         return nodes_by_sample_sources
 
     def group_nodes_by_source_and_parameters(self) -> List[List[Tree_Node]]:
-
         source_paramaters_combinations = {}
 
         def check_node_in_combination_dict(node: Tree_Node):
@@ -752,7 +729,6 @@ class Tree_Progress:
         print("########## STACKED DEPLOYMENT CLASS FICATION ##########")
         print(nodes_by_sample_sources)
         for nodes_subset in nodes_by_sample_sources:
-
             if len(nodes_subset) == 0:
                 continue
 
@@ -762,15 +738,18 @@ class Tree_Progress:
             print("run_success: " + str(run_success))
 
             if run_success:
-
                 for node in nodes_subset:
                     node.run_manager.run_engine.read_classification_drone = (
                         volonteer.run_manager.run_engine.read_classification_drone
                     )
+                    node.run_manager.run_engine.contig_classification_drone = (
+                        volonteer.run_manager.run_engine.contig_classification_drone
+                    )
+
                     node.run_manager.run_engine.read_classification_performed = True
+                    node.run_manager.run_engine.contig_classification_performed = True
                     new_nodes.append(node)
             else:
-
                 for node in nodes_subset:
                     self.register_failed_children(node)
 
@@ -778,11 +757,9 @@ class Tree_Progress:
             self.current_nodes = new_nodes
 
     def stacked_deployement(self, nodes_by_sample_sources: List[List[Tree_Node]]):
-
         current_nodes = []
 
         for nodes in nodes_by_sample_sources:
-
             if len(nodes) == 0:
                 continue
 
@@ -800,8 +777,7 @@ class Tree_Progress:
             print("mapped_instances_shared")
             print(len(mapped_instances_shared))
 
-            nodes = self.update_mapped_instances(
-                nodes, mapped_instances_shared)
+            nodes = self.update_mapped_instances(nodes, mapped_instances_shared)
 
             print("deployment_success: " + str(deployment_success))
             print("updated nodes")
@@ -810,7 +786,6 @@ class Tree_Progress:
                 current_nodes.extend(nodes)
 
             else:
-
                 for node in nodes:
                     self.register_failed_children(node)
 
@@ -825,8 +800,7 @@ class Tree_Progress:
         new_nodes = []
 
         for node in nodes_to_update:
-            node.run_manager.run_engine.update_mapped_instances(
-                mapped_instances_shared)
+            node.run_manager.run_engine.update_mapped_instances(mapped_instances_shared)
             new_nodes.append(node)
 
         return new_nodes
@@ -854,11 +828,9 @@ class Tree_Progress:
         if len(new_nodes) == 0:
             self.current_module = "end"
         else:
-
             self.determine_current_module()
 
     def run_current_nodes(self):
-
         new_nodes = []
 
         for node in self.current_nodes:
@@ -874,7 +846,6 @@ class Tree_Progress:
         self.current_nodes = new_nodes
 
     def run_node(self, node: Tree_Node):
-
         try:
             node.run_manager.run_main()
             return True
@@ -902,7 +873,6 @@ class Tree_Progress:
 
     def register_current_nodes(self):
         for node in self.current_nodes:
-
             self.register_node_leaves(node)
 
     def deploy_nodes(self):
@@ -923,11 +893,10 @@ class Tree_Progress:
             self.run_nodes_sequential()
 
     def run_current_nodes_batch_parallel(self, batch=2):
-
         import multiprocessing as mp
 
         node_batches = [
-            self.current_nodes[i: i + batch]
+            self.current_nodes[i : i + batch]
             for i in range(0, len(self.current_nodes), batch)
         ]
 

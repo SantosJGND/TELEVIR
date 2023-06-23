@@ -7,12 +7,10 @@ from random import randint
 from typing import Type
 
 import pandas as pd
-from pathogen_identification.modules.object_classes import (RunCMD,
-                                                            Software_detail)
+from pathogen_identification.modules.object_classes import RunCMD, Software_detail
 
 
 def check_report_empty(file, comment="@"):
-
     with open(file, "r") as f:
         lines = f.readlines()
 
@@ -49,27 +47,22 @@ class Classifier_init:
         self.r2 = r2
         self.prefix = prefix
         self.args = args
-        self.cmd = RunCMD(bin, logdir=log_dir, prefix=prefix,
-                          task="classification")
+        self.cmd = RunCMD(bin, logdir=log_dir, prefix=prefix, task="classification")
 
-        self.report_path = os.path.join(
-            self.out_path, self.prefix + self.report_suffix)
+        self.report_path = os.path.join(self.out_path, self.prefix + self.report_suffix)
         self.full_report_path = os.path.join(
             self.out_path, self.prefix + self.full_report_suffix
         )
 
     def filter_samfile_read_names(self, same=True, output_sam="", sep=",", idx=0):
-
         if not output_sam:
-            output_sam = os.path.join(
-                self.out_path, f"temp{randint(1,1999)}.sam")
+            output_sam = os.path.join(self.out_path, f"temp{randint(1,1999)}.sam")
 
         read_name_filter_regex = re.compile("^[A-Za-z0-9_-]*$")  # (r"@|=&$\t")
 
         with open(self.report_path, "r") as f:
             column_number = 0
             with open(output_sam, "w") as f2:
-
                 for line in f:
                     if line.startswith(tuple(["@HD", "@SQ", "@PG", "@RG", "@CO"])):
                         f2.write(line)
@@ -109,8 +102,7 @@ class run_kaiju(Classifier_init):
         log_dir="",
     ):
         super().__init__(db_path, query_path, out_path, args, r2, prefix, bin, log_dir)
-        self.report_path = os.path.join(
-            self.out_path, self.prefix + self.report_suffix)
+        self.report_path = os.path.join(self.out_path, self.prefix + self.report_suffix)
 
         try:
             dbdir = os.path.dirname(self.db_path)
@@ -181,8 +173,7 @@ class run_FastViromeExplorer(Classifier_init):
         super().__init__(db_path, query_path, out_path, args, r2, prefix, bin, log_dir)
 
         self.report_path = os.path.join(self.out_path, self.report_name)
-        self.full_report_path = os.path.join(
-            self.out_path, self.full_report_name)
+        self.full_report_path = os.path.join(self.out_path, self.full_report_name)
 
     def run_SE(self, threads: int = 3):
         cmd = [
@@ -303,8 +294,7 @@ class run_CLARK(Classifier_init):
 
         if "2nd_assignment" in report.columns:
             report["taxid"] = (
-                report["taxid"].astype(str) + "," +
-                report["2nd_assignment"].astype(str)
+                report["taxid"].astype(str) + "," + report["2nd_assignment"].astype(str)
             )
 
             report = report.drop(columns=["2nd_assignment"])
@@ -319,7 +309,6 @@ class run_CLARK(Classifier_init):
         return report
 
     def get_report(self) -> pd.DataFrame:
-
         return self.read_report()
 
     def get_report_simple(self) -> pd.DataFrame:
@@ -352,8 +341,7 @@ class run_blast(Classifier_init):
         """
         run single read file classification.
         """
-        temp_read = os.path.join(
-            self.out_path, self.prefix + ".temp_read.fasta")
+        temp_read = os.path.join(self.out_path, self.prefix + ".temp_read.fasta")
 
         self.unzip_query(temp_read)
 
@@ -443,8 +431,7 @@ class run_blast_p(Classifier_init):
         """
         run single read file classification.
         """
-        temp_read = os.path.join(
-            self.out_path, self.prefix + ".temp_read.fasta")
+        temp_read = os.path.join(self.out_path, self.prefix + ".temp_read.fasta")
 
         self.unzip_query(temp_read)
         cmd = [
@@ -511,7 +498,6 @@ class run_blast_p(Classifier_init):
 
 
 class run_centrifuge(Classifier_init):
-
     method_name = "centrifuge"
     report_suffix = ".report.tsv"
     full_report_suffix = ".centrifuge"
@@ -595,7 +581,7 @@ class run_centrifuge(Classifier_init):
             header=None,
             usecols=[0, 2],
             quoting=csv.QUOTE_NONE,
-        ).rename(columns={0: "qseqid", 2: "taxid"})
+        ).rename(columns={0: "qseqid", 6: "taxid"})
 
         report = report[report.taxid != "unclassified"][["qseqid", "taxid"]]
         return pd.DataFrame(report)
@@ -808,7 +794,6 @@ class run_diamond(Classifier_init):
         return acc
 
     def get_report(self) -> pd.DataFrame:
-
         if check_report_empty(self.report_path):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
@@ -935,7 +920,6 @@ class run_minimap2_illumina(Classifier_init):
         self.cmd.run(cmd)
 
     def get_report(self) -> pd.DataFrame:
-
         if check_report_empty(self.report_path):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
@@ -1053,7 +1037,6 @@ class run_bwa_mem(Classifier_init):
         self.cmd.run(cmd)
 
     def get_report(self) -> pd.DataFrame:
-
         if check_report_empty(self.report_path):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
@@ -1162,7 +1145,6 @@ class run_minimap2_ONT(Classifier_init):
         self.cmd.run(cmd)
 
     def get_report(self) -> pd.DataFrame:
-
         if check_report_empty(self.report_path):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
@@ -1213,7 +1195,6 @@ class run_minimap2_asm(Classifier_init):
         self.cmd.run(cmd)
 
     def get_report(self) -> pd.DataFrame:
-
         if check_report_empty(self.report_path):
             return pd.DataFrame(columns=["qseqid", "acc"])
 
@@ -1306,8 +1287,7 @@ class Classifier:
         :param bin: bin path
         :param logging_level: logging level
         """
-        self.logger = logging.getLogger(
-            f"{__name__}_{classifier_method.name}_{prefix}")
+        self.logger = logging.getLogger(f"{__name__}_{classifier_method.name}_{prefix}")
         if self.logger.hasHandlers():
             self.logger.handlers.clear()
         self.logger.propagate = False
@@ -1329,8 +1309,7 @@ class Classifier:
         self.report_name = self.classifier_method.name + "_results.tsv"
         self.classifier = self.classifier_configure()
         self.type = type
-        self.classification_report = pd.DataFrame(
-            columns=["qseqid", "acc", "length"])
+        self.classification_report = pd.DataFrame(columns=["qseqid", "acc", "length"])
         self.classified_reads_list = []
 
         self.logger.info(f"Classifier: {self.classifier_method}")
@@ -1369,8 +1348,7 @@ class Classifier:
         """
 
         try:
-            classifier = self.available_software[self.classifier_method.name.lower(
-            )]
+            classifier = self.available_software[self.classifier_method.name.lower()]
             os.makedirs(self.output_path, exist_ok=True)
             return classifier(
                 db_path=self.classifier_method.db,

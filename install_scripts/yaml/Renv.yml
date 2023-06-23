@@ -9,5 +9,7 @@ dependencies:
   - r=4.1
   - r-ggplot2
   - r-devtools
+  - r-collapsibleTree
+  - r-ellipsis
   - binutils=2.36.1
   - libgit2=1.4.3

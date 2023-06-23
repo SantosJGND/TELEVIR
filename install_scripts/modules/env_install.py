@@ -19,7 +19,6 @@ class env_install:
         os.makedirs(self.envsdir, exist_ok=True)
 
     def conda_install(self, force_install=False):
-
         for ndir, yml in self.envs.items():
             ymlf = self.ymld + yml
             cdir = self.envsdir + ndir
@@ -30,8 +29,6 @@ class env_install:
             force = False
             if os.path.isdir(cdir):
                 force = True
-
-            # print(cdir, ymlf, force)
 
             command = [
                 "conda",
@@ -76,7 +73,6 @@ class env_install:
         command = ["git", "clone", git]
 
         if not exists or force_install:
-
             subprocess.run(command)
 
             # JAVA INSTALLATION.
@@ -203,7 +199,6 @@ class env_install:
         os.chdir(CWD)
 
     def jellyfish_get(self):
-
         pid = "jellyfish"
         bin = os.path.join(
             self.envsdir,
@@ -245,7 +240,6 @@ class env_install:
 
         command = ["git", "clone", git]
         if not exists or force_install:
-
             subprocess.run(command)
 
             # INSTALLATION.
@@ -323,8 +317,7 @@ class env_install:
 
         ln_target = sdir + "classes/trimmomatic.jar"
         ln_cmd = f"ln -s {sdir}{zip_name}/trimmomatic-0.39.jar " + ln_target
-        ln_targets_cmd = f"ln -s {sdir}{zip_name}/adapters/* " + \
-            sdir + "adapters/"
+        ln_targets_cmd = f"ln -s {sdir}{zip_name}/adapters/* " + sdir + "adapters/"
         print(ln_targets_cmd)
 
         os.system(ln_cmd)
@@ -370,7 +363,6 @@ class env_install:
         return True
 
     def rabbitqc_insaflu_install(self):
-
         # GIT CLONE
         soft = "RabbitQC"
         sdir = self.envsdir + soft.split("/")[0] + "/"
@@ -386,7 +378,6 @@ class env_install:
             return True
 
         try:
-
             wget_cmd = f"wget -O v0.0.1.zip {zip_source}"
             unzip_cmd = "unzip v0.0.1.zip"
             rm_cmd = "rm v0.0.1.zip"

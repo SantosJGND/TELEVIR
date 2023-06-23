@@ -135,7 +135,6 @@ class ProjectTable(tables.Table):
         )
 
         if project_settings_exist:
-
             parameters = parameters + (
                 '<a href="#id_reset_modal" id="id_reset_parameters_modal" data-toggle="modal" data-toggle="tooltip" title="Reset"'
                 + ' ref_name="'
@@ -387,7 +386,6 @@ class RawReferenceTable(tables.Table):
             return "reads / contigs"
 
     def render_status(self, record):
-
         if record.status == RawReference.STATUS_MAPPING:
             return "Running"
         elif record.status == RawReference.STATUS_MAPPED:
@@ -403,7 +401,6 @@ class RawReferenceTable(tables.Table):
             return "Fail"
 
         elif record.status == RawReference.STATUS_UNMAPPED:
-
             button = (
                 " <a "
                 + 'href="#" '
@@ -430,7 +427,6 @@ class SampleQCTable(tables.Table):
 
 
 class ContigTable(tables.Table):
-
     contig = tables.Column(verbose_name="Contig")
     depth = tables.Column(verbose_name="Depth")
     depthr = tables.Column(verbose_name="Depth Covered")
@@ -454,7 +450,6 @@ class ContigTable(tables.Table):
 
 
 class RunMainTable(tables.Table):
-
     name = tables.Column(verbose_name="Run Name")
     report = tables.Column(verbose_name="Report", orderable=False, empty_values=())
     success = tables.Column(verbose_name="Success", orderable=False, empty_values=())
@@ -515,7 +510,7 @@ class RunMainTable(tables.Table):
         else:
             return mark_safe('<i class="fa fa-times"></i>')
 
-    def render_report(self, record):
+    def render_report(self, record: RunMain):
         from crequest.middleware import CrequestMiddleware
 
         current_request = CrequestMiddleware.get_request()
@@ -557,11 +552,9 @@ class RunMainTable(tables.Table):
         else:
             runlog = " <a " + 'href="#" >'
             if finished_preprocessing:
-
                 runlog += '<i class="fa fa-check"'
                 runlog += 'title="Preprocessing finished"></i>'
             else:
-
                 runlog += '<i class="fa fa-cog"'
                 runlog += 'title="Preprocessing running."></i>'
 
@@ -572,11 +565,9 @@ class RunMainTable(tables.Table):
             runlog += " <a " + 'href="#" >'
 
             if finished_assembly:
-
                 runlog += '<i class="fa fa-check"'
                 runlog += 'title="Assembly finished"></i>'
             else:
-
                 runlog += '<i class="fa fa-cog"'
                 if finished_preprocessing:
                     runlog += 'title="Assembly running."></i>'
@@ -589,11 +580,9 @@ class RunMainTable(tables.Table):
             runlog += " <a " + 'href="#" >'
 
             if finished_classification:
-
                 runlog += '<i class="fa fa-check"'
                 runlog += 'title="Classification finished"></i>'
             else:
-
                 runlog += '<i class="fa fa-cog"'
                 if finished_assembly:
                     runlog += 'title="Classification running."></i>'
