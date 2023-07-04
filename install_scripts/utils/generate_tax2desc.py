@@ -6,7 +6,6 @@ import pandas as pd
 
 
 def entrez_ncbi_taxid_command(lines, tempfile, outdir, outfile):
-
     Path(tempfile).touch()
 
     with open(tempfile, "w") as ftemp:
@@ -18,7 +17,6 @@ def entrez_ncbi_taxid_command(lines, tempfile, outdir, outfile):
 
 
 def get_args():
-
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -63,7 +61,6 @@ def get_args():
 
 
 def main():
-
     args = get_args()
 
     new_descriptions = pd.DataFrame(columns=["taxid", "description"])
@@ -73,13 +70,11 @@ def main():
     d = 0
 
     for chunk in pd.read_csv(args.infile, chunksize=chunksize, header=None, sep="\t"):
-
         print(f"Processing chunk {d}")
         chunk = chunk[0].tolist()
         chunk = "\n".join(chunk)
 
-        entrez_ncbi_taxid_command(
-            chunk, args.tempfile, args.outdir, args.outfile)
+        entrez_ncbi_taxid_command(chunk, args.tempfile, args.outdir, args.outfile)
 
         new_names = pd.read_csv(
             f"{args.outdir}{args.outfile}",
@@ -92,8 +87,7 @@ def main():
         new_descriptions = pd.concat([new_descriptions, new_names])
         new_descriptions = new_descriptions.drop_duplicates()
 
-    new_descriptions.to_csv(
-        f"{args.outdir}{args.outfile}", sep="\t", index=False)
+    new_descriptions.to_csv(f"{args.outdir}{args.outfile}", sep="\t", index=False)
 
 
 if __name__ == "__main__":
