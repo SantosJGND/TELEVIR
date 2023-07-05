@@ -33,6 +33,7 @@ INSTALL_PARAMS = {
         "bwa": "remap/remap",
         "bowtie2": "remap/remap",
         "prinseq": "preprocess/prinseq",
+        "entrez_direct": "entrez_direct",
     },
     "BINDIR": {"deSAMBA": "classm_lc/deSAMBA"},
     "REQUEST_REFERENCES": {
@@ -65,6 +66,7 @@ ENVS_PARAMS = {
         "Pyenv/pyenv": "pyenv.yml",
         "classm_lc/venvlc": "venvlc.txt",
         "preprocess/prinseq": "prinseq.yml",
+        "entrez_direct": "entrez_direct.yml",
         # "plots/pyGenomeTracks": "pyGenomeTracks.yml",
     },
     "GIT": {
