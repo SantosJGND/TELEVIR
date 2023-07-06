@@ -41,7 +41,7 @@ def compress_using_xopen(fq_in: str, fq_out: str):
             sequence = record.sequence + "\n"
             output_h.write(sequence.encode("ascii"))
 
-
+ 
 def sed_out_after_dot(file):
     """remove everything after the dot in the file name"""
     os.system("sed -i 's/[:].*$//g' {}".format(file))
