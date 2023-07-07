@@ -1586,9 +1586,20 @@ class setup_install(setup_dl):
                 seqid = pd.read_csv(
                     f"{odir + dbname}/seqid2taxid.map.orig", sep="\t")
                 seqid.columns = ["refseq", "taxid", "merge"]
-                seqid[["GTDB", "description"]] = seqid["merge"].str.split(
-                    " ", 1, expand=True
-                )
+
+                def split_merge(x):
+                    if x is None:
+                        return ["", ""]
+                    else:
+                        x= x.split(" ")
+                        if len(x) == 1:
+                            return [x[0], ""]
+                        else:
+                            return [x[0], " ".join(x[1:])]
+
+                seqid[["GTDB", "description"]] = seqid["merge"].apply(
+                    lambda x: pd.Series(split_merge(x)))
+                
 
                 seqid = seqid.drop("merge", 1)
                 seqid.to_csv(
