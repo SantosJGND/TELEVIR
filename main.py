@@ -101,7 +101,7 @@ def main():
         TECH = "nanopore"
         TAXDUMP = "/opt/taxdump.tar.gz"
         ORGANISM = "viral"
-        INSTALL_CONFIG = "minimal"
+        INSTALL_CONFIG = "docker"
         INSTALL_TYPE = "docker"
 
         INSTALL_PARAMS["HOME"] = HOME
