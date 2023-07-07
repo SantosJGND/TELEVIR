@@ -8,7 +8,7 @@ class Televir_Layout_docker:
     install_virosaurus = True
     install_hg38 = True
     install_grc38 = False
-    install_request_sequences = True
+    install_request_sequences = False
 
     # host mappers
     install_bowtie2 = False
@@ -16,11 +16,11 @@ class Televir_Layout_docker:
 
     # classification software.
     install_centrifuge = True
-    install_centrifuge_bacteria = True
+    install_centrifuge_bacteria = False
     install_kraken2 = True
-    install_kraken2_bacteria = True
+    install_kraken2_bacteria = False
     install_krakenuniq = True
-    install_krakenuniq_fungi = True
+    install_krakenuniq_fungi = False
     install_kaiju = True
     install_diamond = False
     install_minimap2 = False
