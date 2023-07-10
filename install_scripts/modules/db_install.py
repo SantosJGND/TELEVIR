@@ -1600,7 +1600,6 @@ class setup_install(setup_dl):
                 seqid[["GTDB", "description"]] = seqid["merge"].apply(
                     lambda x: pd.Series(split_merge(x)))
                 
-
                 seqid = seqid.drop("merge", 1)
                 seqid.to_csv(
                     f"{odir + dbname}/seqid2taxid.map.orig",
@@ -1609,12 +1608,12 @@ class setup_install(setup_dl):
                     index=False,
                 )
 
-            map_file = f"{odir + dbname}/seqid2taxid.map"
+            map_file = f"{odir + dbname}/seqid2taxid.map" 
 
             if os.path.exists(map_file):
                 seqmap = pd.read_csv(
                     f"{odir + dbname}/seqid2taxid.map", sep="\t")
-                seqmap.columns = ["acc", "protid"]
+                seqmap.columns = ["acc", "protid"] 
                 seqmap.to_csv(
                     f"{self.metadir}/protein_acc2protid.tsv",
                     sep="\t",
@@ -1718,8 +1717,13 @@ class setup_install(setup_dl):
             gzipped = False
             if reference[-3:] == ".gz":
                 gzipped = True
+                reference_unzip = os.path.splitext(reference)[0]
+                if os.path.exists(reference_unzip):
+                    subprocess.run(["rm", reference_unzip])
+                    
                 subprocess.run(["gunzip", reference])
-                reference = os.path.splitext(reference)[0]
+                reference = reference_unzip
+                
 
             commands = [
                 bin + "makeblastdb",
