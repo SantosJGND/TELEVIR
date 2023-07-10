@@ -1520,7 +1520,7 @@ class setup_install(setup_dl):
             if not os.path.isfile(f"{self.metadir}/protein_acc2protid.tsv"):
                 seqmap = pd.read_csv(
                     f"{odir + dbname}/seqid2taxid.map", sep="\t")
-                seqmap.columns = ["acc", "protid", "genid", "description"]
+                seqmap.columns = ["acc", "protid"]
                 seqmap.to_csv(
                     f"{self.metadir}/protein_acc2protid.tsv",
                     sep="\t",
