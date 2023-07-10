@@ -1048,12 +1048,13 @@ class setup_install(setup_dl):
                 
             # create symlink to new index for files that use old index
             files_in_directory= os.listdir(odir + dbname)
+            print(files_in_directory)
             for file in files_in_directory:
                 if file.startswith("index"):
                     new_filename = file.replace("index", dbname + "_index")
                     new_filepath= os.path.join(odir + dbname, new_filename)
                     old_file_path= os.path.join(odir + dbname, file)
-                    os.symlink(new_filepath, old_file_path)
+                    os.symlink(old_file_path,new_filepath)
 
             self.dbs[id] = {
                 "dir": odir,
