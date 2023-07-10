@@ -1023,6 +1023,7 @@ class setup_install(setup_dl):
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
         sdir = odir + dbname + "/" + dbname
         index_file_prefix = f"{odir}{dbname}/{dbname}_index"
+        old_index_file_prefix= f"{odir}{dbname}/index"
         if os.path.isfile(index_file_prefix + ".1.cf"):
             logging.info(f"Centrifuge db {dbname} index is installed.")
             centrifuge_fasta = f"{sdir}/complete.fna.gz"
@@ -1037,6 +1038,31 @@ class setup_install(setup_dl):
                 "db": index_file_prefix,
             }
             return True
+        
+        elif os.path.isfile(old_index_file_prefix + ".1.cf"):
+            logging.info(f"Centrifuge db {dbname} index is installed.")
+            centrifuge_fasta = f"{sdir}/complete.fna.gz"
+            if os.path.isfile(os.path.splitext(centrifuge_fasta)[0]):
+                compress_using_xopen(f"{sdir}/complete.fna",
+                                     f"{sdir}/complete.fna.gz")
+                
+            # create symlink to new index for files that use old index
+            files_in_directory= os.listdir(odir + dbname)
+            for file in files_in_directory:
+                if file.startswith("index"):
+                    new_filename = file.replace("index", dbname + "_index")
+                    new_filepath= os.path.join(odir + dbname, new_filename)
+                    old_file_path= os.path.join(odir + dbname, file)
+                    os.symlink(new_filepath, old_file_path)
+
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "fasta": f"{sdir}/complete.fna.gz",
+                "db": index_file_prefix,
+            }
+            return True
+
         else:
             if self.test:
                 logging.info(f"Centrifuge db {dbname} is not installed.")
