@@ -5,8 +5,17 @@ import os
 from abc import ABC, abstractmethod
 
 import sqlalchemy
-from sqlalchemy import (Boolean, Column, ForeignKey, Integer, MetaData, String,
-                        Table, create_engine, text)
+from sqlalchemy import (
+    Boolean,
+    Column,
+    ForeignKey,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    create_engine,
+    text,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapper, sessionmaker
 
@@ -37,7 +46,6 @@ class database_item:
 
 
 class Utility_Repository:
-
     database_item = database_item
     software_item = software_item
     dbtype_local: str = "sqlite"
@@ -74,7 +82,6 @@ class Utility_Repository:
         )
 
     def setup_engine_postgres(self):
-
         from decouple import config
 
         self.engine = create_engine(
@@ -82,14 +89,12 @@ class Utility_Repository:
         )
 
     def setup_engine_docker(self):
-
         self.engine = create_engine(
             f"{self.dbtype_local}:////"
             + os.path.join(*self.db_path.split("/"), "utility_docker.db")
         )
 
     def create_software_table(self):
-
         self.software = Table(
             "software",
             self.metadata,
@@ -135,8 +140,7 @@ class Utility_Repository:
         self.engine_execute(f"DELETE FROM {table_name}")
 
     def print_table_schema(self, table_name):
-        print(self.engine_execute(
-            f"PRAGMA table_info({table_name})").fetchall())
+        print(self.engine_execute(f"PRAGMA table_info({table_name})").fetchall())
 
     def reset_tables(self):
         """
@@ -149,7 +153,6 @@ class Utility_Repository:
     def engine_execute(self, string: str):
         sql = text(string)
         with self.engine.connect() as conn:
-
             result = conn.execute(sql)
 
             # conn.commit()
@@ -184,8 +187,7 @@ class Utility_Repository:
         """
 
         if table_name not in self.tables:
-            print(
-                f"Table {table_name} not found. Available tables: {self.tables}")
+            print(f"Table {table_name} not found. Available tables: {self.tables}")
             return
 
         if not os.path.exists(directory):

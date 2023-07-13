@@ -1,5 +1,4 @@
 class Televir_Layout_docker:
-
     # databases. chose at least one.
     install_refseq_prot = False
     install_refseq_gen = True
@@ -40,14 +39,13 @@ class Televir_Layout_docker:
 
 
 class Televir_Layout_full:
-
     # databases. chose at least one.
     install_refseq_prot = False
     install_refseq_gen = True
-    install_swissprot = True
-    install_rvdb = True
+    install_swissprot = False
+    install_rvdb = False
     install_virosaurus = True
-    install_hg38 = False
+    install_hg38 = True
     install_grc38 = False
     install_request_sequences = True
 
@@ -57,8 +55,8 @@ class Televir_Layout_full:
 
     # classification software.
     install_centrifuge = True
-    install_centrifuge_bacteria = False
-    install_kraken2 = False
+    install_centrifuge_bacteria = True
+    install_kraken2 = True
     install_kraken2_bacteria = True
     install_krakenuniq = True
     install_krakenuniq_fungi = False
@@ -82,7 +80,6 @@ class Televir_Layout_full:
 
 
 class Televir_Layout_minimal:
-
     # databases. chose at least one.
     install_refseq_prot = False
     install_refseq_gen = True

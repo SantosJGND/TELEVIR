@@ -78,7 +78,6 @@ def get_args():
 
 
 def main():
-
     from install_scripts.install_source import ENVS_PARAMS, INSTALL_PARAMS
 
     CWD = os.getcwd()
@@ -101,7 +100,7 @@ def main():
         TECH = "nanopore"
         TAXDUMP = "/opt/taxdump.tar.gz"
         ORGANISM = "viral"
-        INSTALL_CONFIG = "docker"
+        INSTALL_CONFIG = "full"
         INSTALL_TYPE = "docker"
 
         INSTALL_PARAMS["HOME"] = HOME
@@ -114,7 +113,6 @@ def main():
         ENV = CWD + ".venv"
 
     else:
-
         try:
             mainconf = __import__(os.path.splitext(args.config)[0])
         except ImportError as e:
