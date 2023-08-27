@@ -372,6 +372,7 @@ class env_install:
 
         zip_source = "https://github.com/ZekunYin/RabbitQC/archive/v0.0.1.zip"
         zip_name = os.path.basename(zip_source).strip(".zip")
+        unzipped_name = "RabbitQC-0.0.1"
         exec_target = sdir + "rabbit_qc"
 
         if os.path.exists(exec_target):
@@ -383,6 +384,8 @@ class env_install:
             rm_cmd = "rm v0.0.1.zip"
 
             os.system(wget_cmd)
+            if os.path.exists(unzipped_name):
+                shutil.rmtree(unzipped_name)
             os.system(unzip_cmd)
             os.system(rm_cmd)
 

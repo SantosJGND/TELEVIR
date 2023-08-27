@@ -1023,6 +1023,7 @@ class setup_install(setup_dl):
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
         sdir = odir + dbname + "/" + dbname
         index_file_prefix = f"{odir}{dbname}/{dbname}_index"
+        old_index_file_prefix= f"{odir}{dbname}/index"
         if os.path.isfile(index_file_prefix + ".1.cf"):
             logging.info(f"Centrifuge db {dbname} index is installed.")
             centrifuge_fasta = f"{sdir}/complete.fna.gz"
@@ -1037,6 +1038,32 @@ class setup_install(setup_dl):
                 "db": index_file_prefix,
             }
             return True
+        
+        elif os.path.isfile(old_index_file_prefix + ".1.cf"):
+            logging.info(f"Centrifuge db {dbname} index is installed.")
+            centrifuge_fasta = f"{sdir}/complete.fna.gz"
+            if os.path.isfile(os.path.splitext(centrifuge_fasta)[0]):
+                compress_using_xopen(f"{sdir}/complete.fna",
+                                     f"{sdir}/complete.fna.gz")
+                
+            # create symlink to new index for files that use old index
+            files_in_directory= os.listdir(odir + dbname)
+            print(files_in_directory)
+            for file in files_in_directory:
+                if file.startswith("index"):
+                    new_filename = file.replace("index", dbname + "_index")
+                    new_filepath= os.path.join(odir + dbname, new_filename)
+                    old_file_path= os.path.join(odir + dbname, file)
+                    os.symlink(old_file_path,new_filepath)
+
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "fasta": f"{sdir}/complete.fna.gz",
+                "db": index_file_prefix,
+            }
+            return True
+
         else:
             if self.test:
                 logging.info(f"Centrifuge db {dbname} is not installed.")
@@ -1520,7 +1547,7 @@ class setup_install(setup_dl):
             if not os.path.isfile(f"{self.metadir}/protein_acc2protid.tsv"):
                 seqmap = pd.read_csv(
                     f"{odir + dbname}/seqid2taxid.map", sep="\t")
-                seqmap.columns = ["acc", "protid", "genid", "description"]
+                seqmap.columns = ["acc", "protid"]
                 seqmap.to_csv(
                     f"{self.metadir}/protein_acc2protid.tsv",
                     sep="\t",
@@ -1586,11 +1613,21 @@ class setup_install(setup_dl):
                 seqid = pd.read_csv(
                     f"{odir + dbname}/seqid2taxid.map.orig", sep="\t")
                 seqid.columns = ["refseq", "taxid", "merge"]
-                seqid[["GTDB", "description"]] = seqid["merge"].str.split(
-                    " ", 1, expand=True
-                )
 
-                seqid = seqid.drop("merge", 1)
+                def split_merge(x):
+                    if x is None:
+                        return ["", ""]
+                    else:
+                        x= x.split(" ")
+                        if len(x) == 1:
+                            return [x[0], ""]
+                        else:
+                            return [x[0], " ".join(x[1:])]
+
+                seqid[["GTDB", "description"]] = seqid["merge"].apply(
+                    lambda x: pd.Series(split_merge(x)))
+                
+                seqid = seqid.drop("merge")
                 seqid.to_csv(
                     f"{odir + dbname}/seqid2taxid.map.orig",
                     sep="\t",
@@ -1598,12 +1635,12 @@ class setup_install(setup_dl):
                     index=False,
                 )
 
-            map_file = f"{odir + dbname}/seqid2taxid.map"
+            map_file = f"{odir + dbname}/seqid2taxid.map" 
 
             if os.path.exists(map_file):
                 seqmap = pd.read_csv(
                     f"{odir + dbname}/seqid2taxid.map", sep="\t")
-                seqmap.columns = ["acc", "protid"]
+                seqmap.columns = ["acc", "protid"] 
                 seqmap.to_csv(
                     f"{self.metadir}/protein_acc2protid.tsv",
                     sep="\t",
@@ -1707,8 +1744,13 @@ class setup_install(setup_dl):
             gzipped = False
             if reference[-3:] == ".gz":
                 gzipped = True
+                reference_unzip = os.path.splitext(reference)[0]
+                if os.path.exists(reference_unzip):
+                    subprocess.run(["rm", reference_unzip])
+                    
                 subprocess.run(["gunzip", reference])
-                reference = os.path.splitext(reference)[0]
+                reference = reference_unzip
+                
 
             commands = [
                 bin + "makeblastdb",

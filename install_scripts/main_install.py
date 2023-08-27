@@ -280,8 +280,8 @@ class main_setup:
         pdir="",
         ENVS_PARAMS="",
         INSTALL_PARAMS="",
-        install_config="full",
-        install_type="local",
+        install_config="docker",
+        install_type="docker",
     ) -> None:
         if not ENVS_PARAMS:
             from install_source import ENVS_PARAMS
@@ -316,6 +316,7 @@ class main_setup:
         return f"{database_name} installed on {date}"
 
     def setup_config(self):
+        print(self.install_config)
         if self.install_config == "full":
 
             try:
