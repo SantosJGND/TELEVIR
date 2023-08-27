@@ -280,7 +280,7 @@ class main_setup:
         pdir="",
         ENVS_PARAMS="",
         INSTALL_PARAMS="",
-        install_config="docker",
+        install_config="full",
         install_type="docker",
     ) -> None:
         if not ENVS_PARAMS:
