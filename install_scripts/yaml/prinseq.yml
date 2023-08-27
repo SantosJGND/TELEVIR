@@ -8,3 +8,4 @@ channels:
 dependencies:
   - prinseq-plus-plus=1.2.4
   - fastqc=0.11.9
+  - samtools=1.15.1
