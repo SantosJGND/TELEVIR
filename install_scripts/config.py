@@ -50,7 +50,7 @@ class Televir_Layout_full:
     install_request_sequences = True
 
     # host mappers
-    install_bowtie2 = False
+    install_bowtie2 = True
     install_bwa = True
 
     # classification software.
