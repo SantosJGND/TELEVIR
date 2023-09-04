@@ -17,8 +17,13 @@ from install_scripts.modules.env_install import env_install
 from install_scripts.modules.utility_manager import Utility_Repository
 
 
-def fastq_records_to_files(records: Iterable[dnaio.Sequence], filepath_template: str = "test",
-                           compression_level: int = 2, max_file_size: int = 1000000000, margin: int = 1000000) -> List[str]:
+def fastq_records_to_files(
+    records: Iterable[dnaio.Sequence],
+    filepath_template: str = "test",
+    compression_level: int = 2,
+    max_file_size: int = 1000000000,
+    margin: int = 1000000,
+) -> List[str]:
     """
     split fastq records into files of max_file_size"""
 
@@ -26,20 +31,21 @@ def fastq_records_to_files(records: Iterable[dnaio.Sequence], filepath_template:
     file_index = 0
     filepath = filepath_template + f"_{file_index}" + ".fastq.gz"
 
-    output_h = xopen.xopen(filepath, mode='wb', threads=0,
-                           compresslevel=compression_level)
+    output_h = xopen.xopen(
+        filepath, mode="wb", threads=0, compresslevel=compression_level
+    )
 
     print(f"writing to {filepath}")
 
     for record in records:
-
         if os.path.getsize(filepath) > (max_file_size - margin):
             output_h.close()
             files.append(filepath)
             file_index += 1
             filepath = filepath_template + f"_{file_index}" + ".fastq.gz"
-            output_h = xopen.xopen(filepath, mode='wb', threads=0,
-                                   compresslevel=compression_level)
+            output_h = xopen.xopen(
+                filepath, mode="wb", threads=0, compresslevel=compression_level
+            )
             print(f"writing to {filepath}")
 
         header = ">" + record.name + "\n"
@@ -54,7 +60,6 @@ def fastq_records_to_files(records: Iterable[dnaio.Sequence], filepath_template:
 
 
 def bioinf_splitext(filepath: str):
-
     basename, ext = os.path.splitext(filepath)
     if ext == ".gz":
         basename, ext = os.path.splitext(basename)
@@ -62,16 +67,16 @@ def bioinf_splitext(filepath: str):
     return basename, ext
 
 
-def predict_files_split(filepath: str, max_file_size: int = 1000000000, file_template: str = "test"):
+def predict_files_split(
+    filepath: str, max_file_size: int = 1000000000, file_template: str = "test"
+):
     """
     predict files that will be created by split_file"""
     file_size = os.path.getsize(filepath)
-    n_files = file_size/max_file_size
+    n_files = file_size / max_file_size
     # round up
     n_files = int(n_files) + 1
-    files_predict = [
-        file_template + f"_{i}" + ".fastq.gz" for i in range(n_files)
-    ]
+    files_predict = [file_template + f"_{i}" + ".fastq.gz" for i in range(n_files)]
     return files_predict
 
 
@@ -79,10 +84,12 @@ def check_proceed(filepath: str, file_template: str, max_file_size: int = 100000
     """
     check if needed to continue"""
     files_predict = predict_files_split(
-        filepath, max_file_size=max_file_size, file_template=file_template)
+        filepath, max_file_size=max_file_size, file_template=file_template
+    )
 
-    files_exist = [(os.path.exists(file) and os.path.getsize(file) > 100)
-                   for file in files_predict]
+    files_exist = [
+        (os.path.exists(file) and os.path.getsize(file) > 100) for file in files_predict
+    ]
     if all(files_exist):
         return False
     else:
@@ -101,13 +108,19 @@ def split_file(filepath: str, max_file_size=1000000000) -> List[str]:
         basename, _ = bioinf_splitext(filepath)
         if check_proceed(filepath, basename, max_file_size=max_file_size):
             print(f"splitting {filepath}")
-            return fastq_records_to_files(records, filepath_template=basename, max_file_size=max_file_size)
+            return fastq_records_to_files(
+                records, filepath_template=basename, max_file_size=max_file_size
+            )
 
         else:
-            return predict_files_split(filepath, max_file_size=max_file_size, file_template=basename)
+            return predict_files_split(
+                filepath, max_file_size=max_file_size, file_template=basename
+            )
 
 
-def process_file_list(file_list: List[str], max_file_size: int = 1000000000) -> List[str]:
+def process_file_list(
+    file_list: List[str], max_file_size: int = 1000000000
+) -> List[str]:
     """
     split files in file_list into smaller files"""
 
@@ -118,14 +131,17 @@ def process_file_list(file_list: List[str], max_file_size: int = 1000000000) -> 
     return output_files
 
 
-def process_nuc_fasta_dict(nuc_fasta_dict: dict, max_file_size: int = 1000000000) -> dict:
+def process_nuc_fasta_dict(
+    nuc_fasta_dict: dict, max_file_size: int = 1000000000
+) -> dict:
     """
     split files in file_list into smaller files"""
 
     output_files = {}
     for software, file_list in nuc_fasta_dict.items():
         output_files[software] = process_file_list(
-            file_list, max_file_size=max_file_size)
+            file_list, max_file_size=max_file_size
+        )
 
     return output_files
 
@@ -302,15 +318,14 @@ class main_setup:
         self.pdir = pdir
 
         self.setup_config()
-        self.utilities = repository(
-            db_path=self.wdir.home, install_type=install_type)
+        self.utilities = repository(db_path=self.wdir.home, install_type=install_type)
 
-    @ staticmethod
+    @staticmethod
     def software_install_string(software_name: str):
         date = datetime.datetime.now().strftime("%Y-%m-%d")
         return f"{software_name} installed on {date}"
 
-    @ staticmethod
+    @staticmethod
     def database_install_string(database_name: str):
         date = datetime.datetime.now().strftime("%Y-%m-%d")
         return f"{database_name} installed on {date}"
@@ -318,7 +333,6 @@ class main_setup:
     def setup_config(self):
         print(self.install_config)
         if self.install_config == "full":
-
             try:
                 from install_scripts.config import Televir_Layout_full
             except ModuleNotFoundError as e:
@@ -328,7 +342,6 @@ class main_setup:
             self.layout = Televir_Layout_full()
 
         elif self.install_config == "docker":
-
             try:
                 from install_scripts.config import Televir_Layout_docker
             except ModuleNotFoundError as e:
@@ -338,7 +351,6 @@ class main_setup:
             self.layout = Televir_Layout_docker()
 
         else:
-
             try:
                 from install_scripts.config import Televir_Layout_minimal
             except ModuleNotFoundError as e:
@@ -427,12 +439,10 @@ class main_setup:
         )
 
     def setup_envs_conda(self):
-
         if self.install_envs:
             self.env_prepare_conda(self.ENVS_PARAMS)
 
     def setup_envs(self):
-
         if self.install_envs:
             self.env_prepare(self.ENVS_PARAMS)
 
@@ -441,7 +451,6 @@ class main_setup:
         description in INSTALL_PARAMS
         """
         if self.seqdl or self.soft:
-
             self.wdir.mkdirs()
             logging.info("Environment directory: %s", self.wdir.envs["ROOT"])
             logging.info("Fasta directory: %s", self.wdir.seqdir)
@@ -511,11 +520,9 @@ class main_setup:
                 )
 
         if self.layout.install_hg38:
-
             success_hg38 = self.wdir.download_hg38()
             if success_hg38:
-                self.installed_databases.append(
-                    self.database_install_string("hg38"))
+                self.installed_databases.append(self.database_install_string("hg38"))
                 self.utilities.add_database(
                     self.utilities.database_item(
                         "hg38",
@@ -525,11 +532,9 @@ class main_setup:
                 )
 
         if self.layout.install_grc38:
-
             success_hg38 = self.wdir.download_grc38()
             if success_hg38:
-                self.installed_databases.append(
-                    self.database_install_string("grc38"))
+                self.installed_databases.append(self.database_install_string("grc38"))
                 self.utilities.add_database(
                     self.utilities.database_item(
                         "grc38",
@@ -553,7 +558,6 @@ class main_setup:
                 )
 
         if self.organism == "viral":
-
             if self.layout.install_virosaurus:
                 success_virosaurus = self.wdir.virosaurus_dl()
                 if success_virosaurus:
@@ -599,7 +603,7 @@ class main_setup:
         self.wdir.nuc_metadata()
 
     def db_generate_intrinsic(
-        self, INSTALL_PARAMS, prepdl, nanopore=False, taxdump="", test=False
+        self, INSTALL_PARAMS, prepdl: setup_dl, nanopore=False, taxdump="", test=False
     ):
         """
         Install databases for each software envisaged.
@@ -621,7 +625,7 @@ class main_setup:
         """
 
         # install databases using organism name only.
-        sofprep = self.setup_install_class(
+        sofprep: setup_install = self.setup_install_class(
             INSTALL_PARAMS, taxdump=taxdump, test=test, organism=self.organism
         )
         logging.info("database directory %s", sofprep.dbdir)
@@ -644,9 +648,9 @@ class main_setup:
                 if not os.path.isfile(f"{prepdl.seqdir}{centlib}"):
                     logging.info("centrifuge database not found.")
             if os.path.isfile(f"{prepdl.seqdir}{centlib}"):
-                prepdl.fastas["nuc"][
-                    "centrifuge"
-                ] = [f"{prepdl.seqdir}{centlib}"]  # add to fastas dict
+                prepdl.fastas["nuc"]["centrifuge"] = [
+                    f"{prepdl.seqdir}{centlib}"
+                ]  # add to fastas dict
 
                 if install_success:
                     self.installed_software.append(
@@ -665,7 +669,8 @@ class main_setup:
 
         if self.layout.install_centrifuge_bacteria:
             install_success = sofprep.centrifuge_install(
-                dbname="bacteria", threads="16")
+                dbname="bacteria", threads="16"
+            )
             centlib = f"refseq-bacteria.dust.fna.gz"
             if os.path.isfile(sofprep.dbs["centrifuge"]["fasta"]):
                 os.system(
@@ -676,9 +681,9 @@ class main_setup:
                 if not os.path.isfile(f"{prepdl.seqdir}{centlib}"):
                     logging.info("centrifuge database not found.")
             if os.path.isfile(f"{prepdl.seqdir}{centlib}"):
-                prepdl.fastas["nuc"][
-                    "centrifuge_bacteria"
-                ] = [f"{prepdl.seqdir}{centlib}"]  # add to fastas dict
+                prepdl.fastas["nuc"]["centrifuge_bacteria"] = [
+                    f"{prepdl.seqdir}{centlib}"
+                ]  # add to fastas dict
 
                 if install_success:
                     self.installed_software.append(
@@ -699,8 +704,7 @@ class main_setup:
         if self.layout.install_clark:
             success_install = sofprep.clark_install(dbname=self.organism)
             if success_install:
-                self.installed_software.append(
-                    self.software_install_string("clark"))
+                self.installed_software.append(self.software_install_string("clark"))
 
                 self.utilities.add_software(
                     self.utilities.software_item(
@@ -716,7 +720,8 @@ class main_setup:
 
         if self.layout.install_kraken2:
             success_install = sofprep.kraken2_two_strategies_install(
-                dbname=self.organism)
+                dbname=self.organism
+            )
             krlib = f"kraken2-{self.organism}-library.fna.gz"
             if os.path.isfile(sofprep.dbs["kraken2"]["fasta"]):
                 os.system(
@@ -730,9 +735,7 @@ class main_setup:
                 prepdl.fastas["nuc"]["kraken2"] = [f"{prepdl.seqdir}{krlib}"]
 
             if success_install:
-
-                self.installed_software.append(
-                    self.software_install_string("kraken2"))
+                self.installed_software.append(self.software_install_string("kraken2"))
 
                 self.utilities.add_software(
                     self.utilities.software_item(
@@ -745,8 +748,7 @@ class main_setup:
                 )
 
         if self.layout.install_kraken2_bacteria:
-            success_install = sofprep.kraken2_download_install(
-                dbname="bacteria")
+            success_install = sofprep.kraken2_download_install(dbname="bacteria")
             krlib = f"kraken2-bacteria-library.fna.gz"
             if os.path.isfile(sofprep.dbs["kraken2"]["fasta"]):
                 os.system(
@@ -757,13 +759,10 @@ class main_setup:
                     logging.info("kraken2 database fasta not found.")
 
             if os.path.isfile(f"{prepdl.seqdir}{krlib}"):
-                prepdl.fastas["nuc"]["kraken2-bacteria"] = [
-                    f"{prepdl.seqdir}{krlib}"]
+                prepdl.fastas["nuc"]["kraken2-bacteria"] = [f"{prepdl.seqdir}{krlib}"]
 
             if success_install:
-
-                self.installed_software.append(
-                    self.software_install_string("kraken2"))
+                self.installed_software.append(self.software_install_string("kraken2"))
 
                 self.utilities.add_software(
                     self.utilities.software_item(
@@ -810,11 +809,9 @@ class main_setup:
 
         # install viral specific databases
         if self.organism == "viral":
-
             if self.layout.install_kaiju:
                 sofprep.kaiju_viral_install()
-                self.installed_software.append(
-                    self.software_install_string("kaiju"))
+                self.installed_software.append(self.software_install_string("kaiju"))
 
                 self.utilities.add_software(
                     self.utilities.software_item(
@@ -831,9 +828,13 @@ class main_setup:
         return sofprep
 
     def db_generate_external(
-        self, prepdl, sofprep, nanopore=False, taxdump="", test=False
+        self,
+        prepdl: setup_dl,
+        sofprep: setup_install,
+        nanopore=False,
+        taxdump="",
+        test=False,
     ):
-
         # sofprep = self.setup_install_class(
         #    INSTALL_PARAMS, taxdump=taxdump, test=test, organism=self.organism
         # )
@@ -843,8 +844,7 @@ class main_setup:
         for fname, fpath in prepdl.fastas["host"].items():
             bwa_install = sofprep.bwa_install(dbname=fname, reference=fpath)
             if bwa_install:
-                self.installed_software.append(
-                    self.software_install_string("bwa"))
+                self.installed_software.append(self.software_install_string("bwa"))
                 self.utilities.add_software(
                     self.utilities.software_item(
                         "bwa",
@@ -856,8 +856,7 @@ class main_setup:
                 )
 
             if self.layout.install_bowtie2:
-                bowtie2_install = sofprep.bowtie2_index(
-                    dbname=fname, reference=fpath)
+                bowtie2_install = sofprep.bowtie2_index(dbname=fname, reference=fpath)
                 if bowtie2_install:
                     self.installed_software.append(
                         self.software_install_string("bowtie2")
@@ -884,7 +883,6 @@ class main_setup:
 
         # install prot databases using local files.
         for fname, fdb in prepdl.fastas["prot"].items():
-
             if self.layout.install_diamond:
                 install_success = sofprep.diamond_install(dbname=fname, db=fdb)
 
@@ -905,7 +903,6 @@ class main_setup:
 
             if self.layout.install_blast:
                 if fname == "refseq":
-
                     success_install = sofprep.blast_install(
                         reference=fdb,
                         dbname=f"refseq_{self.organism}_prot",
@@ -932,7 +929,6 @@ class main_setup:
 
         # install nuc databases using local files.
         for fname, fd_list in prepdl.fastas["nuc"].items():
-
             for fdb in fd_list:
                 # skip if file size > 15GB
                 if os.path.getsize(fdb) > 15000000000:
@@ -940,8 +936,7 @@ class main_setup:
 
                 bwa_install = sofprep.bwa_install(dbname=fname, reference=fdb)
                 if bwa_install:
-                    self.installed_software.append(
-                        self.software_install_string("bwa"))
+                    self.installed_software.append(self.software_install_string("bwa"))
                     self.utilities.add_software(
                         self.utilities.software_item(
                             "bwa",
@@ -980,13 +975,12 @@ class main_setup:
                                 sofprep.dbs["fastviromeexplorer"]["db"],
                                 fname,
                                 True,
-                                sofprep.envs["ROOT"] +
-                                sofprep.envs["fastviromeexplorer"],
+                                sofprep.envs["ROOT"]
+                                + sofprep.envs["fastviromeexplorer"],
                             )
                         )
 
                 if self.layout.install_blast:
-
                     if fname == "refseq":
                         install_success = sofprep.blast_install(
                             reference=fdb,
@@ -1008,13 +1002,11 @@ class main_setup:
                                     sofprep.dbs["blast"]["db"],
                                     f"refseq_{self.organism}_genome",
                                     True,
-                                    sofprep.envs["ROOT"] +
-                                    sofprep.envs["blast"],
+                                    sofprep.envs["ROOT"] + sofprep.envs["blast"],
                                 )
                             )
 
                 if nanopore:
-
                     if self.layout.install_desamba:
                         install_success = sofprep.deSAMBA_install(
                             reference=fdb,
@@ -1032,15 +1024,12 @@ class main_setup:
                                     sofprep.dbs["desamba"]["db"],
                                     fname,
                                     True,
-                                    sofprep.envs["ROOT"] +
-                                    sofprep.envs["desamba"],
+                                    sofprep.envs["ROOT"] + sofprep.envs["desamba"],
                                 )
                             )
 
     def setup_soft(self):
-
         if self.seqdl or self.soft:
-
             self.utilities.reset_tables()
 
             # repdl = self.setup_dir(self.INSTALL_PARAMS)
@@ -1049,7 +1038,6 @@ class main_setup:
             self.dl_metadata_prot()
 
             if self.soft:
-
                 sofprep = self.db_generate_intrinsic(
                     self.INSTALL_PARAMS,
                     self.wdir,
@@ -1077,7 +1065,6 @@ class main_setup:
                 self.utilities.dump_software(self.wdir.home)
 
     def register_install_logs(self):
-
         with open(os.path.join(self.wdir.home, "install_log.txt"), "w") as install_log:
             if self.installed_software:
                 install_log.write("Installed software:\n")
@@ -1089,7 +1076,6 @@ class main_setup:
                     install_log.write(f"{database}\n")
 
     def setup_deploy(self):
-
         envprep = self.env_install_class
         envprep.prep_dir()
 
@@ -1097,7 +1083,6 @@ class main_setup:
 
 
 if __name__ == "__main__":
-
     from modules.db_install import setup_dl, setup_install
     from modules.env_install import env_install
     from modules.utility_manager import Utility_Repository
@@ -1108,8 +1093,7 @@ if __name__ == "__main__":
         level=logging.INFO,
     )
 
-    metagen_prep = main_setup(env_install, setup_dl,
-                              setup_install, Utility_Repository)
+    metagen_prep = main_setup(env_install, setup_dl, setup_install, Utility_Repository)
     metagen_prep.user_input()
 
     metagen_prep.setup_envs_conda()
