@@ -11,7 +11,7 @@ class Televir_Layout_docker:
 
     # host mappers
     install_bowtie2_remap = True
-    install_bowtie2_depletion = False
+    install_bowtie2_depletion = True
     install_bwa = True
 
     # classification software.
