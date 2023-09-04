@@ -10,7 +10,8 @@ class Televir_Layout_docker:
     install_request_sequences = False
 
     # host mappers
-    install_bowtie2 = False
+    install_bowtie2_remap = False
+    install_bowtie2_depletion = False
     install_bwa = True
 
     # classification software.
@@ -50,7 +51,8 @@ class Televir_Layout_full:
     install_request_sequences = True
 
     # host mappers
-    install_bowtie2 = True
+    install_bowtie2_remap = True
+    install_bowtie2_depletion = True
     install_bwa = True
 
     # classification software.
@@ -91,7 +93,8 @@ class Televir_Layout_minimal:
     install_request_sequences = True
 
     # host mappers
-    install_bowtie2 = True
+    install_bowtie2_remap = False
+    install_bowtie2_depletion = False
     install_bwa = True
 
     # classification software.

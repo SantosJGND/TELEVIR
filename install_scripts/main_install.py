@@ -849,13 +849,13 @@ class main_setup:
                     self.utilities.software_item(
                         "bwa",
                         sofprep.dbs["bwa"]["fasta"],
-                        fname,
+                        "host",
                         True,
                         sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                     )
                 )
 
-            if self.layout.install_bowtie2:
+            if self.layout.install_bowtie2_depletion:
                 bowtie2_install = sofprep.bowtie2_index(dbname=fname, reference=fpath)
                 if bowtie2_install:
                     self.installed_software.append(
@@ -865,7 +865,7 @@ class main_setup:
                         self.utilities.software_item(
                             "bowtie2",
                             sofprep.dbs["bowtie2"]["db"],
-                            fname,
+                            "host",
                             True,
                             sofprep.envs["ROOT"] + sofprep.envs["bowtie2"],
                         )
@@ -956,6 +956,24 @@ class main_setup:
                         sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                     )
                 )
+
+                if self.layout.install_bowtie2_depletion:
+                    bowtie2_install = sofprep.bowtie2_index(
+                        dbname=fname, reference=fpath
+                    )
+                    if bowtie2_install:
+                        self.installed_software.append(
+                            self.software_install_string("bowtie2")
+                        )
+                        self.utilities.add_software(
+                            self.utilities.software_item(
+                                "bowtie2",
+                                sofprep.dbs["bowtie2"]["db"],
+                                fname,
+                                True,
+                                sofprep.envs["ROOT"] + sofprep.envs["bowtie2"],
+                            )
+                        )
 
                 if self.layout.install_fastviromeexplorer:
                     install_success = sofprep.fve_install(
