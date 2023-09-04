@@ -10,7 +10,7 @@ class Televir_Layout_docker:
     install_request_sequences = False
 
     # host mappers
-    install_bowtie2_remap = False
+    install_bowtie2_remap = True
     install_bowtie2_depletion = False
     install_bwa = True
 
