@@ -74,7 +74,7 @@ class Televir_Layout_full:
 
     install_spades = True
     install_raven = True
-    install_flye = True
+    install_flye = False
 
     # technology setup (exclusive technologies. overrides info above).
     install_illumina = True
