@@ -999,7 +999,7 @@ class main_setup:
                         )
 
                 if self.layout.install_blast:
-                    if fname == "refseq":
+                    if fname in ["refseq", "centrifuge_bacteria"]:
                         install_success = sofprep.blast_install(
                             reference=fdb,
                             dbname=f"refseq_{self.organism}_genome",
