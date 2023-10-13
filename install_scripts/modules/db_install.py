@@ -33,7 +33,7 @@ def compress_using_xopen(fq_in: str, fq_out: str):
     compress using fastq_filter generator"""
 
     records = file_to_fastq_records(fq_in)
-    with xopen(fq_out, mode='wb', threads=0, compresslevel=2) as output_h:
+    with xopen(fq_out, mode="wb", threads=0, compresslevel=2) as output_h:
         for record in records:
             header = ">" + record.name + "\n"
             header = header.encode("ascii")
@@ -41,14 +41,13 @@ def compress_using_xopen(fq_in: str, fq_out: str):
             sequence = record.sequence + "\n"
             output_h.write(sequence.encode("ascii"))
 
- 
+
 def sed_out_after_dot(file):
     """remove everything after the dot in the file name"""
     os.system("sed -i 's/[:].*$//g' {}".format(file))
 
 
 def entrez_ncbi_taxid_command(lines, tempfile, outdir, outfile):
-
     Path(tempfile).touch()
 
     with open(tempfile, "w") as ftemp:
@@ -62,8 +61,7 @@ def entrez_ncbi_taxid_command(lines, tempfile, outdir, outfile):
 def entrez_fetch_sequence(accid, outfile):
     """return fasta from ncbi nuccore db using accid"""
 
-    os.system(
-        f"esearch -db nuccore -query {accid} | efetch -format fasta >> {outfile}")
+    os.system(f"esearch -db nuccore -query {accid} | efetch -format fasta >> {outfile}")
 
 
 def entrez_ncbi_taxid(file, outdir, outfile, nmax=500):
@@ -77,15 +75,12 @@ def entrez_ncbi_taxid(file, outdir, outfile, nmax=500):
     lines = ""
 
     with open(file, "r") as f:
-
         line = f.readline()
         while line:
-
             lines += line
             current_batch += 1
 
             if current_batch == nmax:
-
                 entrez_ncbi_taxid_command(lines, tempfile, outdir, outfile)
                 lines = ""
                 current_batch = 0
@@ -103,7 +98,6 @@ class setup_dl:
     def __init__(
         self, INSTALL_PARAMS, organism="viral", home="", bindir="", test=False
     ):
-
         if not INSTALL_PARAMS["HOME"]:
             home = os.getcwd()
 
@@ -177,24 +171,24 @@ class setup_dl:
                     logging.info(f"indexing {vv}")
                     subprocess.run(["samtools", "faidx", vv])
 
-    def download_hg38(self):
+    def ftp_host_file(self, host, source, filename, fname):
         """
-        download hg38 fasta from ucsc.
+        download file from ftp host.
+        :param host:
+        :param source:
+        :param filename:
+        :param fname:
         :return:
         """
-        host = "hgdownload.soe.ucsc.edu"
-        source = "goldenPath/hg38/bigZips/"
-        f = "hg38.fa.gz"
-
-        if os.path.isfile(self.seqdir + f):
-            self.fastas["host"]["hg38"] = self.seqdir + f
-            logging.info(f"{f} found.")
+        if os.path.isfile(self.seqdir + filename):
+            self.fastas["host"][fname] = self.seqdir + filename
+            logging.info(f"{filename} found.")
             return True
 
         try:
             ftp = FTP(host)
         except Exception as e:
-            logging.info("hg38 ftp attempt failed. Check internet connection.")
+            logging.info(f"{fname} ftp attempt failed. Check internet connection.")
             return False
 
         ftp.login()
@@ -202,29 +196,50 @@ class setup_dl:
         files = ftp.nlst()
         ftp.quit()
 
-        if f not in files:
-            logging.info(f"{f} not found.")
+        if filename not in files:
+            logging.info(f"{filename} not found.")
             return False
 
-        if not os.path.isfile(self.seqdir + f):
+        if not os.path.isfile(self.seqdir + filename):
             if self.test:
-                logging.info(f"{f} not found.")
+                logging.info(f"{filename} not found.")
                 return False
             else:
-                logging.info(f"{f} not found. downloading...")
-                subprocess.run(
-                    ["wget", f"ftp://{host}/{source}{f}", "-P", self.seqdir])
-                self.fastas["host"]["hg38"] = self.seqdir + f
+                logging.info(f"{filename} not found. downloading...")
+                subprocess.run(["wget", f"ftp://{host}/{source}{filename}", "-P", self.seqdir])
+                self.fastas["host"][fname] = self.seqdir + filename
                 return True
 
         else:
-            self.fastas["host"]["hg38"] = self.seqdir + f
-            logging.info(f"{f} found.")
+            self.fastas["host"][fname] = self.seqdir + filename
+            logging.info(f"{filename} found.")
             return True
+
+    def download_hg38(self):
+        """
+        download hg38 fasta from ucsc.
+        :return:
+        """
+        host = "hgdownload.soe.ucsc.edu"
+        source = "goldenPath/hg38/bigZips/"
+        filename = "hg38.fa.gz"
+        fname = "hg38"
+
+        return self.ftp_host_file(host, source, filename, fname)
+
+    def download_sus_scrofa(self):
+        """
+        download sus scrofa fasta from ncbi."""
+        host = "ftp.ncbi.nlm.nih.gov"
+        source = "genomes/refseq/vertebrate_mammalian/Sus_scrofa/latest_assembly_versions/GCF_000003025.6_Sscrofa11.1/"
+        filename = "GCF_000003025.6_Sscrofa11.1_genomic.fna.gz"
+        fname = "sus_scrofa"
+
+        return self.ftp_host_file(host, source, filename, fname)
 
     def download_grc38(self):
         """
-        download grc38 fasta from ucsc.
+        download grc38 fasta from ncbi.
         :return:
         """
         # host = "hgdownload.soe.ucsc.edu"
@@ -233,48 +248,12 @@ class setup_dl:
 
         host = "ftp.ncbi.nlm.nih.gov"
         source = "genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/"
-        f = "GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz"
+        filename = "GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz"
         fname = "grc38"
 
-        if os.path.isfile(self.seqdir + f):
-            self.fastas["host"][fname] = self.seqdir + f
-            logging.info(f"{f} found.")
-            return True
-
-        try:
-            ftp = FTP(host)
-        except Exception as e:
-            logging.info(
-                f"{fname} ftp attempt failed. Check internet connection.")
-            return False
-
-        ftp.login()
-        ftp.cwd(source)
-        files = ftp.nlst()
-        ftp.quit()
-
-        if f not in files:
-            logging.info(f"{f} not found.")
-            return False
-
-        if not os.path.isfile(self.seqdir + f):
-            if self.test:
-                logging.info(f"{f} not found.")
-                return False
-            else:
-                logging.info(f"{f} not found. downloading...")
-                subprocess.run(
-                    ["wget", f"ftp://{host}/{source}{f}", "-P", self.seqdir])
-                self.fastas["host"][fname] = self.seqdir + f
-                return True
-
-        else:
-            self.fastas["host"][fname] = self.seqdir + f
-            logging.info(f"{f} found.")
-            return True
+        return self.ftp_host_file(host, source, filename, fname)
 
     def install_requests(self):
-
         references_file = os.path.join(self.seqdir, "request_references.fa")
 
         if os.path.isfile(references_file + ".gz"):
@@ -288,7 +267,6 @@ class setup_dl:
                 shutil.copy(acc_tsv, tempfile)
             elif "https" in acc_tsv:
                 try:
-
                     subprocess.run(["curl", "-o", tempfile, acc_tsv])
 
                 except subprocess.CalledProcessError:
@@ -331,8 +309,7 @@ class setup_dl:
         try:
             ftp = FTP(host)
         except:
-            logging.info(
-                "refseq ftp attempt failed. Check internet connection.")
+            logging.info("refseq ftp attempt failed. Check internet connection.")
             return False
 
         ftp.login()
@@ -476,8 +453,7 @@ class setup_dl:
                 logging.info("uniref{}.fasta not found.".format(vs))
                 return False
             else:
-                logging.info(
-                    "uniref{}.fasta not found. downloading...".format(vs))
+                logging.info("uniref{}.fasta not found. downloading...".format(vs))
                 subprocess.run(["wget", fl, "-P", self.seqdir])
         else:
             logging.info("uniref{}.fasta found.".format(vs))
@@ -523,8 +499,7 @@ class setup_dl:
                 logging.info("U-RVDBv{}.fasta.xz not found.".format(vs))
                 return False
             else:
-                logging.info(
-                    "U-RVDBv{}.fasta.xz not found. downloading...".format(vs))
+                logging.info("U-RVDBv{}.fasta.xz not found. downloading...".format(vs))
                 subprocess.run(["wget", "-P", self.seqdir, fl])
                 fl = self.seqdir + os.path.basename(fl)
                 subprocess.run(["unxz", fl])
@@ -571,7 +546,6 @@ class setup_dl:
                     not os.path.isfile(self.seqdir + os.path.basename(fl))
                     or os.path.getsize(self.seqdir + os.path.basename(fl)) <= 100
                 ):
-
                     logging.info("wget failed. trying curl...")
                     subprocess.run(
                         ["curl", fl, "-o", self.seqdir + os.path.basename(fl)]
@@ -609,8 +583,7 @@ class setup_dl:
                 return
             else:
                 if self.test:
-                    logging.info(
-                        "acc2taxid.tsv not found for {}".format(check))
+                    logging.info("acc2taxid.tsv not found for {}".format(check))
                     return
                 else:
                     logging.info(
@@ -688,7 +661,6 @@ class setup_dl:
         self.parse_refseq_prot()
 
     def parse_refseq_prot(self):
-
         if "refseq_prot" not in self.fastas["prot"]:
             logging.info("refseq_prot not found.")
             return
@@ -701,7 +673,7 @@ class setup_dl:
             return
 
         def retrieve_within_square_brackets(string):
-            return string[string.find("[") + 1: string.find("]")]
+            return string[string.find("[") + 1 : string.find("]")]
 
         def retrieve_acc_string(string):
             return string.split()[0][1:]
@@ -715,8 +687,7 @@ class setup_dl:
                     lines.append([acc, description])
 
         df = pd.DataFrame(lines, columns=["acc", "description"])
-        tax2description = pd.read_csv(
-            f"{self.metadir}/taxid2desc.tsv", sep="\t")
+        tax2description = pd.read_csv(f"{self.metadir}/taxid2desc.tsv", sep="\t")
 
         df = df.merge(tax2description, on="description", how="left")
         df = df[["acc", "taxid"]]
@@ -739,8 +710,7 @@ class setup_dl:
             id_files = {i: [] for i in dict_ids}
 
             threads = [
-                Thread(target=self.prot2taxid_parse,
-                       args=(dci, dict_ids, acc2tax_dir))
+                Thread(target=self.prot2taxid_parse, args=(dci, dict_ids, acc2tax_dir))
                 for dci in range(1, 11)
             ]
             for th in threads:
@@ -750,14 +720,12 @@ class setup_dl:
 
             for dbi in list(id_files):
                 id_files[dbi] = [
-                    pd.read_csv(self.metadir +
-                                f"{dbi}_a2p_{dci}.tsv", sep="\t")
+                    pd.read_csv(self.metadir + f"{dbi}_a2p_{dci}.tsv", sep="\t")
                     for dci in range(1, 11)
                 ]
                 fdb = pd.concat(id_files[dbi], axis=0)
                 #
-                fdb.to_csv(self.metadir +
-                           f"{dbi}_acc2taxid.tsv", sep="\t", index=False)
+                fdb.to_csv(self.metadir + f"{dbi}_acc2taxid.tsv", sep="\t", index=False)
                 report = pd.merge(
                     fdb, dict_ids[dbi], on="acc", how="outer", indicator=True
                 )
@@ -769,8 +737,7 @@ class setup_dl:
                 )
                 #
                 for dci in range(1, 11):
-                    os.system("rm {}".format(
-                        self.metadir + f"{dbi}_a2p_{dci}.tsv"))
+                    os.system("rm {}".format(self.metadir + f"{dbi}_a2p_{dci}.tsv"))
 
                 self.meta[dbi] = "refseq_prot"
 
@@ -800,9 +767,7 @@ class setup_dl:
         for ix, docf in enumerate(reader):
             docf.columns = ["acc", "taxid"]
             for dbi, ids in meta_dict.items():
-
-                rnv = pd.merge(left=ids, right=docf,
-                               left_on="acc", right_on="acc")
+                rnv = pd.merge(left=ids, right=docf, left_on="acc", right_on="acc")
                 mchunks[dbi].append(rnv)
 
             processed += docf.shape[0]
@@ -811,8 +776,7 @@ class setup_dl:
 
         for dbi in mchunks.keys():
             chk = pd.concat(mchunks[dbi])
-            chk.to_csv(self.metadir +
-                       f"{dbi}_a2p_{dci}.tsv", sep="\t", index=False)
+            chk.to_csv(self.metadir + f"{dbi}_a2p_{dci}.tsv", sep="\t", index=False)
 
     def generate_main_protacc_to_taxid(self):
         """
@@ -831,7 +795,6 @@ class setup_dl:
                 to_concat.append(p2t)
 
         if to_concat:
-
             general_db = pd.concat(to_concat, axis=0)
             general_db.columns = ["prot_acc", "taxid"]
             general_db.drop_duplicates(subset="prot_acc")
@@ -855,23 +818,20 @@ class setup_dl:
             outfile = self.metadir + f"{dbs}_acc2taxid.tsv"
             if os.path.isfile(outfile):
                 self.meta[dbs] = outfile
-                logging.info(
-                    f"acc2taxid map file {outfile} exists, continuing.")
+                logging.info(f"acc2taxid map file {outfile} exists, continuing.")
                 continue
             else:
                 if self.test:
                     logging.info(f"acc2taxid map file {outfile} not found.")
                     continue
                 else:
-                    logging.info(
-                        f"acc2taxid map file {outfile} not found. creating")
+                    logging.info(f"acc2taxid map file {outfile} not found. creating")
 
             kept = []
             with gzip.open(fl, "rb") as fn:
                 ln = str(fn.readline(), "utf-8")
                 while ln:
                     if ln[0] == ">":
-
                         tp = ln.split()[0][1:]
 
                         if dbs == "rvdb":
@@ -1023,13 +983,12 @@ class setup_install(setup_dl):
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
         sdir = odir + dbname + "/" + dbname
         index_file_prefix = f"{odir}{dbname}/{dbname}_index"
-        old_index_file_prefix= f"{odir}{dbname}/index"
+        old_index_file_prefix = f"{odir}{dbname}/index"
         if os.path.isfile(index_file_prefix + ".1.cf"):
             logging.info(f"Centrifuge db {dbname} index is installed.")
             centrifuge_fasta = f"{sdir}/complete.fna.gz"
             if os.path.isfile(os.path.splitext(centrifuge_fasta)[0]):
-                compress_using_xopen(f"{sdir}/complete.fna",
-                                     f"{sdir}/complete.fna.gz")
+                compress_using_xopen(f"{sdir}/complete.fna", f"{sdir}/complete.fna.gz")
 
             self.dbs[id] = {
                 "dir": odir,
@@ -1038,23 +997,22 @@ class setup_install(setup_dl):
                 "db": index_file_prefix,
             }
             return True
-        
+
         elif os.path.isfile(old_index_file_prefix + ".1.cf"):
             logging.info(f"Centrifuge db {dbname} index is installed.")
             centrifuge_fasta = f"{sdir}/complete.fna.gz"
             if os.path.isfile(os.path.splitext(centrifuge_fasta)[0]):
-                compress_using_xopen(f"{sdir}/complete.fna",
-                                     f"{sdir}/complete.fna.gz")
-                
+                compress_using_xopen(f"{sdir}/complete.fna", f"{sdir}/complete.fna.gz")
+
             # create symlink to new index for files that use old index
-            files_in_directory= os.listdir(odir + dbname)
+            files_in_directory = os.listdir(odir + dbname)
             print(files_in_directory)
             for file in files_in_directory:
                 if file.startswith("index"):
                     new_filename = file.replace("index", dbname + "_index")
-                    new_filepath= os.path.join(odir + dbname, new_filename)
-                    old_file_path= os.path.join(odir + dbname, file)
-                    os.symlink(old_file_path,new_filepath)
+                    new_filepath = os.path.join(odir + dbname, new_filename)
+                    old_file_path = os.path.join(odir + dbname, file)
+                    os.symlink(old_file_path, new_filepath)
 
             self.dbs[id] = {
                 "dir": odir,
@@ -1069,8 +1027,7 @@ class setup_install(setup_dl):
                 logging.info(f"Centrifuge db {dbname} is not installed.")
                 return False
             else:
-                logging.info(
-                    f"Centrifuge db {dbname} is not installed. Installing...")
+                logging.info(f"Centrifuge db {dbname} is not installed. Installing...")
 
         subprocess.run(["mkdir", "-p", odir])
         #
@@ -1118,8 +1075,7 @@ class setup_install(setup_dl):
         ###
         try:
             subprocess.run(tax_command)
-            os.system(" ".join(seqmap_command) +
-                      f" > {odir}{dbname}.seq2taxid.map")
+            os.system(" ".join(seqmap_command) + f" > {odir}{dbname}.seq2taxid.map")
 
             # iterate over .fna files and concatenate them into one file
             fna_files = [f for f in os.listdir(sdir) if f.endswith(".fna")]
@@ -1136,7 +1092,6 @@ class setup_install(setup_dl):
                     f"{odir}{dbname}/nodes.dmp"
                 ) or not os.path.exists(f"{odir}{dbname}/names.dmp"):
                     if not self.taxdump:
-
                         cmd_dl_taxonomy = [
                             "wget",
                             "--no-check-certificate",
@@ -1147,8 +1102,7 @@ class setup_install(setup_dl):
                         subprocess.run(cmd_dl_taxonomy)
 
                     else:
-                        shutil.copy(
-                            self.taxdump, f"{odir}{dbname}/taxdump.tar.gz")
+                        shutil.copy(self.taxdump, f"{odir}{dbname}/taxdump.tar.gz")
 
                     subprocess.run(
                         [
@@ -1163,8 +1117,7 @@ class setup_install(setup_dl):
                 subprocess.run(build_command)
 
             # os.system(f"bgzip {sdir}/complete.fna")
-            compress_using_xopen(f"{sdir}/complete.fna",
-                                 f"{sdir}/complete.fna.gz")
+            compress_using_xopen(f"{sdir}/complete.fna", f"{sdir}/complete.fna.gz")
 
             self.dbs[id] = {
                 "dir": odir,
@@ -1196,7 +1149,6 @@ class setup_install(setup_dl):
         bin = self.envs["ROOT"] + self.envs[id] + "/"
 
         if os.path.isfile(odir + dbname + f"/.{dbname}"):
-
             logging.info(f"{id} db {dbname} is installed.")
 
             self.dbs[id] = {
@@ -1210,8 +1162,7 @@ class setup_install(setup_dl):
                 logging.info(f"CLARK db {dbname} is not installed.")
                 return False
             else:
-                logging.info(
-                    f"CLARK db {dbname} is not installed. Installing...")
+                logging.info(f"CLARK db {dbname} is not installed. Installing...")
 
         subprocess.run(["mkdir", "-p", odir])
         ##
@@ -1226,7 +1177,6 @@ class setup_install(setup_dl):
         spaced_command = [bin + "buildSpacedDB.sh"]
 
         try:
-
             try:
                 subprocess.run(lib_command)
 
@@ -1253,27 +1203,32 @@ class setup_install(setup_dl):
             return False
 
     def kraken2_download_install(
-            self,
-            dbname="viral",
-            id="kraken2",
-            dbdir="kraken2",
+        self,
+        dbname="viral",
+        id="kraken2",
+        dbdir="kraken2",
     ):
         odir = self.dbdir + dbdir + "/"
 
         if dbname == "viral":
-            source = "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20221209.tar.gz"
+            source = (
+                "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20221209.tar.gz"
+            )
         elif dbname == "standard":
-            source = "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20230314.tar.gz"
+            source = (
+                "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20230314.tar.gz"
+            )
         elif dbname == "bacteria":
             source = "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_16gb_20230314.tar.gz"
         elif dbname == "ribo16s":
-            source = "https://genome-idx.s3.amazonaws.com/kraken/16S_RDP11.5_20200326.tgz"
+            source = (
+                "https://genome-idx.s3.amazonaws.com/kraken/16S_RDP11.5_20200326.tgz"
+            )
 
         source_file = source.split("/")[-1]
 
         if os.path.isfile(odir + dbname + "/taxo.k2d"):
-            logging.info(
-                f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
+            logging.info(f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
 
             self.dbs[id] = {
                 "dir": odir,
@@ -1288,13 +1243,13 @@ class setup_install(setup_dl):
                 return False
             else:
                 logging.info(
-                    f"Kraken2 db {dbname} is not installed. Downloading from {source}.")
+                    f"Kraken2 db {dbname} is not installed. Downloading from {source}."
+                )
 
         sdir = odir + dbname + "/"
         subprocess.run(["mkdir", "-p", sdir])
         subprocess.run(["wget", "-P", sdir, source])
-        subprocess.run(
-            ["tar", "-xvzf", sdir + source_file, "-C", sdir])
+        subprocess.run(["tar", "-xvzf", sdir + source_file, "-C", sdir])
         subprocess.run(["rm", sdir + source_file])
 
         self.dbs[id] = {
@@ -1305,8 +1260,7 @@ class setup_install(setup_dl):
         }
 
         if os.path.isfile(odir + dbname + "/taxo.k2d"):
-            logging.info(
-                f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
+            logging.info(f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
             return True
         else:
             logging.info(f"failed to download Kraken2 db {dbname}")
@@ -1321,13 +1275,11 @@ class setup_install(setup_dl):
         build_args="--max-db-size 18000000000 --kmer-len 31",
         ftp=False,
     ):
-
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
 
         if os.path.isfile(odir + dbname + "/taxo.k2d"):
-            logging.info(
-                f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
+            logging.info(f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
             krk2_fasta = odir + dbname + "/library/" + dbname + "/library.fna.gz"
             if os.path.isfile(os.path.splitext(krk2_fasta)[0]):
                 os.system("bgzip " + os.path.splitext(krk2_fasta)[0])
@@ -1344,8 +1296,7 @@ class setup_install(setup_dl):
                 logging.info(f"Kraken2 db {dbname} is not installed.")
                 return False
             else:
-                logging.info(
-                    f"Kraken2 db {dbname} is not installed. Installing...")
+                logging.info(f"Kraken2 db {dbname} is not installed. Installing...")
 
         subprocess.run(["mkdir", "-p", odir])
         ##
@@ -1382,7 +1333,6 @@ class setup_install(setup_dl):
             tax_command.append("--use-ftp")
 
         try:
-
             try:
                 subprocess.run(lib_command)
 
@@ -1410,12 +1360,12 @@ class setup_install(setup_dl):
 
             subprocess.call(" ".join(build_command), shell=True)
             untax_get(self.taxdump, odir, dbname)
-            os.system("bgzip " + odir + dbname +
-                      "/library/" + dbname + "/library.fna")
+            os.system("bgzip " + odir + dbname + "/library/" + dbname + "/library.fna")
 
             if os.path.isfile(odir + dbname + "/taxo.k2d"):
                 logging.info(
-                    f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
+                    f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed."
+                )
                 self.dbs[id] = {
                     "dir": odir,
                     "dbname": dbname,
@@ -1484,7 +1434,6 @@ class setup_install(setup_dl):
     def diamond_install(
         self, id="diamond", dbdir="diamond", dbname="swissprot", db="swissprot.gz"
     ):
-
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
 
@@ -1505,10 +1454,8 @@ class setup_install(setup_dl):
                 logging.info(f"diamond db {dbname} . Installing...")
 
         try:
-
             subprocess.run(["mkdir", "-p", odir])
-            command = [bin + "diamond", "makedb",
-                       "--in", db, "--db", odir + dbname]
+            command = [bin + "diamond", "makedb", "--in", db, "--db", odir + dbname]
 
             subprocess.call(" ".join(command), shell=True)
 
@@ -1532,7 +1479,6 @@ class setup_install(setup_dl):
         dl_args="--force --min-seq-len 300 --dust",
         build_args="--work-on-disk --jellyfish-hash-size 10M --kmer-len 31 --taxids-for-genomes --taxids-for-sequences",
     ):
-
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
 
@@ -1545,8 +1491,7 @@ class setup_install(setup_dl):
             }
 
             if not os.path.isfile(f"{self.metadir}/protein_acc2protid.tsv"):
-                seqmap = pd.read_csv(
-                    f"{odir + dbname}/seqid2taxid.map", sep="\t")
+                seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
                 seqmap.columns = ["acc", "protid"]
                 seqmap.to_csv(
                     f"{self.metadir}/protein_acc2protid.tsv",
@@ -1610,23 +1555,23 @@ class setup_install(setup_dl):
 
             map_orig_file = f"{odir + dbname}/seqid2taxid.map.orig"
             if os.path.exists(map_orig_file):
-                seqid = pd.read_csv(
-                    f"{odir + dbname}/seqid2taxid.map.orig", sep="\t")
+                seqid = pd.read_csv(f"{odir + dbname}/seqid2taxid.map.orig", sep="\t")
                 seqid.columns = ["refseq", "taxid", "merge"]
 
                 def split_merge(x):
                     if x is None:
                         return ["", ""]
                     else:
-                        x= x.split(" ")
+                        x = x.split(" ")
                         if len(x) == 1:
                             return [x[0], ""]
                         else:
                             return [x[0], " ".join(x[1:])]
 
                 seqid[["GTDB", "description"]] = seqid["merge"].apply(
-                    lambda x: pd.Series(split_merge(x)))
-                
+                    lambda x: pd.Series(split_merge(x))
+                )
+
                 seqid = seqid.drop("merge")
                 seqid.to_csv(
                     f"{odir + dbname}/seqid2taxid.map.orig",
@@ -1635,12 +1580,11 @@ class setup_install(setup_dl):
                     index=False,
                 )
 
-            map_file = f"{odir + dbname}/seqid2taxid.map" 
+            map_file = f"{odir + dbname}/seqid2taxid.map"
 
             if os.path.exists(map_file):
-                seqmap = pd.read_csv(
-                    f"{odir + dbname}/seqid2taxid.map", sep="\t")
-                seqmap.columns = ["acc", "protid"] 
+                seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
+                seqmap.columns = ["acc", "protid"]
                 seqmap.to_csv(
                     f"{self.metadir}/protein_acc2protid.tsv",
                     sep="\t",
@@ -1656,7 +1600,6 @@ class setup_install(setup_dl):
             return False
 
     def kaiju_viral_install(self, id="kaiju", dbdir="kaiju", dbname="viral"):
-
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
         subdb = odir + dbname + "/"
@@ -1676,15 +1619,12 @@ class setup_install(setup_dl):
 
                 return False
             else:
-                logging.info(
-                    f"Kaiju {dbname} db is not installed. Installing...")
+                logging.info(f"Kaiju {dbname} db is not installed. Installing...")
 
         try:
-
             subprocess.run(["mkdir", "-p", odir])
 
-            subprocess.run(["wget", "-P", subdb, db_online,
-                           "--no-check-certificate"])
+            subprocess.run(["wget", "-P", subdb, db_online, "--no-check-certificate"])
             CWD = os.getcwd()
             os.chdir(subdb)
             subprocess.run(["tar", "-zxvf", file])
@@ -1712,7 +1652,6 @@ class setup_install(setup_dl):
         args="-parse_seqids",
         title="viral db",
     ):
-
         odir = self.dbdir + dbdir + "/"
 
         dbtype = "nucl"
@@ -1747,10 +1686,9 @@ class setup_install(setup_dl):
                 reference_unzip = os.path.splitext(reference)[0]
                 if os.path.exists(reference_unzip):
                     subprocess.run(["rm", reference_unzip])
-                    
+
                 subprocess.run(["gunzip", reference])
                 reference = reference_unzip
-                
 
             commands = [
                 bin + "makeblastdb",
@@ -1794,7 +1732,6 @@ class setup_install(setup_dl):
         args="",
         title="viral db",
     ):
-
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
         db = odir + dbname
@@ -1879,8 +1816,7 @@ class setup_install(setup_dl):
                 logging.info(f"BWA db {dbname} is not installed.")
                 return False
             else:
-                logging.info(
-                    f"BWA db {dbname} is not installed. Installing...")
+                logging.info(f"BWA db {dbname} is not installed. Installing...")
 
         subprocess.run(["mkdir", "-p", sdir])
 
@@ -1892,8 +1828,7 @@ class setup_install(setup_dl):
             reference = os.path.splitext(reference)[0]
             subprocess.run(["samtools", "faidx", reference])
 
-        command = [bin + "bwa", "index", "-p",
-                   f"{odir}{dbname}/{dbname}", reference]
+        command = [bin + "bwa", "index", "-p", f"{odir}{dbname}/{dbname}", reference]
         # command = " ".join(command)
 
         try:
@@ -1999,14 +1934,12 @@ class setup_install(setup_dl):
         fidx = subdir + dbname + ".idx"
 
         if os.path.isfile(fidx):
-            logging.info(
-                f"FastViromeExplorer index for {reference} is installed.")
+            logging.info(f"FastViromeExplorer index for {reference} is installed.")
             self.dbs[id] = {"dir": odir, "dbname": dbname, "db": fidx}
             return True
         else:
             if self.test:
-                logging.info(
-                    f"FastViromeExplorer {reference} index is not installed.")
+                logging.info(f"FastViromeExplorer {reference} index is not installed.")
                 return False
             else:
                 logging.info(
@@ -2080,7 +2013,6 @@ class setup_install(setup_dl):
         bin = self.envs["ROOT"] + self.envs[id]
 
         if os.path.isfile(sdir + "/deSAMBA.bwt"):
-
             logging.info(f"deSAMBA db {dbname} is installed.")
             self.dbs[id] = {"dir": sdir, "dbname": dbname, "db": sdir}
             return True
@@ -2089,8 +2021,7 @@ class setup_install(setup_dl):
                 logging.info(f"deSAMBA db {dbname} is not installed.")
                 return False
             else:
-                logging.info(
-                    f"deSAMBA db {dbname} is not installed. Installing...")
+                logging.info(f"deSAMBA db {dbname} is not installed. Installing...")
 
         try:
             subprocess.run(["mkdir", "-p", odir])

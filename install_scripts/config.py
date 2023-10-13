@@ -6,6 +6,7 @@ class Televir_Layout_docker:
     install_rvdb = False
     install_virosaurus = True
     install_hg38 = True
+    install_sus_scrofa = True
     install_grc38 = False
     install_request_sequences = False
 
@@ -47,6 +48,7 @@ class Televir_Layout_full:
     install_rvdb = False
     install_virosaurus = True
     install_hg38 = True
+    install_sus_scrofa = True
     install_grc38 = False
     install_request_sequences = True
 
@@ -89,6 +91,7 @@ class Televir_Layout_minimal:
     install_rvdb = False
     install_virosaurus = True
     install_hg38 = True
+    install_sus_scrofa = True
     install_grc38 = False
     install_request_sequences = True
 

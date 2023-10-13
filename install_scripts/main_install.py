@@ -543,6 +543,20 @@ class main_setup:
                     )
                 )
 
+        if self.layout.install_sus_scrofa:
+            success_sus_scrofa = self.wdir.download_sus_scrofa()
+            if success_sus_scrofa:
+                self.installed_databases.append(
+                    self.database_install_string("sus_scrofa")
+                )
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        "sus_scrofa",
+                        self.wdir.fastas["host"]["sus_scrofa"],
+                        True,
+                    )
+                )
+
         if self.layout.install_request_sequences:
             request_success = self.wdir.install_requests()
             if request_success:
