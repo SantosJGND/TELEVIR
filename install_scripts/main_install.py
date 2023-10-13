@@ -1002,7 +1002,7 @@ class main_setup:
                     if fname in ["refseq", "centrifuge_bacteria"]:
                         install_success = sofprep.blast_install(
                             reference=fdb,
-                            dbname=f"refseq_{self.organism}_genome",
+                            dbname=fname,
                             nuc=True,
                             taxid_map=sofprep.metadir + "acc2taxid.nuc.map",
                             args="-parse_seqids",
