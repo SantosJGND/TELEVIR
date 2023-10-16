@@ -5,10 +5,19 @@ class Televir_Layout_docker:
     install_swissprot = False
     install_rvdb = False
     install_virosaurus = True
-    install_hg38 = True
-    install_sus_scrofa = True
-    install_grc38 = False
     install_request_sequences = False
+
+    # hosts ### CHECK HOST LIBRARY FILE FOR AVAILABLE HOSTS ###
+    HOSTS_TO_INSTALL = [
+        "hg38",
+        "sus_scrofa",
+        "aedes_albopictus",
+        "gallus_gallus",
+        "oncorhynchus_mykiss",
+        "salmo_salar",
+        "bos_taurus",
+        "neogale_vison",
+    ]
 
     # host mappers
     install_bowtie2_remap = True
@@ -47,10 +56,19 @@ class Televir_Layout_full:
     install_swissprot = False
     install_rvdb = False
     install_virosaurus = True
-    install_hg38 = True
-    install_sus_scrofa = True
-    install_grc38 = False
     install_request_sequences = True
+
+    # hosts
+    HOSTS_TO_INSTALL = [
+        "hg38",
+        "sus_scrofa",
+        "aedes_albopictus",
+        "gallus_gallus",
+        "oncorhynchus_mykiss",
+        "salmo_salar",
+        "bos_taurus",
+        "neogale_vison",
+    ]
 
     # host mappers
     install_bowtie2_remap = True
@@ -90,10 +108,19 @@ class Televir_Layout_minimal:
     install_swissprot = True
     install_rvdb = False
     install_virosaurus = True
-    install_hg38 = True
-    install_sus_scrofa = True
-    install_grc38 = False
     install_request_sequences = True
+
+    # hosts
+    HOSTS_TO_INSTALL = [
+        "hg38",
+        "sus_scrofa",
+        "aedes_albopictus",
+        "gallus_gallus",
+        "oncorhynchus_mykiss",
+        "salmo_salar",
+        "bos_taurus",
+        "neogale_vison",
+    ]
 
     # host mappers
     install_bowtie2_remap = False

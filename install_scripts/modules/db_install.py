@@ -11,7 +11,10 @@ from random import randint
 from threading import Thread
 
 import pandas as pd
+from install_scripts.host_library import Host
+
 from fastq_filter import fastq_records_to_file, file_to_fastq_records
+
 from numpy import int0
 from xopen import xopen
 
@@ -206,7 +209,9 @@ class setup_dl:
                 return False
             else:
                 logging.info(f"{filename} not found. downloading...")
-                subprocess.run(["wget", f"ftp://{host}/{source}{filename}", "-P", self.seqdir])
+                subprocess.run(
+                    ["wget", f"ftp://{host}/{source}{filename}", "-P", self.seqdir]
+                )
                 self.fastas["host"][fname] = self.seqdir + filename
                 return True
 
@@ -214,6 +219,46 @@ class setup_dl:
             self.fastas["host"][fname] = self.seqdir + filename
             logging.info(f"{filename} found.")
             return True
+
+    def find_host(self, host_name):
+        """
+        find host in host library
+        :param host_name:
+        :return:
+        """
+        host = None
+        for h in Host.__subclasses__():
+            if h.host_name == host_name:
+                host = h()
+                break
+
+        return host
+
+    def get_host_common_name(self, host_name):
+        """
+        get common name of host
+        :param host_name:
+        :return:
+        """
+        host = self.find_host(host_name)
+        if not host:
+            logging.info(f"{host_name} not found in host library.")
+            return False
+
+        return host.common_name
+
+    def download_host(self, host_name):
+        host = self.find_host(host_name)
+        if not host:
+            logging.info(f"{host_name} not found in host library.")
+            return False
+
+        return self.ftp_host_file(
+            host.remote_host,
+            host.remote_path,
+            host.remote_filename,
+            host.host_name,
+        )
 
     def download_hg38(self):
         """
@@ -234,6 +279,96 @@ class setup_dl:
         source = "genomes/refseq/vertebrate_mammalian/Sus_scrofa/latest_assembly_versions/GCF_000003025.6_Sscrofa11.1/"
         filename = "GCF_000003025.6_Sscrofa11.1_genomic.fna.gz"
         fname = "sus_scrofa"
+
+        return self.ftp_host_file(host, source, filename, fname)
+
+    def download_aedes_albopictus(self):
+        """
+        download aedes albopictus fasta from ncbi."""
+        host = "ftp.ncbi.nlm.nih.gov"
+        source = "genomes/refseq/invertebrate/Aedes_albopictus/latest_assembly_versions/GCF_006496715.2_Aalbo_primary.1/"
+        filename = "GCF_006496715.2_Aalbo_primary.1_genomic.fna.gz"
+        fname = "aedes_albopictus"
+
+        return self.ftp_host_file(host, source, filename, fname)
+
+    def download_aedes_aegypti(self):
+        """
+        download aedes aegypti fasta from ncbi."""
+        host = "ftp.ncbi.nlm.nih.gov"
+        source = "genomes/refseq/invertebrate/Aedes_aegypti/latest_assembly_versions/GCF_002204515.2_AaegL5.0/"
+        filename = "GCF_002204515.2_AaegL5.0_genomic.fna.gz"
+        fname = "aedes_aegypti"
+
+        return self.ftp_host_file(host, source, filename, fname)
+
+    def download_gallus_gallus(self):
+        """
+        download gallus gallus fasta from ncbi."""
+        host = "ftp.ncbi.nlm.nih.gov"
+        source = "genomes/refseq/vertebrate_other/Gallus_gallus/latest_assembly_versions/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b/"
+        filename = "GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz"
+        fname = "gallus_gallus"
+
+        return self.ftp_host_file(host, source, filename, fname)
+
+    def download_mus_musculus(self):
+        """
+        download mus musculus fasta from ncbi."""
+        host = "ftp.ncbi.nlm.nih.gov"
+        source = "genomes/refseq/vertebrate_mammalian/Mus_musculus/latest_assembly_versions/GCF_000001635.27_GRCm39/"
+        filename = "GCF_000001635.27_GRCm39_genomic.fna.gz"
+        fname = "mus_musculus"
+
+        return self.ftp_host_file(host, source, filename, fname)
+
+    def download_oncorhynchus_mykiss(self):
+        """
+        download rainbow trout fasta from ncbi."""
+        host = "ftp.ncbi.nlm.nih.gov"
+        source = "genomes/refseq/vertebrate_other/Oncorhynchus_mykiss/latest_assembly_versions/GCF_013265735.2_USDA_OmykA_1.1/"
+        filename = "GCF_013265735.2_USDA_OmykA_1.1_genomic.fna.gz"
+        fname = "rainbow_trout"
+
+        return self.ftp_host_file(host, source, filename, fname)
+
+    def download_salmo_salar(self):
+        """
+        download salmo salar fasta from ncbi."""
+        host = "ftp.ncbi.nlm.nih.gov"
+        source = "genomes/refseq/vertebrate_other/Salmo_salar/latest_assembly_versions/GCF_905237065.1_Ssal_v3.1/"
+        filename = "GCF_905237065.1_Ssal_v3.1_genomic.fna.gz"
+        fname = "salmo_salar"
+
+        return self.ftp_host_file(host, source, filename, fname)
+
+    def donwload_acipenser_ruthenus(self):
+        """
+        download acipenser ruthenus fasta from ncbi."""
+        host = "ftp.ncbi.nlm.nih.gov"
+        source = "genomes/refseq/vertebrate_other/Acipenser_ruthenus/latest_assembly_versions/GCF_902713425.1_fAciRut3.2_maternal_haplotype/"
+        filename = "GCF_902713425.1_fAciRut3.2_maternal_haplotype_genomic.fna.gz"
+        fname = "acipenser_ruthenus"
+
+        return self.ftp_host_file(host, source, filename, fname)
+
+    def download_bos_taurus(self):
+        """
+        download bos taurus fasta from ncbi."""
+        host = "ftp.ncbi.nlm.nih.gov"
+        source = "genomes/refseq/vertebrate_mammalian/Bos_taurus/latest_assembly_versions/GCF_002263795.3_ARS-UCD2.0/"
+        filename = "GCF_002263795.3_ARS-UCD2.0_genomic.fna.gz"
+        fname = "bos_taurus"
+
+        return self.ftp_host_file(host, source, filename, fname)
+
+    def download_neogale_vison(self):
+        """
+        download neogale vison fasta from ncbi."""
+        host = "ftp.ncbi.nlm.nih.gov"
+        source = "genomes/refseq/vertebrate_other/Neogale_vison/latest_assembly_versions/GCF_020171115.1_ASM_NN_V1/"
+        filename = "GCF_020171115.1_ASM_NN_V1_cds_from_genomic.fna.gz"
+        fname = "neogale_vison"
 
         return self.ftp_host_file(host, source, filename, fname)
 
