@@ -1,15 +1,3 @@
-HOSTS_TO_INSTALL = [
-    "hg38",
-    "sus_scrofa",
-    # "aedes_albopictus",
-    # "gallus_gallus",
-    # "oncorhynchus_mykiss",
-    # "salmo_salar",
-    # "bos_taurus",
-    # "neogale_vison",
-]
-
-
 class Host:
     remote_host: str
     remote_path: str
@@ -18,12 +6,12 @@ class Host:
     common_name: str
 
 
-class Hg38(Host):
+class HomoSapiens(Host):
     def __init__(self):
         self.remote_host = "hgdownload.soe.ucsc.edu"
         self.remote_path = "/goldenPath/hg38/bigZips/"
         self.remote_filename = "hg38.fa.gz"
-        self.host_name = "hg38"
+        self.host_name = "homo_sapiens
         self.common_name = "human"
 
 
