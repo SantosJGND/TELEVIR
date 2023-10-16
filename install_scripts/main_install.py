@@ -871,14 +871,14 @@ class main_setup:
 
         for fname, fpath in prepdl.fastas["host"].items():
             bwa_install = sofprep.bwa_install(dbname=fname, reference=fpath)
-            common_name = sofprep.get_host_common_name(fname)
+            # common_name = sofprep.get_host_common_name(fname)
             if bwa_install:
                 self.installed_software.append(self.software_install_string("bwa"))
                 self.utilities.add_software(
                     self.utilities.software_item(
                         "bwa",
                         sofprep.dbs["bwa"]["fasta"],
-                        common_name,
+                        fname,
                         bwa_install,
                         sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                         tag="host",
@@ -895,7 +895,7 @@ class main_setup:
                         self.utilities.software_item(
                             "bowtie2",
                             sofprep.dbs["bowtie2"]["db"],
-                            common_name,
+                            fname,
                             bowtie2_install,
                             sofprep.envs["ROOT"] + sofprep.envs["bowtie2"],
                             tag="host",
@@ -906,7 +906,7 @@ class main_setup:
                 self.utilities.software_item(
                     "minimap2",
                     fpath,
-                    common_name,
+                    fname,
                     True,
                     sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                     tag="host",
