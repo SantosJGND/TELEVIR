@@ -58,7 +58,7 @@ class Utility_Repository:
     def __init__(self, db_path="", install_type="local", file_prefix="utility") -> None:
         self.db_path = db_path
         self.metadata = MetaData()
-        self.engine_name = f"{file_prefix}_f{install_type}.db"
+        self.engine_name = f"{file_prefix}_{install_type}.db"
         self.engine_filepath = os.path.join(*self.db_path.split("/"), self.engine_name)
 
         self.setup_engine(install_type)
