@@ -247,18 +247,24 @@ class setup_dl:
 
         return host.common_name
 
-    def download_host(self, host_name: str):
+    def download_host(self, host_name: str) -> bool:
         host = self.find_host(host_name)
         if not host:
             logging.info(f"{host_name} not found in host library.")
             return False
 
-        return self.ftp_host_file(
-            host.remote_host,
-            host.remote_path,
-            host.remote_filename,
-            host.host_name,
-        )
+        try:
+            ftp_download= self.ftp_host_file(
+                host.remote_host,
+                host.remote_path,
+                host.remote_filename,
+                host.host_name,
+            )
+
+            return ftp_download
+        except Exception as e:
+            logging.info(f"failed to download {host_name} from ftp.")
+            return False
 
     def download_hg38(self):
         """
