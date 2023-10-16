@@ -67,8 +67,8 @@ class SalmoSalar(Host):
 class BosTaurus(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "genomes/refseq/vertebrate_mammalian/Bos_taurus/latest_assembly_versions/GCF_002263795.2_ARS-UCD1.2/"
-        self.remote_filename = "GCF_002263795.2_ARS-UCD1.2_genomic.fna.gz"
+        self.remote_path = "/genomes/refseq/vertebrate_mammalian/Bos_taurus/latest_assembly_versions/GCF_002263795.3_ARS-UCD2.0"
+        self.remote_filename = "GCF_002263795.3_ARS-UCD2.0_cds_from_genomic.fna.gz"
         self.host_name = "bos_taurus"
         self.common_name = "cow"
 
