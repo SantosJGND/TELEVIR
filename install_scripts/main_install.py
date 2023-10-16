@@ -245,51 +245,17 @@ class main_setup:
     prepare metagenomics run environments, databases.
     """
 
-    # internal log. read this to know what is available.
-    available_classifiers = [
-        "kraken2",
-        "centrifuge",
-        # "metaphlan2",
-        # "humann2",
-        "diamond",
-        # "vsearch",
-        "blast",
-        "blastp",
-        "kaiju",
-        "kuniq",
-        "desamba",
-        "clark",
-        "fastviromeexplorer",
-    ]
-
-    available_assemblers = [
-        "spades",
-        "raven",
-        "velvet",
-        "flye",
-    ]
-
-    available_preprocessors = ["trimmomatic", "nanofilt"]
-
-    available_remapers = [
-        "bwa",
-        "minimap2",
-        "rematch",
-        "snippy",
-        "bowtie2",
-    ]
-
     installed_software = []
     installed_databases = []
 
     wdir: setup_dl
     utilities: Utility_Repository
-    env_install_class: env_install
+    env_manager: env_install
     setup_install_class: setup_install
 
     def __init__(
         self,
-        env_install,
+        env_install_engine: env_install,
         dl_engine: setup_dl,
         install_engine: setup_install,
         repository: Utility_Repository,
@@ -298,15 +264,10 @@ class main_setup:
         INSTALL_PARAMS="",
         install_config="full",
     ) -> None:
-        if not ENVS_PARAMS:
-            from install_source import ENVS_PARAMS
-        if not INSTALL_PARAMS:
-            from install_source import INSTALL_PARAMS
-
         self.ENVS_PARAMS = ENVS_PARAMS
         self.INSTALL_PARAMS = INSTALL_PARAMS
-        self.wdir = dl_engine(INSTALL_PARAMS)
-        self.env_install_class = env_install(ENVS_PARAMS)
+        self.wdir = dl_engine
+        self.env_manager = env_install_engine
         self.setup_install_class = install_engine
         self.install_config = install_config
 
@@ -402,7 +363,7 @@ class main_setup:
         :type ENVS_PARAMS: dict
         :return: None
         """
-        envprep = self.env_install_class
+        envprep = self.env_manager
         envprep.prep_dir()
         envprep.conda_install()
 
@@ -413,7 +374,7 @@ class main_setup:
         :type ENVS_PARAMS: dict
         :return: None
         """
-        envprep = self.env_install_class
+        envprep = self.env_manager
         envprep.prep_dir()
         if self.layout.install_flye:
             envprep.flye_install()
@@ -652,9 +613,8 @@ class main_setup:
         """
 
         # install databases using organism name only.
-        sofprep: setup_install = self.setup_install_class(
-            INSTALL_PARAMS, taxdump=taxdump, test=test, organism=self.organism
-        )
+        sofprep = self.setup_install_class
+
         logging.info("database directory %s", sofprep.dbdir)
 
         sofprep.install_prep()
@@ -913,9 +873,9 @@ class main_setup:
             )
 
         # install prot databases using local files.
-        for fname, fdb in prepdl.fastas["prot"].items():
+        for fname, fpath in prepdl.fastas["prot"].items():
             if self.layout.install_diamond:
-                install_success = sofprep.diamond_install(dbname=fname, db=fdb)
+                install_success = sofprep.diamond_install(dbname=fname, db=fpath)
 
                 if install_success:
                     self.installed_software.append(
@@ -935,7 +895,7 @@ class main_setup:
             if self.layout.install_blast:
                 if fname == "refseq":
                     success_install = sofprep.blast_install(
-                        reference=fdb,
+                        reference=fpath,
                         dbname=f"refseq_{self.organism}_prot",
                         nuc=False,
                         taxid_map=sofprep.metadir + "acc2taxid.prot.map",
@@ -960,12 +920,12 @@ class main_setup:
 
         # install nuc databases using local files.
         for fname, fd_list in prepdl.fastas["nuc"].items():
-            for fdb in fd_list:
+            for fpath in fd_list:
                 # skip if file size > 15GB
-                if os.path.getsize(fdb) > 15000000000:
+                if os.path.getsize(fpath) > 15000000000:
                     continue
 
-                bwa_install = sofprep.bwa_install(dbname=fname, reference=fdb)
+                bwa_install = sofprep.bwa_install(dbname=fname, reference=fpath)
                 if bwa_install:
                     self.installed_software.append(self.software_install_string("bwa"))
                     self.utilities.add_software(
@@ -981,8 +941,8 @@ class main_setup:
                 self.utilities.add_software(
                     self.utilities.software_item(
                         "minimap2",
-                        fdb,
-                        fdb,
+                        fpath,
+                        fpath,
                         True,
                         sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                     )
@@ -1008,7 +968,7 @@ class main_setup:
 
                 if self.layout.install_fastviromeexplorer:
                     install_success = sofprep.fve_install(
-                        reference=fdb,
+                        reference=fpath,
                         dbname=fname,
                         virus_list=sofprep.metadir + f"{fname}-list.txt",
                         list_create=True,
@@ -1032,7 +992,7 @@ class main_setup:
                 if self.layout.install_blast:
                     if fname in ["refseq", "centrifuge_bacteria"]:
                         install_success = sofprep.blast_install(
-                            reference=fdb,
+                            reference=fpath,
                             dbname=fname,
                             nuc=True,
                             taxid_map=sofprep.metadir + "acc2taxid.nuc.map",
@@ -1058,7 +1018,7 @@ class main_setup:
                 if nanopore:
                     if self.layout.install_desamba:
                         install_success = sofprep.deSAMBA_install(
-                            reference=fdb,
+                            reference=fpath,
                             dbname=fname,
                         )
 
@@ -1125,16 +1085,15 @@ class main_setup:
                     install_log.write(f"{database}\n")
 
     def setup_deploy(self):
-        envprep = self.env_install_class
+        envprep = self.env_manager
         envprep.prep_dir()
 
         envprep.install_deployment_software()
 
 
 if __name__ == "__main__":
-    from modules.db_install import setup_dl, setup_install
-    from modules.env_install import env_install
-    from modules.utility_manager import Utility_Repository
+    from install_scripts.install_source import ENVS_PARAMS
+    from install_scripts.install_source import INSTALL_PARAMS
 
     logging.basicConfig(
         format="%(asctime)s - %(message)s",
@@ -1143,6 +1102,11 @@ if __name__ == "__main__":
     )
 
     utility_repo = Utility_Repository(db_path="./", install_type="local")
+    env_manager = env_install(ENVS_PARAMS)
+    dl_manager = setup_dl(INSTALL_PARAMS)
+    install_manager = setup_install(
+        INSTALL_PARAMS, taxdump="", test=False, organism="viral"
+    )
 
     metagen_prep = main_setup(env_install, setup_dl, setup_install, Utility_Repository)
     metagen_prep.user_input()

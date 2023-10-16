@@ -151,16 +151,26 @@ def main():
         db_path=HOME, install_type=INSTALL_TYPE, file_prefix="utility"
     )
 
+    env_manager = env_install(ENVS_PARAMS)
+
+    dl_manager = setup_dl(INSTALL_PARAMS)
+
+    install_manager = setup_install(
+        INSTALL_PARAMS,
+        taxdump=TAXDUMP,
+        test=args.test,
+        organism=ORGANISM,
+    )
+
     metagen_prep = main_setup(
-        env_install,
-        setup_dl,
-        setup_install,
+        env_manager,
+        dl_manager,
+        install_manager,
         utility_repository,
         ENVS_PARAMS=ENVS_PARAMS,
         INSTALL_PARAMS=INSTALL_PARAMS,
         pdir=CWD + "/install_scripts/",
         install_config=INSTALL_CONFIG,
-        install_type=INSTALL_TYPE,
     )
 
     metagen_prep.object_input(
