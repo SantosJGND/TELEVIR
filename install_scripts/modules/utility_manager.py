@@ -36,7 +36,7 @@ class SoftwareItem:
         return f"({self.name}, {self.path}, {self.database}, {self.installed}, {self.env_path})"
 
 
-class database_item:
+class DatabaseItem:
     def __init__(self, name, path, installed, software: str = "none") -> None:
         self.name = name
         self.path = path
@@ -49,7 +49,7 @@ class database_item:
 
 
 class Utility_Repository:
-    database_item = database_item
+    database_item = DatabaseItem
     software_item = SoftwareItem
     dbtype_local: str = "sqlite"
 
