@@ -100,7 +100,7 @@ def main():
         TECH = "nanopore"
         TAXDUMP = "/opt/taxdump.tar.gz"
         ORGANISM = "viral"
-        INSTALL_CONFIG = "docker"
+        INSTALL_CONFIG = "full"
         INSTALL_TYPE = "docker"
 
         INSTALL_PARAMS["HOME"] = HOME
@@ -148,7 +148,7 @@ def main():
 
     ####
     utility_repository = Utility_Repository(
-        db_path=HOME, install_type=INSTALL_TYPE, file_prefix="utility"
+        db_path=HOME, install_type=INSTALL_TYPE, file_prefix="utility_test"
     )
 
     env_manager = env_install(ENVS_PARAMS)
