@@ -545,6 +545,7 @@ class main_setup:
 
         if self.layout.install_sus_scrofa:
             success_sus_scrofa = self.wdir.download_sus_scrofa()
+
             if success_sus_scrofa:
                 self.installed_databases.append(
                     self.database_install_string("sus_scrofa")
@@ -863,9 +864,10 @@ class main_setup:
                     self.utilities.software_item(
                         "bwa",
                         sofprep.dbs["bwa"]["fasta"],
-                        "host",
-                        True,
+                        fname,
+                        bwa_install,
                         sofprep.envs["ROOT"] + sofprep.envs["bwa"],
+                        tag="host",
                     )
                 )
 
@@ -879,9 +881,10 @@ class main_setup:
                         self.utilities.software_item(
                             "bowtie2",
                             sofprep.dbs["bowtie2"]["db"],
-                            "host",
-                            True,
+                            fname,
+                            bowtie2_install,
                             sofprep.envs["ROOT"] + sofprep.envs["bowtie2"],
+                            tag="host",
                         )
                     )
 
@@ -889,9 +892,10 @@ class main_setup:
                 self.utilities.software_item(
                     "minimap2",
                     fpath,
-                    fpath,
+                    fname,
                     True,
                     sofprep.envs["ROOT"] + sofprep.envs["bwa"],
+                    tag="host",
                 )
             )
 

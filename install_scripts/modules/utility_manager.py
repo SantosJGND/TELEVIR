@@ -20,14 +20,17 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapper, sessionmaker
 
 
-class software_item:
-    def __init__(self, name, path, database, installed, env_path) -> None:
+class SoftwareItem:
+    def __init__(
+        self, name, path, database, installed, env_path, tag: str = "undefined"
+    ) -> None:
         self.name = name
         self.path = path
         self.database = database
         self.installed = installed
         self.env_path = env_path
         self.date = datetime.datetime.now().strftime("%Y-%m-%d")
+        self.tag = tag
 
     def __repr__(self) -> str:
         return f"({self.name}, {self.path}, {self.database}, {self.installed}, {self.env_path})"
@@ -47,7 +50,7 @@ class database_item:
 
 class Utility_Repository:
     database_item = database_item
-    software_item = software_item
+    software_item = SoftwareItem
     dbtype_local: str = "sqlite"
 
     tables: list = ["software", "database"]
@@ -104,6 +107,7 @@ class Utility_Repository:
             Column("installed", Boolean),
             Column("env_path", String),
             Column("date", String),
+            Column("tag", String, default="undefined"),
         )
 
         self.engine_execute(
@@ -223,7 +227,7 @@ class Utility_Repository:
             return False
 
     @abstractmethod
-    def add_software(self, item: software_item):
+    def add_software(self, item: SoftwareItem):
         """
         Add a record to a table
         """
