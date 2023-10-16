@@ -1,12 +1,12 @@
 HOSTS_TO_INSTALL = [
     "hg38",
     "sus_scrofa",
-    "aedes_albopictus",
-    "gallus_gallus",
-    "oncorhynchus_mykiss",
-    "salmo_salar",
-    "bos_taurus",
-    "neogale_vison",
+    # "aedes_albopictus",
+    # "gallus_gallus",
+    # "oncorhynchus_mykiss",
+    # "salmo_salar",
+    # "bos_taurus",
+    # "neogale_vison",
 ]
 
 
