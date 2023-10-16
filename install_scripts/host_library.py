@@ -11,7 +11,7 @@ class HomoSapiens(Host):
         self.remote_host = "hgdownload.soe.ucsc.edu"
         self.remote_path = "/goldenPath/hg38/bigZips/"
         self.remote_filename = "hg38.fa.gz"
-        self.host_name = "homo_sapiens"
+        self.host_name = "hg38"
         self.common_name = "human"
 
 
