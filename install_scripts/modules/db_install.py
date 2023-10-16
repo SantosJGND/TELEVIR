@@ -228,13 +228,13 @@ class setup_dl:
         """
         host = None
         for h in Host.__subclasses__():
-            if h.host_name == host_name:
+            if h().host_name == host_name:
                 host = h()
                 break
 
         return host
 
-    def get_host_common_name(self, host_name):
+    def get_host_common_name(self, host_name: str):
         """
         get common name of host
         :param host_name:
@@ -247,7 +247,7 @@ class setup_dl:
 
         return host.common_name
 
-    def download_host(self, host_name):
+    def download_host(self, host_name: str):
         host = self.find_host(host_name)
         if not host:
             logging.info(f"{host_name} not found in host library.")
