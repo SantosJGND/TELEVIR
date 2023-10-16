@@ -100,7 +100,7 @@ def main():
         TECH = "nanopore"
         TAXDUMP = "/opt/taxdump.tar.gz"
         ORGANISM = "viral"
-        INSTALL_CONFIG = "full"
+        INSTALL_CONFIG = "docker"
         INSTALL_TYPE = "docker"
 
         INSTALL_PARAMS["HOME"] = HOME
@@ -146,11 +146,16 @@ def main():
     from install_scripts.modules.env_install import env_install
     from install_scripts.modules.utility_manager import Utility_Repository
 
+    ####
+    utility_repository = Utility_Repository(
+        db_path=HOME, install_type=INSTALL_TYPE, file_prefix="utility"
+    )
+
     metagen_prep = main_setup(
         env_install,
         setup_dl,
         setup_install,
-        Utility_Repository,
+        utility_repository,
         ENVS_PARAMS=ENVS_PARAMS,
         INSTALL_PARAMS=INSTALL_PARAMS,
         pdir=CWD + "/install_scripts/",

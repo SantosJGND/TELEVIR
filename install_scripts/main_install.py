@@ -282,7 +282,7 @@ class main_setup:
     installed_software = []
     installed_databases = []
 
-    wdir: setup_install
+    wdir: setup_dl
     utilities: Utility_Repository
     env_install_class: env_install
     setup_install_class: setup_install
@@ -290,14 +290,13 @@ class main_setup:
     def __init__(
         self,
         env_install,
-        setup_dl,
-        setup_install,
-        repository,
+        dl_engine: setup_dl,
+        install_engine: setup_install,
+        repository: Utility_Repository,
         pdir="",
         ENVS_PARAMS="",
         INSTALL_PARAMS="",
         install_config="full",
-        install_type="docker",
     ) -> None:
         if not ENVS_PARAMS:
             from install_source import ENVS_PARAMS
@@ -306,9 +305,9 @@ class main_setup:
 
         self.ENVS_PARAMS = ENVS_PARAMS
         self.INSTALL_PARAMS = INSTALL_PARAMS
-        self.wdir = setup_dl(INSTALL_PARAMS)
+        self.wdir = dl_engine(INSTALL_PARAMS)
         self.env_install_class = env_install(ENVS_PARAMS)
-        self.setup_install_class = setup_install
+        self.setup_install_class = install_engine
         self.install_config = install_config
 
         if not pdir:
@@ -318,7 +317,7 @@ class main_setup:
         self.pdir = pdir
 
         self.setup_config()
-        self.utilities = repository(db_path=self.wdir.home, install_type=install_type)
+        self.utilities = repository
 
     @staticmethod
     def software_install_string(software_name: str):
@@ -1142,6 +1141,8 @@ if __name__ == "__main__":
         datefmt="%d-%b-%y %H:%M:%S",
         level=logging.INFO,
     )
+
+    utility_repo = Utility_Repository(db_path="./", install_type="local")
 
     metagen_prep = main_setup(env_install, setup_dl, setup_install, Utility_Repository)
     metagen_prep.user_input()

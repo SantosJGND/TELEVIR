@@ -55,9 +55,11 @@ class Utility_Repository:
 
     tables: list = ["software", "database"]
 
-    def __init__(self, db_path="", install_type="local") -> None:
+    def __init__(self, db_path="", install_type="local", file_prefix="utility") -> None:
         self.db_path = db_path
         self.metadata = MetaData()
+        self.engine_name = f"{file_prefix}_f{install_type}.db"
+        self.engine_filepath = os.path.join(*self.db_path.split("/"), self.engine_name)
 
         self.setup_engine(install_type)
 
@@ -71,30 +73,22 @@ class Utility_Repository:
         self.metadata.drop_all(self.engine)
 
     def setup_engine(self, install_type):
-        if install_type == "local":
-            self.setup_engine_local()
-        elif install_type == "docker":
-            self.setup_engine_docker()
+        """
+        setup the engine
+        """
+        self.engine = create_engine(f"{self.dbtype_local}:////" + self.engine_filepath)
+        # if install_type == "local":
+        #    self.setup_engine_local()
+        # elif install_type == "docker":
+        #    self.setup_engine_docker()
 
         self.clear_existing_repo()
-
-    def setup_engine_local(self):
-        self.engine = create_engine(
-            f"{self.dbtype_local}:////"
-            + os.path.join(*self.db_path.split("/"), "utility_local.db")
-        )
 
     def setup_engine_postgres(self):
         from decouple import config
 
         self.engine = create_engine(
             f"postgresql+psycopg2://{config('DB_USER')}:{config('DB_PASSWORD')}@{config('DB_HOST')}:{config('DB_PORT')}/{config('DB_NAME')}"
-        )
-
-    def setup_engine_docker(self):
-        self.engine = create_engine(
-            f"{self.dbtype_local}:////"
-            + os.path.join(*self.db_path.split("/"), "utility_docker.db")
         )
 
     def create_software_table(self):
