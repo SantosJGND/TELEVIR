@@ -114,19 +114,7 @@ class main_deploy_prep:
         self.paramf = paramf
         self.docker_home = docker_home
 
-    def read_available_software(self):
-        """
-        read available software from params file.
-        """
-        import sys
-
-        sys.path.append(self.pdir)
-        from utility_manager import installed_utilities
-
-        self.software = soft
-
     def dir_prep(self):
-
         if not os.path.isdir(self.dir):
             os.makedirs(self.dir, exist_ok=True)
 
@@ -142,12 +130,7 @@ class main_deploy_prep:
         self.paramf = os.path.join(self.dir + "constants") + "/constants.py"
         env_file = self.dir + ".env_model"
 
-        self.mainsh = self.pdir + f"main/main_{self.tech}.sh"
         new_params = self.app_dir + "televir_deploy_parameters.py"
-        test_params_ont_json = os.path.join(self.dir, "product") + "/ont_params.json"
-        test_params_illumina_json = (
-            os.path.join(self.dir, "product") + "/illumina_params.json"
-        )
 
         mods_dict = {
             "$ENVDIR": self.envd,
@@ -177,7 +160,6 @@ class main_deploy_prep:
 
 
 if __name__ == "__main__":
-
     deploy_prep = main_deploy_prep()
     deploy_prep.user_input()
     deploy_prep.dir_prep()

@@ -220,7 +220,7 @@ def main():
             docker_home=HOME,
         )
 
-        deploy_prep.dir_prep()
+        # deploy_prep.dir_prep()
         deploy_prep.export(DATABASE)
 
 

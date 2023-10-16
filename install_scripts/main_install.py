@@ -1108,7 +1108,7 @@ if __name__ == "__main__":
         INSTALL_PARAMS, taxdump="", test=False, organism="viral"
     )
 
-    metagen_prep = main_setup(env_install, setup_dl, setup_install, Utility_Repository)
+    metagen_prep = main_setup(env_manager, dl_manager, install_manager, utility_repo)
     metagen_prep.user_input()
 
     metagen_prep.setup_envs_conda()
