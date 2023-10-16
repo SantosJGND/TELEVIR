@@ -12,11 +12,11 @@ class Televir_Layout_docker:
         "hg38",
         "sus_scrofa",
         "aedes_albopictus",
-        "gallus_gallus",
-        "oncorhynchus_mykiss",
-        "salmo_salar",
-        "bos_taurus",
-        "neogale_vison",
+        # "gallus_gallus",
+        # "oncorhynchus_mykiss",
+        # "salmo_salar",
+        # "bos_taurus",
+        # "neogale_vison",
     ]
 
     # host mappers
