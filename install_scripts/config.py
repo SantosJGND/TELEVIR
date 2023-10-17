@@ -68,11 +68,16 @@ class Televir_Layout_full:
         "hg38",
         "sus_scrofa",
         "aedes_albopictus",
-        # "gallus_gallus",
-        # "oncorhynchus_mykiss",
-        # "salmo_salar",
-        # "bos_taurus",
-        # "neogale_vison",
+        "gallus_gallus",
+        "oncorhynchus_mykiss",
+        "salmo_salar",
+        "bos_taurus",
+        "neogale_vison",
+        "marmota_marmota",
+        "culex_pipiens",
+        "anas_platyrhynchos",
+        "pipistrellus_kuhlii",
+        "phlebotomus_papatasi",
     ]
 
     # host mappers
