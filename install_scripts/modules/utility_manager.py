@@ -99,13 +99,13 @@ class Utility_Repository:
             Column("path", String),
             Column("database", String),
             Column("installed", Boolean),
+            Column("tag", String, default="undefined"),
             Column("env_path", String),
             Column("date", String),
-            Column("tag", String, default="undefined"),
         )
 
         self.engine_execute(
-            "CREATE TABLE IF NOT EXISTS software (name TEXT, path TEXT, database TEXT, installed BOOLEAN, env_path TEXT, date TEXT)"
+            "CREATE TABLE IF NOT EXISTS software (name TEXT, path TEXT, database TEXT, installed BOOLEAN, tag TEXT, env_path TEXT, date TEXT)"
         )
 
     def create_database_table(self):
@@ -228,7 +228,7 @@ class Utility_Repository:
         # print("adding software")
 
         self.engine_execute(
-            f"INSERT INTO software (name, path, database, installed, env_path, date) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.env_path}', '{item.date}')"
+            f"INSERT INTO software (name, path, database, installed, tag, env_path, date) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.tag}', '{item.env_path}', '{item.date}')"
         )
 
     @abstractmethod
