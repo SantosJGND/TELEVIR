@@ -10,13 +10,18 @@ class Televir_Layout_docker:
     # hosts ### CHECK HOST LIBRARY FILE FOR AVAILABLE HOSTS ###
     HOSTS_TO_INSTALL = [
         "hg38",
-        # "sus_scrofa",
-        # "aedes_albopictus",
-        # "gallus_gallus",
-        # "oncorhynchus_mykiss",
-        # "salmo_salar",
-        # "bos_taurus",
-        # "neogale_vison",
+        "sus_scrofa",
+        "aedes_albopictus",
+        "gallus_gallus",
+        "oncorhynchus_mykiss",
+        "salmo_salar",
+        "bos_taurus",
+        "neogale_vison",
+        "marmota_marmota",
+        "culex_pipiens",
+        "anas_platyrhynchos",
+        "pipistrellus_kuhlii",
+        "phlebotomus_papatasi",
     ]
 
     # host mappers
