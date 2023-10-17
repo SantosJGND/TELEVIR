@@ -18,6 +18,14 @@ from fastq_filter import fastq_records_to_file, file_to_fastq_records
 from numpy import int0
 from xopen import xopen
 
+from decouple import config
+
+BGZIP_BIN = "bgzip"
+try:
+    BGZIP_BIN = config("BGZIP_BIN")
+except:
+    pass
+
 
 def grep_sequence_identifiers(input, output):
     """
@@ -155,7 +163,7 @@ class setup_dl:
         subprocess.run(["gunzip", filename])
 
         logging.info(f"bgzipping {filename}")
-        subprocess.run(["bgzip", basename])
+        subprocess.run([BGZIP_BIN, basename])
 
         check = open(basename + ".bgzipped", "w").close()
 
@@ -254,7 +262,7 @@ class setup_dl:
             return False
 
         try:
-            ftp_download= self.ftp_host_file(
+            ftp_download = self.ftp_host_file(
                 host.remote_host,
                 host.remote_path,
                 host.remote_filename,
@@ -423,7 +431,7 @@ class setup_dl:
                 entrez_fetch_sequence(accid, references_file)
 
         if os.path.isfile(references_file) and os.path.getsize(references_file):
-            os.system(f"bgzip {references_file}")
+            os.system(f"{BGZIP_BIN} {references_file}")
             self.fastas["nuc"]["requests"] = [references_file]
             logging.info("request sequences prepped.")
             return True
@@ -577,7 +585,7 @@ class setup_dl:
                         os.remove(fl)
 
         os.system("rm {}".format(fls))
-        subprocess.run(["bgzip", self.seqdir + outf])
+        subprocess.run([BGZIP_BIN, self.seqdir + outf])
 
     def uniprot_dl(self, vs="90"):
         """
@@ -646,7 +654,7 @@ class setup_dl:
                 subprocess.run(["unxz", fl])
                 fl, _ = os.path.splitext(fl)
                 print("fl", fl)
-                subprocess.run(["bgzip", fl])
+                subprocess.run([BGZIP_BIN, fl])
                 fl = fl + ".gz"
 
         else:
@@ -1423,7 +1431,7 @@ class setup_install(setup_dl):
             logging.info(f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
             krk2_fasta = odir + dbname + "/library/" + dbname + "/library.fna.gz"
             if os.path.isfile(os.path.splitext(krk2_fasta)[0]):
-                os.system("bgzip " + os.path.splitext(krk2_fasta)[0])
+                os.system(f"{BGZIP_BIN} " + os.path.splitext(krk2_fasta)[0])
 
             self.dbs[id] = {
                 "dir": odir,
@@ -1501,7 +1509,9 @@ class setup_install(setup_dl):
 
             subprocess.call(" ".join(build_command), shell=True)
             untax_get(self.taxdump, odir, dbname)
-            os.system("bgzip " + odir + dbname + "/library/" + dbname + "/library.fna")
+            os.system(
+                f"{BGZIP_BIN} " + odir + dbname + "/library/" + dbname + "/library.fna"
+            )
 
             if os.path.isfile(odir + dbname + "/taxo.k2d"):
                 logging.info(
@@ -1853,7 +1863,7 @@ class setup_install(setup_dl):
                 subprocess.run(commands)
             finally:
                 if gzipped:
-                    subprocess.run(["bgzip", reference])
+                    subprocess.run([BGZIP_BIN, reference])
                     reference = reference + ".gz"
 
             self.dbs[id] = {"dir": sdir, "dbname": dbname, "db": db}
@@ -1910,7 +1920,7 @@ class setup_install(setup_dl):
                 subprocess.run(commands)
             finally:
                 if gzipped:
-                    subprocess.run(["bgzip", reference])
+                    subprocess.run([BGZIP_BIN, reference])
                     reference = reference + ".gz"
 
             self.dbs[id] = {"dir": odir, "dbname": dbname, "db": db}
@@ -1987,7 +1997,7 @@ class setup_install(setup_dl):
             return False
         finally:
             if gzipped:
-                subprocess.run(["bgzip", reference])
+                subprocess.run([BGZIP_BIN, reference])
                 reference = reference + ".gz"
 
     def virsorter_install(
@@ -2128,7 +2138,7 @@ class setup_install(setup_dl):
 
             finally:
                 if gzipped:
-                    subprocess.run(["bgzip", reference])
+                    subprocess.run([BGZIP_BIN, reference])
                     reference = reference + ".gz"
 
             self.dbs[id] = {"dir": subdir, "dbname": dbname, "db": fidx}
@@ -2182,7 +2192,7 @@ class setup_install(setup_dl):
 
             finally:
                 if gzipped:
-                    subprocess.run(["bgzip", reference])
+                    subprocess.run([BGZIP_BIN, reference])
                     reference = reference + ".gz"
 
             self.dbs[id] = {"dir": odir, "dbname": dbname, "db": sdir}

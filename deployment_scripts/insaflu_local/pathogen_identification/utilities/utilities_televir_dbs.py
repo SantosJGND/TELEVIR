@@ -59,7 +59,6 @@ class Utility_Repository:
         )
 
     def setup_engine_docker(self):
-
         self.engine = create_engine(
             f"{self.dbtype_local}:////"
             + os.path.join(*self.db_path.split("/"), "utility_docker.db")
@@ -73,7 +72,6 @@ class Utility_Repository:
         )
 
     def create_software_table(self):
-
         self.software = Table(
             "software",
             self.metadata,
@@ -122,8 +120,7 @@ class Utility_Repository:
         Get a list of tables
         """
 
-        find = self.engine.execute(
-            "SELECT name FROM sqlite_master WHERE type='table'")
+        find = self.engine.execute("SELECT name FROM sqlite_master WHERE type='table'")
         find = [i[0] for i in find]
         return find
 
