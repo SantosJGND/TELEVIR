@@ -113,6 +113,7 @@ class main_deploy_prep:
         self.metad = metad
         self.paramf = paramf
         self.docker_home = docker_home
+        self.app_dir = os.path.join(self.dir, "pathogen_identification") + "/"
 
     def dir_prep(self):
         if not os.path.isdir(self.dir):
@@ -122,7 +123,6 @@ class main_deploy_prep:
         print("dir: ", self.dir)
         copy_tree(self.django_dir, self.dir)
 
-        self.app_dir = os.path.join(self.dir, "pathogen_identification") + "/"
         # os.makedirs(self.dir)
 
     def export(self, database):
