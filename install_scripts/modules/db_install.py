@@ -217,11 +217,19 @@ class setup_dl:
                 return False
             else:
                 logging.info(f"{filename} not found. downloading...")
-                subprocess.run(
-                    ["wget", f"ftp://{host}/{source}{filename}", "-P", self.seqdir]
-                )
-                self.fastas["host"][fname] = self.seqdir + filename
-                return True
+                try:
+                    subprocess.run(
+                        ["wget", f"ftp://{host}/{source}{filename}", "-P", self.seqdir]
+                    )
+                except subprocess.CalledProcessError:
+                    logging.info(f"{filename} not found.")
+                    return False
+
+                if os.path.isfile(self.seqdir + filename):
+                    self.fastas["host"][fname] = self.seqdir + filename
+                    return True
+                else:
+                    return False
 
         else:
             self.fastas["host"][fname] = self.seqdir + filename

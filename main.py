@@ -110,7 +110,6 @@ def main():
         ENVS_PARAMS["SOURCE"] = SOURCE
         ENVS_PARAMS["ENVSDIR"] = ENVDIR
         ENVS_PARAMS["YMLDIR"] = CWD + "/install_scripts/yaml/"
-        ENV = CWD + ".venv"
 
     else:
         try:
@@ -127,7 +126,6 @@ def main():
         TAXDUMP = mainconf.TAXDUMP
         TECH = mainconf.TECH
         ORGANISM = mainconf.ORGANISM
-        ENV = mainconf.ENV
         INSTALL_CONFIG = mainconf.INSTALL_CONFIG
         INSTALL_TYPE = "local"
         DATABASE = mainconf.DATABASE

@@ -344,44 +344,7 @@ class main_setup:
                     )
                 )
 
-        # if self.layout.install_hg38:
-        #    success_hg38 = self.wdir.download_hg38()
-        #    if success_hg38:
-        #        self.installed_databases.append(self.database_install_string("hg38"))
-        #        self.utilities.add_database(
-        #            self.utilities.database_item(
-        #                "hg38",
-        #                self.wdir.fastas["host"]["hg38"],
-        #                True,
-        #            )
-        #        )
 
-        # if self.layout.install_grc38:
-        #    success_hg38 = self.wdir.download_grc38()
-        #    if success_hg38:
-        #        self.installed_databases.append(self.database_install_string("grc38"))
-        #        self.utilities.add_database(
-        #            self.utilities.database_item(
-        #                "grc38",
-        #                self.wdir.fastas["host"]["grc38"],
-        #                True,
-        #            )
-        #        )
-
-        # if self.layout.install_sus_scrofa:
-        #    success_sus_scrofa = self.wdir.download_sus_scrofa()
-        #
-        #    if success_sus_scrofa:
-        #        self.installed_databases.append(
-        #            self.database_install_string("sus_scrofa")
-        #        )
-        #        self.utilities.add_database(
-        #            self.utilities.database_item(
-        #                "sus_scrofa",
-        #                self.wdir.fastas["host"]["sus_scrofa"],
-        #                True,
-        #            )
-        #        )
 
         if self.layout.install_request_sequences:
             request_success = self.wdir.install_requests()
