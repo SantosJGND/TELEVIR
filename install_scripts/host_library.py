@@ -36,7 +36,7 @@ class CulexPipiens(Host):
 class AnasPlatyrhynchos(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "/genomes/refseq/vertebrate_other/Anas_platyrhynchos/latest_assembly_versions/GCF_015476345.1_ZJU1.0"
+        self.remote_path = "/genomes/refseq/vertebrate_other/Anas_platyrhynchos/latest_assembly_versions/GCF_015476345.1_ZJU1.0/"
         self.remote_filename = "GCF_015476345.1_ZJU1.0_genomic.fna.gz"
         self.host_name = "anas_platyrhynchos"
         self.common_name = "duck"
@@ -45,8 +45,8 @@ class AnasPlatyrhynchos(Host):
 class PipistrellusKuhlii(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "/genomes/refseq/invertebrate/Phlebotomus_papatasi/latest_assembly_versions/GCF_024763615.1_Ppap_2.1"
-        self.remote_filename = "GCF_024763615.1_Ppap_2.1_genomic.fna.gz"
+        self.remote_path = "/genomes/refseq/vertebrate_mammalian/Pipistrellus_kuhlii/latest_assembly_versions/GCF_014108245.1_mPipKuh1.p/"
+        self.remote_filename = "GCF_014108245.1_mPipKuh1.p_genomic.fna.gz"
         self.host_name = "pipistrellus_kuhlii"
         self.common_name = "bat"
 
@@ -54,8 +54,8 @@ class PipistrellusKuhlii(Host):
 class PhlebotomusPapatasi(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "/genomes/refseq/invertebrate/Phlebotomus_papatasi/latest_assembly_versions/GCF_000439695.1_Ppap_1.0/"
-        self.remote_filename = "GCF_000439695.1_Ppap_1.0_genomic.fna.gz"
+        self.remote_path = "/genomes/refseq/invertebrate/Phlebotomus_papatasi/latest_assembly_versions/GCF_024763615.1_Ppap_2.1/"
+        self.remote_filename = "GCF_024763615.1_Ppap_2.1_genomic.fna.gz"
         self.host_name = "phlebotomus_papatasi"
         self.common_name = "sandfly"
 
