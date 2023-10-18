@@ -101,10 +101,8 @@ class OncorhynchusMykiss(Host):
 class SalmoSalar(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "genomes/refseq/vertebrate_other/Acipenser_ruthenus/latest_assembly_versions/GCF_902713425.1_fAciRut3.2_maternal_haplotype/"
-        self.remote_filename = (
-            "GCF_902713425.1_fAciRut3.2_maternal_haplotype_genomic.fna.gz"
-        )
+        self.remote_path = "/genomes/refseq/vertebrate_other/Salmo_salar/latest_assembly_versions/GCF_905237065.1_Ssal_v3.1/"
+        self.remote_filename = "GCF_905237065.1_Ssal_v3.1_genomic.fna.gz "
         self.host_name = "salmo_salar"
         self.common_name = "atlantic_salmon"
 
