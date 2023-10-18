@@ -113,7 +113,7 @@ class BosTaurus(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
         self.remote_path = "/genomes/refseq/vertebrate_mammalian/Bos_taurus/latest_assembly_versions/GCF_002263795.3_ARS-UCD2.0/"
-        self.remote_filename = "GCF_002263795.3_ARS-UCD2.0_cds_from_genomic.fna.gz"
+        self.remote_filename = "GCF_002263795.3_ARS-UCD2.0_genomic.fna.gz"
         self.host_name = "bos_taurus"
         self.common_name = "cow"
 
@@ -122,6 +122,6 @@ class NeogaleVison(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
         self.remote_path = "genomes/refseq/vertebrate_mammalian/Neogale_vison/latest_assembly_versions/GCF_020171115.1_ASM_NN_V1/"
-        self.remote_filename = "GCF_020171115.1_ASM_NN_V1_cds_from_genomic.fna.gz"
+        self.remote_filename = "GCF_020171115.1_ASM_NN_V1_genomic.fna.gz"
         self.host_name = "neogale_vison"
         self.common_name = "mink"
