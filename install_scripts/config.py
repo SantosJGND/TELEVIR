@@ -22,6 +22,9 @@ class Televir_Layout_docker:
         "anas_platyrhynchos",
         "pipistrellus_kuhlii",
         "phlebotomus_papatasi",
+        "felis_catus",
+        "canis_lupus_familiaris",
+        "cyprinus_carpio",
     ]
 
     # host mappers
@@ -78,8 +81,10 @@ class Televir_Layout_full:
         "anas_platyrhynchos",
         "pipistrellus_kuhlii",
         "phlebotomus_papatasi",
+        "felis_catus",
+        "canis_lupus_familiaris",
+        "cyprinus_carpio",
     ]
-
     # host mappers
     install_bowtie2_remap = True
     install_bowtie2_depletion = True
@@ -130,6 +135,14 @@ class Televir_Layout_minimal:
         "salmo_salar",
         "bos_taurus",
         "neogale_vison",
+        "marmota_marmota",
+        "culex_pipiens",
+        "anas_platyrhynchos",
+        "pipistrellus_kuhlii",
+        "phlebotomus_papatasi",
+        "felis_catus",
+        "canis_lupus_familiaris",
+        "cyprinus_carpio",
     ]
 
     # host mappers
