@@ -145,18 +145,18 @@ class main_deploy_prep:
             if repl[-1] != "/":
                 repl += "/"
             os.system(f"sed -i 's#{tag}#{repl}#g' {self.paramf}")
-            os.system(f"sed -i 's#{tag}#{repl}#g' {env_file}")
+            # os.system(f"sed -i 's#{tag}#{repl}#g' {env_file}")
             os.system(f"sed -i 's#{tag}#{repl}#g' {new_params}")
             # os.system(f"sed -i 's#{tag}#{repl}#g' {test_params_ont_json}")
             # os.system(f"sed -i 's#{tag}#{repl}#g' {test_params_illumina_json}")
 
-        os.system(f"sed -i 's#$DATABASE#{database}#g' {env_file}")
+        # os.system(f"sed -i 's#$DATABASE#{database}#g' {env_file}")
         os.system(f"sed -i 's#$SOURCE#{self.source}#g' {new_params}")
         os.system(f"sed -i 's#$SOURCE#{self.source}#g' {self.paramf}")
 
         os.system(f"cp {self.pdir}metadata/taxid2desc.tsv {self.metad}")
         os.system(f"cp {self.pdir}README.md {self.fmain}")
-        shutil.copy(env_file, self.dir + ".env")
+        # shutil.copy(env_file, self.dir + ".env")
 
 
 if __name__ == "__main__":
