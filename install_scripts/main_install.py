@@ -344,8 +344,6 @@ class main_setup:
                     )
                 )
 
-
-
         if self.layout.install_request_sequences:
             request_success = self.wdir.install_requests()
             if request_success:
@@ -876,9 +874,9 @@ class main_setup:
                     taxdump=self.taxdump,
                 )
 
-                self.wdir.fastas["nuc"] = process_nuc_fasta_dict(
-                    self.wdir.fastas["nuc"], max_file_size=4000000000
-                )
+                # self.wdir.fastas["nuc"] = process_nuc_fasta_dict(
+                #    self.wdir.fastas["nuc"], max_file_size=4000000000
+                # )
 
                 self.dl_metadata_nuc()
 
