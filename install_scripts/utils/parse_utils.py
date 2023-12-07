@@ -74,6 +74,7 @@ def predict_files_split(
 def check_proceed(filepath: str, file_template: str, max_file_size: int = 1000000000):
     """
     check if needed to continue"""
+    print(f"checking if {filepath} needs to be split")
     files_predict = predict_files_split(
         filepath, max_file_size=max_file_size, file_template=file_template
     )
@@ -82,8 +83,10 @@ def check_proceed(filepath: str, file_template: str, max_file_size: int = 100000
         (os.path.exists(file) and os.path.getsize(file) > 100) for file in files_predict
     ]
     if all(files_exist):
+        print(f"all files exist for {filepath}")
         return False
     else:
+        print(f"files missing for {filepath}")
         return True
 
 
