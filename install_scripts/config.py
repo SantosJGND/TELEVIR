@@ -59,7 +59,7 @@ class Televir_Layout_docker:
 
 class Televir_Layout_full:
     # databases. chose at least one.
-    install_refseq_prot = False
+    install_refseq_prot = True
     install_refseq_gen = True
     install_swissprot = False
     install_rvdb = False
