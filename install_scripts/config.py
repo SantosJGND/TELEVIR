@@ -40,7 +40,7 @@ class Televir_Layout_docker:
     install_krakenuniq = True
     install_krakenuniq_fungi = False
     install_kaiju = True
-    install_diamond = False
+    install_diamond = True
     install_minimap2 = False
     install_fastviromeexplorer = False
     install_clark = False
