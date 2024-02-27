@@ -1,6 +1,6 @@
 class Televir_Layout_docker:
     # databases. chose at least one.
-    install_refseq_prot = False
+    install_refseq_prot = True
     install_refseq_gen = True
     install_swissprot = False
     install_rvdb = False
@@ -40,7 +40,7 @@ class Televir_Layout_docker:
     install_krakenuniq = True
     install_krakenuniq_fungi = False
     install_kaiju = True
-    install_diamond = False
+    install_diamond = True
     install_minimap2 = False
     install_fastviromeexplorer = False
     install_clark = False
@@ -59,7 +59,7 @@ class Televir_Layout_docker:
 
 class Televir_Layout_full:
     # databases. chose at least one.
-    install_refseq_prot = False
+    install_refseq_prot = True
     install_refseq_gen = True
     install_swissprot = False
     install_rvdb = False
