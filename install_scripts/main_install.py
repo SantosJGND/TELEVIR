@@ -344,8 +344,6 @@ class main_setup:
                     )
                 )
 
-
-
         if self.layout.install_request_sequences:
             request_success = self.wdir.install_requests()
             if request_success:
