@@ -689,6 +689,7 @@ class main_setup:
         for fname, fpath in prepdl.fastas["prot"].items():
             if self.layout.install_diamond:
                 install_success = sofprep.diamond_install(dbname=fname, db=fpath)
+                print("INSTALL SUCCESS", install_success)
 
                 if install_success:
                     self.installed_software.append(
