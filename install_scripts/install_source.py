@@ -34,6 +34,7 @@ INSTALL_PARAMS = {
         "bowtie2": "remap/remap",
         "prinseq": "preprocess/prinseq",
         "entrez_direct": "entrez_direct",
+        "create_report": "Pyenv/igv_reports",
     },
     "BINDIR": {"deSAMBA": "classm_lc/deSAMBA"},
     "REQUEST_REFERENCES": {
@@ -64,6 +65,7 @@ ENVS_PARAMS = {
         "remap/remap": "remap.yml",
         "remap/Renv": "Renv.yml",
         "Pyenv/pyenv": "pyenv.yml",
+        "Pyenv/igv_reports": "igv_reports.yml",
         "classm_lc/venvlc": "venvlc.txt",
         "preprocess/prinseq": "prinseq.yml",
         "entrez_direct": "entrez_direct.yml",
