@@ -146,7 +146,7 @@ def main():
 
     ####
     utility_repository = Utility_Repository(
-        db_path=HOME, install_type=INSTALL_TYPE, file_prefix="utility_test"
+        db_path=HOME, install_type=INSTALL_TYPE, file_prefix="utility"
     )
 
     env_manager = env_install(ENVS_PARAMS)
