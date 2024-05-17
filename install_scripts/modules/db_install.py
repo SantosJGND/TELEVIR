@@ -13,7 +13,7 @@ from threading import Thread
 import pandas as pd
 from install_scripts.host_library import Host
 
-from fastq_filter import fastq_records_to_file, file_to_fastq_records
+from fastq_filter import file_to_fastq_records
 
 from numpy import int0
 from xopen import xopen
