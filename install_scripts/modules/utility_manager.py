@@ -192,8 +192,6 @@ class Utility_Repository:
             os.makedirs(directory, exist_ok=True)
 
         table_rows = self.engine.execute(f"SELECT * FROM {table_name}")
-        print("### TABLE ROWS ###")
-        print(table_rows)
 
         with open(os.path.join(directory, f"{table_name}.tsv"), "w") as f:
             for row in table_rows:

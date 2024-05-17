@@ -180,7 +180,7 @@ def main():
         organism=ORGANISM,
         test=args.test,
     )
-    print(args.setup_conda)
+
     if args.setup_conda:
         metagen_prep.setup_envs_conda()
 

@@ -99,8 +99,6 @@ class metaclass_run:
             CS.PIPELINE_NAME_remapping: False,
         }
 
-        print(self.actions)
-
     def import_params(self):
         if self.technology == "illumina":
             self.params_conf = Params_Illumina
@@ -669,9 +667,9 @@ class meta_orchestra:
         child.actions[CS.PIPELINE_NAME_assembly] = False
         child.actions["SIFT"] = self.base_params.ACTIONS["PHAGE_DEPL"]
         child.actions["VIRSORT"] = self.base_params.ACTIONS["VIRSORT"]
-        child.actions[
-            CS.PIPELINE_NAME_contig_classification
-        ] = self.base_params.ACTIONS[CS.PIPELINE_NAME_contig_classification]
+        child.actions[CS.PIPELINE_NAME_contig_classification] = (
+            self.base_params.ACTIONS[CS.PIPELINE_NAME_contig_classification]
+        )
         child.actions[CS.PIPELINE_NAME_read_classification] = self.base_params.ACTIONS[
             CS.PIPELINE_NAME_read_classification
         ]
@@ -905,9 +903,9 @@ class meta_orchestra:
             technology=self.technology,
         )
         qcrun.actions = {x: False for x in qcrun.actions.keys()}
-        qcrun.actions[
-            CS.PIPELINE_NAME_read_quality_analysis
-        ] = self.base_params.ACTIONS[CS.PIPELINE_NAME_read_quality_analysis]
+        qcrun.actions[CS.PIPELINE_NAME_read_quality_analysis] = (
+            self.base_params.ACTIONS[CS.PIPELINE_NAME_read_quality_analysis]
+        )
 
         qcrun.config_get(conf)
 
