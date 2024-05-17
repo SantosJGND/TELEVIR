@@ -191,7 +191,7 @@ class Utility_Repository:
         if not os.path.exists(directory):
             os.makedirs(directory, exist_ok=True)
 
-        table_rows = self.engine.execute(f"SELECT * FROM {table_name}")
+        table_rows = self.engine_execute(f"SELECT * FROM {table_name}")
 
         with open(os.path.join(directory, f"{table_name}.tsv"), "w") as f:
             for row in table_rows:
