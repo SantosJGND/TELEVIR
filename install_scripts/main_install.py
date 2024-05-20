@@ -135,7 +135,7 @@ class main_setup:
         return f"{database_name} installed on {date}"
 
     def setup_config(self):
-        print(self.install_config)
+
         if self.install_config == "full":
             try:
                 from install_scripts.config import Televir_Layout_full

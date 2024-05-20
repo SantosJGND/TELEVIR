@@ -2,22 +2,17 @@
 
 import datetime
 import os
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
-import sqlalchemy
 from sqlalchemy import (
     Boolean,
     Column,
-    ForeignKey,
-    Integer,
     MetaData,
     String,
     Table,
     create_engine,
     text,
 )
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import mapper, sessionmaker
 
 
 class SoftwareItem:
@@ -76,6 +71,10 @@ class Utility_Repository:
         """
         setup the engine
         """
+
+        if os.path.exists(self.engine_filepath):
+            os.remove(self.engine_filepath)
+
         self.engine = create_engine(f"{self.dbtype_local}:////" + self.engine_filepath)
         # if install_type == "local":
         #    self.setup_engine_local()

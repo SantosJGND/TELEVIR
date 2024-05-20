@@ -172,9 +172,7 @@ class setup_dl:
         index fasta files.
         :return:
         """
-        print(self.fastas.items())
         for k, v in self.fastas.items():
-            print(k, v)
             for kk, vv in v.items():
                 self.bgzip_file(vv)
 
@@ -661,7 +659,7 @@ class setup_dl:
                 fl = self.seqdir + os.path.basename(fl)
                 subprocess.run(["unxz", fl])
                 fl, _ = os.path.splitext(fl)
-                print("fl", fl)
+
                 subprocess.run([BGZIP_BIN, fl])
                 fl = fl + ".gz"
 
@@ -1163,7 +1161,7 @@ class setup_install(setup_dl):
 
             # create symlink to new index for files that use old index
             files_in_directory = os.listdir(odir + dbname)
-            print(files_in_directory)
+
             for file in files_in_directory:
                 if file.startswith("index"):
                     new_filename = file.replace("index", dbname + "_index")
@@ -1438,6 +1436,7 @@ class setup_install(setup_dl):
         if os.path.isfile(odir + dbname + "/taxo.k2d"):
             logging.info(f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
             krk2_fasta = odir + dbname + "/library/" + dbname + "/library.fna.gz"
+
             if os.path.isfile(os.path.splitext(krk2_fasta)[0]):
                 os.system(f"{BGZIP_BIN} " + os.path.splitext(krk2_fasta)[0])
 
@@ -1447,6 +1446,7 @@ class setup_install(setup_dl):
                 "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
                 "db": odir + dbname,
             }
+            
             return True
         else:
             if self.test:
@@ -1921,8 +1921,6 @@ class setup_install(setup_dl):
                 reference,
                 db,
             ]
-
-            print(" ".join(commands))
 
             try:
                 subprocess.run(commands)
