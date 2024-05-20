@@ -1446,7 +1446,7 @@ class setup_install(setup_dl):
                 "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
                 "db": odir + dbname,
             }
-            
+
             return True
         else:
             if self.test:
@@ -1730,8 +1730,9 @@ class setup_install(setup_dl):
                 seqid[["GTDB", "description"]] = seqid["merge"].apply(
                     lambda x: pd.Series(split_merge(x))
                 )
-
-                seqid = seqid.drop("merge")
+                print(seqid.head())
+                if "merge" in seqid.columns:
+                    seqid = seqid.drop("merge")
                 seqid.to_csv(
                     f"{odir + dbname}/seqid2taxid.map.orig",
                     sep="\t",
