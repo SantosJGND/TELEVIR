@@ -225,6 +225,7 @@ class Utility_Repository:
                 f"INSERT INTO software (name, path, database, installed, tag, env_path, date) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.tag}', '{item.env_path}', '{item.date}')"
             )
         except Exception as e:
+            print(e)
             print(
                 "error adding software: delete currently existing utility_docker.db and re-run the script"
             )
