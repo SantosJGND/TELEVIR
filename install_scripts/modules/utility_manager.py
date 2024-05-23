@@ -225,6 +225,9 @@ class Utility_Repository:
             self.engine_execute(
                 f"INSERT INTO software (name, path, database, installed, tag, env_path, date) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.tag}', '{item.env_path}', '{item.date}')"
             )
+            table_rows = self.engine_execute(f"SELECT * FROM software")
+            print("software added")
+            print(table_rows.fetchall())
         except Exception as e:
             print(e)
             print(
