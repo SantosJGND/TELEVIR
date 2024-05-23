@@ -148,6 +148,7 @@ class Utility_Repository:
 
     def engine_execute(self, string: str):
         sql = text(string)
+
         with self.engine.connect() as conn:
             result = conn.execute(sql)
 
@@ -222,9 +223,11 @@ class Utility_Repository:
         # print("adding software")
 
         try:
-            self.engine_execute(
+            result = self.engine_execute(
                 f"INSERT INTO software (name, path, database, installed, tag, env_path, date) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.tag}', '{item.env_path}', '{item.date}')"
             )
+            print(result)
+            print([x for x in result])
             table_rows = self.engine_execute(f"SELECT * FROM software")
             print("software added")
             print(table_rows.fetchall())
