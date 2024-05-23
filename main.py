@@ -88,7 +88,7 @@ def main():
         args.envs = True
         args.soft = True
         args.seqdl = True
-        args.deploy = True
+        # args.deploy = True
 
     if args.docker:
         SOURCE = "/opt/conda/etc/profile.d/conda.sh"

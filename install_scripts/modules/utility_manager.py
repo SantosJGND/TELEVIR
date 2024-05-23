@@ -72,8 +72,8 @@ class Utility_Repository:
         setup the engine
         """
 
-        if os.path.exists(self.engine_filepath):
-            os.remove(self.engine_filepath)
+        # if os.path.exists(self.engine_filepath):
+        #    os.remove(self.engine_filepath)
 
         self.engine = create_engine(f"{self.dbtype_local}:////" + self.engine_filepath)
         # if install_type == "local":
