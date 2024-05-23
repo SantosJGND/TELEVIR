@@ -1668,7 +1668,8 @@ class setup_install(setup_dl):
             print(seqid.head())
             print(seqid.columns)
             if "merge" in seqid.columns:
-                seqid = seqid.drop("merge")
+                new_columns = [x for x in seqid.columns if x != "merge"]
+                seqid = seqid[new_columns]
 
             seqid.to_csv(
                 out_map_orig,
