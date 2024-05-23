@@ -852,7 +852,6 @@ class main_setup:
             self.dl_metadata_prot()
 
             if self.soft:
-                self.utilities.clear_existing_repo()
 
                 sofprep = self.db_generate_intrinsic(
                     self.INSTALL_PARAMS,

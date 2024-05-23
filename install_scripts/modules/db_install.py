@@ -306,8 +306,8 @@ class setup_dl:
         """
         download aedes albopictus fasta from ncbi."""
         host = "ftp.ncbi.nlm.nih.gov"
-        source = "genomes/refseq/invertebrate/Aedes_albopictus/latest_assembly_versions/GCF_006496715.2_Aalbo_primary.1/"
-        filename = "GCF_006496715.2_Aalbo_primary.1_genomic.fna.gz"
+        source = "genomes/refseq/invertebrate/Aedes_albopictus/latest_assembly_versions/GCF_035046485.1_AalbF5/"
+        filename = "GCF_035046485.1_AalbF5_genomic.fna.gz"
         fname = "aedes_albopictus"
 
         return self.ftp_host_file(host, source, filename, fname)
