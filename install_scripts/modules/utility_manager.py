@@ -152,8 +152,6 @@ class Utility_Repository:
         with self.engine.connect() as conn:
             result = conn.execute(sql)
 
-            # conn.commit()
-
         return result
 
     def create_tables(self):
@@ -224,9 +222,14 @@ class Utility_Repository:
         """
         # print("adding software")
 
-        self.engine_execute(
-            f"INSERT INTO software (name, path, database, installed, tag, env_path, date) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.tag}', '{item.env_path}', '{item.date}')"
-        )
+        try:
+            self.engine_execute(
+                f"INSERT INTO software (name, path, database, installed, tag, env_path, date) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.tag}', '{item.env_path}', '{item.date}')"
+            )
+        except Exception as e:
+            print(
+                "error adding software: delete currently existing utility_docker.db and re-run the script"
+            )
 
     @abstractmethod
     def add_database(self, item: database_item):

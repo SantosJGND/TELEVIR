@@ -1597,7 +1597,7 @@ class setup_install(setup_dl):
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
 
         if os.path.isfile(odir + dbname + ".dmnd"):
-            logging.info(f"diamond db {dbname}.dmnd present. Diamond prepped.")
+            logging.info(f"Diamond db {dbname}.dmnd present. Diamond prepped.")
             self.dbs[id] = {
                 "dir": odir,
                 "dbname": dbname,
@@ -1607,10 +1607,10 @@ class setup_install(setup_dl):
             return True
         else:
             if self.test:
-                logging.info(f"diamond db {dbname} not installed.")
+                logging.info(f"Diamond db {dbname} not installed.")
                 return False
             else:
-                logging.info(f"diamond db {dbname} . Installing...")
+                logging.info(f"Diamond db {dbname} . Installing...")
 
         try:
             subprocess.run(["mkdir", "-p", odir])
@@ -1626,7 +1626,7 @@ class setup_install(setup_dl):
             return True
 
         except subprocess.CalledProcessError:
-            logging.info(f"failed to download diamond db {dbname}")
+            logging.info(f"failed to download Diamond db {dbname}")
             return False
 
     def process_kuniq_files(self, dbname, odir):
