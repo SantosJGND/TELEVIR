@@ -1629,6 +1629,96 @@ class setup_install(setup_dl):
             logging.info(f"failed to download diamond db {dbname}")
             return False
 
+    def process_kuniq_files(self, dbname, odir):
+
+        def check_map_orig_processed(map_orig_file):
+
+            if os.path.exists(map_orig_file) is False:
+                return False
+
+            seqid = pd.read_csv(map_orig_file, sep="\t")
+            if seqid.shape[1] == 4:
+                if "GTDB" in seqid.columns and "description" in seqid.columns:
+                    return True
+
+            return False
+
+        def process_map_orig(map_orig_file, out_map_orig):
+
+            if os.path.exists(map_orig_file) is False:
+                return
+
+            seqid = pd.read_csv(map_orig_file, sep="\t", header=None)
+
+            seqid.columns = ["refseq", "taxid", "merge"]
+
+            def split_merge(x: str):
+                if x is None:
+                    return ["", ""]
+                else:
+                    x = x.split(" ")
+                    if len(x) == 1:
+                        return [x[0], ""]
+                    else:
+                        return [x[0], " ".join(x[1:])]
+
+            seqid[["GTDB", "description"]] = seqid["merge"].apply(
+                lambda x: pd.Series(split_merge(x))
+            )
+            print(seqid.head())
+            if "merge" in seqid.columns:
+                seqid = seqid.drop("merge")
+
+            seqid.to_csv(
+                out_map_orig,
+                sep="\t",
+                header=True,
+                index=False,
+            )
+
+        ############
+        ############
+
+        def check_map_file(map_file):
+            if os.path.exists(map_file) is False:
+                return False
+
+            seqmap = pd.read_csv(map_file, sep="\t")
+            if seqmap.shape[1] == 2:
+                if "acc" in seqmap.columns and "protid" in seqmap.columns:
+                    return True
+
+            return False
+
+        def process_map_file(map_file, out_map_file):
+            if os.path.exists(map_file) is False:
+                return
+
+            seqmap = pd.read_csv(map_file, sep="\t")
+            seqmap.columns = ["acc", "protid"]
+            seqmap.to_csv(
+                out_map_file,
+                sep="\t",
+                header=True,
+                index=False,
+            )
+
+        ####################
+        ####################
+
+        map_orig_file = f"{odir + dbname}/seqid2taxid.map.orig"
+        out_map_orig = f"{odir + dbname}/seqid2taxid.map.orig"
+
+        if check_map_orig_processed(map_orig_file) is False:
+            process_map_orig(map_orig_file, out_map_orig)
+
+        ######
+        map_file = f"{odir + dbname}/seqid2taxid.map"
+        out_map_file = f"{self.metadir}/protein_acc2protid.tsv"
+
+        if check_map_file(map_file) is False:
+            process_map_file(map_file, out_map_file)
+
     def kuniq_install(
         self,
         id="krakenuniq",
@@ -1643,6 +1733,7 @@ class setup_install(setup_dl):
 
         if os.path.isfile(odir + dbname + "/taxDB"):
             logging.info(f"Krakenuniq {dbname} taxDB present. prepped.")
+            self.process_kuniq_files(dbname, odir)
             self.dbs[id] = {
                 "dir": odir,
                 "dbname": dbname,
@@ -1650,14 +1741,16 @@ class setup_install(setup_dl):
             }
 
             if not os.path.isfile(f"{self.metadir}/protein_acc2protid.tsv"):
-                seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
-                seqmap.columns = ["acc", "protid"]
-                seqmap.to_csv(
-                    f"{self.metadir}/protein_acc2protid.tsv",
-                    sep="\t",
-                    header=True,
-                    index=False,
-                )
+
+                self.process_kuniq_files(dbname, odir)
+                # seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
+                # seqmap.columns = ["acc", "protid"]
+                # seqmap.to_csv(
+                #    f"{self.metadir}/protein_acc2protid.tsv",
+                #    sep="\t",
+                #    header=True,
+                #    index=False,
+                # )
 
             return True
         else:
@@ -1712,45 +1805,7 @@ class setup_install(setup_dl):
             except subprocess.CalledProcessError:
                 logging.error("failed to install krakenuniq db")
 
-            map_orig_file = f"{odir + dbname}/seqid2taxid.map.orig"
-            if os.path.exists(map_orig_file):
-                seqid = pd.read_csv(f"{odir + dbname}/seqid2taxid.map.orig", sep="\t")
-                seqid.columns = ["refseq", "taxid", "merge"]
-
-                def split_merge(x):
-                    if x is None:
-                        return ["", ""]
-                    else:
-                        x = x.split(" ")
-                        if len(x) == 1:
-                            return [x[0], ""]
-                        else:
-                            return [x[0], " ".join(x[1:])]
-
-                seqid[["GTDB", "description"]] = seqid["merge"].apply(
-                    lambda x: pd.Series(split_merge(x))
-                )
-                print(seqid.head())
-                if "merge" in seqid.columns:
-                    seqid = seqid.drop("merge")
-                seqid.to_csv(
-                    f"{odir + dbname}/seqid2taxid.map.orig",
-                    sep="\t",
-                    header=True,
-                    index=False,
-                )
-
-            map_file = f"{odir + dbname}/seqid2taxid.map"
-
-            if os.path.exists(map_file):
-                seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
-                seqmap.columns = ["acc", "protid"]
-                seqmap.to_csv(
-                    f"{self.metadir}/protein_acc2protid.tsv",
-                    sep="\t",
-                    header=True,
-                    index=False,
-                )
+            self.process_kuniq_files(dbname, odir)
 
             self.dbs[id] = {"dir": odir, "dbname": dbname, "db": odir + dbname}
 
