@@ -1666,6 +1666,7 @@ class setup_install(setup_dl):
                 lambda x: pd.Series(split_merge(x))
             )
             print(seqid.head())
+            print(seqid.columns)
             if "merge" in seqid.columns:
                 seqid = seqid.drop("merge")
 
@@ -1920,8 +1921,6 @@ class setup_install(setup_dl):
 
             if taxid_map:
                 commands += ["-taxid_map", taxid_map]
-
-            print(" ".join(commands))
 
             try:
                 subprocess.run(commands)
