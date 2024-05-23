@@ -1665,8 +1665,7 @@ class setup_install(setup_dl):
             seqid[["GTDB", "description"]] = seqid["merge"].apply(
                 lambda x: pd.Series(split_merge(x))
             )
-            print(seqid.head())
-            print(seqid.columns)
+
             if "merge" in seqid.columns:
                 new_columns = [x for x in seqid.columns if x != "merge"]
                 seqid = seqid[new_columns]
