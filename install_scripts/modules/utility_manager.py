@@ -66,6 +66,7 @@ class Utility_Repository:
         """
 
         self.metadata.drop_all(self.engine)
+        self.create_tables()
 
     def setup_engine(self, install_type):
         """
