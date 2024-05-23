@@ -225,14 +225,10 @@ class Utility_Repository:
         # print("adding software")
 
         try:
-            result = self.engine_execute(
+            _ = self.engine_execute(
                 f"INSERT INTO software (name, path, database, installed, tag, env_path, date) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.tag}', '{item.env_path}', '{item.date}')"
             )
-            print(result)
-            print([x for x in result])
-            table_rows = self.engine_execute(f"SELECT * FROM software")
-            print("software added")
-            print(table_rows.fetchall())
+
         except Exception as e:
             print(e)
             print(
@@ -244,7 +240,12 @@ class Utility_Repository:
         """
         Add a record to a table
         """
-
-        self.engine_execute(
-            f"INSERT INTO database (name, path, installed, date) VALUES ('{item.name}', '{item.path}', '{item.installed}', '{item.date}')"
-        )
+        try:
+            _ = self.engine_execute(
+                f"INSERT INTO database (name, path, installed, date) VALUES ('{item.name}', '{item.path}', '{item.installed}', '{item.date}')"
+            )
+        except Exception as e:
+            print(e)
+            print(
+                "error adding database: delete currently existing utility_docker.db and re-run the script"
+            )
