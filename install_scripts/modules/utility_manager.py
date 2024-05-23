@@ -81,8 +81,6 @@ class Utility_Repository:
         # elif install_type == "docker":
         #    self.setup_engine_docker()
 
-        self.clear_existing_repo()
-
     def setup_engine_postgres(self):
         from decouple import config
 
