@@ -4,7 +4,6 @@ import logging
 import os
 import sys
 
-
 from install_scripts.modules.db_install import setup_dl, setup_install
 from install_scripts.modules.env_install import env_install
 from install_scripts.modules.utility_manager import Utility_Repository
@@ -136,7 +135,7 @@ class main_setup:
         return f"{database_name} installed on {date}"
 
     def setup_config(self):
-        print(self.install_config)
+
         if self.install_config == "full":
             try:
                 from install_scripts.config import Televir_Layout_full
@@ -381,8 +380,6 @@ class main_setup:
                             True,
                         )
                     )
-
-        # self.wdir.index_fasta_files()
 
     def dl_metadata_prot(self):
         """
@@ -854,6 +851,7 @@ class main_setup:
             self.dl_metadata_prot()
 
             if self.soft:
+
                 sofprep = self.db_generate_intrinsic(
                     self.INSTALL_PARAMS,
                     self.wdir,
@@ -872,6 +870,7 @@ class main_setup:
                     self.wdir.fastas["nuc"], max_file_size=4000000000
                 )
 
+                self.wdir.index_nuc_fasta_files()
                 self.dl_metadata_nuc()
 
             if self.seqdl:

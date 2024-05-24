@@ -2,22 +2,17 @@
 
 import datetime
 import os
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
-import sqlalchemy
 from sqlalchemy import (
     Boolean,
     Column,
-    ForeignKey,
-    Integer,
     MetaData,
     String,
     Table,
     create_engine,
     text,
 )
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import mapper, sessionmaker
 
 
 class SoftwareItem:
@@ -71,18 +66,21 @@ class Utility_Repository:
         """
 
         self.metadata.drop_all(self.engine)
+        self.create_tables()
 
     def setup_engine(self, install_type):
         """
         setup the engine
         """
+
+        # if os.path.exists(self.engine_filepath):
+        #    os.remove(self.engine_filepath)
+
         self.engine = create_engine(f"{self.dbtype_local}:////" + self.engine_filepath)
         # if install_type == "local":
         #    self.setup_engine_local()
         # elif install_type == "docker":
         #    self.setup_engine_docker()
-
-        self.clear_existing_repo()
 
     def setup_engine_postgres(self):
         from decouple import config
@@ -150,10 +148,11 @@ class Utility_Repository:
 
     def engine_execute(self, string: str):
         sql = text(string)
+
         with self.engine.connect() as conn:
             result = conn.execute(sql)
 
-            # conn.commit()
+            conn.commit()
 
         return result
 
@@ -191,7 +190,7 @@ class Utility_Repository:
         if not os.path.exists(directory):
             os.makedirs(directory, exist_ok=True)
 
-        table_rows = self.engine.execute(f"SELECT * FROM {table_name}")
+        table_rows = self.engine_execute(f"SELECT * FROM {table_name}")
 
         with open(os.path.join(directory, f"{table_name}.tsv"), "w") as f:
             for row in table_rows:
@@ -225,16 +224,28 @@ class Utility_Repository:
         """
         # print("adding software")
 
-        self.engine_execute(
-            f"INSERT INTO software (name, path, database, installed, tag, env_path, date) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.tag}', '{item.env_path}', '{item.date}')"
-        )
+        try:
+            _ = self.engine_execute(
+                f"INSERT INTO software (name, path, database, installed, tag, env_path, date) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.tag}', '{item.env_path}', '{item.date}')"
+            )
+
+        except Exception as e:
+            print(e)
+            print(
+                "error adding software: delete currently existing utility_docker.db and re-run the script"
+            )
 
     @abstractmethod
     def add_database(self, item: database_item):
         """
         Add a record to a table
         """
-
-        self.engine_execute(
-            f"INSERT INTO database (name, path, installed, date) VALUES ('{item.name}', '{item.path}', '{item.installed}', '{item.date}')"
-        )
+        try:
+            _ = self.engine_execute(
+                f"INSERT INTO database (name, path, installed, date) VALUES ('{item.name}', '{item.path}', '{item.installed}', '{item.date}')"
+            )
+        except Exception as e:
+            print(e)
+            print(
+                "error adding database: delete currently existing utility_docker.db and re-run the script"
+            )

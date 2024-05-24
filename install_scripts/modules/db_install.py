@@ -13,7 +13,7 @@ from threading import Thread
 import pandas as pd
 from install_scripts.host_library import Host
 
-from fastq_filter import fastq_records_to_file, file_to_fastq_records
+from fastq_filter import file_to_fastq_records
 
 from numpy import int0
 from xopen import xopen
@@ -144,43 +144,77 @@ class setup_dl:
                 os.mkdir(dr)
 
     @staticmethod
-    def bgzip_file(filename):
+    def check_fasta_bgziped(fasta_path: str):
+        """
+        use samtools faidx to check if fasta is bgzipped.
+        check return of running samtools faidx on fasta file. if return is 0, file is bgzipped.
+        if return is 1, file is not bgzipped. unzipped file and bgzip it.
+        """
+        if not os.path.isfile(fasta_path):
+            return False
+        if not os.path.isfile(fasta_path + ".fai"):
+            return False
+        try:
+            subprocess.run(
+                [
+                    "samtools",
+                    "faidx",
+                    fasta_path,
+                ]
+            )
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
+    def bgzip_file(self, filename):
         """
         bgzip file.
         :param filename:
         :return:
         """
-
-        if os.path.isfile(filename + ".bgzipped"):
-            logging.info(f"{filename} already compressed.")
-            return
-
+        flname= os.path.basename(filename)
         basename = os.path.splitext(filename)[0]
+        blname= os.path.basename(basename)
 
-        if os.path.isfile(basename):
+        if os.path.isfile(basename) and os.path.isfile(filename):
             os.remove(basename)
 
-        subprocess.run(["gunzip", filename])
+        file_is_bgzipped = False
+        if os.path.isfile(filename):
+            file_is_bgzipped = self.check_fasta_bgziped(filename)
 
-        logging.info(f"bgzipping {filename}")
-        subprocess.run([BGZIP_BIN, basename])
+        if not file_is_bgzipped:
+            logging.info(f"gunzipping {flname}")
+            subprocess.run(["gunzip", filename])
 
-        check = open(basename + ".bgzipped", "w").close()
+            if os.path.isfile(basename):
+                if os.path.isfile(filename):
+                    os.remove(filename)
 
-    def index_fasta_files(self):
+            logging.info(f"bgzipping {flname}")
+            subprocess.run([BGZIP_BIN, basename])
+
+        return basename + ".gz"
+
+    def index_nuc_fasta_files(self):
         """
         index fasta files.
         :return:
         """
-        print(self.fastas.items())
-        for k, v in self.fastas.items():
-            print(k, v)
-            for kk, vv in v.items():
-                self.bgzip_file(vv)
+        logging.info("Checking nuc fasta files for index ")
+        for k, v in self.fastas["nuc"].items():
 
-                if not os.path.isfile(vv + ".fai"):
-                    logging.info(f"indexing {vv}")
-                    subprocess.run(["samtools", "faidx", vv])
+            for fl in v:
+                flname= os.path.basename(fl)
+                if not self.check_fasta_bgziped(fl):
+                    logging.info(f"{flname} not bgzipped.")
+                    self.bgzip_file(fl)
+                    logging.info(f"indexing {flname} using samtools faidx")
+                    subprocess.run(["samtools", "faidx", fl])
+
+                    logging.info(f"{flname} indexed.")
+                else:
+                    logging.info(f"{flname} already bgzipped and indexed.")
 
     def ftp_host_file(self, host, source, filename, fname):
         """
@@ -308,8 +342,8 @@ class setup_dl:
         """
         download aedes albopictus fasta from ncbi."""
         host = "ftp.ncbi.nlm.nih.gov"
-        source = "genomes/refseq/invertebrate/Aedes_albopictus/latest_assembly_versions/GCF_006496715.2_Aalbo_primary.1/"
-        filename = "GCF_006496715.2_Aalbo_primary.1_genomic.fna.gz"
+        source = "genomes/refseq/invertebrate/Aedes_albopictus/latest_assembly_versions/GCF_035046485.1_AalbF5/"
+        filename = "GCF_035046485.1_AalbF5_genomic.fna.gz"
         fname = "aedes_albopictus"
 
         return self.ftp_host_file(host, source, filename, fname)
@@ -661,7 +695,7 @@ class setup_dl:
                 fl = self.seqdir + os.path.basename(fl)
                 subprocess.run(["unxz", fl])
                 fl, _ = os.path.splitext(fl)
-                print("fl", fl)
+
                 subprocess.run([BGZIP_BIN, fl])
                 fl = fl + ".gz"
 
@@ -1163,7 +1197,7 @@ class setup_install(setup_dl):
 
             # create symlink to new index for files that use old index
             files_in_directory = os.listdir(odir + dbname)
-            print(files_in_directory)
+
             for file in files_in_directory:
                 if file.startswith("index"):
                     new_filename = file.replace("index", dbname + "_index")
@@ -1438,6 +1472,7 @@ class setup_install(setup_dl):
         if os.path.isfile(odir + dbname + "/taxo.k2d"):
             logging.info(f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
             krk2_fasta = odir + dbname + "/library/" + dbname + "/library.fna.gz"
+
             if os.path.isfile(os.path.splitext(krk2_fasta)[0]):
                 os.system(f"{BGZIP_BIN} " + os.path.splitext(krk2_fasta)[0])
 
@@ -1447,6 +1482,7 @@ class setup_install(setup_dl):
                 "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
                 "db": odir + dbname,
             }
+
             return True
         else:
             if self.test:
@@ -1597,7 +1633,7 @@ class setup_install(setup_dl):
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
 
         if os.path.isfile(odir + dbname + ".dmnd"):
-            logging.info(f"diamond db {dbname}.dmnd present. Diamond prepped.")
+            logging.info(f"Diamond db {dbname}.dmnd present. Diamond prepped.")
             self.dbs[id] = {
                 "dir": odir,
                 "dbname": dbname,
@@ -1607,10 +1643,10 @@ class setup_install(setup_dl):
             return True
         else:
             if self.test:
-                logging.info(f"diamond db {dbname} not installed.")
+                logging.info(f"Diamond db {dbname} not installed.")
                 return False
             else:
-                logging.info(f"diamond db {dbname} . Installing...")
+                logging.info(f"Diamond db {dbname} . Installing...")
 
         try:
             subprocess.run(["mkdir", "-p", odir])
@@ -1626,8 +1662,99 @@ class setup_install(setup_dl):
             return True
 
         except subprocess.CalledProcessError:
-            logging.info(f"failed to download diamond db {dbname}")
+            logging.info(f"failed to download Diamond db {dbname}")
             return False
+
+    def process_kuniq_files(self, dbname, odir):
+
+        def check_map_orig_processed(map_orig_file):
+
+            if os.path.exists(map_orig_file) is False:
+                return False
+
+            seqid = pd.read_csv(map_orig_file, sep="\t")
+            if seqid.shape[1] == 4:
+                if "GTDB" in seqid.columns and "description" in seqid.columns:
+                    return True
+
+            return False
+
+        def process_map_orig(map_orig_file, out_map_orig):
+
+            if os.path.exists(map_orig_file) is False:
+                return
+
+            seqid = pd.read_csv(map_orig_file, sep="\t", header=None)
+
+            seqid.columns = ["refseq", "taxid", "merge"]
+
+            def split_merge(x: str):
+                if x is None:
+                    return ["", ""]
+                else:
+                    x = x.split(" ")
+                    if len(x) == 1:
+                        return [x[0], ""]
+                    else:
+                        return [x[0], " ".join(x[1:])]
+
+            seqid[["GTDB", "description"]] = seqid["merge"].apply(
+                lambda x: pd.Series(split_merge(x))
+            )
+
+            if "merge" in seqid.columns:
+                new_columns = [x for x in seqid.columns if x != "merge"]
+                seqid = seqid[new_columns]
+
+            seqid.to_csv(
+                out_map_orig,
+                sep="\t",
+                header=True,
+                index=False,
+            )
+
+        ############
+        ############
+
+        def check_map_file(map_file):
+            if os.path.exists(map_file) is False:
+                return False
+
+            seqmap = pd.read_csv(map_file, sep="\t")
+            if seqmap.shape[1] == 2:
+                if "acc" in seqmap.columns and "protid" in seqmap.columns:
+                    return True
+
+            return False
+
+        def process_map_file(map_file, out_map_file):
+            if os.path.exists(map_file) is False:
+                return
+
+            seqmap = pd.read_csv(map_file, sep="\t")
+            seqmap.columns = ["acc", "protid"]
+            seqmap.to_csv(
+                out_map_file,
+                sep="\t",
+                header=True,
+                index=False,
+            )
+
+        ####################
+        ####################
+
+        map_orig_file = f"{odir + dbname}/seqid2taxid.map.orig"
+        out_map_orig = f"{odir + dbname}/seqid2taxid.map.orig"
+
+        if check_map_orig_processed(map_orig_file) is False:
+            process_map_orig(map_orig_file, out_map_orig)
+
+        ######
+        map_file = f"{odir + dbname}/seqid2taxid.map"
+        out_map_file = f"{self.metadir}/protein_acc2protid.tsv"
+
+        if check_map_file(map_file) is False:
+            process_map_file(map_file, out_map_file)
 
     def kuniq_install(
         self,
@@ -1643,6 +1770,7 @@ class setup_install(setup_dl):
 
         if os.path.isfile(odir + dbname + "/taxDB"):
             logging.info(f"Krakenuniq {dbname} taxDB present. prepped.")
+            self.process_kuniq_files(dbname, odir)
             self.dbs[id] = {
                 "dir": odir,
                 "dbname": dbname,
@@ -1650,14 +1778,16 @@ class setup_install(setup_dl):
             }
 
             if not os.path.isfile(f"{self.metadir}/protein_acc2protid.tsv"):
-                seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
-                seqmap.columns = ["acc", "protid"]
-                seqmap.to_csv(
-                    f"{self.metadir}/protein_acc2protid.tsv",
-                    sep="\t",
-                    header=True,
-                    index=False,
-                )
+
+                self.process_kuniq_files(dbname, odir)
+                # seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
+                # seqmap.columns = ["acc", "protid"]
+                # seqmap.to_csv(
+                #    f"{self.metadir}/protein_acc2protid.tsv",
+                #    sep="\t",
+                #    header=True,
+                #    index=False,
+                # )
 
             return True
         else:
@@ -1712,44 +1842,7 @@ class setup_install(setup_dl):
             except subprocess.CalledProcessError:
                 logging.error("failed to install krakenuniq db")
 
-            map_orig_file = f"{odir + dbname}/seqid2taxid.map.orig"
-            if os.path.exists(map_orig_file):
-                seqid = pd.read_csv(f"{odir + dbname}/seqid2taxid.map.orig", sep="\t")
-                seqid.columns = ["refseq", "taxid", "merge"]
-
-                def split_merge(x):
-                    if x is None:
-                        return ["", ""]
-                    else:
-                        x = x.split(" ")
-                        if len(x) == 1:
-                            return [x[0], ""]
-                        else:
-                            return [x[0], " ".join(x[1:])]
-
-                seqid[["GTDB", "description"]] = seqid["merge"].apply(
-                    lambda x: pd.Series(split_merge(x))
-                )
-
-                seqid = seqid.drop("merge")
-                seqid.to_csv(
-                    f"{odir + dbname}/seqid2taxid.map.orig",
-                    sep="\t",
-                    header=True,
-                    index=False,
-                )
-
-            map_file = f"{odir + dbname}/seqid2taxid.map"
-
-            if os.path.exists(map_file):
-                seqmap = pd.read_csv(f"{odir + dbname}/seqid2taxid.map", sep="\t")
-                seqmap.columns = ["acc", "protid"]
-                seqmap.to_csv(
-                    f"{self.metadir}/protein_acc2protid.tsv",
-                    sep="\t",
-                    header=True,
-                    index=False,
-                )
+            self.process_kuniq_files(dbname, odir)
 
             self.dbs[id] = {"dir": odir, "dbname": dbname, "db": odir + dbname}
 
@@ -1865,8 +1958,6 @@ class setup_install(setup_dl):
             if taxid_map:
                 commands += ["-taxid_map", taxid_map]
 
-            print(" ".join(commands))
-
             try:
                 subprocess.run(commands)
             finally:
@@ -1921,8 +2012,6 @@ class setup_install(setup_dl):
                 reference,
                 db,
             ]
-
-            print(" ".join(commands))
 
             try:
                 subprocess.run(commands)
