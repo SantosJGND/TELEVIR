@@ -155,12 +155,18 @@ class setup_dl:
         if not os.path.isfile(fasta_path + ".fai"):
             return False
         try:
-            subprocess.run(["/televir/mngs_benchmark/mngs_environments/remap/remap/bin/samtools", "faidx", fasta_path])
+            subprocess.run(
+                [
+                    "/televir/mngs_benchmark/mngs_environments/remap/remap/bin/samtools",
+                    "faidx",
+                    fasta_path,
+                ]
+            )
             return True
         except subprocess.CalledProcessError:
             return False
 
-    def bgzip_file(self,filename):
+    def bgzip_file(self, filename):
         """
         bgzip file.
         :param filename:
@@ -171,7 +177,7 @@ class setup_dl:
 
         if os.path.isfile(basename) and os.path.isfile(filename):
             os.remove(basename)
-            
+
         file_is_bgzipped = False
         if os.path.isfile(filename):
             file_is_bgzipped = self.check_fasta_bgziped(filename)
@@ -183,7 +189,7 @@ class setup_dl:
             if os.path.isfile(basename):
                 if os.path.isfile(filename):
                     os.remove(filename)
-            
+
             logging.info(f"bgzipping {basename}")
             subprocess.run([BGZIP_BIN, basename])
 
@@ -206,8 +212,6 @@ class setup_dl:
                     logging.info(f"{fl} indexed.")
                 else:
                     logging.info(f"{fl} already bgzipped and indexed.")
-
-«
 
     def ftp_host_file(self, host, source, filename, fname):
         """
