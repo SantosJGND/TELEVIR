@@ -157,7 +157,7 @@ class setup_dl:
         try:
             subprocess.run(
                 [
-                    "/televir/mngs_benchmark/mngs_environments/remap/remap/bin/samtools",
+                    "samtools",
                     "faidx",
                     fasta_path,
                 ]
@@ -172,8 +172,9 @@ class setup_dl:
         :param filename:
         :return:
         """
-
+        flname= os.path.basename(filename)
         basename = os.path.splitext(filename)[0]
+        blname= os.path.basename(basename)
 
         if os.path.isfile(basename) and os.path.isfile(filename):
             os.remove(basename)
@@ -183,14 +184,14 @@ class setup_dl:
             file_is_bgzipped = self.check_fasta_bgziped(filename)
 
         if not file_is_bgzipped:
-            logging.info(f"gunzipping {filename}")
+            logging.info(f"gunzipping {flname}")
             subprocess.run(["gunzip", filename])
 
             if os.path.isfile(basename):
                 if os.path.isfile(filename):
                     os.remove(filename)
 
-            logging.info(f"bgzipping {basename}")
+            logging.info(f"bgzipping {flname}")
             subprocess.run([BGZIP_BIN, basename])
 
         return basename + ".gz"
@@ -200,18 +201,20 @@ class setup_dl:
         index fasta files.
         :return:
         """
+        logging.info("Checking nuc fasta files for index ")
         for k, v in self.fastas["nuc"].items():
 
             for fl in v:
+                flname= os.path.basename(fl)
                 if not self.check_fasta_bgziped(fl):
-                    logging.info(f"bgzipping {fl}")
+                    logging.info(f"{flname} not bgzipped.")
                     self.bgzip_file(fl)
-                    logging.info(f"indexing {fl} using samtools faidx")
+                    logging.info(f"indexing {flname} using samtools faidx")
                     subprocess.run(["samtools", "faidx", fl])
 
-                    logging.info(f"{fl} indexed.")
+                    logging.info(f"{flname} indexed.")
                 else:
-                    logging.info(f"{fl} already bgzipped and indexed.")
+                    logging.info(f"{flname} already bgzipped and indexed.")
 
     def ftp_host_file(self, host, source, filename, fname):
         """
