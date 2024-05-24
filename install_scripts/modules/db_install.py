@@ -144,41 +144,70 @@ class setup_dl:
                 os.mkdir(dr)
 
     @staticmethod
-    def bgzip_file(filename):
+    def check_fasta_bgziped(fasta_path: str):
+        """
+        use samtools faidx to check if fasta is bgzipped.
+        check return of running samtools faidx on fasta file. if return is 0, file is bgzipped.
+        if return is 1, file is not bgzipped. unzipped file and bgzip it.
+        """
+        if not os.path.isfile(fasta_path):
+            return False
+        if not os.path.isfile(fasta_path + ".fai"):
+            return False
+        try:
+            subprocess.run(["/televir/mngs_benchmark/mngs_environments/remap/remap/bin/samtools", "faidx", fasta_path])
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
+    def bgzip_file(self,filename):
         """
         bgzip file.
         :param filename:
         :return:
         """
 
-        if os.path.isfile(filename + ".bgzipped"):
-            logging.info(f"{filename} already compressed.")
-            return
-
         basename = os.path.splitext(filename)[0]
 
-        if os.path.isfile(basename):
+        if os.path.isfile(basename) and os.path.isfile(filename):
             os.remove(basename)
+            
+        file_is_bgzipped = False
+        if os.path.isfile(filename):
+            file_is_bgzipped = self.check_fasta_bgziped(filename)
 
-        subprocess.run(["gunzip", filename])
+        if not file_is_bgzipped:
+            logging.info(f"gunzipping {filename}")
+            subprocess.run(["gunzip", filename])
 
-        logging.info(f"bgzipping {filename}")
-        subprocess.run([BGZIP_BIN, basename])
+            if os.path.isfile(basename):
+                if os.path.isfile(filename):
+                    os.remove(filename)
+            
+            logging.info(f"bgzipping {basename}")
+            subprocess.run([BGZIP_BIN, basename])
 
-        check = open(basename + ".bgzipped", "w").close()
+        return basename + ".gz"
 
-    def index_fasta_files(self):
+    def index_nuc_fasta_files(self):
         """
         index fasta files.
         :return:
         """
-        for k, v in self.fastas.items():
-            for kk, vv in v.items():
-                self.bgzip_file(vv)
+        for k, v in self.fastas["nuc"].items():
 
-                if not os.path.isfile(vv + ".fai"):
-                    logging.info(f"indexing {vv}")
-                    subprocess.run(["samtools", "faidx", vv])
+            for fl in v:
+                if not self.check_fasta_bgziped(fl):
+                    logging.info(f"bgzipping {fl}")
+                    self.bgzip_file(fl)
+                    logging.info(f"indexing {fl} using samtools faidx")
+                    subprocess.run(["samtools", "faidx", fl])
+
+                    logging.info(f"{fl} indexed.")
+                else:
+                    logging.info(f"{fl} already bgzipped and indexed.")
+
+«
 
     def ftp_host_file(self, host, source, filename, fname):
         """

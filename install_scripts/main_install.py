@@ -381,8 +381,6 @@ class main_setup:
                         )
                     )
 
-        # self.wdir.index_fasta_files()
-
     def dl_metadata_prot(self):
         """
         generate metadata files for prot databases.
@@ -870,7 +868,8 @@ class main_setup:
                 self.wdir.fastas["nuc"] = process_nuc_fasta_dict(
                     self.wdir.fastas["nuc"], max_file_size=4000000000
                 )
-
+                
+                self.wdir.index_nuc_fasta_files()
                 self.dl_metadata_nuc()
 
             if self.seqdl:
