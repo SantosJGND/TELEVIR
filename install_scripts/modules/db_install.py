@@ -2092,6 +2092,9 @@ class setup_install(setup_dl):
         except subprocess.CalledProcessError:
             logging.info(f"failed to index bwa db {dbname}")
             return False
+        except FileNotFoundError:
+            logging.info(f"failed to index bwa db {dbname}")
+            return False
         finally:
             if gzipped:
                 subprocess.run([BGZIP_BIN, reference])
