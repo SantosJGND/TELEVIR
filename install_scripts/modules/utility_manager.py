@@ -65,7 +65,9 @@ class Utility_Repository:
         Delete the database
         """
 
-        self.metadata.drop_all(self.engine)
+        for table in self.tables:
+            self.engine_execute(f"DROP TABLE {table}")
+        # self.metadata.drop_all(self.engine)
         self.create_tables()
 
     def setup_engine(self, install_type):

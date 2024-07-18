@@ -172,9 +172,9 @@ class setup_dl:
         :param filename:
         :return:
         """
-        flname= os.path.basename(filename)
+        flname = os.path.basename(filename)
         basename = os.path.splitext(filename)[0]
-        blname= os.path.basename(basename)
+        blname = os.path.basename(basename)
 
         if os.path.isfile(basename) and os.path.isfile(filename):
             os.remove(basename)
@@ -205,7 +205,7 @@ class setup_dl:
         for k, v in self.fastas["nuc"].items():
 
             for fl in v:
-                flname= os.path.basename(fl)
+                flname = os.path.basename(fl)
                 if not self.check_fasta_bgziped(fl):
                     logging.info(f"{flname} not bgzipped.")
                     self.bgzip_file(fl)
@@ -712,7 +712,7 @@ class setup_dl:
         :return:
         """
 
-        fl = "https://viralzone.expasy.org/resources/Virosaurus/2020_4/virosaurus90_vertebrate-20200330.fas.gz"
+        fl = "https://ftp.expasy.org/databases/viralzone/2020%5F4/virosaurus90%5Fvertebrate-20200330.fas.gz"
 
         if (
             not os.path.isfile(self.seqdir + os.path.basename(fl))
