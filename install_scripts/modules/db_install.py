@@ -251,9 +251,11 @@ class setup_dl:
                 return False
             else:
                 logging.info(f"{filename} not found. downloading...")
+                sep = "/" if source.startswith("/") else "" 
+
                 try:
                     subprocess.run(
-                        ["wget", f"ftp://{host}/{source}{filename}", "-P", self.seqdir]
+                        ["wget", f"ftp://{host}{sep}{source}{filename}", "-P", self.seqdir]
                     )
                 except subprocess.CalledProcessError:
                     logging.info(f"{filename} not found.")

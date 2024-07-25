@@ -8,9 +8,9 @@ class Host:
 
 class HomoSapiens(Host):
     def __init__(self):
-        self.remote_host = "hgdownload.soe.ucsc.edu"
-        self.remote_path = "/goldenPath/hg38/bigZips/"
-        self.remote_filename = "hg38.fa.gz"
+        self.remote_host = "ftp.ncbi.nlm.nih.gov"
+        self.remote_path = "/genomes/refseq/vertebrate_mammalian/Homo_sapiens/latest_assembly_versions/GCF_000001405.40_GRCh38.p14/"
+        self.remote_filename = "GCF_000001405.40_GRCh38.p14_genomic.fna.gz"
         self.host_name = "hg38"
         self.common_name = "human"
 
@@ -18,7 +18,7 @@ class HomoSapiens(Host):
 class MarmotaMarmota(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "/genomes/refseq/vertebrate_mammalian/Marmota_marmota/latest_assembly_versions/GCF_001458135.2_marMar/"
+        self.remote_path = "genomes/refseq/vertebrate_mammalian/Marmota_marmota/latest_assembly_versions/GCF_001458135.2_marMar/"
         self.remote_filename = "GCF_001458135.2_marMar_genomic.fna.gz"
         self.host_name = "marmota_marmota"
         self.common_name = "marmot"
@@ -27,7 +27,7 @@ class MarmotaMarmota(Host):
 class CulexPipiens(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "/genomes/refseq/invertebrate/Culex_pipiens/latest_assembly_versions/GCF_016801865.2_TS_CPP_V2/"
+        self.remote_path = "genomes/refseq/invertebrate/Culex_pipiens/latest_assembly_versions/GCF_016801865.2_TS_CPP_V2/"
         self.remote_filename = "GCF_016801865.2_TS_CPP_V2_genomic.fna.gz"
         self.host_name = "culex_pipiens"
         self.common_name = "mosquito"
@@ -36,7 +36,7 @@ class CulexPipiens(Host):
 class FelisCatus(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "/genomes/refseq/vertebrate_mammalian/Felis_catus/latest_assembly_versions/GCF_018350175.1_F.catus_Fca126_mat1.0/"
+        self.remote_path = "genomes/refseq/vertebrate_mammalian/Felis_catus/latest_assembly_versions/GCF_018350175.1_F.catus_Fca126_mat1.0/"
         self.remote_filename = "GCF_018350175.1_F.catus_Fca126_mat1.0_genomic.fna.gz"
         self.host_name = "felis_catus"
         self.common_name = "cat"
@@ -45,7 +45,7 @@ class FelisCatus(Host):
 class CanisLupusFamiliaris(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "/genomes/refseq/vertebrate_mammalian/Canis_lupus_familiaris/latest_assembly_versions/GCF_011100685.1_UU_Cfam_GSD_1.0/"
+        self.remote_path = "genomes/refseq/vertebrate_mammalian/Canis_lupus_familiaris/latest_assembly_versions/GCF_011100685.1_UU_Cfam_GSD_1.0/"
         self.remote_filename = "GCF_011100685.1_UU_Cfam_GSD_1.0_genomic.fna.gz"
         self.host_name = "canis_lupus_familiaris"
         self.common_name = "dog"
@@ -54,7 +54,7 @@ class CanisLupusFamiliaris(Host):
 class CyprinusCarpio(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "/genomes/refseq/vertebrate_other/Cyprinus_carpio/latest_assembly_versions/GCF_018340385.1_ASM1834038v1/"
+        self.remote_path = "genomes/refseq/vertebrate_other/Cyprinus_carpio/latest_assembly_versions/GCF_018340385.1_ASM1834038v1/"
         self.remote_filename = "GCF_018340385.1_ASM1834038v1_genomic.fna.gz"
         self.host_name = "cyprinus_carpio"
         self.common_name = "carp"
@@ -63,7 +63,7 @@ class CyprinusCarpio(Host):
 class AnasPlatyrhynchos(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "/genomes/refseq/vertebrate_other/Anas_platyrhynchos/latest_assembly_versions/GCF_015476345.1_ZJU1.0/"
+        self.remote_path = "genomes/refseq/vertebrate_other/Anas_platyrhynchos/latest_assembly_versions/GCF_015476345.1_ZJU1.0/"
         self.remote_filename = "GCF_015476345.1_ZJU1.0_genomic.fna.gz"
         self.host_name = "anas_platyrhynchos"
         self.common_name = "duck"
@@ -72,7 +72,7 @@ class AnasPlatyrhynchos(Host):
 class PipistrellusKuhlii(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "/genomes/refseq/vertebrate_mammalian/Pipistrellus_kuhlii/latest_assembly_versions/GCF_014108245.1_mPipKuh1.p/"
+        self.remote_path = "genomes/refseq/vertebrate_mammalian/Pipistrellus_kuhlii/latest_assembly_versions/GCF_014108245.1_mPipKuh1.p/"
         self.remote_filename = "GCF_014108245.1_mPipKuh1.p_genomic.fna.gz"
         self.host_name = "pipistrellus_kuhlii"
         self.common_name = "bat"
@@ -81,7 +81,7 @@ class PipistrellusKuhlii(Host):
 class PhlebotomusPapatasi(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "/genomes/refseq/invertebrate/Phlebotomus_papatasi/latest_assembly_versions/GCF_024763615.1_Ppap_2.1/"
+        self.remote_path = "genomes/refseq/invertebrate/Phlebotomus_papatasi/latest_assembly_versions/GCF_024763615.1_Ppap_2.1/"
         self.remote_filename = "GCF_024763615.1_Ppap_2.1_genomic.fna.gz"
         self.host_name = "phlebotomus_papatasi"
         self.common_name = "sandfly"
@@ -99,7 +99,7 @@ class SusScrofa(Host):
 class AedesAlbopictus(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "/genomes/refseq/invertebrate/Aedes_albopictus/latest_assembly_versions/GCF_035046485.1_AalbF5/"
+        self.remote_path = "genomes/refseq/invertebrate/Aedes_albopictus/latest_assembly_versions/GCF_035046485.1_AalbF5/"
         self.remote_filename = "GCF_035046485.1_AalbF5_genomic.fna.gz"
         self.host_name = "aedes_albopictus"
         self.common_name = "mosquito"
@@ -119,7 +119,7 @@ class GallusGallus(Host):
 class OncorhynchusMykiss(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "/genomes/refseq/vertebrate_other/Oncorhynchus_mykiss/latest_assembly_versions/GCF_013265735.2_USDA_OmykA_1.1/"
+        self.remote_path = "genomes/refseq/vertebrate_other/Oncorhynchus_mykiss/latest_assembly_versions/GCF_013265735.2_USDA_OmykA_1.1/"
         self.remote_filename = "GCF_013265735.2_USDA_OmykA_1.1_genomic.fna.gz"
         self.host_name = "oncorhynchus_mykiss"
         self.common_name = "rainbow_trout"
@@ -128,7 +128,7 @@ class OncorhynchusMykiss(Host):
 class SalmoSalar(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "/genomes/refseq/vertebrate_other/Salmo_salar/latest_assembly_versions/GCF_905237065.1_Ssal_v3.1/"
+        self.remote_path = "genomes/refseq/vertebrate_other/Salmo_salar/latest_assembly_versions/GCF_905237065.1_Ssal_v3.1/"
         self.remote_filename = "GCF_905237065.1_Ssal_v3.1_genomic.fna.gz "
         self.host_name = "salmo_salar"
         self.common_name = "atlantic_salmon"
@@ -137,7 +137,7 @@ class SalmoSalar(Host):
 class BosTaurus(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "/genomes/refseq/vertebrate_mammalian/Bos_taurus/latest_assembly_versions/GCF_002263795.3_ARS-UCD2.0/"
+        self.remote_path = "genomes/refseq/vertebrate_mammalian/Bos_taurus/latest_assembly_versions/GCF_002263795.3_ARS-UCD2.0/"
         self.remote_filename = "GCF_002263795.3_ARS-UCD2.0_genomic.fna.gz"
         self.host_name = "bos_taurus"
         self.common_name = "cow"
