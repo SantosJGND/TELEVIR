@@ -42,7 +42,7 @@ class Televir_Layout_docker:
     install_kaiju = True
     install_diamond = True
     install_minimap2 = False
-    install_fastviromeexplorer = False
+    install_fastviromeexplorer = True
     install_clark = False
     install_desamba = False
     install_blast = True

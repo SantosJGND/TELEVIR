@@ -90,7 +90,7 @@ class PhlebotomusPapatasi(Host):
 class SusScrofa(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "genomes/refseq/vertebrate_mammalian/Sus_scrofa/latest_assembly_versions/GCF_000003025.6_Sscrofa11.1/"
+        self.remote_path = "/genomes/refseq/vertebrate_mammalian/Sus_scrofa/latest_assembly_versions/GCF_000003025.6_Sscrofa11.1/"
         self.remote_filename = "GCF_000003025.6_Sscrofa11.1_genomic.fna.gz"
         self.host_name = "sus_scrofa"
         self.common_name = "pig"
@@ -99,8 +99,8 @@ class SusScrofa(Host):
 class AedesAlbopictus(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "genomes/refseq/invertebrate/Aedes_albopictus/latest_assembly_versions/GCF_006496715.2_Aalbo_primary.1/"
-        self.remote_filename = "GCF_006496715.2_Aalbo_primary.1_genomic.fna.gz"
+        self.remote_path = "/genomes/refseq/invertebrate/Aedes_albopictus/latest_assembly_versions/GCF_035046485.1_AalbF5/"
+        self.remote_filename = "GCF_035046485.1_AalbF5_genomic.fna.gz"
         self.host_name = "aedes_albopictus"
         self.common_name = "mosquito"
 
@@ -119,7 +119,7 @@ class GallusGallus(Host):
 class OncorhynchusMykiss(Host):
     def __init__(self):
         self.remote_host = "ftp.ncbi.nlm.nih.gov"
-        self.remote_path = "genomes/refseq/vertebrate_other/Oncorhynchus_mykiss/latest_assembly_versions/GCF_013265735.2_USDA_OmykA_1.1/"
+        self.remote_path = "/genomes/refseq/vertebrate_other/Oncorhynchus_mykiss/latest_assembly_versions/GCF_013265735.2_USDA_OmykA_1.1/"
         self.remote_filename = "GCF_013265735.2_USDA_OmykA_1.1_genomic.fna.gz"
         self.host_name = "oncorhynchus_mykiss"
         self.common_name = "rainbow_trout"
