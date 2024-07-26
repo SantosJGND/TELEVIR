@@ -27,15 +27,25 @@ except:
     pass
 
 
-def grep_sequence_identifiers(input, output):
+def grep_sequence_identifiers(str_input, output, ignore= ""):
     """
     grep sequence identifiers from fasta file.
     """
 
+    get_pattern= "zgrep -P '^>' {}".format(str_input)
+    filter_pattern = "grep -v {}".format(ignore)
+    process_pattern = "sed 's/^>//; s/[ ].*$//g'"
+
+    if ignore:
+        command = "{} | {} | {}".format(get_pattern, filter_pattern, process_pattern)
+    else:
+        command = "{} | {}".format(get_pattern, process_pattern)
+
+    
+    command = command + " > {}".format(output)
+
     os.system(
-        "zgrep -P '^>' {} | sed 's/^>//; s/[ ].*$//g' > {}".format(
-            input, output  # | grep -v 'GENE\|gene'
-        )
+        command
     )
 
 
@@ -260,7 +270,8 @@ class setup_dl:
                             f"ftp://{host}{sep}{source}{filename}",
                             "-P",
                             self.seqdir,
-                        ], check= False
+                        ],
+                        check=False,
                     )
                 except subprocess.CalledProcessError:
                     logging.info(f"{filename} not found.")
@@ -801,7 +812,12 @@ class setup_dl:
             for fl in fl_list:
                 temp_file = self.metadir + dbs + "_temp.tsv"
 
-                grep_sequence_identifiers(fl, temp_file)
+                ignore_patterns= ""
+                if dbs == "virosaurus":
+                    ignore_patterns = "GENE"
+
+
+                grep_sequence_identifiers(fl, temp_file, ignore=ignore_patterns)
 
                 if dbs == "kraken2":
                     dbacc = pd.read_csv(
