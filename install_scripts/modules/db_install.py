@@ -27,13 +27,13 @@ except:
     pass
 
 
-def grep_sequence_identifiers(str_input, output, ignore= ""):
+def grep_sequence_identifiers(str_input, output, ignore=""):
     """
     grep sequence identifiers from fasta file.
     """
 
-    get_pattern= "zgrep -P '^>' {}".format(str_input)
-    filter_pattern = "grep -v {}".format(ignore)
+    get_pattern = f"zgrep -P '^>' {str_input}"
+    filter_pattern = f"grep -v {ignore}"
     process_pattern = "sed 's/^>//; s/[ ].*$//g'"
 
     if ignore:
@@ -41,12 +41,9 @@ def grep_sequence_identifiers(str_input, output, ignore= ""):
     else:
         command = "{} | {}".format(get_pattern, process_pattern)
 
-    
     command = command + " > {}".format(output)
 
-    os.system(
-        command
-    )
+    os.system(command)
 
 
 def compress_using_xopen(fq_in: str, fq_out: str):
@@ -812,10 +809,9 @@ class setup_dl:
             for fl in fl_list:
                 temp_file = self.metadir + dbs + "_temp.tsv"
 
-                ignore_patterns= ""
+                ignore_patterns = ""
                 if dbs == "virosaurus":
                     ignore_patterns = "GENE"
-
 
                 grep_sequence_identifiers(fl, temp_file, ignore=ignore_patterns)
 
