@@ -6,7 +6,6 @@ from constants.constants import Constants
 from django.conf import settings
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from managing_files.manage_database import ManageDatabase
 from pathogen_identification.models import (
     ContigClassification,
     FinalReport,
@@ -22,7 +21,7 @@ from pathogen_identification.models import (
     SampleQC,
 )
 from settings.constants_settings import ConstantsSettings
-from settings.models import Parameter, Technology
+from settings.models import Parameter
 
 
 class ProjectTable(tables.Table):
