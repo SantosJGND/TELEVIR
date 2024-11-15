@@ -1,4 +1,4 @@
-class Televir_Layout:
+class TelevirLayout:
     # databases. chose at least one.
     install_refseq_prot = True
     install_refseq_gen = True
@@ -50,7 +50,6 @@ class Televir_Layout:
     # assemblers.
     install_spades = True
     install_raven = True
-    install_flye = True
 
     # technology setup (exclusive technologies. overrides info above).
     install_illumina = True

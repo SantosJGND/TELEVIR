@@ -10,7 +10,7 @@ from install_scripts.modules.utility_manager import Utility_Repository
 from install_scripts.utils.parse_utils import (
     process_nuc_fasta_dict,
 )
-from install_scripts.config import Televir_Layout
+from install_scripts.config import TelevirLayout
 
 
 def get_args_install():
@@ -138,7 +138,7 @@ class main_setup:
     def setup_config(self):
 
         try:
-            self.layout = Televir_Layout()
+            self.layout = TelevirLayout()
             self.layout.report_config()
         except ModuleNotFoundError as e:
             print("check install config.py exists")
