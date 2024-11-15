@@ -1,3 +1,7 @@
+from dataclasses import dataclass
+
+
+@dataclass
 class TelevirLayout:
     # databases. chose at least one.
     install_refseq_prot = True
@@ -29,7 +33,7 @@ class TelevirLayout:
 
     # host mappers
     install_bowtie2_remap = True
-    install_bowtie2_depletion = True
+    install_bowtie2_depletion = False
     install_bwa = True
 
     # classification software.
@@ -54,15 +58,3 @@ class TelevirLayout:
     # technology setup (exclusive technologies. overrides info above).
     install_illumina = True
     install_nanopore = True
-
-    def report_config(self):
-        """
-        Print the configuration.
-        """
-        print("Configuration:")
-
-        for key, value in self.__dict__.items():
-            print(key, ":", value)
-
-        print("#" * 20)
-        print("\n")
