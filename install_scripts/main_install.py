@@ -13,6 +13,24 @@ from install_scripts.utils.parse_utils import (
 from install_scripts.config import TelevirLayout
 
 
+class LayoutWithReport(TelevirLayout):
+    """
+    Layout with report.
+    """
+
+    def report_config(self):
+        """
+        Print the configuration.
+        """
+        print("Configuration:")
+
+        for key, value in self.__dict__.items():
+            print(key, ":", value)
+
+        print("#" * 20)
+        print("\n")
+
+
 def get_args_install():
     """
     get user defined arguments.
@@ -138,7 +156,7 @@ class main_setup:
     def setup_config(self):
 
         try:
-            self.layout = TelevirLayout()
+            self.layout = LayoutWithReport()
             self.layout.report_config()
         except ModuleNotFoundError as e:
             print("check install config.py exists")
