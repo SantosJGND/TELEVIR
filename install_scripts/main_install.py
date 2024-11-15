@@ -10,6 +10,7 @@ from install_scripts.modules.utility_manager import Utility_Repository
 from install_scripts.utils.parse_utils import (
     process_nuc_fasta_dict,
 )
+from install_scripts.config import Televir_Layout
 
 
 def get_args_install():
@@ -136,34 +137,16 @@ class main_setup:
 
     def setup_config(self):
 
-        if self.install_config == "full":
-            try:
-                from install_scripts.config import Televir_Layout_full
-            except ModuleNotFoundError as e:
-                print("check install config.py exists")
-                sys.exit()
-
-            self.layout = Televir_Layout_full()
-
-        elif self.install_config == "docker":
-            try:
-                from install_scripts.config import Televir_Layout_docker
-            except ModuleNotFoundError as e:
-                print("check install config.py exists")
-                sys.exit()
-
-            self.layout = Televir_Layout_docker()
-
-        else:
-            try:
-                from install_scripts.config import Televir_Layout_minimal
-            except ModuleNotFoundError as e:
-                print("check install config.py exists")
-                sys.exit()
-
-            self.layout = Televir_Layout_minimal()
+        try:
+            self.layout = Televir_Layout()
+        except ModuleNotFoundError as e:
+            print("check install config.py exists")
+            print(e)
+            sys.exit()
 
     def user_input(self):
+        """
+        get user defined arguments."""
         args = get_args_install()
         self.install_envs = args.envs
         self.seqdl = args.seqdl
