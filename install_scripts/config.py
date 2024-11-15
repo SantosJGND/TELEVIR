@@ -55,3 +55,15 @@ class Televir_Layout:
     # technology setup (exclusive technologies. overrides info above).
     install_illumina = True
     install_nanopore = True
+
+    def report_config(self):
+        """
+        Print the configuration.
+        """
+        print("Configuration:")
+
+        for key, value in self.__dict__.items():
+            print(key, ":", value)
+
+        print("#" * 20)
+        print("\n")

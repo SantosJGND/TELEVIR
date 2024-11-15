@@ -139,6 +139,7 @@ class main_setup:
 
         try:
             self.layout = Televir_Layout()
+            self.layout.report_config()
         except ModuleNotFoundError as e:
             print("check install config.py exists")
             print(e)
