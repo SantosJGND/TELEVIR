@@ -152,13 +152,13 @@ class Televir_Layout_minimal:
 
     # classification software.
     install_centrifuge = True
-    install_centrifuge_bacteria = True
+    install_centrifuge_bacteria = False
     install_kraken2 = True
-    install_kraken2_bacteria = True
+    install_kraken2_bacteria = False
     install_krakenuniq = True
     install_krakenuniq_fungi = False
     install_kaiju = True
-    install_diamond = False
+    install_diamond = True
     install_minimap2 = False
     install_fastviromeexplorer = True
     install_clark = True

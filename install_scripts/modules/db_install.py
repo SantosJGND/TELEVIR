@@ -27,16 +27,23 @@ except:
     pass
 
 
-def grep_sequence_identifiers(input, output):
+def grep_sequence_identifiers(str_input, output, ignore=""):
     """
     grep sequence identifiers from fasta file.
     """
 
-    os.system(
-        "zgrep -P '^>' {} | sed 's/^>//; s/[ ].*$//g' > {}".format(
-            input, output  # | grep -v 'GENE\|gene'
-        )
-    )
+    get_pattern = f"zgrep -P '^>' {str_input}"
+    filter_pattern = f"grep -v {ignore}"
+    process_pattern = "sed 's/^>//; s/[ ].*$//g'"
+
+    if ignore:
+        command = "{} | {} | {}".format(get_pattern, filter_pattern, process_pattern)
+    else:
+        command = "{} | {}".format(get_pattern, process_pattern)
+
+    command = command + " > {}".format(output)
+
+    os.system(command)
 
 
 def compress_using_xopen(fq_in: str, fq_out: str):
@@ -172,9 +179,9 @@ class setup_dl:
         :param filename:
         :return:
         """
-        flname= os.path.basename(filename)
+        flname = os.path.basename(filename)
         basename = os.path.splitext(filename)[0]
-        blname= os.path.basename(basename)
+        blname = os.path.basename(basename)
 
         if os.path.isfile(basename) and os.path.isfile(filename):
             os.remove(basename)
@@ -205,7 +212,7 @@ class setup_dl:
         for k, v in self.fastas["nuc"].items():
 
             for fl in v:
-                flname= os.path.basename(fl)
+                flname = os.path.basename(fl)
                 if not self.check_fasta_bgziped(fl):
                     logging.info(f"{flname} not bgzipped.")
                     self.bgzip_file(fl)
@@ -251,9 +258,17 @@ class setup_dl:
                 return False
             else:
                 logging.info(f"{filename} not found. downloading...")
+                sep = "" if source.startswith("/") else "/"
+
                 try:
                     subprocess.run(
-                        ["wget", f"ftp://{host}/{source}{filename}", "-P", self.seqdir]
+                        [
+                            "wget",
+                            f"ftp://{host}{sep}{source}{filename}",
+                            "-P",
+                            self.seqdir,
+                        ],
+                        check=False,
                     )
                 except subprocess.CalledProcessError:
                     logging.info(f"{filename} not found.")
@@ -712,7 +727,7 @@ class setup_dl:
         :return:
         """
 
-        fl = "https://viralzone.expasy.org/resources/Virosaurus/2020_4/virosaurus90_vertebrate-20200330.fas.gz"
+        fl = "https://ftp.expasy.org/databases/viralzone/2020%5F4/virosaurus90%5Fvertebrate-20200330.fas.gz"
 
         if (
             not os.path.isfile(self.seqdir + os.path.basename(fl))
@@ -794,7 +809,11 @@ class setup_dl:
             for fl in fl_list:
                 temp_file = self.metadir + dbs + "_temp.tsv"
 
-                grep_sequence_identifiers(fl, temp_file)
+                ignore_patterns = ""
+                if dbs == "virosaurus":
+                    ignore_patterns = "GENE"
+
+                grep_sequence_identifiers(fl, temp_file, ignore=ignore_patterns)
 
                 if dbs == "kraken2":
                     dbacc = pd.read_csv(
@@ -2090,6 +2109,9 @@ class setup_install(setup_dl):
             }
             return True
         except subprocess.CalledProcessError:
+            logging.info(f"failed to index bwa db {dbname}")
+            return False
+        except FileNotFoundError:
             logging.info(f"failed to index bwa db {dbname}")
             return False
         finally:
