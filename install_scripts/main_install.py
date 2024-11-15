@@ -24,8 +24,10 @@ class LayoutWithReport(TelevirLayout):
         """
         print("Configuration:")
 
-        for key, value in self.__dict__.items():
-            print(key, ":", value)
+        attributes= [attr for attr in dir(self) if not callable(getattr(self, attr)) and not attr.startswith("__")]
+
+        for attr in attributes:
+            print(f"{attr} : {getattr(self, attr)}")
 
         print("#" * 20)
         print("\n")

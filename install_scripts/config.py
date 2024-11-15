@@ -1,7 +1,3 @@
-from dataclasses import dataclass
-
-
-@dataclass
 class TelevirLayout:
     # databases. chose at least one.
     install_refseq_prot = True
