@@ -515,7 +515,6 @@ class main_setup:
                 )
 
         ########################## kraken2 ###############################
-        
 
         if self.layout.install_kraken2:
             success_install = sofprep.kraken2_two_strategies_install(
@@ -546,7 +545,7 @@ class main_setup:
                     )
                 )
 
-        if self.layout.install_kraken2_eupathdb46;
+        if self.layout.install_kraken2_eupathdb46:
             success_install = sofprep.kraken2_download_install(dbname="eupathdb46")
             if success_install:
                 self.installed_software.append(self.software_install_string("kraken2"))
