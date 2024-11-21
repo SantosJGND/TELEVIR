@@ -24,7 +24,11 @@ class LayoutWithReport(TelevirLayout):
         """
         print("Configuration:")
 
-        attributes= [attr for attr in dir(self) if not callable(getattr(self, attr)) and not attr.startswith("__")]
+        attributes = [
+            attr
+            for attr in dir(self)
+            if not callable(getattr(self, attr)) and not attr.startswith("__")
+        ]
 
         for attr in attributes:
             print(f"{attr} : {getattr(self, attr)}")
@@ -511,6 +515,7 @@ class main_setup:
                 )
 
         ########################## kraken2 ###############################
+        
 
         if self.layout.install_kraken2:
             success_install = sofprep.kraken2_two_strategies_install(
@@ -536,6 +541,21 @@ class main_setup:
                         "kraken2",
                         sofprep.dbs["kraken2"]["db"],
                         "default",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
+                    )
+                )
+
+        if self.layout.install_kraken2_eupathdb46;
+            success_install = sofprep.kraken2_download_install(dbname="eupathdb46")
+            if success_install:
+                self.installed_software.append(self.software_install_string("kraken2"))
+
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "kraken2",
+                        sofprep.dbs["kraken2"]["db"],
+                        "eupathdb46",
                         True,
                         sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
                     )
@@ -683,7 +703,6 @@ class main_setup:
         for fname, fpath in prepdl.fastas["prot"].items():
             if self.layout.install_diamond:
                 install_success = sofprep.diamond_install(dbname=fname, db=fpath)
-                print("INSTALL SUCCESS", install_success)
 
                 if install_success:
                     self.installed_software.append(

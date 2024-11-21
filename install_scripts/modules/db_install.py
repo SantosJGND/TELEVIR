@@ -1321,7 +1321,8 @@ class setup_install(setup_dl):
                             f"{odir}{dbname}/taxdump.tar.gz",
                             "-C",
                             f"{odir}{dbname}",
-                        ]
+                        ],
+                        check=False,
                     )
 
                 subprocess.run(build_command)
@@ -1434,6 +1435,8 @@ class setup_install(setup_dl):
             source = (
                 "https://genome-idx.s3.amazonaws.com/kraken/16S_RDP11.5_20200326.tgz"
             )
+        elif dbname == "eupathdb46":
+            source = "https://genome-idx.s3.amazonaws.com/kraken/k2_eupathdb48_20201113.tar.gz"
 
         source_file = source.split("/")[-1]
 
