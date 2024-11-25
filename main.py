@@ -153,7 +153,7 @@ def main():
         INSTALL_PARAMS,
         taxdump=TAXDUMP,
         test=args.test,
-        organism=ORGANISM,
+        update=UPDATE,
     )
 
     metagen_prep = main_setup(

@@ -1167,9 +1167,9 @@ class setup_install(setup_dl):
         bindir="",
         taxdump="",
         test=False,
-        organism="viral",
+        update=False,
     ):
-        super().__init__(INSTALL_PARAMS, home, bindir, test=test)
+        super().__init__(INSTALL_PARAMS, home, bindir, test=test, update=update)
         self.taxdump = taxdump
 
         if not self.taxdump:
@@ -1210,7 +1210,6 @@ class setup_install(setup_dl):
 
         if self.update:
             logging.info(f"Updating centrifuge db {dbname} index.")
-            print(os.path.exists(f"{odir}{dbname}"))
             if os.path.exists(f"{odir}{dbname}"):
                 logging.info(f"Removing old centrifuge db {dbname} index.")
                 shutil.rmtree(f"{odir}{dbname}")
