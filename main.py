@@ -88,55 +88,51 @@ def main():
         args.envs = True
         args.soft = True
         args.seqdl = True
-        # args.deploy = True
 
-    if args.docker:
-        SOURCE = "/opt/conda/etc/profile.d/conda.sh"
-        SOURCE_DIR = "/opt/conda/"
-        HOME = "/televir/mngs_benchmark/"
-        ENVDIR = "/televir/mngs_benchmark/mngs_environments/"
-        DEPLOYMENT_DIR = "/televir/mngs_benchmark/app/"
-        DATABASE = "insaflu_db"
-        TECH = "nanopore"
-        TAXDUMP = "/opt/taxdump.tar.gz"
-        ORGANISM = "viral"
-        INSTALL_CONFIG = "full"
-        INSTALL_TYPE = "docker"
+        """     if args.docker:
+                SOURCE = "/opt/conda/etc/profile.d/conda.sh"
+                HOME = "/televir/mngs_benchmark/"
+                ENVDIR = "/televir/mngs_benchmark/mngs_environments/"
+                TECH = "nanopore"
+                TAXDUMP = "/opt/taxdump.tar.gz"
+                UPDATE = False
 
-        INSTALL_PARAMS["HOME"] = HOME
-        INSTALL_PARAMS["ENVSDIR"]["SOURCE"] = SOURCE
-        INSTALL_PARAMS["ENVSDIR"]["ROOT"] = ENVDIR
+                ORGANISM = "viral"
+                INSTALL_TYPE = "docker"
 
-        ENVS_PARAMS["SOURCE"] = SOURCE
-        ENVS_PARAMS["ENVSDIR"] = ENVDIR
-        ENVS_PARAMS["YMLDIR"] = CWD + "/install_scripts/yaml/"
+                INSTALL_PARAMS["HOME"] = HOME
+                INSTALL_PARAMS["ENVSDIR"]["SOURCE"] = SOURCE
+                INSTALL_PARAMS["ENVSDIR"]["ROOT"] = ENVDIR
 
-    else:
-        try:
-            mainconf = __import__(os.path.splitext(args.config)[0])
-        except ImportError as e:
-            logging.info(f"failed to import config file {args.config}")
-            sys.exit(1)
+                ENVS_PARAMS["SOURCE"] = SOURCE
+                ENVS_PARAMS["ENVSDIR"] = ENVDIR
+                ENVS_PARAMS["YMLDIR"] = CWD + "/install_scripts/yaml/"
 
-        DEPLOYMENT_DIR = mainconf.DEPLOYMENT_DIR
-        ENVDIR = mainconf.ENVDIR
-        HOME = mainconf.HOME
-        SOURCE = mainconf.SOURCE
-        SOURCE_DIR = mainconf.SOURCE_DIR
-        TAXDUMP = mainconf.TAXDUMP
-        TECH = mainconf.TECH
-        ORGANISM = mainconf.ORGANISM
-        INSTALL_CONFIG = mainconf.INSTALL_CONFIG
-        INSTALL_TYPE = "local"
-        DATABASE = mainconf.DATABASE
+            else: """
 
-        INSTALL_PARAMS["HOME"] = HOME
-        INSTALL_PARAMS["ENVSDIR"]["SOURCE"] = SOURCE
-        INSTALL_PARAMS["ENVSDIR"]["ROOT"] = ENVDIR
+    try:
+        mainconf = __import__(os.path.splitext(args.config)[0])
+    except ImportError as e:
+        logging.info(f"failed to import config file {args.config}")
+        sys.exit(1)
 
-        ENVS_PARAMS["SOURCE"] = SOURCE
-        ENVS_PARAMS["ENVSDIR"] = ENVDIR
-        ENVS_PARAMS["YMLDIR"] = CWD + "/install_scripts/yaml/"
+    ENVDIR = mainconf.ENVDIR
+    HOME = mainconf.HOME
+    SOURCE = mainconf.SOURCE
+    TAXDUMP = mainconf.TAXDUMP
+    UPDATE = mainconf.UPDATE
+
+    TECH = "nanopore"
+    ORGANISM = "viral"
+    INSTALL_TYPE = "docker"
+
+    INSTALL_PARAMS["HOME"] = HOME
+    INSTALL_PARAMS["ENVSDIR"]["SOURCE"] = SOURCE
+    INSTALL_PARAMS["ENVSDIR"]["ROOT"] = ENVDIR
+
+    ENVS_PARAMS["SOURCE"] = SOURCE
+    ENVS_PARAMS["ENVSDIR"] = ENVDIR
+    ENVS_PARAMS["YMLDIR"] = CWD + "/install_scripts/yaml/"
 
     ###
     from install_scripts.main_install import main_setup
@@ -151,7 +147,7 @@ def main():
 
     env_manager = env_install(ENVS_PARAMS)
 
-    dl_manager = setup_dl(INSTALL_PARAMS)
+    dl_manager = setup_dl(INSTALL_PARAMS, update=UPDATE)
 
     install_manager = setup_install(
         INSTALL_PARAMS,
@@ -168,7 +164,6 @@ def main():
         ENVS_PARAMS=ENVS_PARAMS,
         INSTALL_PARAMS=INSTALL_PARAMS,
         pdir=CWD + "/install_scripts/",
-        install_config=INSTALL_CONFIG,
     )
 
     metagen_prep.object_input(

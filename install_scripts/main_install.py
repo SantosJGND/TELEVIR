@@ -131,14 +131,12 @@ class main_setup:
         pdir="",
         ENVS_PARAMS="",
         INSTALL_PARAMS="",
-        install_config="full",
     ) -> None:
         self.ENVS_PARAMS = ENVS_PARAMS
         self.INSTALL_PARAMS = INSTALL_PARAMS
         self.wdir = dl_engine
         self.env_manager = env_install_engine
         self.setup_install_class = install_engine
-        self.install_config = install_config
 
         if not pdir:
             pdir = os.getcwd()
@@ -358,21 +356,20 @@ class main_setup:
                     )
                 )
 
-        if self.organism == "viral":
-            if self.layout.install_virosaurus:
-                success_virosaurus = self.wdir.virosaurus_dl()
-                if success_virosaurus:
-                    self.installed_databases.append(
-                        self.database_install_string("virosaurus")
-                    )
+        if self.layout.install_virosaurus:
+            success_virosaurus = self.wdir.virosaurus_dl()
+            if success_virosaurus:
+                self.installed_databases.append(
+                    self.database_install_string("virosaurus")
+                )
 
-                    self.utilities.add_database(
-                        self.utilities.database_item(
-                            "virosaurus",
-                            self.wdir.fastas["nuc"]["virosaurus"][0],
-                            True,
-                        )
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        "virosaurus",
+                        self.wdir.fastas["nuc"]["virosaurus"][0],
+                        True,
                     )
+                )
 
             if self.layout.install_rvdb:
                 success_rvdb = self.wdir.RVDB_dl()
@@ -621,20 +618,19 @@ class main_setup:
                 )
 
         # install viral specific databases
-        if self.organism == "viral":
-            if self.layout.install_kaiju:
-                sofprep.kaiju_viral_install()
-                self.installed_software.append(self.software_install_string("kaiju"))
+        if self.layout.install_kaiju:
+            sofprep.kaiju_viral_install()
+            self.installed_software.append(self.software_install_string("kaiju"))
 
-                self.utilities.add_software(
-                    self.utilities.software_item(
-                        "kaiju",
-                        sofprep.dbs["kaiju"]["db"],
-                        "default",
-                        True,
-                        sofprep.envs["ROOT"] + sofprep.envs["kaiju"],
-                    )
+            self.utilities.add_software(
+                self.utilities.software_item(
+                    "kaiju",
+                    sofprep.dbs["kaiju"]["db"],
+                    "default",
+                    True,
+                    sofprep.envs["ROOT"] + sofprep.envs["kaiju"],
                 )
+            )
 
         # install host dbs.
 

@@ -128,11 +128,8 @@ TECH: the sequencing technology used. Options are: illumina, nanopore.
 TAXDUMP: the path to the taxdump.tar.gz file. This should be the argument to a local instance of ncbi's taxdump.tar.gz. if given, the software will use this to rescue corruped files on download for those software that require it. Recommended when running locally.
 ORGANISM: the organism to be used. Options are: viral.
 ENV: the environment to be used. Options are: mngsbench.
-INSTALL_CONFIG: installation configuration, options are: minimal, full.
 
 Verify that these values correspond to those in the ENVS_PARAMS dictionary for the corresponding keys.
-
-NOTE: INSTALL_CONFIG == minimal will install only the software and databases required for the pipeline to run. INSTALL_CONFIG == full will install all the software and databases available for the pipeline. See install_scripts/config.py for more details.
 
 #### Deployment
 

@@ -114,7 +114,13 @@ def entrez_ncbi_taxid(file, outdir, outfile, nmax=500):
 
 class setup_dl:
     def __init__(
-        self, INSTALL_PARAMS, organism="viral", home="", bindir="", test=False
+        self,
+        INSTALL_PARAMS,
+        organism="viral",
+        home="",
+        bindir="",
+        test=False,
+        update=False,
     ):
         if not INSTALL_PARAMS["HOME"]:
             home = os.getcwd()
@@ -140,6 +146,7 @@ class setup_dl:
         self.fastas = {"prot": {}, "nuc": {}, "host": {}}
         self.meta = {}
         self.test = test
+        self.update = update
 
         self.organism = organism
 
@@ -557,7 +564,13 @@ class setup_dl:
         fnuc = f"refseq_{self.organism}.genome.fna.gz"
         fnuc_suf = os.path.splitext(fnuc)[0]
 
+        if self.update:
+            if os.path.isfile(self.seqdir + fnuc):
+                logging.info(f"{fnuc_suf} found, removing for Update.")
+                os.remove(self.seqdir + fnuc)
+
         if os.path.isfile(self.seqdir + fnuc):
+
             self.fastas["nuc"]["refseq"] = [self.seqdir + fnuc]
             logging.info(f"{fnuc} found.")
             return True
@@ -1179,6 +1192,7 @@ class setup_install(setup_dl):
         id="centrifuge",
         dbdir="centrifuge",
         dlp="wget",
+        update=False,
     ):
         """
         install centrifuge.
@@ -1194,6 +1208,13 @@ class setup_install(setup_dl):
         sdir = odir + dbname + "/" + dbname
         index_file_prefix = f"{odir}{dbname}/{dbname}_index"
         old_index_file_prefix = f"{odir}{dbname}/index"
+
+        if update:
+            logging.info(f"Updating centrifuge db {dbname} index.")
+            if os.path.exists(f"{odir}{dbname}"):
+                logging.info(f"Removing old centrifuge db {dbname} index.")
+                shutil.rmtree(f"{odir}{dbname}")
+
         if os.path.isfile(index_file_prefix + ".1.cf"):
             logging.info(f"Centrifuge db {dbname} index is installed.")
             centrifuge_fasta = f"{sdir}/complete.fna.gz"
@@ -1209,6 +1230,7 @@ class setup_install(setup_dl):
             return True
 
         elif os.path.isfile(old_index_file_prefix + ".1.cf"):
+
             logging.info(f"Centrifuge db {dbname} index is installed.")
             centrifuge_fasta = f"{sdir}/complete.fna.gz"
             if os.path.isfile(os.path.splitext(centrifuge_fasta)[0]):
@@ -1927,7 +1949,6 @@ class setup_install(setup_dl):
         title="viral db",
     ):
         odir = self.dbdir + dbdir + "/"
-
         dbtype = "nucl"
         sdir = "NUC/"
 
