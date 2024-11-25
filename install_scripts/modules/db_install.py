@@ -654,7 +654,7 @@ class setup_dl:
                     if os.path.isfile(fl):
                         os.remove(fl)
 
-        os.system("rm {}".format(fls))
+        os.system("rm {}".format(" ".join(fls)))
         subprocess.run([BGZIP_BIN, self.seqdir + outf])
 
     def uniprot_dl(self, vs="90"):
@@ -1192,7 +1192,6 @@ class setup_install(setup_dl):
         id="centrifuge",
         dbdir="centrifuge",
         dlp="wget",
-        update=False,
     ):
         """
         install centrifuge.
@@ -1209,7 +1208,7 @@ class setup_install(setup_dl):
         index_file_prefix = f"{odir}{dbname}/{dbname}_index"
         old_index_file_prefix = f"{odir}{dbname}/index"
 
-        if update:
+        if self.update:
             logging.info(f"Updating centrifuge db {dbname} index.")
             if os.path.exists(f"{odir}{dbname}"):
                 logging.info(f"Removing old centrifuge db {dbname} index.")
