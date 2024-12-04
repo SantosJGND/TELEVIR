@@ -226,8 +226,8 @@ class main_setup:
         """
         envprep = self.env_manager
         envprep.prep_dir()
-        if self.layout.install_flye:
-            envprep.flye_install()
+        #if self.layout.install_flye:
+        #    envprep.flye_install()
 
         if self.layout.install_clark:
             envprep.clark_install()
