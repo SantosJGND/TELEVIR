@@ -788,6 +788,10 @@ class setup_dl:
         merge accession and taxonomy info from nuc fasta files.
         """
 
+        if self.update:
+            if os.path.isfile(self.metadir + outfile):
+                os.remove(self.metadir + outfile)
+
         if os.path.isfile(self.metadir + outfile):
             acc2tax = pd.read_csv(self.metadir + outfile, sep="\t")
             check = []
