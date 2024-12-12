@@ -1448,11 +1448,13 @@ class setup_install(setup_dl):
 
         if dbname == "viral":
             source = (
-                "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20221209.tar.gz"
+                "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20240904.tar.gz"
+                # "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20221209.tar.gz"
             )
         elif dbname == "standard":
             source = (
-                "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20230314.tar.gz"
+                "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20240904.tar.gz"
+                #"https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20230314.tar.gz"
             )
         elif dbname == "bacteria":
             source = "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_16gb_20230314.tar.gz"
@@ -1902,7 +1904,8 @@ class setup_install(setup_dl):
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
         subdb = odir + dbname + "/"
-        db_online = "https://kaiju.binf.ku.dk/database/kaiju_db_viruses_2021-02-24.tgz"
+        #db_online = "https://kaiju.binf.ku.dk/database/kaiju_db_viruses_2021-02-24.tgz"
+        db_online = "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2023/kaiju_db_fungi_2023-05-26.tgz"
         file = os.path.basename(db_online)
         if os.path.isfile(subdb + "kaiju_db_viruses.fmi"):
             logging.info(f"Kaiju {dbname}  is installed.")

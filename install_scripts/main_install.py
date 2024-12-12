@@ -226,7 +226,7 @@ class main_setup:
         """
         envprep = self.env_manager
         envprep.prep_dir()
-        #if self.layout.install_flye:
+        # if self.layout.install_flye:
         #    envprep.flye_install()
 
         if self.layout.install_clark:
@@ -398,9 +398,7 @@ class main_setup:
         generate metadata files for nuc databases."""
         self.wdir.nuc_metadata()
 
-    def db_generate_intrinsic(
-        self, INSTALL_PARAMS, prepdl: setup_dl, nanopore=False, taxdump="", test=False
-    ):
+    def db_generate_intrinsic(self, prepdl: setup_dl):
         """
         Install databases for each software envisaged.
         Could be changed so that the software in question are also drawn from config file,
@@ -870,12 +868,7 @@ class main_setup:
 
             if self.soft:
 
-                sofprep = self.db_generate_intrinsic(
-                    self.INSTALL_PARAMS,
-                    self.wdir,
-                    nanopore=self.nanopore,
-                    taxdump=self.taxdump,
-                )
+                sofprep = self.db_generate_intrinsic(self.wdir)
 
                 self.db_generate_external(
                     self.wdir,
