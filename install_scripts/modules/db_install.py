@@ -1467,6 +1467,13 @@ class setup_install(setup_dl):
 
         source_file = source.split("/")[-1]
 
+        if self.update:
+            logging.info(f"Updating Kraken2 db {dbname}.")
+            if os.path.exists(odir + dbname):
+
+                logging.info(f"Removing old Kraken2 db {dbname}.")
+                shutil.rmtree(odir + dbname)
+
         if os.path.isfile(odir + dbname + "/taxo.k2d"):
             logging.info(f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
 
