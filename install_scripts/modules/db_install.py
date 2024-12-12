@@ -1454,7 +1454,7 @@ class setup_install(setup_dl):
         elif dbname == "standard":
             source = (
                 "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20240904.tar.gz"
-                #"https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20230314.tar.gz"
+                # "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20230314.tar.gz"
             )
         elif dbname == "bacteria":
             source = "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_16gb_20230314.tar.gz"
@@ -1904,7 +1904,7 @@ class setup_install(setup_dl):
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
         subdb = odir + dbname + "/"
-        #db_online = "https://kaiju.binf.ku.dk/database/kaiju_db_viruses_2021-02-24.tgz"
+        # db_online = "https://kaiju.binf.ku.dk/database/kaiju_db_viruses_2021-02-24.tgz"
         db_online = "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2023/kaiju_db_fungi_2023-05-26.tgz"
         file = os.path.basename(db_online)
         if os.path.isfile(subdb + "kaiju_db_viruses.fmi"):
@@ -1965,6 +1965,11 @@ class setup_install(setup_dl):
 
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
         db = sdir + dbname
+
+        if self.update:
+            if os.path.exists(f"{sdir}"):
+                shutil.rmtree(f"{sdir}")
+
         if os.path.isfile(db + f".{dbtype[0]}db"):
             logging.info(f"blast index for {dbname} is installed.")
             self.dbs[id] = {"dir": odir, "dbname": dbname, "db": db}
@@ -2091,6 +2096,10 @@ class setup_install(setup_dl):
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
         sdir = odir + dbname + "/" + dbname
+
+        if self.update:
+            if os.path.exists(f"{odir}{dbname}"):
+                shutil.rmtree(f"{odir}{dbname}")
 
         if not url and not reference:
             logging.info(
@@ -2233,7 +2242,12 @@ class setup_install(setup_dl):
         subdir = odir + dbname + "/"
         fidx = subdir + dbname + ".idx"
 
+        if self.update:
+            if os.path.exists(subdir):
+                shutil.rmtree(subdir)
+
         if os.path.isfile(fidx):
+
             logging.info(f"FastViromeExplorer index for {reference} is installed.")
             self.dbs[id] = {"dir": odir, "dbname": dbname, "db": fidx}
             return True
