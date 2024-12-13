@@ -229,14 +229,14 @@ class main_setup:
         # if self.layout.install_flye:
         #    envprep.flye_install()
 
-        if self.layout.install_clark:
-            envprep.clark_install()
+        # if self.layout.install_clark:
+        #    envprep.clark_install()
 
         if self.layout.install_fastviromeexplorer:
             envprep.fve_install()
 
-        if self.layout.install_desamba:
-            envprep.deSAMBA_install()
+        # if self.layout.install_desamba:
+        #    envprep.deSAMBA_install()
 
         os.system(
             f"cp {self.pdir}bin/krakenuniq-download* {ENVS_PARAMS['ENVSDIR']}hostDepletion/hostdep_env/bin/"
@@ -464,7 +464,7 @@ class main_setup:
             install_success = sofprep.centrifuge_install(
                 dbname="bacteria", threads="16"
             )
-            centlib = f"refseq-bacteria.dust.fna.gz"
+            centlib = "refseq-bacteria.dust.fna.gz"
             if os.path.isfile(sofprep.dbs["centrifuge"]["fasta"]):
                 os.system(
                     f"mv {sofprep.dbs['centrifuge']['fasta']} {prepdl.seqdir}{centlib}"
@@ -493,21 +493,21 @@ class main_setup:
                         )
                     )
 
-        ########################## clark ##################################
-        if self.layout.install_clark:
-            success_install = sofprep.clark_install(dbname=self.organism)
-            if success_install:
-                self.installed_software.append(self.software_install_string("clark"))
-
-                self.utilities.add_software(
-                    self.utilities.software_item(
-                        "clark",
-                        sofprep.dbs["clark"]["db"],
-                        "default",
-                        True,
-                        sofprep.envs["ROOT"] + sofprep.envs["clark"],
-                    )
-                )
+        ########################### clark ##################################
+        # if self.layout.install_clark:
+        #    success_install = sofprep.clark_install(dbname=self.organism)
+        #    if success_install:
+        #        self.installed_software.append(self.software_install_string("clark"))
+        #
+        #        self.utilities.add_software(
+        #            self.utilities.software_item(
+        #                "clark",
+        #                sofprep.dbs["clark"]["db"],
+        #                "default",
+        #                True,
+        #                sofprep.envs["ROOT"] + sofprep.envs["clark"],
+        #            )
+        #        )
 
         ########################## kraken2 ###############################
 
@@ -599,21 +599,21 @@ class main_setup:
                     )
                 )
 
-        if self.layout.install_krakenuniq_fungi:
-            success_install = sofprep.kuniq_install(dbname="fungi")
-            if success_install:
-                self.installed_software.append(
-                    self.software_install_string("krakenuniq")
-                )
-                self.utilities.add_software(
-                    self.utilities.software_item(
-                        "krakenuniq",
-                        sofprep.dbs["krakenuniq"]["db"],
-                        "fungi",
-                        True,
-                        sofprep.envs["ROOT"] + sofprep.envs["krakenuniq"],
-                    )
-                )
+        # if self.layout.install_krakenuniq_fungi:
+        #    success_install = sofprep.kuniq_install(dbname="fungi")
+        #    if success_install:
+        #        self.installed_software.append(
+        #            self.software_install_string("krakenuniq")
+        #        )
+        #        self.utilities.add_software(
+        #            self.utilities.software_item(
+        #                "krakenuniq",
+        #                sofprep.dbs["krakenuniq"]["db"],
+        #                "fungi",
+        #                True,
+        #                sofprep.envs["ROOT"] + sofprep.envs["krakenuniq"],
+        #            )
+        #        )
 
         # install viral specific databases
         if self.layout.install_kaiju:
@@ -835,27 +835,28 @@ class main_setup:
                                 )
                             )
 
-                if nanopore:
-                    if self.layout.install_desamba:
-                        install_success = sofprep.deSAMBA_install(
-                            reference=fpath,
-                            dbname=fname,
-                        )
+                # if nanopore:
+                #    if self.layout.install_desamba:
+                #        install_success = sofprep.deSAMBA_install(
+                #            reference=fpath,
+                #            dbname=fname,
+                #        )
 
-                        if install_success:
-                            self.installed_software.append(
-                                self.software_install_string("desamba")
-                            )
-
-                            self.utilities.add_software(
-                                self.utilities.software_item(
-                                    "desamba",
-                                    sofprep.dbs["desamba"]["db"],
-                                    fname,
-                                    True,
-                                    sofprep.envs["ROOT"] + sofprep.envs["desamba"],
-                                )
-                            )
+    #
+    #        if install_success:
+    #            self.installed_software.append(
+    #                self.software_install_string("desamba")
+    #            )
+    #
+    #            self.utilities.add_software(
+    #                self.utilities.software_item(
+    #                    "desamba",
+    #                    sofprep.dbs["desamba"]["db"],
+    #                    fname,
+    #                    True,
+    #                    sofprep.envs["ROOT"] + sofprep.envs["desamba"],
+    #                )
+    #            )
 
     def setup_soft(self):
         if self.seqdl or self.soft:
