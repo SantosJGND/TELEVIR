@@ -1525,6 +1525,12 @@ class setup_install(setup_dl):
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
 
+        if self.update:
+            logging.info(f"Updating Kraken2 db {dbname}.")
+            if os.path.exists(odir + dbname):
+                logging.info(f"Removing old Kraken2 db {dbname}.")
+                shutil.rmtree(odir + dbname
+
         if os.path.isfile(odir + dbname + "/taxo.k2d"):
             logging.info(f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
             krk2_fasta = odir + dbname + "/library/" + dbname + "/library.fna.gz"
@@ -1655,6 +1661,21 @@ class setup_install(setup_dl):
     ):
         odir = self.dbdir + dbdir + "/"
 
+
+        kraken2_download_install = self.kraken2_download_install(
+            dbname=dbname,
+            id=id,
+            dbdir=dbdir,
+        )
+
+        if kraken2_download_install:
+            return True
+        
+        # if traditional install fails, try to download and install
+        # remove the dbdir and try again
+        os.system("rm -rf " + odir)
+
+
         traditional_install = self.kraken2_install(
             dbname=dbname,
             threads=threads,
@@ -1667,18 +1688,6 @@ class setup_install(setup_dl):
         if traditional_install:
             return True
 
-        # if traditional install fails, try to download and install
-        # remove the dbdir and try again
-        os.system("rm -rf " + odir)
-
-        kraken2_download_install = self.kraken2_download_install(
-            dbname=dbname,
-            id=id,
-            dbdir=dbdir,
-        )
-
-        if kraken2_download_install:
-            return True
 
         return False
 
@@ -2040,8 +2049,6 @@ class setup_install(setup_dl):
         dbdir="bowtie2",
         reference="",
         dbname="viral",
-        args="",
-        title="viral db",
     ):
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
@@ -2097,6 +2104,7 @@ class setup_install(setup_dl):
         id="bwa",
         dbdir="bwa",
         dlp="wget",
+        update=False,
     ):
         """ """
 
@@ -2104,7 +2112,7 @@ class setup_install(setup_dl):
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
         sdir = odir + dbname + "/" + dbname
 
-        if self.update:
+        if update:
             if os.path.exists(f"{odir}{dbname}"):
                 shutil.rmtree(f"{odir}{dbname}")
 
