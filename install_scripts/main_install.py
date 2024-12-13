@@ -494,6 +494,7 @@ class main_setup:
                     )
 
         ########################### clark ##################################
+
         # if self.layout.install_clark:
         #    success_install = sofprep.clark_install(dbname=self.organism)
         #    if success_install:
@@ -638,19 +639,12 @@ class main_setup:
         self,
         prepdl: setup_dl,
         sofprep: setup_install,
-        nanopore=False,
-        taxdump="",
-        test=False,
     ):
-        # sofprep = self.setup_install_class(
-        #    INSTALL_PARAMS, taxdump=taxdump, test=test, organism=self.organism
-        # )
-
         logging.info("install prepped")
 
         for fname, fpath in prepdl.fastas["host"].items():
             bwa_install = sofprep.bwa_install(dbname=fname, reference=fpath)
-            # common_name = sofprep.get_host_common_name(fname)
+
             if bwa_install:
                 self.installed_software.append(self.software_install_string("bwa"))
                 self.utilities.add_software(
@@ -745,7 +739,9 @@ class main_setup:
                 if os.path.getsize(fpath) > 15000000000:
                     continue
 
-                bwa_install = sofprep.bwa_install(dbname=fname, reference=fpath)
+                bwa_install = sofprep.bwa_install(
+                    dbname=fname, reference=fpath, update=sofprep.update
+                )
                 if bwa_install:
                     self.installed_software.append(self.software_install_string("bwa"))
                     self.utilities.add_software(
@@ -874,8 +870,6 @@ class main_setup:
                 self.db_generate_external(
                     self.wdir,
                     sofprep,
-                    nanopore=self.nanopore,
-                    taxdump=self.taxdump,
                 )
 
                 self.wdir.fastas["nuc"] = process_nuc_fasta_dict(

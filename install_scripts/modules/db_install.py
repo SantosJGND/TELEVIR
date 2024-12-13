@@ -688,6 +688,10 @@ class setup_dl:
         """
         fl = "https://ftp.ncbi.nlm.nih.gov/blast/db/FASTA/swissprot.gz"
 
+        if self.update:
+            if os.path.isfile(self.seqdir + os.path.basename(fl)):
+                os.remove(self.seqdir + os.path.basename(fl))
+
         if not os.path.isfile(self.seqdir + os.path.basename(fl)):
             if self.test:
                 logging.info("swissprot.gz not found.")
@@ -1693,6 +1697,11 @@ class setup_install(setup_dl):
     ):
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
+
+        if self.update:
+            if os.path.exists(odir + dbname):
+                logging.info(f"Removing old Diamond db {dbname}.")
+                shutil.rmtree(odir + dbname)
 
         if os.path.isfile(odir + dbname + ".dmnd"):
             logging.info(f"Diamond db {dbname}.dmnd present. Diamond prepped.")
