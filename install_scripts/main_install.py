@@ -861,7 +861,9 @@ class main_setup:
                     self.wdir.fastas["nuc"], max_file_size=4000000000
                 )
 
-                self.wdir.index_nuc_fasta_files()
+                if self.layout.check_index_files:
+                    self.wdir.index_nuc_fasta_files()
+
                 self.dl_metadata_nuc()
 
             if self.seqdl:
