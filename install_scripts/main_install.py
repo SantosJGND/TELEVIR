@@ -557,7 +557,7 @@ class main_setup:
                 )
 
         if self.layout.install_kraken2_bacteria:
-            success_install = sofprep.kraken2_download_install(dbname="bacteria")
+            success_install = sofprep.kraken2_install(dbname="bacteria")
             krlib = f"kraken2-bacteria-library.fna.gz"
             if os.path.isfile(sofprep.dbs["kraken2"]["fasta"]):
                 os.system(
