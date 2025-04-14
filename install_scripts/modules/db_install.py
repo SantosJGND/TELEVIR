@@ -1926,8 +1926,12 @@ class setup_install(setup_dl):
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
         subdb = odir + dbname + "/"
-        # db_online = "https://kaiju.binf.ku.dk/database/kaiju_db_viruses_2021-02-24.tgz"
-        db_online = "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2023/kaiju_db_fungi_2023-05-26.tgz"
+        if dbname == "viral":
+            db_online = (
+                "https://kaiju.binf.ku.dk/database/kaiju_db_viruses_2021-02-24.tgz"
+            )
+        elif dbname == "fungi":
+            db_online = "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2023/kaiju_db_fungi_2023-05-26.tgz"
         file = os.path.basename(db_online)
         if os.path.isfile(subdb + "kaiju_db_viruses.fmi"):
             logging.info(f"Kaiju {dbname}  is installed.")
