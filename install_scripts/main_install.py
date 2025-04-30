@@ -642,6 +642,21 @@ class main_setup:
     ):
         logging.info("install prepped")
 
+        for fname, fpath in prepdl.fastas["filter"].items():
+
+            if self.layout.install_bwa_host:
+                bwa_install = sofprep.bwa_install(dbname=fname, reference=fpath)
+                self.installed_software.append(self.software_install_string("bwa"))
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "bwa-filter",
+                        sofprep.dbs["bwa"]["fasta"],
+                        fname,
+                        bwa_install,
+                        sofprep.envs["ROOT"] + sofprep.envs["bwa"],
+                        tag="filter",
+                    )
+                )
         for fname, fpath in prepdl.fastas["host"].items():
 
             if self.layout.install_bwa_host:

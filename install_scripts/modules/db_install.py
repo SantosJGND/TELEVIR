@@ -230,6 +230,36 @@ class setup_dl:
                 else:
                     logging.info(f"{flname} already bgzipped and indexed.")
 
+    def ftp_16s(self):
+        """
+        donwload 16s from https://ftp.ncbi.nlm.nih.gov/blast/db/16S_ribosomal_RNA.tar.gz
+        save to fastas["filter"]["16s"]
+        """
+        host = "ftp.ncbi.nlm.nih.gov"
+        source = "blast/db/16S_ribosomal_RNA.tar.gz"
+        filename = "16S_ribosomal_RNA.tar.gz"
+        fname = "16s"
+
+        if os.path.isfile(self.seqdir + filename):
+            self.fastas["filter"][fname] = self.seqdir + filename
+            logging.info(f"{filename} found.")
+            return True
+
+        try:
+            subprocess.run(
+                ["wget", f"ftp://{host}/{source}", "-P", self.seqdir],
+                check=False,
+            )
+        except subprocess.CalledProcessError:
+            logging.info(f"{filename} not found.")
+            return False
+
+        if os.path.isfile(self.seqdir + filename):
+            self.fastas["filter"][fname] = self.seqdir + filename
+            return True
+        else:
+            return False
+
     def ftp_host_file(self, host, source, filename, fname):
         """
         download file from ftp host.
