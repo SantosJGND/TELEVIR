@@ -143,7 +143,7 @@ class setup_dl:
         self.requests = INSTALL_PARAMS["REQUEST_REFERENCES"]
         self.home = home
         self.bindr = bindir
-        self.fastas = {"prot": {}, "nuc": {}, "host": {}}
+        self.fastas = {"prot": {}, "nuc": {}, "host": {}, "filter": {}}
         self.meta = {}
         self.test = test
         self.update = update
