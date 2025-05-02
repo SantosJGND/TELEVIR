@@ -6,6 +6,7 @@ class TelevirLayout:
     install_rvdb = False
     install_virosaurus = True
     install_request_sequences = False
+    install_ribo16s = True
 
     # hosts ### CHECK HOST LIBRARY FILE FOR AVAILABLE HOSTS ###
     HOSTS_TO_INSTALL = [
@@ -31,6 +32,7 @@ class TelevirLayout:
     install_bowtie2_remap = True
     install_bowtie2_depletion = False
     install_bwa_host = True
+    install_bwa_filter = True
 
     # classification software.
     install_centrifuge = True

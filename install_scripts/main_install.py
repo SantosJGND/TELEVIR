@@ -329,6 +329,21 @@ class main_setup:
                     )
                 )
 
+        if self.layout.install_ribo16s:
+            success_16s = self.wdir.ncbi_16s_dl()
+            if success_16s:
+                self.installed_databases.append(
+                    self.database_install_string("ncbi_ribo16s")
+                )
+
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        "ncbi_ribo16s",
+                        self.wdir.fastas["nuc"]["ncbi_ribo16s"][0],
+                        True,
+                    )
+                )
+
         for host_name in self.layout.HOSTS_TO_INSTALL:
             success_install = self.wdir.download_host(host_name)
             if success_install:
@@ -644,7 +659,7 @@ class main_setup:
 
         for fname, fpath in prepdl.fastas["filter"].items():
 
-            if self.layout.install_bwa_host:
+            if self.layout.install_bwa_filter:
                 bwa_install = sofprep.bwa_install(dbname=fname, reference=fpath)
                 self.installed_software.append(
                     self.software_install_string("bwa-filter")

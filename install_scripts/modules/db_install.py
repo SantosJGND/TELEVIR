@@ -230,7 +230,7 @@ class setup_dl:
                 else:
                     logging.info(f"{flname} already bgzipped and indexed.")
 
-    def ftp_16s(self):
+    def ncbi_16s_dl(self):
         """
         donwload 16s from https://ftp.ncbi.nlm.nih.gov/blast/db/16S_ribosomal_RNA.tar.gz
         save to fastas["filter"]["16s"]
