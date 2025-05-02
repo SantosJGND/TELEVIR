@@ -1695,19 +1695,6 @@ class setup_install(setup_dl):
     ):
         odir = self.dbdir + dbdir + "/"
 
-        kraken2_download_install = self.kraken2_download_install(
-            dbname=dbname,
-            id=id,
-            dbdir=dbdir,
-        )
-
-        if kraken2_download_install:
-            return True
-
-        # if traditional install fails, try to download and install
-        # remove the dbdir and try again
-        os.system("rm -rf " + odir)
-
         traditional_install = self.kraken2_install(
             dbname=dbname,
             threads=threads,
@@ -1718,6 +1705,19 @@ class setup_install(setup_dl):
         )
 
         if traditional_install:
+            return True
+
+        # if traditional install fails, try to download and install
+        # remove the dbdir and try again
+        os.system("rm -rf " + odir)
+
+        kraken2_download_install = self.kraken2_download_install(
+            dbname=dbname,
+            id=id,
+            dbdir=dbdir,
+        )
+
+        if kraken2_download_install:
             return True
 
         return False
