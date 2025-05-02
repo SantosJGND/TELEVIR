@@ -368,6 +368,49 @@ class setup_dl:
             logging.info(f"failed to download {host_name} from ftp.")
             return False
 
+    def get_latest_assembly(
+        host, base_path, latest_assembly_dir="latest_assembly_versions"
+    ):
+        """
+        Identify the latest assembly file in the latest_assembly_versions directory.
+
+        :param host: FTP host address.
+        :param base_path: Base path to the organism directory on the FTP server.
+        :param latest_assembly_dir: Directory containing the latest assembly versions.
+        :return: Full path to the latest assembly file ending with '_genomic.fna.gz'.
+        """
+        try:
+            ftp = FTP(host)
+            ftp.login()
+
+            # Navigate to the latest_assembly_versions directory
+            latest_assembly_path = os.path.join(base_path, latest_assembly_dir)
+            ftp.cwd(latest_assembly_path)
+
+            # Get the single subdirectory
+            subdirectories = ftp.nlst()
+            if len(subdirectories) != 1:
+                raise ValueError(
+                    "Expected a single subdirectory in latest_assembly_versions."
+                )
+
+            # Navigate to the subdirectory
+            ftp.cwd(subdirectories[0])
+
+            # Find the file ending with '_genomic.fna.gz'
+            files = ftp.nlst()
+            for file in files:
+                if file.endswith("_genomic.fna.gz"):
+                    ftp.quit()
+                    return os.path.join(latest_assembly_path, subdirectories[0], file)
+
+            ftp.quit()
+            raise FileNotFoundError("No file ending with '_genomic.fna.gz' found.")
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
+
     def download_hg38(self):
         """
         download hg38 fasta from ucsc.
