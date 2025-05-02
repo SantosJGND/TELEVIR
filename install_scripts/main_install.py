@@ -339,7 +339,7 @@ class main_setup:
                 self.utilities.add_database(
                     self.utilities.database_item(
                         "ncbi_ribo16s",
-                        self.wdir.fastas["nuc"]["ncbi_ribo16s"][0],
+                        self.wdir.fastas["filter"]["ncbi_ribo16s"][0],
                         True,
                     )
                 )
