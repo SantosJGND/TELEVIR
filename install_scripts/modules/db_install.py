@@ -238,7 +238,7 @@ class setup_dl:
         host = "ftp.ncbi.nlm.nih.gov"
         source = "blast/db/16S_ribosomal_RNA.tar.gz"
         filename = "16S_ribosomal_RNA.tar.gz"
-        fname = "16s"
+        fname = "ncbi_ribo16s"
 
         if os.path.isfile(self.seqdir + filename):
             self.fastas["filter"][fname] = self.seqdir + filename
