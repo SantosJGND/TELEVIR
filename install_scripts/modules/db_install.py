@@ -230,7 +230,7 @@ class setup_dl:
                 else:
                     logging.info(f"{flname} already bgzipped and indexed.")
 
-    def silva_16s_dl(self):
+    def silva_16s_dl(self, fname="silva_16s"):
         """
         download silva 16s from https://www.arb-silva.de/fileadmin/silva_databases/release_138_1/Exports/SILVA_138.1_LSURef_NR99_tax_silva.fasta.gz
         save to fastas["filter"]["silva"]
@@ -238,7 +238,6 @@ class setup_dl:
         host = "www.arb-silva.de"
         source = "fileadmin/silva_databases/release_138_1/Exports/"
         filename = "SILVA_138.1_LSURef_NR99_tax_silva.fasta.gz"
-        fname = "silva_16s"
 
         if os.path.isfile(self.seqdir + filename):
             self.fastas["filter"][fname] = self.seqdir + filename
@@ -260,7 +259,7 @@ class setup_dl:
         else:
             return False
 
-    def ncbi_16s_dl(self):
+    def ncbi_16s_dl(self, fname="ncbi_ribo16s"):
         """
         donwload 16s from https://ftp.ncbi.nlm.nih.gov/blast/db/16S_ribosomal_RNA.tar.gz
         save to fastas["filter"]["16s"]
@@ -268,7 +267,6 @@ class setup_dl:
         host = "ftp.ncbi.nlm.nih.gov"
         source = "blast/db/16S_ribosomal_RNA.tar.gz"
         filename = "16S_ribosomal_RNA.tar.gz"
-        fname = "ncbi_ribo16s"
 
         if os.path.isfile(self.seqdir + filename):
             self.fastas["filter"][fname] = self.seqdir + filename
