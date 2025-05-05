@@ -330,7 +330,7 @@ class main_setup:
                 )
 
         if self.layout.install_ribo16s:
-            success_16s = self.wdir.ncbi_16s_dl()
+            success_16s = self.wdir.silva_16s_dl()
             if success_16s:
                 self.installed_databases.append(
                     self.database_install_string("ncbi_ribo16s")

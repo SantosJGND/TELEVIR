@@ -230,6 +230,36 @@ class setup_dl:
                 else:
                     logging.info(f"{flname} already bgzipped and indexed.")
 
+    def silva_16s_dl(self):
+        """
+        download silva 16s from https://www.arb-silva.de/fileadmin/silva_databases/release_138_1/Exports/SILVA_138.1_LSURef_NR99_tax_silva.fasta.gz
+        save to fastas["filter"]["silva"]
+        """
+        host = "www.arb-silva.de"
+        source = "fileadmin/silva_databases/release_138_1/Exports/"
+        filename = "SILVA_138.1_LSURef_NR99_tax_silva.fasta.gz"
+        fname = "silva_16s"
+
+        if os.path.isfile(self.seqdir + filename):
+            self.fastas["filter"][fname] = self.seqdir + filename
+            logging.info(f"{filename} found.")
+            return True
+
+        try:
+            subprocess.run(
+                ["wget", f"https://{host}/{source}{filename}", "-P", self.seqdir],
+                check=False,
+            )
+        except subprocess.CalledProcessError:
+            logging.info(f"{filename} not found.")
+            return False
+
+        if os.path.isfile(self.seqdir + filename):
+            self.fastas["filter"][fname] = self.seqdir + filename
+            return True
+        else:
+            return False
+
     def ncbi_16s_dl(self):
         """
         donwload 16s from https://ftp.ncbi.nlm.nih.gov/blast/db/16S_ribosomal_RNA.tar.gz
