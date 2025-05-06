@@ -1482,12 +1482,14 @@ class setup_install(setup_dl):
 
         if dbname == "viral":
             source = (
-                "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20240904.tar.gz"
+                "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20250402.tar.gz"
+                # "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20240904.tar.gz"
                 # "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20221209.tar.gz"
             )
         elif dbname == "standard":
             source = (
-                "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20240904.tar.gz"
+                "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20250402.tar.gz"
+                # "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20240904.tar.gz"
                 # "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20230314.tar.gz"
             )
         elif dbname == "bacteria":
