@@ -1467,8 +1467,71 @@ class setup_install(setup_dl):
                 "db": index_file_prefix,
             }
             return True
+
         except subprocess.CalledProcessError:
             logging.info(f"failed to download centrifuge db {dbname}")
+            return False
+
+    def voyager_install_download(
+        self,
+        dbname="viral",
+        id="voyager",
+        dbdir="voyager",
+    ):
+
+        dbname_translate = {
+            "viral": "viruses",
+            "bacteria": "bacteria",
+            "archaea": "archaea",
+            "fungi": "fungi",
+        }
+
+        dbname = dbname_translate[dbname]
+        odir = self.dbdir + dbdir + "/"
+
+        if dbname == "viral":
+            source = "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/voyager/viral/"
+        elif dbname == "bacteria":
+            source = "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/voyager/bacterial/"
+
+        if self.update:
+            logging.info(f"Updating voyager db {dbname}.")
+            if os.path.exists(odir + dbname):
+                logging.info(f"Removing old voyager db {dbname}.")
+                shutil.rmtree(odir + dbname)
+
+        if os.path.isfile(os.path.join(odir, dbname, f"{dbname}.idx")):
+            logging.info(f"Voyager db {dbname} is installed.")
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "db": os.path.join(odir, dbname, f"{dbname}.idx"),
+            }
+            return True
+        else:
+            if self.test:
+                logging.info(f"Voyager db {dbname} is not installed.")
+                return False
+            else:
+                logging.info(f"Voyager db {dbname} is not installed. Installing...")
+        subprocess.run(["mkdir", "-p", odir])
+        subprocess.run(["mkdir", "-p", odir + dbname])
+        subprocess.run(["wget", "-P", odir + dbname, source])
+        subprocess.run(
+            ["tar", "-xvzf", odir + dbname + f"/{dbname}.tar.gz", "-C", odir + dbname]
+        )
+        subprocess.run(["rm", odir + dbname + f"/{dbname}.tar.gz"])
+
+        self.dbs[id] = {
+            "dir": odir,
+            "dbname": dbname,
+            "db": os.path.join(odir, dbname, f"{dbname}.idx"),
+        }
+        if os.path.isfile(os.path.join(odir, dbname, f"{dbname}.idx")):
+            logging.info(f"Voyager db {dbname} is installed.")
+            return True
+        else:
+            logging.info(f"Voyager db {dbname} is not installed.")
             return False
 
     def clark_install(
