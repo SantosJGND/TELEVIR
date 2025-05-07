@@ -278,6 +278,37 @@ class env_install:
 
         os.chdir(CWD)
 
+    def voyager_install(self, force_install=False):
+        """
+        Voyager installation.
+        """
+
+        source = "https://bitbucket.org/sverre-phd-work/voyager/downloads/voyager-noarch64-v0.1.5.tar.gz"
+        soft = "classification/voyager"
+        sdir = os.path.join(self.envsdir, soft.split("/")[0])
+        CWD = os.getcwd()
+
+        try:
+            os.mkdir(sdir, exist_ok=True)
+            cmd = f"wget -O {sdir}/voyager.tar.gz {source}"
+            os.system(cmd)
+            os.chdir(sdir)
+            cmd = "tar -xvzf voyager.tar.gz"
+            os.system(cmd)
+            os.system("rm voyager.tar.gz")
+            os.chdir(sdir + "/voyager")
+            cmd = "chmod +x voyager-cli"
+            os.system(cmd)
+
+            os.chdir(CWD)
+
+            return True
+
+        except Exception as e:
+            print(f"Voyager installation failed: {e}")
+            os.chdir(CWD)
+            return False
+
     def trimmomatic_insaflu_install(self):
         """
         Trimmomatic installation.

@@ -235,6 +235,9 @@ class main_setup:
         if self.layout.install_fastviromeexplorer:
             envprep.fve_install()
 
+        if self.layout.install_voyager_viral:
+            envprep.voyager_install()
+
         # if self.layout.install_desamba:
         #    envprep.deSAMBA_install()
 
@@ -524,6 +527,23 @@ class main_setup:
         #                sofprep.envs["ROOT"] + sofprep.envs["clark"],
         #            )
         #        )
+
+        ########################### voyager ###############################
+
+        if self.layout.install_voyager_viral:
+            success_install = sofprep.voyager_install_download(dbname=self.organism)
+            if success_install:
+                self.installed_software.append(self.software_install_string("voyager"))
+
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "voyager",
+                        sofprep.dbs["voyager"]["db"],
+                        "viral",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["voyager"],
+                    )
+                )
 
         ########################## kraken2 ###############################
 
