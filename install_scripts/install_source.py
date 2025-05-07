@@ -31,6 +31,7 @@ INSTALL_PARAMS = {
         "desamba": "classm_lc/deSAMBA",
         "clark": "classification/Clark",
         "metaphlan": "classification/Metaphlan",
+        "voyager": "classification/Voyager",
         "bwa": "remap/remap",
         "bowtie2": "remap/remap",
         "prinseq": "preprocess/prinseq",

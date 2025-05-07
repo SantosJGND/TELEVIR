@@ -284,12 +284,12 @@ class env_install:
         """
 
         source = "https://bitbucket.org/sverre-phd-work/voyager/downloads/voyager-noarch64-v0.1.5.tar.gz"
-        soft = "classification/voyager"
+        soft = "classification/Voyager"
         sdir = os.path.join(self.envsdir, soft.split("/")[0])
         CWD = os.getcwd()
 
         try:
-            os.mkdir(sdir, exist_ok=True)
+            os.makedirs(sdir, exist_ok=True)
             cmd = f"wget -O {sdir}/voyager.tar.gz {source}"
             os.system(cmd)
             os.chdir(sdir)
