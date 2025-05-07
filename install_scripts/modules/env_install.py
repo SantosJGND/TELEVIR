@@ -288,6 +288,12 @@ class env_install:
         sdir = os.path.join(self.envsdir, soft.split("/")[0])
         CWD = os.getcwd()
 
+        if os.path.exists(sdir):
+            if os.path.exists(sdir + "/voyager-cli"):
+                return True
+            else:
+                shutil.rmtree(sdir)
+
         try:
             os.makedirs(sdir, exist_ok=True)
             cmd = f"wget -O {sdir}/voyager.tar.gz {source}"

@@ -1553,8 +1553,9 @@ class setup_install(setup_dl):
                 logging.info(f"Removing old metaphlan db {dbname}.")
                 shutil.rmtree(odir + dbname)
 
-        print(os.path.isfile(odir + dbname + "/{}/{}.pkl".format(dbname, dbname)))
-        if os.path.isfile(odir + dbname + "/{}/{}.pkl".format(dbname, dbname)):
+        if os.path.isfile(
+            odir + dbname + "/{}/{}.pkl".format(dbname, os.path.splitext(dbname)[0])
+        ):
             logging.info(f"Metaphlan db {dbname} is installed.")
             self.dbs[id] = {
                 "dir": odir,
