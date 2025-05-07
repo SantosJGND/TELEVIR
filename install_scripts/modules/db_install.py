@@ -1578,6 +1578,11 @@ class setup_install(setup_dl):
                 check=True,
             )
             subprocess.run(["rm", odir + dbname + "/" + source_file], check=True)
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "db": f"{odir}{dbname}/{dbname}.pkl",
+            }
             return True
 
         except subprocess.CalledProcessError:
