@@ -143,7 +143,7 @@ class setup_dl:
         self.requests = INSTALL_PARAMS["REQUEST_REFERENCES"]
         self.home = home
         self.bindr = bindir
-        self.fastas = {"prot": {}, "nuc": {}, "host": {}}
+        self.fastas = {"prot": {}, "nuc": {}, "host": {}, "filter": {}}
         self.meta = {}
         self.test = test
         self.update = update
@@ -230,7 +230,36 @@ class setup_dl:
                 else:
                     logging.info(f"{flname} already bgzipped and indexed.")
 
-    def ftp_16s(self):
+    def silva_16s_dl(self, fname="silva_16s"):
+        """
+        download silva 16s from https://www.arb-silva.de/fileadmin/silva_databases/release_138_1/Exports/SILVA_138.1_LSURef_NR99_tax_silva.fasta.gz
+        save to fastas["filter"]["silva"]
+        """
+        host = "www.arb-silva.de"
+        source = "fileadmin/silva_databases/release_138_1/Exports/"
+        filename = "SILVA_138.1_LSURef_NR99_tax_silva.fasta.gz"
+
+        if os.path.isfile(self.seqdir + filename):
+            self.fastas["filter"][fname] = self.seqdir + filename
+            logging.info(f"{filename} found.")
+            return True
+
+        try:
+            subprocess.run(
+                ["wget", f"https://{host}/{source}{filename}", "-P", self.seqdir],
+                check=False,
+            )
+        except subprocess.CalledProcessError:
+            logging.info(f"{filename} not found.")
+            return False
+
+        if os.path.isfile(self.seqdir + filename):
+            self.fastas["filter"][fname] = self.seqdir + filename
+            return True
+        else:
+            return False
+
+    def ncbi_16s_dl(self, fname="ncbi_ribo16s"):
         """
         donwload 16s from https://ftp.ncbi.nlm.nih.gov/blast/db/16S_ribosomal_RNA.tar.gz
         save to fastas["filter"]["16s"]
@@ -238,7 +267,6 @@ class setup_dl:
         host = "ftp.ncbi.nlm.nih.gov"
         source = "blast/db/16S_ribosomal_RNA.tar.gz"
         filename = "16S_ribosomal_RNA.tar.gz"
-        fname = "16s"
 
         if os.path.isfile(self.seqdir + filename):
             self.fastas["filter"][fname] = self.seqdir + filename
@@ -367,6 +395,49 @@ class setup_dl:
         except Exception as e:
             logging.info(f"failed to download {host_name} from ftp.")
             return False
+
+    def get_latest_assembly(
+        host, base_path, latest_assembly_dir="latest_assembly_versions"
+    ):
+        """
+        Identify the latest assembly file in the latest_assembly_versions directory.
+
+        :param host: FTP host address.
+        :param base_path: Base path to the organism directory on the FTP server.
+        :param latest_assembly_dir: Directory containing the latest assembly versions.
+        :return: Full path to the latest assembly file ending with '_genomic.fna.gz'.
+        """
+        try:
+            ftp = FTP(host)
+            ftp.login()
+
+            # Navigate to the latest_assembly_versions directory
+            latest_assembly_path = os.path.join(base_path, latest_assembly_dir)
+            ftp.cwd(latest_assembly_path)
+
+            # Get the single subdirectory
+            subdirectories = ftp.nlst()
+            if len(subdirectories) != 1:
+                raise ValueError(
+                    "Expected a single subdirectory in latest_assembly_versions."
+                )
+
+            # Navigate to the subdirectory
+            ftp.cwd(subdirectories[0])
+
+            # Find the file ending with '_genomic.fna.gz'
+            files = ftp.nlst()
+            for file in files:
+                if file.endswith("_genomic.fna.gz"):
+                    ftp.quit()
+                    return os.path.join(latest_assembly_path, subdirectories[0], file)
+
+            ftp.quit()
+            raise FileNotFoundError("No file ending with '_genomic.fna.gz' found.")
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
 
     def download_hg38(self):
         """
