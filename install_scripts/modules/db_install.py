@@ -1534,6 +1534,56 @@ class setup_install(setup_dl):
             logging.info(f"Voyager db {dbname} is not installed.")
             return False
 
+    def install_metaphlan(
+        self,
+        dbname="mpa_vFeb24_CDIFF_CHOCOPhlAnSGB_20240910",
+        id="metaphlan",
+        dbdir="metaphlan",
+    ):
+
+        bin = self.envs["ROOT"] + self.envs[id] + "/"
+        odir = self.dbdir + dbdir + "/"
+        dbname = dbname + ".mpa"
+
+        if self.update:
+            logging.info(f"Updating metaphlan db {dbname}.")
+            if os.path.exists(odir + dbname):
+                logging.info(f"Removing old metaphlan db {dbname}.")
+                shutil.rmtree(odir + dbname)
+        if os.path.isfile(odir + dbname + "/{}/{}.pkl".format(dbname, dbname)):
+            logging.info(f"Metaphlan db {dbname} is installed.")
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "db": f"{odir}{dbname}/{dbname}.pkl",
+            }
+            return True
+        else:
+            if self.test:
+                logging.info(f"Metaphlan db {dbname} is not installed.")
+                return False
+            else:
+                logging.info(f"Metaphlan db {dbname} is not installed. Installing...")
+
+        subprocess.run(["mkdir", "-p", odir])
+        subprocess.run(["mkdir", "-p", odir + dbname])
+
+        try:
+
+            source = "http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/mpa_vFeb24_CDIFF_CHOCOPhlAnSGB_20240910.tar"
+            source_file = source.split("/")[-1]
+            subprocess.run(["wget", "-P", odir + dbname, source], check=True)
+            subprocess.run(
+                ["tar", "-xvf", odir + dbname + "/" + source_file, "-C", odir + dbname],
+                check=True,
+            )
+            subprocess.run(["rm", odir + dbname + "/" + source_file], check=True)
+            return True
+
+        except subprocess.CalledProcessError:
+            logging.info(f"failed to download metaphlan db {dbname}")
+            return False
+
     def clark_install(
         self,
         dbname="viral",

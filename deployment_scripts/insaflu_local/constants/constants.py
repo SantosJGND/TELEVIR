@@ -3,6 +3,7 @@ Created on Oct 13, 2017
 
 @author: mmp
 """
+
 from enum import Enum
 
 from settings.constants_settings import ConstantsSettings as CS
@@ -108,9 +109,7 @@ class Constants(object):
     # MAX LOCUS FROM FASTA
     MAX_SEQUENCES_FROM_FASTA = 20  # update this value
     MAX_SEQUENCES_FROM_CONTIGS_FASTA = 1000  # update this value
-    MAX_LENGTH_SEQ_NAME = (
-        20  # it must be less than 20 because of prokka constrainments
-    )
+    MAX_LENGTH_SEQ_NAME = 20  # it must be less than 20 because of prokka constrainments
     MAX_LENGTH_CONTIGS_SEQ_NAME = (
         190  # it must be less than 190 because of the Consensus.name field
     )
@@ -272,8 +271,7 @@ class Constants(object):
     ERROR_REFERENCE = "error_reference"
     ERROR_PROJECT_NAME = "error_project_name"
 
-    vect_ambigous = ["R", "Y", "K", "M", "S",
-                     "W", "B", "D", "H", "V", "N", "*"]
+    vect_ambigous = ["R", "Y", "K", "M", "S", "W", "B", "D", "H", "V", "N", "*"]
     dt_ambigous = {
         "R": "[AG]",
         "Y": "[TC]",
@@ -389,8 +387,7 @@ class Constants(object):
         """
         if len(name) > max_size:
             return "{}...{}".format(
-                name[: int(max_size / 2)
-                     ], name[int(len(name) - (max_size / 2)):]
+                name[: int(max_size / 2)], name[int(len(name) - (max_size / 2)) :]
             )
         return name
 

@@ -545,6 +545,25 @@ class main_setup:
                     )
                 )
 
+        ############################ metaphlan ###############################
+
+        if self.layout.install_metaphlan:
+            success_install = sofprep.install_metaphlan()
+            if success_install:
+                self.installed_software.append(
+                    self.software_install_string("metaphlan")
+                )
+
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "metaphlan",
+                        sofprep.dbs["metaphlan"]["db"],
+                        "default",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["metaphlan"],
+                    )
+                )
+
         ########################## kraken2 ###############################
 
         if self.layout.install_kraken2:
