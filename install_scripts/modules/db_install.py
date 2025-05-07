@@ -1500,6 +1500,8 @@ class setup_install(setup_dl):
                 logging.info(f"Removing old voyager db {dbname}.")
                 shutil.rmtree(odir + dbname)
 
+        print(os.path.isfile(os.path.join(odir, dbname, f"{dbname}.idx")))
+
         if os.path.isfile(os.path.join(odir, dbname, f"{dbname}.idx")):
             logging.info(f"Voyager db {dbname} is installed.")
             self.dbs[id] = {
@@ -1550,7 +1552,9 @@ class setup_install(setup_dl):
             if os.path.exists(odir + dbname):
                 logging.info(f"Removing old metaphlan db {dbname}.")
                 shutil.rmtree(odir + dbname)
-        if os.path.isfile(odir + dbname + "/{}.pkl".format(dbname)):
+
+        print(os.path.isfile(odir + dbname + "/{}/{}.pkl".format(dbname, dbname)))
+        if os.path.isfile(odir + dbname + "/{}/{}.pkl".format(dbname, dbname)):
             logging.info(f"Metaphlan db {dbname} is installed.")
             self.dbs[id] = {
                 "dir": odir,
@@ -1577,7 +1581,6 @@ class setup_install(setup_dl):
                 ["tar", "-xvf", odir + dbname + "/" + source_file, "-C", odir + dbname],
                 check=True,
             )
-
             subprocess.run(["rm", odir + dbname + "/" + source_file], check=True)
             self.dbs[id] = {
                 "dir": odir,
