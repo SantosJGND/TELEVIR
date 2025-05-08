@@ -1533,13 +1533,14 @@ class setup_install(setup_dl):
         else:
             logging.info(f"Voyager db {dbname} is not installed.")
             return Falsem
-    
+
     def install_metaphlan(
         self,
         dbname="mpa_vJan25_CHOCOPhlAnSGB_202503",
         id="metaphlan",
         dbdir="metaphlan",
-        dlp="wget")
+        dlp="wget",
+    ):
         """
         install metaphlan database.
         """
@@ -1551,7 +1552,7 @@ class setup_install(setup_dl):
             if os.path.exists(odir + dbname):
                 logging.info(f"Removing old metaphlan db {dbname}.")
                 shutil.rmtree(odir + dbname)
-        
+
         if os.path.isfile(
             odir + dbname + "/{}.pkl".format(os.path.splitext(dbname)[0])
         ):
@@ -1574,7 +1575,7 @@ class setup_install(setup_dl):
         subprocess.run(["mkdir", "-p", odir + dbname])
 
         try:
-            bin= self.envs["ROOT"] + self.envs[id] + "/bin/"
+            bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
             cmd = [
                 f"{bin}metaphlan",
                 "--install",
@@ -1582,7 +1583,7 @@ class setup_install(setup_dl):
                 f"{odir + dbname}",
             ]
             subprocess.run(cmd, check=True)
-            
+
             self.dbs[id] = {
                 "dir": odir,
                 "dbname": dbname,
