@@ -1678,7 +1678,7 @@ class setup_install(setup_dl):
             with open(metaphlan_install_script, "w") as f:
                 f.write("#!/bin/bash\n")
                 f.write('eval "$(conda shell.bash hook)"\n')
-                f.write(f"conda activate {self.envs[id]}\n")
+                f.write(f"conda activate {self.envs["ROOT"] + self.envs[id]}\n")
                 f.write(f"export PATH={bin}:$PATH\n")
                 f.write(cmd + "\n")
                 f.write("conda deactivate\n")
