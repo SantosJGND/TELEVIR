@@ -1586,7 +1586,7 @@ class setup_install(setup_dl):
 
             # subprocess.run(cmd, check=True)
             metaphlan_install_script = f"{odir + dbname}/install.sh"
-            with open(metaphlan_install_script, "r") as f:
+            with open(metaphlan_install_script, "w") as f:
                 f.write("#!/bin/bash\n")
                 f.write('eval "$(~/miniconda3/bin/conda shell.bash hook)"\n')
                 f.write(f"conda activate {self.envs[id]}\n")
