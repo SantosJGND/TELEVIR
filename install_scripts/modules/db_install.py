@@ -230,6 +230,35 @@ class setup_dl:
                 else:
                     logging.info(f"{flname} already bgzipped and indexed.")
 
+    def refseq_16s_dl(self, fname="refseq_16s"):
+        """
+        download 16s from https://ftp.ncbi.nlm.nih.gov/refseq/TargetedLoci/Bacteria/bacteria.16SrRNA.fna.gz
+        save to fastas["filter"]["16s"]
+        """
+        host = "ftp.ncbi.nlm.nih.gov"
+        source = "refseq/TargetedLoci/Bacteria/bacteria.16SrRNA.fna.gz"
+        filename = "bacteria.16SrRNA.fna.gz"
+
+        if os.path.isfile(self.seqdir + filename):
+            self.fastas["filter"][fname] = self.seqdir + filename
+            logging.info(f"{filename} found.")
+            return True
+
+        try:
+            subprocess.run(
+                ["wget", f"https://{host}/{source}", "-P", self.seqdir],
+                check=False,
+            )
+        except subprocess.CalledProcessError:
+            logging.info(f"{filename} not found.")
+            return False
+
+        if os.path.isfile(self.seqdir + filename):
+            self.fastas["filter"][fname] = self.seqdir + filename
+            return True
+        else:
+            return False
+
     def silva_16s_dl(self, fname="silva_16s"):
         """
         download silva 16s from https://www.arb-silva.de/fileadmin/silva_databases/release_138_1/Exports/SILVA_138.1_LSURef_NR99_tax_silva.fasta.gz
@@ -1470,6 +1499,66 @@ class setup_install(setup_dl):
 
         except subprocess.CalledProcessError:
             logging.info(f"failed to download centrifuge db {dbname}")
+            return False
+
+    def voyager_install_viruses_copy(
+        self,
+        dbname="viral",
+        id="voyager",
+        dbdir="voyager",
+    ):
+
+        dbname_translate = {
+            "viral": "viruses",
+            "bacteria": "bacteria",
+            "archaea": "archaea",
+            "fungi": "fungi",
+        }
+        dbname = dbname_translate[dbname]
+        odir = self.dbdir + dbdir + "/"
+
+        if self.update:
+            logging.info(f"Updating voyager db {dbname}.")
+            if os.path.exists(odir + dbname):
+                logging.info(f"Removing old voyager db {dbname}.")
+                shutil.rmtree(odir + dbname)
+
+        if os.path.isfile(os.path.join(odir, dbname, f"{dbname}.idx")):
+            logging.info(f"Voyager db {dbname} is installed.")
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "db": os.path.join(odir, dbname, f"{dbname}.idx"),
+            }
+            return True
+        else:
+            if self.test:
+                logging.info(f"Voyager db {dbname} is not installed.")
+                return False
+            else:
+                logging.info(f"Voyager db {dbname} is not installed. Installing...")
+
+        subprocess.run(["mkdir", "-p", odir])
+        subprocess.run(["mkdir", "-p", odir + dbname])
+        subprocess.run(
+            ["cp", "-r", "install_scripts/software/viruses.tar.gz", odir + dbname]
+        )
+        subprocess.run(
+            ["tar", "-xvf", odir + dbname + f"/viruses.tar.gz", "-C", odir + dbname]
+        )
+        subprocess.run(["rm", odir + dbname + f"/viruses.tar.gz"])
+
+        self.dbs[id] = {
+            "dir": odir,
+            "dbname": dbname,
+            "db": os.path.join(odir, dbname, f"{dbname}.idx"),
+        }
+
+        if os.path.isfile(os.path.join(odir, dbname, f"{dbname}.idx")):
+            logging.info(f"Voyager db {dbname} is installed.")
+            return True
+        else:
+            logging.info(f"Voyager db {dbname} is not installed.")
             return False
 
     def voyager_install_download(

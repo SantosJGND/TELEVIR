@@ -531,7 +531,7 @@ class main_setup:
         ########################### voyager ###############################
 
         if self.layout.install_voyager_viral:
-            success_install = sofprep.voyager_install_download(dbname=self.organism)
+            success_install = sofprep.voyager_install_viruses_copy(dbname=self.organism)
             if success_install:
                 self.installed_software.append(self.software_install_string("voyager"))
 
