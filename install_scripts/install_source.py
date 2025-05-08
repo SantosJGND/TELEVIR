@@ -30,7 +30,7 @@ INSTALL_PARAMS = {
         "virsorter": "hostDepletion/vs2",
         "desamba": "classm_lc/deSAMBA",
         "clark": "classification/Clark",
-        "metaphlan": "classification/Metaphlan",
+        "metaphlan": "Metaphlan/metaphlan",
         "voyager": "classification/Voyager",
         "bwa": "remap/remap",
         "bowtie2": "remap/remap",
