@@ -1539,14 +1539,10 @@ class setup_install(setup_dl):
                 logging.info(f"Voyager db {dbname} is not installed. Installing...")
 
         subprocess.run(["mkdir", "-p", odir])
-        subprocess.run(["mkdir", "-p", odir + dbname])
-        subprocess.run(
-            ["cp", "-r", "install_scripts/software/viruses.tar.gz", odir + dbname]
-        )
-        subprocess.run(
-            ["tar", "-xvf", odir + dbname + f"/viruses.tar.gz", "-C", odir + dbname]
-        )
-        subprocess.run(["rm", odir + dbname + f"/viruses.tar.gz"])
+        subprocess.run(["mkdir", "-p", odir])
+        subprocess.run(["cp", "-r", "install_scripts/software/viruses.tar.gz", odir])
+        subprocess(["tar", "-xvf", odir + f"/viruses.tar.gz", "-C", odir])
+        subprocess.run(["rm", odir + f"/viruses.tar.gz"])
 
         self.dbs[id] = {
             "dir": odir,
