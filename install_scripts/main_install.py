@@ -332,6 +332,21 @@ class main_setup:
                     )
                 )
 
+        if self.layout.install_refseq_16s:
+            success_16s = self.wdir.refseq_16s_dl()
+            if success_16s:
+                self.installed_databases.append(
+                    self.database_install_string("refseq_16s")
+                )
+
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        "refseq_16s",
+                        self.wdir.fastas["filter"]["refseq_16s"],
+                        True,
+                    )
+                )
+
         if self.layout.install_ribo16s:
             success_16s = self.wdir.silva_16s_dl(fname="arb-silva_ribo16s")
             if success_16s:
