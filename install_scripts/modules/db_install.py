@@ -1582,7 +1582,20 @@ class setup_install(setup_dl):
                 "--bowtie2db",
                 f"{odir + dbname}",
             ]
+            cmd = " ".join(cmd)
+
             subprocess.run(cmd, check=True)
+            metaphlan_install_script = f"{odir + dbname}/install.sh"
+            with open(metaphlan_install_script, "r") as f:
+                f.write("#!/bin/bash\n")
+                f.write('eval "$(~/miniconda3/bin/conda shell.bash hook)"\n')
+                f.write(f"conda activate {self.envs[id]}\n")
+                f.write(f"export PATH={bin}:$PATH\n")
+                f.write(cmd + "\n")
+                f.write("conda deactivate\n")
+            os.chmod(metaphlan_install_script, 0o755)
+            subprocess.run([metaphlan_install_script], check=True)
+            subprocess.run(["rm", metaphlan_install_script], check=True)
 
             self.dbs[id] = {
                 "dir": odir,
