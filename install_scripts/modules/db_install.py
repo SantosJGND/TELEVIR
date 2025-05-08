@@ -1584,7 +1584,7 @@ class setup_install(setup_dl):
             ]
             cmd = " ".join(cmd)
 
-            subprocess.run(cmd, check=True)
+            # subprocess.run(cmd, check=True)
             metaphlan_install_script = f"{odir + dbname}/install.sh"
             with open(metaphlan_install_script, "r") as f:
                 f.write("#!/bin/bash\n")
