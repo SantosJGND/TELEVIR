@@ -1539,7 +1539,7 @@ class setup_install(setup_dl):
         dbname="mpa_vJan25_CHOCOPhlAnSGB_202503",
         id="metaphlan",
         dbdir="metaphlan",
-        dlp="wget",)
+        dlp="wget")
         """
         install metaphlan database.
         """
