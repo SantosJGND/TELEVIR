@@ -1532,9 +1532,69 @@ class setup_install(setup_dl):
             return True
         else:
             logging.info(f"Voyager db {dbname} is not installed.")
+            return Falsem
+    
+    def install_metaphlan(
+        self,
+        dbname="mpa_vFeb24_CDIFF_CHOCOPhlAnSGB_20240910",
+        id="metaphlan",
+        dbdir="metaphlan",
+        dlp="wget",)
+        """
+        install metaphlan database.
+        """
+        odir = self.dbdir + dbdir + "/"
+        dbname = dbname + ".mpa"
+
+        if self.update:
+            logging.info(f"Updating metaphlan db {dbname}.")
+            if os.path.exists(odir + dbname):
+                logging.info(f"Removing old metaphlan db {dbname}.")
+                shutil.rmtree(odir + dbname)
+        
+        if os.path.isfile(
+            odir + dbname + "/{}.pkl".format(os.path.splitext(dbname)[0])
+        ):
+            logging.info(f"Metaphlan db {dbname} is installed.")
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "db": f"{odir}{dbname}/{dbname}.pkl",
+            }
+            return True
+
+        else:
+            if self.test:
+                logging.info(f"Metaphlan db {dbname} is not installed.")
+                return False
+            else:
+                logging.info(f"Metaphlan db {dbname} is not installed. Installing...")
+
+        subprocess.run(["mkdir", "-p", odir])
+        subprocess.run(["mkdir", "-p", odir + dbname])
+
+        try:
+            bin= self.envs["ROOT"] + self.envs[id] + "/bin/"
+            cmd = [
+                f"{bin}metaphlan",
+                "--install",
+                "--bowtie2db",
+                f"{odir + dbname}",
+            ]
+            subprocess.run(cmd, check=True)
+            
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "db": f"{odir}{dbname}/{dbname}.pkl",
+            }
+            return True
+
+        except subprocess.CalledProcessError:
+            logging.info(f"failed to download metaphlan db {dbname}")
             return False
 
-    def install_metaphlan(
+    def install_metaphlan_dl(
         self,
         dbname="mpa_vFeb24_CDIFF_CHOCOPhlAnSGB_20240910",
         id="metaphlan",
@@ -1550,7 +1610,6 @@ class setup_install(setup_dl):
                 logging.info(f"Removing old metaphlan db {dbname}.")
                 shutil.rmtree(odir + dbname)
 
-        print(odir + dbname + "/{}.pkl".format(os.path.splitext(dbname)[0]))
         if os.path.isfile(
             odir + dbname + "/{}.pkl".format(os.path.splitext(dbname)[0])
         ):
