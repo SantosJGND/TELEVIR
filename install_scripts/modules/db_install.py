@@ -1536,7 +1536,7 @@ class setup_install(setup_dl):
     
     def install_metaphlan(
         self,
-        dbname="mpa_vFeb24_CDIFF_CHOCOPhlAnSGB_20240910",
+        dbname="mpa_vJan25_CHOCOPhlAnSGB_202503",
         id="metaphlan",
         dbdir="metaphlan",
         dlp="wget",)
