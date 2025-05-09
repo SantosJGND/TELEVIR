@@ -1541,7 +1541,7 @@ class setup_install(setup_dl):
         subprocess.run(["mkdir", "-p", odir])
         subprocess.run(["mkdir", "-p", odir])
         subprocess.run(["cp", "-r", "install_scripts/software/viruses.tar.gz", odir])
-        subprocess(["tar", "-xvf", odir + f"/viruses.tar.gz", "-C", odir])
+        subprocess.run(["tar", "-xvf", odir + f"/viruses.tar.gz", "-C", odir])
         subprocess.run(["rm", odir + f"/viruses.tar.gz"])
 
         self.dbs[id] = {
