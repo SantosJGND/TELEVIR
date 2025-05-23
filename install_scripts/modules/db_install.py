@@ -1664,6 +1664,8 @@ class setup_install(setup_dl):
             cmd = [
                 f"{bin}metaphlan",
                 "--install",
+                "--index",
+                f"{dbname}",
                 "--bowtie2db",
                 f"{odir + dbname}",
             ]
