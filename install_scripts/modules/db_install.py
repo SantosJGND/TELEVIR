@@ -983,13 +983,11 @@ class setup_dl:
 
                 sed_out_after_dot(temp_file)
 
-                entrez_ncbi_taxid(temp_file, self.metadir, "nuc_tax.tsv")
+                # entrez_ncbi_taxid(temp_file, self.metadir, "nuc_tax.tsv")
 
-                dbacc = pd.read_csv(
-                    "{}nuc_tax.tsv".format(self.metadir), sep="\t", header=None
-                )
+                dbacc = pd.read_csv(temp_file, sep="\t", header=None)
 
-                dbacc = dbacc.rename(columns={0: "acc", 1: "taxid"})
+                dbacc = dbacc.rename(columns={0: "acc"})
                 dbacc["file"] = os.path.basename(fl)
 
                 if dbs == "virosaurus":
