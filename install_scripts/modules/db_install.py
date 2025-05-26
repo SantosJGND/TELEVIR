@@ -1004,7 +1004,7 @@ class setup_dl:
                 tax2acc.append(dbacc)
 
                 os.system(f"rm {temp_file}")
-                os.system("rm {}".format("{}nuc_tax.tsv".format(self.metadir)))
+                # os.system("rm {}".format("{}nuc_tax.tsv".format(self.metadir)))
 
         tax2acc = pd.concat(tax2acc)
 
