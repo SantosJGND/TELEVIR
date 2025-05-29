@@ -1354,7 +1354,8 @@ class setup_install(setup_dl):
             logging.info(f"Centrifuge db {dbname} index is installed.")
             centrifuge_fasta = f"{sdir}/complete.fna.gz"
             if os.path.isfile(os.path.splitext(centrifuge_fasta)[0]):
-                compress_using_xopen(f"{sdir}/complete.fna", f"{sdir}/complete.fna.gz")
+                os.system(f"bgzip {sdir}/complete.fna")
+                # compress_using_xopen(f"{sdir}/complete.fna", f"{sdir}/complete.fna.gz")
 
             self.dbs[id] = {
                 "dir": odir,
@@ -1369,7 +1370,8 @@ class setup_install(setup_dl):
             logging.info(f"Centrifuge db {dbname} index is installed.")
             centrifuge_fasta = f"{sdir}/complete.fna.gz"
             if os.path.isfile(os.path.splitext(centrifuge_fasta)[0]):
-                compress_using_xopen(f"{sdir}/complete.fna", f"{sdir}/complete.fna.gz")
+                os.system(f"bgzip {sdir}/complete.fna")
+            #                compress_using_xopen(f"{sdir}/complete.fna", f"{sdir}/complete.fna.gz")
 
             # create symlink to new index for files that use old index
             files_in_directory = os.listdir(odir + dbname)
@@ -1484,8 +1486,8 @@ class setup_install(setup_dl):
 
                 subprocess.run(build_command)
 
-            # os.system(f"bgzip {sdir}/complete.fna")
-            compress_using_xopen(f"{sdir}/complete.fna", f"{sdir}/complete.fna.gz")
+            os.system(f"bgzip {sdir}/complete.fna")
+            # compress_using_xopen(f"{sdir}/complete.fna", f"{sdir}/complete.fna.gz")
 
             self.dbs[id] = {
                 "dir": odir,
@@ -1665,7 +1667,7 @@ class setup_install(setup_dl):
                 "--index",
                 f"{dbname}",
                 "--bowtie2db",
-                f"{odir + dbname}",
+                f"{odir}",
             ]
             cmd = " ".join(cmd)
 
@@ -1685,7 +1687,7 @@ class setup_install(setup_dl):
             self.dbs[id] = {
                 "dir": odir,
                 "dbname": dbname,
-                "db": f"{odir}{dbname}/{dbname}.pkl",
+                "db": f"{odir}{dbname}/{dbname}",
             }
             return True
 
