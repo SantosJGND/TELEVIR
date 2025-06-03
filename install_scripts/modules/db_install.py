@@ -1617,7 +1617,7 @@ class setup_install(setup_dl):
             return True
         else:
             logging.info(f"Voyager db {dbname} is not installed.")
-            return Falsem
+            return False
 
     def install_metaphlan(
         self,
@@ -1630,7 +1630,7 @@ class setup_install(setup_dl):
         install metaphlan database.
         """
         odir = self.dbdir + dbdir + "/"
-        dbname = dbname + ".mpa"
+        # dbname = dbname + ".mpa"
 
         if self.update:
             logging.info(f"Updating metaphlan db {dbname}.")
