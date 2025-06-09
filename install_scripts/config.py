@@ -36,8 +36,8 @@ class TelevirLayout:
     install_bwa_filter = True
 
     # classification software.
-    install_metaphlan = True
-    install_voyager_viral = True
+    install_metaphlan = False
+    install_voyager_viral = False
     install_centrifuge = True
     install_centrifuge_bacteria = False
     install_kraken2 = True

@@ -686,7 +686,7 @@ class main_setup:
 
         # install viral specific databases
         if self.layout.install_kaiju:
-            sofprep.kaiju_viral_install()
+            sofprep.kaiju_dl_install(dbname="viral")
             self.installed_software.append(self.software_install_string("kaiju"))
 
             self.utilities.add_software(

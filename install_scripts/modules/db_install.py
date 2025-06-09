@@ -2306,6 +2306,62 @@ class setup_install(setup_dl):
             logging.info(f"failed to download Krakenuniq db {dbname}")
             return False
 
+    def kaiju_dl_install(
+        self,
+        id="kaiju",
+        dbdir="kaiju",
+        dbname="viral",
+    ):
+        if dbname == "viral":
+            db_online = (
+                "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_viruses_2024-08-15.tgz",
+            )
+        elif dbname == "fungi":
+            db_online = "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_fungi_2024-08-16.tgz"
+
+        elif dbname == "bacteria":
+            db_online = "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_refseq_ref_2024-08-14.tgz"
+
+        odir = self.dbdir + dbdir + "/"
+        bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
+        subdb = odir + dbname + "/"
+
+        if os.path.isfile(subdb + "kaiju_db_viruses.fmi"):
+            logging.info(f"Kaiju {dbname}  is installed.")
+            self.dbs[id] = {
+                "dir": odir,
+                "dbname": dbname,
+                "db": subdb + "kaiju_db_viruses.fmi",
+            }
+            return True
+        else:
+            if self.test:
+                logging.info(f"Kaiju {dbname} db is not installed.")
+
+                return False
+            else:
+                logging.info(f"Kaiju {dbname} db is not installed. Installing...")
+
+        try:
+            subprocess.run(["mkdir", "-p", odir])
+
+            subprocess.run(["wget", "-P", subdb, db_online, "--no-check-certificate"])
+            CWD = os.getcwd()
+            os.chdir(subdb)
+            subprocess.run(["tar", "-zxvf", os.path.basename(db_online)])
+            subprocess.run(["rm", os.path.basename(db_online)])
+            os.chdir(CWD)
+
+            self.dbs[id] = {
+                "dir": subdb,
+                "dbname": dbname,
+                "db": subdb + "kaiju_db_viruses.fmi",
+            }
+            return True
+        except subprocess.CalledProcessError:
+            logging.info(f"failed to download Kaiju db {dbname}")
+            return False
+
     def kaiju_viral_install(self, id="kaiju", dbdir="kaiju", dbname="viral"):
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
