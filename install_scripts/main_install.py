@@ -583,7 +583,7 @@ class main_setup:
         ########################## kraken2 ###############################
 
         if self.layout.install_kraken2:
-            success_install = sofprep.kraken2_install(dbname=self.organism)
+            success_install = sofprep.kraken2_download_install(dbname=self.organism)
             krlib = f"kraken2-{self.organism}-library.fna.gz"
             if os.path.isfile(sofprep.dbs["kraken2"]["fasta"]):
                 os.system(
