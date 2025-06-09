@@ -1523,6 +1523,8 @@ class setup_install(setup_dl):
                 logging.info(f"Removing old voyager db {dbname}.")
                 shutil.rmtree(odir + dbname)
 
+        print(f"odir: {odir}, dbname: {dbname}")
+        print(os.path.isfile(os.path.join(odir, dbname, f"{dbname}.idx")))
         if os.path.isfile(os.path.join(odir, dbname, f"{dbname}.idx")):
             logging.info(f"Voyager db {dbname} is installed.")
             self.dbs[id] = {
@@ -2313,9 +2315,7 @@ class setup_install(setup_dl):
         dbname="viral",
     ):
         if dbname == "viral":
-            db_online = (
-                "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_viruses_2024-08-15.tgz",
-            )
+            db_online = "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_viruses_2024-08-15.tgz"
         elif dbname == "fungi":
             db_online = "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_fungi_2024-08-16.tgz"
 
@@ -2345,11 +2345,13 @@ class setup_install(setup_dl):
         try:
             subprocess.run(["mkdir", "-p", odir])
 
-            subprocess.run(["wget", "-P", subdb, db_online, "--no-check-certificate"])
+            subprocess.run(
+                ["wget", "-P", subdb, db_online, "--no-check-certificate"], check=True
+            )
             CWD = os.getcwd()
             os.chdir(subdb)
-            subprocess.run(["tar", "-zxvf", os.path.basename(db_online)])
-            subprocess.run(["rm", os.path.basename(db_online)])
+            subprocess.run(["tar", "-zxvf", os.path.basename(db_online)], check=True)
+            subprocess.run(["rm", os.path.basename(db_online)], check=True)
             os.chdir(CWD)
 
             self.dbs[id] = {
