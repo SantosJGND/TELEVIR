@@ -34,6 +34,7 @@ class env_install:
                 "conda",
                 "env",
                 "create",
+                "-y",
                 "-p",
                 cdir,
                 "--file",
