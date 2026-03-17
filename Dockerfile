@@ -2,8 +2,8 @@ FROM ubuntu:22.04
 
 ARG APP_USER=televir_user
 RUN useradd -ms /bin/bash ${APP_USER}
-ENV DEBIAN_FRONTEND noninteractive
-ENV TERM xterm
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TERM=xterm
 
 RUN set -x \
     && groupadd -r --gid=990 slurm \
@@ -11,15 +11,17 @@ RUN set -x \
 
 RUN apt-get update && apt-get upgrade -y
 
-RUN apt-get install -y postgresql postgresql-contrib
-RUN apt-get -y install libpq-dev
+RUN apt-get install -y postgresql postgresql-contrib libpq-dev
 
-RUN apt-get install -y python3.11 python3-pip 
-RUN apt-get -y install python3.11-venv python3.11-dev
+RUN apt-get install -y python3.11 python3.11-venv python3.11-dev python3-venv python3-pip python3.10-venv
 RUN python3 -m pip install --upgrade pip
 RUN python3 -m venv /opt/venv
 
-RUN /opt/venv/bin/pip install setuptools numpy==1.24.3 pandas==2.0.1 psycopg2==2.9.6 sqlalchemy==2.0.30 python-decouple==3.8 danio xopen==1.7.0 fastq_filter==0.3.0
+RUN /opt/venv/bin/pip install wheel
+RUN /opt/venv/bin/pip install setuptools numpy==1.24.3 pandas==2.0.1 
+RUN /opt/venv/bin/pip install --upgrade pip
+
+RUN /opt/venv/bin/pip install psycopg2 sqlalchemy python-decouple==3.8 danio xopen==1.7.0 fastq_filter==0.3.0
 RUN /opt/venv/bin/pip install --default-timeout=100 future
 
 RUN apt-get update
@@ -35,16 +37,16 @@ RUN apt-get install -y git ncbi-entrez-direct tabix samtools bioperl
 
 RUN apt-get -y install default-jre 
 
-ENV CONDA_DIR /opt/conda
+ENV CONDA_DIR=/opt/conda
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
     /bin/bash ~/miniconda.sh -b -p $CONDA_DIR && \
     rm ~/miniconda.sh
 
-ENV PATH $CONDA_DIR/bin:$PATH
+ENV PATH=$CONDA_DIR/bin:$PATH
 
 RUN wget https://github.com/pachterlab/kallisto/releases/download/v0.43.1/kallisto_linux-v0.43.1.tar.gz
 RUN tar -xzf kallisto_linux-v0.43.1.tar.gz
-ENV PATH $PATH:kallisto_linux-v0.43.1
+ENV PATH=$PATH:kallisto_linux-v0.43.1
 
 RUN apt-get install zlib1g-dev make g++
 
