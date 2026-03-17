@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import datetime
 import gzip
 import logging
 import os
@@ -145,10 +146,18 @@ class setup_dl:
         self.bindr = bindir
         self.fastas = {"prot": {}, "nuc": {}, "host": {}, "filter": {}}
         self.meta = {}
+        self.db_versions = {}
         self.test = test
         self.update = update
 
         self.organism = organism
+
+    def get_file_mod_date(self, filepath: str):
+        """Get file modification date as YYYY-MM-DD"""
+        if os.path.isfile(filepath):
+            timestamp = os.path.getmtime(filepath)
+            return datetime.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d")
+        return ""
 
     def mkdirs(self):
         if not os.path.isdir(self.home):
@@ -420,6 +429,17 @@ class setup_dl:
                 host.host_name,
             )
 
+            if ftp_download:
+                fpath = self.fastas["host"].get(host_name)
+                if fpath:
+                    gcf_version = host.remote_filename.split("_")[0]
+                    source_url = f"ftp://{host.remote_host}/{host.remote_path}{host.remote_filename}"
+                    self.db_versions[host_name] = {
+                        "version": gcf_version,
+                        "source_url": source_url,
+                        "file_mod_date": self.get_file_mod_date(fpath)
+                    }
+
             return ftp_download
         except Exception as e:
             logging.info(f"failed to download {host_name} from ftp.")
@@ -468,142 +488,46 @@ class setup_dl:
             print(f"Error: {e}")
             return None
 
-    def download_hg38(self):
-        """
-        download hg38 fasta from ucsc.
-        :return:
-        """
-        host = "hgdownload.soe.ucsc.edu"
-        source = "goldenPath/hg38/bigZips/"
-        filename = "hg38.fa.gz"
-        fname = "hg38"
-
-        return self.ftp_host_file(host, source, filename, fname)
-
-    def download_sus_scrofa(self):
-        """
-        download sus scrofa fasta from ncbi."""
-        host = "ftp.ncbi.nlm.nih.gov"
-        source = "genomes/refseq/vertebrate_mammalian/Sus_scrofa/latest_assembly_versions/GCF_000003025.6_Sscrofa11.1/"
-        filename = "GCF_000003025.6_Sscrofa11.1_genomic.fna.gz"
-        fname = "sus_scrofa"
-
-        return self.ftp_host_file(host, source, filename, fname)
-
-    def download_aedes_albopictus(self):
-        """
-        download aedes albopictus fasta from ncbi."""
-        host = "ftp.ncbi.nlm.nih.gov"
-        source = "genomes/refseq/invertebrate/Aedes_albopictus/latest_assembly_versions/GCF_035046485.1_AalbF5/"
-        filename = "GCF_035046485.1_AalbF5_genomic.fna.gz"
-        fname = "aedes_albopictus"
-
-        return self.ftp_host_file(host, source, filename, fname)
-
-    def download_aedes_aegypti(self):
-        """
-        download aedes aegypti fasta from ncbi."""
-        host = "ftp.ncbi.nlm.nih.gov"
-        source = "genomes/refseq/invertebrate/Aedes_aegypti/latest_assembly_versions/GCF_002204515.2_AaegL5.0/"
-        filename = "GCF_002204515.2_AaegL5.0_genomic.fna.gz"
-        fname = "aedes_aegypti"
-
-        return self.ftp_host_file(host, source, filename, fname)
-
-    def download_gallus_gallus(self):
-        """
-        download gallus gallus fasta from ncbi."""
-        host = "ftp.ncbi.nlm.nih.gov"
-        source = "genomes/refseq/vertebrate_other/Gallus_gallus/latest_assembly_versions/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b/"
-        filename = "GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz"
-        fname = "gallus_gallus"
-
-        return self.ftp_host_file(host, source, filename, fname)
-
-    def download_mus_musculus(self):
-        """
-        download mus musculus fasta from ncbi."""
-        host = "ftp.ncbi.nlm.nih.gov"
-        source = "genomes/refseq/vertebrate_mammalian/Mus_musculus/latest_assembly_versions/GCF_000001635.27_GRCm39/"
-        filename = "GCF_000001635.27_GRCm39_genomic.fna.gz"
-        fname = "mus_musculus"
-
-        return self.ftp_host_file(host, source, filename, fname)
-
-    def download_oncorhynchus_mykiss(self):
-        """
-        download rainbow trout fasta from ncbi."""
-        host = "ftp.ncbi.nlm.nih.gov"
-        source = "genomes/refseq/vertebrate_other/Oncorhynchus_mykiss/latest_assembly_versions/GCF_013265735.2_USDA_OmykA_1.1/"
-        filename = "GCF_013265735.2_USDA_OmykA_1.1_genomic.fna.gz"
-        fname = "rainbow_trout"
-
-        return self.ftp_host_file(host, source, filename, fname)
-
-    def download_salmo_salar(self):
-        """
-        download salmo salar fasta from ncbi."""
-        host = "ftp.ncbi.nlm.nih.gov"
-        source = "genomes/refseq/vertebrate_other/Salmo_salar/latest_assembly_versions/GCF_905237065.1_Ssal_v3.1/"
-        filename = "GCF_905237065.1_Ssal_v3.1_genomic.fna.gz"
-        fname = "salmo_salar"
-
-        return self.ftp_host_file(host, source, filename, fname)
-
-    def donwload_acipenser_ruthenus(self):
-        """
-        download acipenser ruthenus fasta from ncbi."""
-        host = "ftp.ncbi.nlm.nih.gov"
-        source = "genomes/refseq/vertebrate_other/Acipenser_ruthenus/latest_assembly_versions/GCF_902713425.1_fAciRut3.2_maternal_haplotype/"
-        filename = "GCF_902713425.1_fAciRut3.2_maternal_haplotype_genomic.fna.gz"
-        fname = "acipenser_ruthenus"
-
-        return self.ftp_host_file(host, source, filename, fname)
-
-    def download_bos_taurus(self):
-        """
-        download bos taurus fasta from ncbi."""
-        host = "ftp.ncbi.nlm.nih.gov"
-        source = "genomes/refseq/vertebrate_mammalian/Bos_taurus/latest_assembly_versions/GCF_002263795.3_ARS-UCD2.0/"
-        filename = "GCF_002263795.3_ARS-UCD2.0_genomic.fna.gz"
-        fname = "bos_taurus"
-
-        return self.ftp_host_file(host, source, filename, fname)
-
-    def download_neogale_vison(self):
-        """
-        download neogale vison fasta from ncbi."""
-        host = "ftp.ncbi.nlm.nih.gov"
-        source = "genomes/refseq/vertebrate_other/Neogale_vison/latest_assembly_versions/GCF_020171115.1_ASM_NN_V1/"
-        filename = "GCF_020171115.1_ASM_NN_V1_cds_from_genomic.fna.gz"
-        fname = "neogale_vison"
-
-        return self.ftp_host_file(host, source, filename, fname)
-
-    def download_grc38(self):
-        """
-        download grc38 fasta from ncbi.
-        :return:
-        """
-        # host = "hgdownload.soe.ucsc.edu"
-        # source = "goldenPath/hg38/bigZips/"
-        # f = "hg38.fa.gz"
-
-        host = "ftp.ncbi.nlm.nih.gov"
-        source = "genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/"
-        filename = "GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz"
-        fname = "grc38"
-
-        return self.ftp_host_file(host, source, filename, fname)
 
     def install_requests(self):
-        references_file = os.path.join(self.seqdir, "request_references.fa")
+        references_file = os.path.join(self.seqdir, "request_references.fa.gz")
+
+        if os.path.isfile(references_file):
+            self.fastas["nuc"]["requests"] = [references_file]
+            self.db_versions["requests"] = {
+                "version": self.get_file_mod_date(references_file),
+                "source_url": "user_provided",
+                "file_mod_date": self.get_file_mod_date(references_file)
+            }
+            return True
 
         if os.path.isfile(references_file + ".gz"):
             self.fastas["nuc"]["requests"] = [references_file + ".gz"]
+            self.db_versions["requests"] = {
+                "version": self.get_file_mod_date(references_file + ".gz"),
+                "source_url": "user_provided",
+                "file_mod_date": self.get_file_mod_date(references_file + ".gz")
+            }
             return True
 
-        if self.requests["ACCID"]:
+        seq_file = self.requests.get("FILE", "")
+        if seq_file and os.path.isfile(seq_file):
+            logging.info(f"Using provided request sequences file: {seq_file}")
+            shutil.copy(seq_file, references_file)
+            if not references_file.endswith(".gz"):
+                os.system(f"{BGZIP_BIN} {references_file}")
+                references_file = references_file + ".gz"
+            
+            self.fastas["nuc"]["requests"] = [references_file]
+            self.db_versions["requests"] = {
+                "version": self.get_file_mod_date(references_file),
+                "source_url": seq_file,
+                "file_mod_date": self.get_file_mod_date(references_file)
+            }
+            logging.info("request sequences from file prepped.")
+            return True
+
+        if self.requests.get("ACCID"):
             acc_tsv = self.requests["ACCID"]
             tempfile = os.path.join(self.metadir, "accession_requests.tsv")
             if os.path.isfile(acc_tsv):
@@ -626,7 +550,13 @@ class setup_dl:
 
         if os.path.isfile(references_file) and os.path.getsize(references_file):
             os.system(f"{BGZIP_BIN} {references_file}")
+            references_file = references_file + ".gz"
             self.fastas["nuc"]["requests"] = [references_file]
+            self.db_versions["requests"] = {
+                "version": self.get_file_mod_date(references_file),
+                "source_url": "entrez_accid",
+                "file_mod_date": self.get_file_mod_date(references_file)
+            }
             logging.info("request sequences prepped.")
             return True
         else:
@@ -640,12 +570,18 @@ class setup_dl:
         """
         host = "ftp.ncbi.nlm.nih.gov"
         source = "refseq/release/{}/".format(self.organism)
+        source_url = f"https://{host}/{source}"
 
         fprot = f"refseq_{self.organism}.protein.faa.gz"
         fprot_suf = os.path.splitext(fprot)[0]
 
         if os.path.isfile(self.seqdir + fprot):
             self.fastas["prot"]["refseq_prot"] = self.seqdir + fprot
+            self.db_versions["refseq_prot"] = {
+                "version": self.get_file_mod_date(self.seqdir + fprot),
+                "source_url": source_url,
+                "file_mod_date": self.get_file_mod_date(self.seqdir + fprot)
+            }
             logging.info(f"{fprot_suf} found.")
             return False
 
@@ -676,9 +612,19 @@ class setup_dl:
                 logging.info(f"{fprot_suf} not found. downloading...")
                 self.get_concat(protf, fprot_suf, host, source)
                 self.fastas["prot"]["refseq_prot"] = self.seqdir + fprot
+                self.db_versions["refseq_prot"] = {
+                    "version": self.get_file_mod_date(self.seqdir + fprot),
+                    "source_url": source_url,
+                    "file_mod_date": self.get_file_mod_date(self.seqdir + fprot)
+                }
                 True
         else:
             self.fastas["prot"]["refseq_prot"] = self.seqdir + fprot
+            self.db_versions["refseq_prot"] = {
+                "version": self.get_file_mod_date(self.seqdir + fprot),
+                "source_url": source_url,
+                "file_mod_date": self.get_file_mod_date(self.seqdir + fprot)
+            }
             logging.info(f"{fprot_suf} found.")
             return True
 
@@ -690,6 +636,7 @@ class setup_dl:
         """
         host = "ftp.ncbi.nlm.nih.gov"
         source = "refseq/release/{}/".format(self.organism)
+        source_url = f"https://{host}/{source}"
 
         fnuc = f"refseq_{self.organism}.genome.fna.gz"
         fnuc_suf = os.path.splitext(fnuc)[0]
@@ -700,8 +647,12 @@ class setup_dl:
                 os.remove(self.seqdir + fnuc)
 
         if os.path.isfile(self.seqdir + fnuc):
-
             self.fastas["nuc"]["refseq"] = [self.seqdir + fnuc]
+            self.db_versions["refseq"] = {
+                "version": self.get_file_mod_date(self.seqdir + fnuc),
+                "source_url": source_url,
+                "file_mod_date": self.get_file_mod_date(self.seqdir + fnuc)
+            }
             logging.info(f"{fnuc} found.")
             return True
 
@@ -739,6 +690,11 @@ class setup_dl:
             logging.info(f"{fnuc_suf} found.")
 
         self.fastas["nuc"]["refseq"] = [self.seqdir + fnuc]
+        self.db_versions["refseq"] = {
+            "version": self.get_file_mod_date(self.seqdir + fnuc),
+            "source_url": source_url,
+            "file_mod_date": self.get_file_mod_date(self.seqdir + fnuc)
+        }
         return True
 
     def get_concat(self, flist, outf, host, source):
@@ -1837,23 +1793,27 @@ class setup_install(setup_dl):
         if dbname == "viral":
             source = (
                 "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20250402.tar.gz"
-                # "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20240904.tar.gz"
-                # "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20221209.tar.gz"
             )
+            kraken_version = "20250402"
         elif dbname == "standard":
             source = (
                 "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20250402.tar.gz"
-                # "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20240904.tar.gz"
-                # "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20230314.tar.gz"
             )
+            kraken_version = "20250402"
         elif dbname == "bacteria":
             source = "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_16gb_20230314.tar.gz"
+            kraken_version = "20230314"
         elif dbname == "ribo16s":
             source = (
                 "https://genome-idx.s3.amazonaws.com/kraken/16S_RDP11.5_20200326.tgz"
             )
+            kraken_version = "20200326"
         elif dbname == "eupathdb46":
             source = "https://genome-idx.s3.amazonaws.com/kraken/k2_eupathdb48_20201113.tar.gz"
+            kraken_version = "20201113"
+        else:
+            source = ""
+            kraken_version = ""
 
         source_file = source.split("/")[-1]
 
@@ -1872,6 +1832,8 @@ class setup_install(setup_dl):
                 "dbname": dbname,
                 "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
                 "db": odir + dbname,
+                "version": kraken_version,
+                "source_url": source,
             }
             return True
         else:
@@ -1894,6 +1856,8 @@ class setup_install(setup_dl):
             "dbname": dbname,
             "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
             "db": odir + dbname,
+            "version": kraken_version,
+            "source_url": source,
         }
 
         if os.path.isfile(odir + dbname + "/taxo.k2d"):

@@ -49,14 +49,6 @@ class TelevirLayout:
     install_minimap2 = True
     install_fastviromeexplorer = True
     install_blast = True
-
-    # assemblers.
-    install_spades = True
-    install_raven = True
-
-    # technology setup (exclusive technologies. overrides info above).
-    install_illumina = True
-    install_nanopore = True
-
+    
     # check files
     check_index_files = True

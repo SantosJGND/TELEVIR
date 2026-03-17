@@ -3,6 +3,7 @@
 import datetime
 import os
 from abc import abstractmethod
+from typing import Optional
 
 from sqlalchemy import (
     Boolean,
@@ -17,7 +18,9 @@ from sqlalchemy import (
 
 class SoftwareItem:
     def __init__(
-        self, name, path, database, installed, env_path, tag: str = "undefined"
+        self, name, path, database, installed, env_path, 
+        tag: str = "undefined", db_version: Optional[str] = None, 
+        needs_update: bool = False
     ) -> None:
         self.name = name
         self.path = path
@@ -26,18 +29,25 @@ class SoftwareItem:
         self.env_path = env_path
         self.date = datetime.datetime.now().strftime("%Y-%m-%d")
         self.tag = tag
+        self.db_version = db_version
+        self.needs_update = needs_update
 
     def __repr__(self) -> str:
         return f"({self.name}, {self.path}, {self.database}, {self.installed}, {self.env_path})"
 
 
 class DatabaseItem:
-    def __init__(self, name, path, installed, software: str = "none") -> None:
+    def __init__(self, name, path, installed, software: str = "none",
+                 version: Optional[str] = None, source_url: Optional[str] = None, 
+                 file_mod_date: Optional[str] = None) -> None:
         self.name = name
         self.path = path
         self.installed = installed
         self.software = software
         self.date = datetime.datetime.now().strftime("%Y-%m-%d")
+        self.version = version
+        self.source_url = source_url
+        self.file_mod_date = file_mod_date
 
     def __repr__(self) -> str:
         return f"({self.name}, {self.path}, {self.installed})"
@@ -102,10 +112,12 @@ class Utility_Repository:
             Column("tag", String, default="undefined"),
             Column("env_path", String),
             Column("date", String),
+            Column("db_version", String),
+            Column("needs_update", Boolean),
         )
 
         self.engine_execute(
-            "CREATE TABLE IF NOT EXISTS software (name TEXT, path TEXT, database TEXT, installed BOOLEAN, tag TEXT, env_path TEXT, date TEXT)"
+            "CREATE TABLE IF NOT EXISTS software (name TEXT, path TEXT, database TEXT, installed BOOLEAN, tag TEXT, env_path TEXT, date TEXT, db_version TEXT, needs_update BOOLEAN)"
         )
 
     def create_database_table(self):
@@ -117,10 +129,13 @@ class Utility_Repository:
             Column("installed", Boolean),
             Column("software", String),
             Column("date", String),
+            Column("version", String),
+            Column("source_url", String),
+            Column("file_mod_date", String),
         )
 
         self.engine_execute(
-            "CREATE TABLE IF NOT EXISTS database (name TEXT, path TEXT, installed BOOLEAN, software TEXT, date TEXT)"
+            "CREATE TABLE IF NOT EXISTS database (name TEXT, path TEXT, installed BOOLEAN, software TEXT, date TEXT, version TEXT, source_url TEXT, file_mod_date TEXT)"
         )
 
     def delete_tables(self):
@@ -222,13 +237,14 @@ class Utility_Repository:
     @abstractmethod
     def add_software(self, item: SoftwareItem):
         """
-        Add a record to a table
+        Add a record to a table (uses INSERT OR REPLACE for upsert behavior)
         """
-        # print("adding software")
+        db_version = item.db_version if item.db_version else "NULL"
+        needs_update = 1 if item.needs_update else 0
 
         try:
             _ = self.engine_execute(
-                f"INSERT INTO software (name, path, database, installed, tag, env_path, date) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.tag}', '{item.env_path}', '{item.date}')"
+                f"INSERT OR REPLACE INTO software (name, path, database, installed, tag, env_path, date, db_version, needs_update) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.tag}', '{item.env_path}', '{item.date}', {db_version}, {needs_update})"
             )
 
         except Exception as e:
@@ -238,16 +254,59 @@ class Utility_Repository:
             )
 
     @abstractmethod
-    def add_database(self, item: database_item):
+    def add_database(self, item: DatabaseItem):
         """
-        Add a record to a table
+        Add a record to a table (uses INSERT OR REPLACE for upsert behavior)
         """
+        version = f"'{item.version}'" if item.version else "NULL"
+        source_url = f"'{item.source_url}'" if item.source_url else "NULL"
+        file_mod_date = f"'{item.file_mod_date}'" if item.file_mod_date else "NULL"
+
         try:
             _ = self.engine_execute(
-                f"INSERT INTO database (name, path, installed, date) VALUES ('{item.name}', '{item.path}', '{item.installed}', '{item.date}')"
+                f"INSERT OR REPLACE INTO database (name, path, installed, software, date, version, source_url, file_mod_date) VALUES ('{item.name}', '{item.path}', '{item.installed}', '{item.software}', '{item.date}', {version}, {source_url}, {file_mod_date})"
             )
         except Exception as e:
             print(e)
             print(
                 "error adding database: delete currently existing utility_docker.db and re-run the script"
             )
+
+    def update_software(self, name: str, db_version: Optional[str] = None, needs_update: Optional[bool] = None):
+        """
+        Update software record by name
+        """
+        set_clauses = []
+        if db_version is not None:
+            set_clauses.append(f"db_version = '{db_version}'")
+        if needs_update is not None:
+            set_clauses.append(f"needs_update = {1 if needs_update else 0}")
+
+        if set_clauses:
+            try:
+                self.engine_execute(
+                    f"UPDATE software SET {', '.join(set_clauses)} WHERE name = '{name}'"
+                )
+            except Exception as e:
+                print(e)
+
+    def update_database(self, name: str, version: Optional[str] = None, 
+                        source_url: Optional[str] = None, file_mod_date: Optional[str] = None):
+        """
+        Update database record by name
+        """
+        set_clauses = []
+        if version is not None:
+            set_clauses.append(f"version = '{version}'")
+        if source_url is not None:
+            set_clauses.append(f"source_url = '{source_url}'")
+        if file_mod_date is not None:
+            set_clauses.append(f"file_mod_date = '{file_mod_date}'")
+
+        if set_clauses:
+            try:
+                self.engine_execute(
+                    f"UPDATE database SET {', '.join(set_clauses)} WHERE name = '{name}'"
+                )
+            except Exception as e:
+                print(e)

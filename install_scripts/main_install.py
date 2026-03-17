@@ -294,11 +294,15 @@ class main_setup:
                     self.database_install_string("refseq_prot")
                 )
 
+                db_ver = self.wdir.db_versions.get("refseq_prot", {})
                 self.utilities.add_database(
                     self.utilities.database_item(
                         "refseq_prot",
                         self.wdir.fastas["prot"]["refseq_prot"],
                         True,
+                        version=db_ver.get("version"),
+                        source_url=db_ver.get("source_url"),
+                        file_mod_date=db_ver.get("file_mod_date"),
                     )
                 )
 
@@ -309,11 +313,15 @@ class main_setup:
                     self.database_install_string("refseq_gen")
                 )
 
+                db_ver = self.wdir.db_versions.get("refseq", {})
                 self.utilities.add_database(
                     self.utilities.database_item(
                         "refseq_gen",
                         self.wdir.fastas["nuc"]["refseq"][0],
                         True,
+                        version=db_ver.get("version"),
+                        source_url=db_ver.get("source_url"),
+                        file_mod_date=db_ver.get("file_mod_date"),
                     )
                 )
 
@@ -367,11 +375,15 @@ class main_setup:
             if success_install:
                 self.installed_databases.append(self.database_install_string(host_name))
 
+                db_ver = self.wdir.db_versions.get(host_name, {})
                 self.utilities.add_database(
                     self.utilities.database_item(
                         host_name,
                         self.wdir.fastas["host"][host_name],
                         True,
+                        version=db_ver.get("version"),
+                        source_url=db_ver.get("source_url"),
+                        file_mod_date=db_ver.get("file_mod_date"),
                     )
                 )
 
@@ -599,6 +611,7 @@ class main_setup:
             if success_install:
                 self.installed_software.append(self.software_install_string("kraken2"))
 
+                kraken_ver = sofprep.dbs.get("kraken2", {}).get("version", "")
                 self.utilities.add_software(
                     self.utilities.software_item(
                         "kraken2",
@@ -606,6 +619,7 @@ class main_setup:
                         "default",
                         True,
                         sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
+                        db_version=kraken_ver,
                     )
                 )
 
@@ -956,6 +970,68 @@ class main_setup:
 
             if self.soft:
                 self.utilities.dump_software(self.wdir.home)
+
+            if self.wdir.update:
+                self._reregister_on_update()
+
+    def _reregister_on_update(self):
+        """
+        Re-register all installed databases and software after an update.
+        This ensures the SQLite database has current version info.
+        """
+        logging.info("Re-registering all installed databases and software after update...")
+
+        self.utilities.reset_tables()
+
+        for db_name, db_ver in self.wdir.db_versions.items():
+            fasta_path = None
+
+            if db_name in self.wdir.fastas.get("prot", {}):
+                fasta_path = self.wdir.fastas["prot"].get(db_name)
+            elif db_name in self.wdir.fastas.get("nuc", {}):
+                fasta_path = self.wdir.fastas["nuc"].get(db_name)
+            elif db_name in self.wdir.fastas.get("host", {}):
+                fasta_path = self.wdir.fastas["host"].get(db_name)
+            elif db_name in self.wdir.fastas.get("filter", {}):
+                fasta_path = self.wdir.fastas["filter"].get(db_name)
+
+            if fasta_path and os.path.isfile(fasta_path):
+                try:
+                    self.utilities.add_database(
+                        self.utilities.database_item(
+                            db_name,
+                            fasta_path,
+                            True,
+                            version=db_ver.get("version"),
+                            source_url=db_ver.get("source_url"),
+                            file_mod_date=db_ver.get("file_mod_date"),
+                        )
+                    )
+                    logging.info(f"Re-registered database: {db_name}")
+                except Exception as e:
+                    logging.info(f"Failed to re-register database {db_name}: {e}")
+
+        for db_name, db_info in self.setup_install_class.dbs.items():
+            if isinstance(db_info, dict) and "db" in db_info:
+                try:
+                    db_version = db_info.get("version", "")
+                    self.utilities.add_software(
+                        self.utilities.software_item(
+                            db_name,
+                            db_info["db"],
+                            db_info.get("dbname", "default"),
+                            True,
+                            self.setup_install_class.envs["ROOT"] + self.setup_install_class.envs.get(db_name, ""),
+                            db_version=db_version,
+                        )
+                    )
+                    logging.info(f"Re-registered software: {db_name}")
+                except Exception as e:
+                    logging.info(f"Failed to re-register software {db_name}: {e}")
+
+        self.utilities.dump_database(self.wdir.home)
+        self.utilities.dump_software(self.wdir.home)
+        logging.info("Re-registration complete.")
 
     def register_install_logs(self):
         with open(os.path.join(self.wdir.home, "install_log.txt"), "w") as install_log:
