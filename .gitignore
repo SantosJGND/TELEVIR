@@ -1,5 +1,5 @@
 
-
+check_local.sh
 install_scripts/__pycache__/
 *__pycache__/
 .venv-deploy/
