@@ -55,13 +55,6 @@ def get_args():
         )
 
         parser.add_argument(
-            "--deploy",
-            action="store_true",
-            default=False,
-            help="setup software deployment",
-        )
-
-        parser.add_argument(
             "--partial",
             action="store_true",
             default=False,
