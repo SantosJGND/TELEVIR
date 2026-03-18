@@ -169,8 +169,7 @@ class Utility_Repository:
 
         with self.engine.connect() as conn:
             result = conn.execute(sql)
-
-            conn.commit()
+            #conn.commit()
 
         return result
 

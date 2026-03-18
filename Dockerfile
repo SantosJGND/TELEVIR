@@ -53,10 +53,11 @@ RUN apt-get install zlib1g-dev make g++
 
 WORKDIR /opt/televir
 
+ADD https://api.github.com/repos/SantosJGND/TELEVIR/git/refs/heads/install-stdl version.json
 RUN mkdir -p /opt/televir-repo && \
     wget --quiet https://github.com/SantosJGND/TELEVIR/archive/install-stdl.zip -O televir.zip && \
     unzip -q televir.zip && \
-    cp -r TELEVIR-install-stdl/. /opt/televir-repo/ && \
+    cp -r TELEVIR-install-stdl/. /opt/televir-repo/ && \    
     rm -rf TELEVIR-install-stdl && \
     rm televir.zip && \
     chown -R ${APP_USER}:slurm /opt/televir-repo
