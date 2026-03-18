@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.venv/
+.vscode/
+*.md
+.env
+.env.*
+Dockerfile
+check_local.sh
+solo_install.sh
+*.yml
+*.yaml
+*.txt
+requirements.txt

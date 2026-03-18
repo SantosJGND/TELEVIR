@@ -61,6 +61,7 @@ class Utility_Repository:
     tables: list = ["software", "database"]
 
     def __init__(self, db_path="", install_type="local", file_prefix="utility") -> None:
+        print(f"Initializing Utility Repository: {db_path}, {install_type}, {file_prefix}")
         self.db_path = db_path
         self.metadata = MetaData()
         self.engine_name = f"{file_prefix}_{install_type}.db"

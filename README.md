@@ -49,10 +49,45 @@ docker build -t televir .
 
 ```bash
 # Installation with persistence to /data
-docker run -v /data:/data televir move
+docker run -v /data:/opt/televir televir move
 ```
 
 ---
+
+## Directory Structure
+
+The container has two separate locations:
+
+| Path | Purpose | Persisted |
+|------|---------|-----------|
+| `/opt/televir-repo` | Repository code (read-only) | No |
+| `/opt/televir` | Data directory (environments, databases) | Yes |
+
+### Inside the Container (Image)
+
+```
+/opt/televir-repo/        # Repository code (downloaded at build time)
+├── install_scripts/      # Installation scripts
+├── main.py              # Entry point
+├── yaml/                # Conda environment definitions
+└── ...
+
+/opt/televir/            # Data directory (can be mounted)
+├── environments/        # Conda environments
+├── ref_db/              # Software database indexes
+├── ref_fasta/           # Reference sequences
+├── metadata/            # NCBI metadata
+├── utility_local.db     # Registration database
+├── software.tsv         # Software registry
+└── database.tsv         # Database registry
+```
+
+### Why Separate Repository from Data?
+
+- **Repository (`/opt/televir-repo`)**: Contains code/scripts, stays in the image
+- **Data (`/opt/televir`)**: Contains environments and databases, persisted to volume
+
+This allows you to mount `/opt/televir` to a host directory without polluting it with repository files.
 
 ## Entrypoint Commands
 
@@ -61,20 +96,21 @@ This container provides five commands for installation management:
 ### `move` - Install with Persistence
 
 ```bash
-docker run -v /data:/data televir move
+docker run -v /data:/opt/televir televir move
 ```
 
-**Purpose:** Install TELE-Vir and copy all files to the mounted volume (`INSTALL_HOME`).
+**Purpose:** Install TELE-Vir with data persisted to the mounted volume.
 
 **Use case:** First-time installation where you want databases and environments persisted outside the container.
 
 **What it does:**
-1. Creates directories in the mounted volume
-2. Copies TELE-Vir files to the volume
-3. Installs conda environments
-4. Downloads and builds databases
-5. Registers installed items in SQLite database
-6. Sets appropriate permissions
+1. Creates directories in the mounted volume (`/opt/televir`)
+2. Installs conda environments
+3. Downloads and builds databases
+4. Registers installed items in SQLite database
+5. Sets appropriate permissions
+
+**Note:** The repository code stays in `/opt/televir-repo` (inside the image) and is not copied to the volume.
 
 ---
 
@@ -84,7 +120,7 @@ docker run -v /data:/data televir move
 docker run televir install
 ```
 
-**Purpose:** Install TELE-Vir inside the container (no persistence).
+**Purpose:** Install TELE-Vir with data stored in the container's `/opt/televir`.
 
 **Use case:** Testing or temporary installations.
 
@@ -95,7 +131,7 @@ docker run televir install
 ### `update` - Rebuild Databases
 
 ```bash
-docker run -v /data:/data -e UPDATE=true televir update
+docker run -v /data:/opt/televir -e UPDATE=true televir update
 ```
 
 **Purpose:** Update existing installation by rebuilding all databases.
@@ -113,7 +149,7 @@ docker run -v /data:/data -e UPDATE=true televir update
 ### `check` - Verify Installation
 
 ```bash
-docker run -v /data:/data televir check
+docker run -v /data:/opt/televir televir check
 ```
 
 **Purpose:** Display current installation status.
@@ -121,6 +157,7 @@ docker run -v /data:/data televir check
 **Use case:** Verify installation completed correctly or check what's installed.
 
 **Output includes:**
+- Repository information
 - List of installed databases
 - List of installed environments
 - Registration database status
@@ -133,7 +170,7 @@ docker run -v /data:/data televir check
 ### `register` - Re-register Databases
 
 ```bash
-docker run -v /data:/data televir register
+docker run -v /data:/opt/televir televir register
 ```
 
 **Purpose:** Re-register databases without rebuilding.
@@ -167,23 +204,27 @@ docker run -v /my/custom/path:/opt/televir televir move
 ### Examples
 
 ```bash
-# Custom paths
-docker run \
-  -v /my/televir:/opt/televir \
-  -v /my/data:/data \
-  -e INSTALL_HOME=/opt/televir \
-  -e ENVDIR=/opt/televir/environments \
-  televir move
+# Persist to /data on host
+docker run -v /data:/opt/televir televir move
+
+# Custom data directory
+docker run -v /my/televir:/opt/televir televir move
+
+# Update existing installation
+docker run -v /data:/opt/televir -e UPDATE=true televir update
+
+# Check installation status
+docker run -v /data:/opt/televir televir check
 
 # With custom taxdump
 docker run \
-  -v /data:/data \
+  -v /data:/opt/televir \
   -v /path/to/taxdump.tar.gz:/opt/taxdump.tar.gz \
   televir move
 
 # With request sequences
 docker run \
-  -v /data:/data \
+  -v /data:/opt/televir \
   -v /path/to/sequences.fa.gz:/data/request_sequences.fa.gz \
   televir move
 ```
@@ -203,20 +244,20 @@ docker build --build-arg REQUEST_SEQ_FILE=/path/to/sequences.fa.gz -t televir .
 ### 2. Runtime Volume Mount
 
 ```bash
-docker run -v /path/to/sequences.fa.gz:/data/request_sequences.fa.gz -v /data:/data televir move
+docker run -v /path/to/sequences.fa.gz:/data/request_sequences.fa.gz -v /data:/opt/televir televir move
 ```
 
 ### 3. Environment Variable
 
 ```bash
-docker run -e REQUEST_SEQ_FILE=/data/request_sequences.fa.gz -v /data:/data televir move
+docker run -e REQUEST_SEQ_FILE=/data/request_sequences.fa.gz -v /data:/opt/televir televir move
 ```
 
 ---
 
 ## Directory Structure
 
-After installation, the following structure is created in `INSTALL_HOME`:
+After installation, the following structure is created in `/opt/televir` (the data volume):
 
 ```
 /opt/televir/
@@ -235,6 +276,8 @@ After installation, the following structure is created in `INSTALL_HOME`:
 ├── config.py           # Runtime configuration
 └── televir.env         # Environment config
 ```
+
+**Note:** The repository code is stored separately in `/opt/televir-repo` inside the image and is not copied to the data volume.
 
 ---
 
@@ -269,14 +312,14 @@ The file will be copied to `/opt/request_sequences.fa.gz` in the image.
 ### Check Installation Status
 
 ```bash
-docker run -v /data:/data televir check
+docker run -v /data:/opt/televir televir check
 ```
 
 ### View Logs
 
 ```bash
 # Run interactively to see all output
-docker run -it -v /data:/data televir move
+docker run -it -v /data:/opt/televir televir move
 ```
 
 ### Common Issues

@@ -6,12 +6,14 @@ SOURCE = (
     # path to miniconda3 executable.
     "/opt/conda/etc/profile.d/conda.sh"
 )
-# /home/bioinf/Desktop/METAGEN/depo
+
 # path to the directory where the databases will be stored.
-HOME = "/televir/mngs_benchmark/"
+HOME = "/opt/televir/"
+
 # path to the directory where the environments will be stored.
-ENVDIR = "/televir/mngs_benchmark/mngs_environments/"
-# technology used to generate the database and deployment files. options: "illumina" or "nanopore".
+ENVDIR = "/opt/televir/environments/"
+
 # path to the taxdump.tar.gz file.
 TAXDUMP = "/opt/taxdump.tar.gz"
+
 UPDATE = False
