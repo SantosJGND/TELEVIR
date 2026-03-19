@@ -490,7 +490,7 @@ class setup_dl:
 
 
     def install_requests(self):
-        references_file = os.path.join(self.seqdir, "request_references.fa.gz")
+        references_file = os.path.join(self.seqdir, "request_references.fa")
 
         if os.path.isfile(references_file):
             self.fastas["nuc"]["requests"] = [references_file]
@@ -2580,6 +2580,8 @@ class setup_install(setup_dl):
             return True
         except subprocess.CalledProcessError:
             logging.info(f"failed to index bwa db {dbname}")
+            import traceback
+            traceback.print_exc()
             return False
         except FileNotFoundError:
             logging.info(f"failed to index bwa db {dbname}")

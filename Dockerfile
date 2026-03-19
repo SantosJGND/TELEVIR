@@ -50,7 +50,6 @@ ENV PATH=$PATH:kallisto_linux-v0.43.1
 
 RUN apt-get install zlib1g-dev make g++
 
-
 WORKDIR /opt/televir
 
 ADD https://api.github.com/repos/SantosJGND/TELEVIR/git/refs/heads/install-stdl version.json
