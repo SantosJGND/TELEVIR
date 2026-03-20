@@ -4,6 +4,7 @@ ARG APP_USER=televir_user
 RUN useradd -ms /bin/bash ${APP_USER}
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TERM=xterm
+ENV CONDA_PLUGINS_AUTO_ACCEPT_TOS=yes
 
 RUN set -x \
     && groupadd -r --gid=990 slurm \
@@ -42,7 +43,10 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86
     /bin/bash ~/miniconda.sh -b -p $CONDA_DIR && \
     rm ~/miniconda.sh
 
-ENV PATH=$CONDA_DIR/bin:$PATH
+ENV PATH=$CONDA_DIR/bin:$PATH 
+RUN conda install --name base conda-anaconda-tos
+RUN conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main \
+    && conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r 
 
 RUN wget https://github.com/pachterlab/kallisto/releases/download/v0.43.1/kallisto_linux-v0.43.1.tar.gz
 RUN tar -xzf kallisto_linux-v0.43.1.tar.gz

@@ -490,23 +490,23 @@ class main_setup:
                     f"{prepdl.seqdir}{centlib}"
                 ]  # add to fastas dict
 
-                if install_success:
-                    self.installed_software.append(
-                        self.software_install_string("centrifuge")
-                    )
+            if install_success:
+                self.installed_software.append(
+                    self.software_install_string("centrifuge")
+                )
 
-                    self.utilities.add_software(
-                        self.utilities.software_item(
-                            "centrifuge",
-                            sofprep.dbs["centrifuge"]["db"],
-                            "default",
-                            True,
-                            sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
-                        )
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "centrifuge",
+                        sofprep.dbs["centrifuge"]["db"],
+                        "default",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
                     )
+                )
 
         if self.layout.install_centrifuge_bacteria:
-            install_success = sofprep.centrifuge_install(
+            install_success = sofprep.centrifuge_download_install(
                 dbname="bacteria", threads="16"
             )
             centlib = "refseq-bacteria.dust.fna.gz"
@@ -523,20 +523,20 @@ class main_setup:
                     f"{prepdl.seqdir}{centlib}"
                 ]  # add to fastas dict
 
-                if install_success:
-                    self.installed_software.append(
-                        self.software_install_string("centrifuge")
-                    )
+            if install_success:
+                self.installed_software.append(
+                    self.software_install_string("centrifuge")
+                )
 
-                    self.utilities.add_software(
-                        self.utilities.software_item(
-                            "centrifuge",
-                            sofprep.dbs["centrifuge"]["db"],
-                            "bacteria",
-                            True,
-                            sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
-                        )
+                self.utilities.add_software(
+                    self.utilities.software_item(
+                        "centrifuge",
+                        sofprep.dbs["centrifuge"]["db"],
+                        "bacteria",
+                        True,
+                        sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
                     )
+                )
 
         ########################### clark ##################################
 
