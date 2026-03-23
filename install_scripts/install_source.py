@@ -10,7 +10,7 @@ For new code, prefer importing directly from load_sources:
 """
 
 import os
-from load_sources import get_loader, get_db_url, get_software_url, get_git_url, get_software_entry, list_software
+from install_scripts.load_sources import get_loader, get_software_url, get_git_url, list_software
 
 def get_env_var(key, default=""):
     """Get environment variable with fallback to default"""
