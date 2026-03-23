@@ -120,6 +120,7 @@ class TelevirStatusApp:
         all_dbs = self._get_all_databases()
         print(all_dbs)
         installed_dbs = self._get_installed_databases()
+        
         print(installed_dbs)
         for category, entries in dbs.items():
             if isinstance(entries, dict):
