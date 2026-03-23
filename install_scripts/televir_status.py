@@ -120,15 +120,16 @@ class TelevirStatusApp:
         all_dbs = self._get_all_databases()
         print(all_dbs)
         installed_dbs = self._get_installed_databases()
-        
+
         print(installed_dbs)
+        print("####")
         for category, entries in dbs.items():
             if isinstance(entries, dict):
                 for name, info in entries.items():
                     name_full = f"{category}/{name}"
                     available = "✓" if info else "✗"
-                    version = installed_dbs.get(name_full, {}).get("version", "N/A")
-                    installed = installed_dbs.get(name_full, {}).get("installed", "N/A")
+                    version = installed_dbs.get(name, {}).get("version", "N/A")
+                    installed = installed_dbs.get(name, {}).get("installed", "N/A")
                     self.db_tree.insert("", "end", values=(name_full, category, available, installed, version))
     
     def _populate_hosts(self):
@@ -220,7 +221,7 @@ class TelevirStatusApp:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT name, path FROM database WHERE installed = 1 AND software = 'host'"
+                "SELECT name, path FROM database WHERE installed = 'True' AND software = 'host'"
             )
             for row in cursor.fetchall():
                 filename = os.path.basename(row[1]) if row[1] else "N/A"
@@ -240,7 +241,7 @@ class TelevirStatusApp:
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
-            cursor.execute("SELECT name, tag FROM software WHERE installed = 1")
+            cursor.execute("SELECT name, tag FROM software WHERE installed = 'True'")
             for row in cursor.fetchall():
                 installed[row[0]] = row[1] if row[1] else "N/A"
             conn.close()
