@@ -115,7 +115,7 @@ class TelevirStatusApp:
             self.db_tree.delete(item)
         
         dbs = list_databases()
-        print
+        print(dbs)
 
         all_dbs = self._get_all_databases()
         print(all_dbs)
@@ -126,8 +126,8 @@ class TelevirStatusApp:
                 for name, info in entries.items():
                     name_full = f"{category}/{name}"
                     available = "✓" if info else "✗"
-                    version = installed_dbs.get(name_full, "N/A")
-                    installed = info.get("installed", "✗")
+                    version = installed_dbs.get(name_full, "N/A").get("version", "N/A")
+                    installed = installed_dbs.get(name_full, {}).get("installed", "N/A")
                     self.db_tree.insert("", "end", values=(name_full, category, available, installed, version))
     
     def _populate_hosts(self):
