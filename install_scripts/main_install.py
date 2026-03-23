@@ -998,21 +998,26 @@ class main_setup:
             elif db_name in self.wdir.fastas.get("filter", {}):
                 fasta_path = self.wdir.fastas["filter"].get(db_name)
 
-            if fasta_path and os.path.isfile(fasta_path):
-                try:
-                    self.utilities.add_database(
-                        self.utilities.database_item(
-                            db_name,
-                            fasta_path,
-                            True,
-                            version=db_ver.get("version"),
-                            source_url=db_ver.get("source_url"),
-                            file_mod_date=db_ver.get("file_mod_date"),
+            print(fasta_path)
+            if fasta_path and isinstance(fasta_path, list) is False:
+                fasta_path = [fasta_path]
+
+            for path in fasta_path:
+                if os.path.isfile(path):
+                    try:
+                        self.utilities.add_database(
+                            self.utilities.database_item(
+                                db_name,
+                                path,
+                                True,
+                                version=db_ver.get("version"),
+                                source_url=db_ver.get("source_url"),
+                                file_mod_date=db_ver.get("file_mod_date"),
                         )
                     )
-                    logging.info(f"Re-registered database: {db_name}")
-                except Exception as e:
-                    logging.info(f"Failed to re-register database {db_name}: {e}")
+                        logging.info(f"Re-registered database: {db_name}")
+                    except Exception as e:
+                        logging.info(f"Failed to re-register database {db_name}: {e}")
 
         for db_name, db_info in self.setup_install_class.dbs.items():
             if isinstance(db_info, dict) and "db" in db_info:
