@@ -22,7 +22,7 @@ RUN /opt/venv/bin/pip install wheel
 RUN /opt/venv/bin/pip install setuptools numpy==1.24.3 pandas==2.0.1 
 RUN /opt/venv/bin/pip install --upgrade pip
 
-RUN /opt/venv/bin/pip install psycopg2 sqlalchemy python-decouple==3.8 danio PyYAML xopen==1.7.0 fastq_filter==0.3.0
+RUN /opt/venv/bin/pip install psycopg2 sqlalchemy>=2.0 python-decouple==3.8 danio PyYAML xopen==1.7.0 fastq_filter==0.3.0
 RUN /opt/venv/bin/pip install --default-timeout=100 future
 
 RUN apt-get update
