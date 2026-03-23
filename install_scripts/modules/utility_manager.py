@@ -64,7 +64,7 @@ class Utility_Repository:
         print(f"Initializing Utility Repository: {db_path}, {install_type}, {file_prefix}")
         self.db_path = db_path
         self.metadata = MetaData()
-        self.engine_name = f"{file_prefix}_{install_type}.db"
+        self.engine_name = "utility_local.db"
         self.engine_filepath = os.path.join(*self.db_path.split("/"), self.engine_name)
 
         self.setup_engine(install_type)
