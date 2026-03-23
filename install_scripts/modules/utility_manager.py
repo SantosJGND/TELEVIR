@@ -259,9 +259,7 @@ class Utility_Repository:
             _ = self.engine_execute(
                 f"INSERT OR REPLACE INTO software (name, path, database, installed, tag, env_path, date, db_version, needs_update) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.tag}', '{item.env_path}', '{item.date}', {db_version}, {needs_update})"
             )
-            print(f"[DEBUG] Software added: {item.name}")
-            print(self.engine_execute_return_table(f"SELECT * FROM software WHERE name='{item.name}'"))
-            
+
             verify = self.engine_execute_return_table(f"SELECT name FROM software WHERE name='{item.name}'")
             if verify:
                 print(verify)

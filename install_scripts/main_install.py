@@ -971,12 +971,12 @@ class main_setup:
             if self.soft:
                 self.utilities.dump_software(self.wdir.home)
 
-            if self.wdir.update:
-                self._reregister_on_update()
-            
-            if self.setup_install_class.test:
-                self._reregister_on_update()
-
+            #if self.wdir.update:
+            #    self._reregister_on_update()
+            #
+            #if self.setup_install_class.test:
+            #    self._reregister_on_update()
+#
     def _reregister_on_update(self):
         """
         Re-register all installed databases and software after an update.

@@ -176,7 +176,7 @@ class TelevirStatusApp:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT name, version FROM database WHERE installed = 1 AND software != 'host'"
+                "SELECT name, version FROM database WHERE installed = True AND software != 'host'"
             )
             for row in cursor.fetchall():
                 installed[row[0]] = row[1] if row[1] else "N/A"
