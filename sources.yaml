@@ -1,0 +1,414 @@
+# TELE-Vir Centralized Source Configuration
+# All download sources for databases, software, and reference genomes
+# Easy to edit - just modify URLs when sources change
+
+version: "1.0"
+last_updated: "2026-03-21"
+
+# =============================================================================
+# DATABASES
+# =============================================================================
+
+databases:
+  # ---------------------------------------------------------------------------
+  # 16S rRNA Databases
+  # ---------------------------------------------------------------------------
+  ribosomal_rna:
+    refseq_16s:
+      url: "https://ftp.ncbi.nlm.nih.gov/refseq/TargetedLoci/Bacteria/bacteria.16SrRNA.fna.gz"
+      description: "RefSeq 16S rRNA sequences from targeted loci"
+      file: "bacteria.16SrRNA.fna.gz"
+
+    silva_16s:
+      url: "https://www.arb-silva.de/fileadmin/silva_databases/release_138_1/Exports/SILVA_138.1_LSURef_NR99_tax_silva.fasta.gz"
+      description: "SILVA 138.1 LSURef NR99 16S rRNA with taxonomy"
+      file: "SILVA_138.1_LSURef_NR99_tax_silva.fasta.gz"
+
+    ncbi_16s:
+      url: "https://ftp.ncbi.nlm.nih.gov/blast/db/16S_ribosomal_RNA.tar.gz"
+      description: "NCBI 16S ribosomal RNA database"
+      file: "16S_ribosomal_RNA.tar.gz"
+
+  # ---------------------------------------------------------------------------
+  # Protein Databases
+  # ---------------------------------------------------------------------------
+  protein:
+    uniref90:
+      url: "https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz"
+      description: "UniRef90 protein cluster database"
+      file: "uniref90.fasta.gz"
+      version_template: "{version}.fasta.gz" # Use {version} placeholder
+
+    uniref100:
+      url: "https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref100/uniref100.fasta.gz"
+      description: "UniRef100 protein cluster database"
+      file: "uniref100.fasta.gz"
+
+    swissprot:
+      url: "https://ftp.ncbi.nlm.nih.gov/blast/db/FASTA/swissprot.gz"
+      description: "SwissProt reviewed protein database"
+      file: "swissprot.gz"
+
+    rvdb:
+      url: "https://rvdb-prot.pasteur.fr/files/U-RVDBv{version}-prot.fasta.xz"
+      description: "Reverse Virome Database"
+      file: "U-RVDBv{version}-prot.fasta.xz"
+      version_default: "22.0"
+
+    virosaurus:
+      url: "https://ftp.expasy.org/databases/viralzone/2020%5F4/virosaurus90%5Fvertebrate-20200330.fas.gz"
+      description: "Virosaurus viral protein database"
+      file: "virosaurus90%5Fvertebrate-20200330.fas.gz"
+
+  # ---------------------------------------------------------------------------
+  # Kraken2 Pre-built Databases
+  # ---------------------------------------------------------------------------
+  kraken2:
+    viral:
+      url: "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20250402.tar.gz"
+      description: "Kraken2 pre-built viral database"
+      file: "k2_viral_20250402.tar.gz"
+      version: "20250402"
+
+    standard:
+      url: "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20250402.tar.gz"
+      description: "Kraken2 pre-built standard database"
+      file: "k2_standard_20250402.tar.gz"
+      version: "20250402"
+
+    bacteria:
+      url: "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_16gb_20230314.tar.gz"
+      description: "Kraken2 reduced standard database (16GB)"
+      file: "k2_standard_16gb_20230314.tar.gz"
+      version: "20230314"
+
+    ribo16s:
+      url: "https://genome-idx.s3.amazonaws.com/kraken/16S_RDP11.5_20200326.tgz"
+      description: "Kraken2 RDP 16S rRNA database"
+      file: "16S_RDP11.5_20200326.tgz"
+      version: "20200326"
+
+    eupathdb46:
+      url: "https://genome-idx.s3.amazonaws.com/kraken/k2_eupathdb48_20201113.tar.gz"
+      description: "Kraken2 eukaryotic pathogen database"
+      file: "k2_eupathdb48_20201113.tar.gz"
+      version: "20201113"
+
+  # ---------------------------------------------------------------------------
+  # Centrifuge Databases
+  # ---------------------------------------------------------------------------
+  centrifuge:
+    viral:
+      url: "https://genome-idx.s3.amazonaws.com/centrifuge/p_compressed_2018_4_15.tar.gz"
+      description: "Centrifuge pre-built viral database"
+      file: "p_compressed_2018_4_15.tar.gz"
+      version: "2018_4_15"
+
+    bacteria:
+      url: "https://genome-idx.s3.amazonaws.com/centrifuge/p_compressed_2018_4_15.tar.gz"
+      description: "Centrifuge pre-built bacteria database"
+      file: "p_compressed_2018_4_15.tar.gz"
+      version: "2018_4_15"
+
+  # ---------------------------------------------------------------------------
+  # MetaPhlAn Databases
+  # ---------------------------------------------------------------------------
+  metaphlan:
+    default:
+      url: "http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/mpa_vFeb24_CDIFF_CHOCOPhlAnSGB_20240910.tar"
+      description: "MetaPhlAn CHOCOPhlAn SGB database"
+      file: "mpa_vFeb24_CDIFF_CHOCOPhlAnSGB_20240910.tar"
+      version: "20240910"
+
+    mpa_vJan25:
+      url: "http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/mpa_vJan25_CHOCOPhlAnSGB_202503.tar"
+      description: "MetaPhlAn CHOCOPhlAn SGB database (Jan 2025)"
+      file: "mpa_vJan25_CHOCOPhlAnSGB_202503.tar"
+      version: "202503"
+
+  # ---------------------------------------------------------------------------
+  # Kaiju Databases
+  # ---------------------------------------------------------------------------
+  kaiju:
+    viral:
+      url: "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_viruses_2024-08-15.tgz"
+      description: "Kaiju viral database (August 2024)"
+      file: "kaiju_db_viruses_2024-08-15.tgz"
+
+    fungi:
+      url: "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_fungi_2024-08-16.tgz"
+      description: "Kaiju fungi database (August 2024)"
+      file: "kaiju_db_fungi_2024-08-16.tgz"
+
+    bacteria:
+      url: "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_refseq_ref_2024-08-14.tgz"
+      description: "Kaiju RefSeq reference database (August 2024)"
+      file: "kaiju_db_refseq_ref_2024-08-14.tgz"
+
+    viruses_2021:
+      url: "https://kaiju.binf.ku.dk/database/kaiju_db_viruses_2021-02-24.tgz"
+      description: "Kaiju viral database (February 2021)"
+      file: "kaiju_db_viruses_2021-02-24.tgz"
+
+    fungi_2023:
+      url: "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2023/kaiju_db_fungi_2023-05-26.tgz"
+      description: "Kaiju fungi database (May 2023)"
+      file: "kaiju_db_fungi_2023-05-26.tgz"
+
+  # ---------------------------------------------------------------------------
+  # Taxonomy / NCBI Accession2Taxid
+  # ---------------------------------------------------------------------------
+  taxonomy:
+    accession2taxid:
+      base_url: "https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
+      files_template: "prot.accession2taxid.FULL.{number}.gz"
+      numbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      description: "NCBI protein accession to taxonomy ID mapping"
+
+    taxdump:
+      url: "https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"
+      ftp_url: "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"
+      description: "NCBI taxonomy database dump"
+      file: "taxdump.tar.gz"
+
+  # ---------------------------------------------------------------------------
+  # RefSeq (dynamic - organism specific)
+  # ---------------------------------------------------------------------------
+  refseq:
+    base_url: "https://ftp.ncbi.nlm.nih.gov/refseq/release/{organism}/"
+    protein_suffix: ".protein.faa.gz"
+    genome_suffix: ".genome.fna.gz"
+
+  # ---------------------------------------------------------------------------
+  # Voyager Databases
+  # ---------------------------------------------------------------------------
+  voyager:
+    viral:
+      ftp: "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/voyager/viral/"
+      file: "viruses.tar.gz"
+
+    bacteria:
+      ftp: "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/voyager/bacterial/"
+      file: "bacteria.tar.gz"
+
+# =============================================================================
+# SOFTWARE
+# =============================================================================
+
+software:
+  # ---------------------------------------------------------------------------
+  # Archive Downloads (tar/zip)
+  # ---------------------------------------------------------------------------
+  archives:
+    clark:
+      url: "http://clark.cs.ucr.edu/Download/CLARKV1.2.6.1.tar.gz"
+      description: "CLARK metagenomics classifier"
+      file: "CLARKV1.2.6.1.tar.gz"
+
+    voyager:
+      url: "https://bitbucket.org/sverre-phd-work/voyager/downloads/voyager-noarch64-v0.1.5.tar.gz"
+      description: "Voyager viral classification tool"
+      file: "voyager-noarch64-v0.1.5.tar.gz"
+
+    trimmomatic:
+      url: "http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.39.zip"
+      description: "Trimmomatic adapter trimming tool"
+      file: "Trimmomatic-0.39.zip"
+
+    fastqc:
+      url: "https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.9.zip"
+      description: "FastQC quality control tool"
+      file: "fastqc_v0.11.9.zip"
+
+    rabbitqc:
+      url: "https://github.com/ZekunYin/RabbitQC/archive/v0.0.1.zip"
+      description: "RabbitQC quality control tool"
+      file: "RabbitQC-0.0.1.zip"
+
+  # ---------------------------------------------------------------------------
+  # Git Repositories
+  # ---------------------------------------------------------------------------
+  git_repos:
+    fastviromeexplorer:
+      url: "https://github.com/saima-tithi/FastViromeExplorer.git"
+      description: "FastViromeExplorer viral detection tool"
+      branch: "master"
+
+    desamba:
+      url: "https://github.com/hitbc/deSAMBA.git"
+      description: "deSAMBA metagenomics classifier"
+      branch: "master"
+
+    rabbitqc_git:
+      url: "https://github.com/ZekunYin/RabbitQC.git"
+      description: "RabbitQC Git repository"
+      branch: "master"
+
+    trimmomatic_git:
+      url: "https://github.com/usadellab/Trimmomatic.git"
+      description: "Trimmomatic Git repository"
+      branch: "develop"
+
+# =============================================================================
+# HOST GENOMES
+# =============================================================================
+
+host_genomes:
+  description: "NCBI RefSeq host genome FTP locations for host depletion"
+
+  homo_sapiens:
+    host_name: "hg38"
+    common_name: "human"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "/genomes/refseq/vertebrate_mammalian/Homo_sapiens/latest_assembly_versions/GCF_000001405.40_GRCh38.p14/"
+    file: "GCF_000001405.40_GRCh38.p14_genomic.fna.gz"
+
+  marmota_marmota:
+    host_name: "marmota_marmota"
+    common_name: "marmot"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "genomes/refseq/vertebrate_mammalian/Marmota_marmota/latest_assembly_versions/GCF_001458135.2_marMar/"
+    file: "GCF_001458135.2_marMar_genomic.fna.gz"
+
+  culex_pipiens:
+    host_name: "culex_pipiens"
+    common_name: "mosquito"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "genomes/refseq/invertebrate/Culex_pipiens/latest_assembly_versions/GCF_016801865.2_TS_CPP_V2/"
+    file: "GCF_016801865.2_TS_CPP_V2_genomic.fna.gz"
+
+  felis_catus:
+    host_name: "felis_catus"
+    common_name: "cat"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "genomes/refseq/vertebrate_mammalian/Felis_catus/latest_assembly_versions/GCF_018350175.1_F.catus_Fca126_mat1.0/"
+    file: "GCF_018350175.1_F.catus_Fca126_mat1.0_genomic.fna.gz"
+
+  canis_lupus_familiaris:
+    host_name: "canis_lupus_familiaris"
+    common_name: "dog"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "genomes/refseq/vertebrate_mammalian/Canis_lupus_familiaris/latest_assembly_versions/GCF_011100685.1_UU_Cfam_GSD_1.0/"
+    file: "GCF_011100685.1_UU_Cfam_GSD_1.0_genomic.fna.gz"
+
+  cyprinus_carpio:
+    host_name: "cyprinus_carpio"
+    common_name: "carp"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "genomes/refseq/vertebrate_other/Cyprinus_carpio/latest_assembly_versions/GCF_018340385.1_ASM1834038v1/"
+    file: "GCF_018340385.1_ASM1834038v1_genomic.fna.gz"
+
+  anas_platyrhynchos:
+    host_name: "anas_platyrhynchos"
+    common_name: "duck"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "genomes/refseq/vertebrate_other/Anas_platyrhynchos/latest_assembly_versions/GCF_015476345.1_ZJU1.0/"
+    file: "GCF_015476345.1_ZJU1.0_genomic.fna.gz"
+
+  pipistrellus_kuhlii:
+    host_name: "pipistrellus_kuhlii"
+    common_name: "bat"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "genomes/refseq/vertebrate_mammalian/Pipistrellus_kuhlii/latest_assembly_versions/GCF_014108245.1_mPipKuh1.p/"
+    file: "GCF_014108245.1_mPipKuh1.p_genomic.fna.gz"
+
+  phlebotomus_papatasi:
+    host_name: "phlebotomus_papatasi"
+    common_name: "sandfly"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "genomes/refseq/invertebrate/Phlebotomus_papatasi/latest_assembly_versions/GCF_024763615.1_Ppap_2.1/"
+    file: "GCF_024763615.1_Ppap_2.1_genomic.fna.gz"
+
+  sus_scrofa:
+    host_name: "sus_scrofa"
+    common_name: "pig"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "/genomes/refseq/vertebrate_mammalian/Sus_scrofa/latest_assembly_versions/GCF_000003025.6_Sscrofa11.1/"
+    file: "GCF_000003025.6_Sscrofa11.1_genomic.fna.gz"
+
+  aedes_albopictus:
+    host_name: "aedes_albopictus"
+    common_name: "mosquito"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "genomes/refseq/invertebrate/Aedes_albopictus/latest_assembly_versions/GCF_035046485.1_AalbF5/"
+    file: "GCF_035046485.1_AalbF5_genomic.fna.gz"
+
+  gallus_gallus:
+    host_name: "gallus_gallus"
+    common_name: "chicken"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "genomes/refseq/vertebrate_other/Gallus_gallus/latest_assembly_versions/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b/"
+    file: "GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz"
+
+  oncorhynchus_mykiss:
+    host_name: "oncorhynchus_mykiss"
+    common_name: "rainbow_trout"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "genomes/refseq/vertebrate_other/Oncorhynchus_mykiss/latest_assembly_versions/GCF_013265735.2_USDA_OmykA_1.1/"
+    file: "GCF_013265735.2_USDA_OmykA_1.1_genomic.fna.gz"
+
+  salmo_salar:
+    host_name: "salmo_salar"
+    common_name: "atlantic_salmon"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "genomes/refseq/vertebrate_other/Salmo_salar/latest_assembly_versions/GCF_905237065.1_Ssal_v3.1/"
+    file: "GCF_905237065.1_Ssal_v3.1_genomic.fna.gz"
+
+  bos_taurus:
+    host_name: "bos_taurus"
+    common_name: "cow"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "genomes/refseq/vertebrate_mammalian/Bos_taurus/latest_assembly_versions/GCF_002263795.3_ARS-UCD2.0/"
+    file: "GCF_002263795.3_ARS-UCD2.0_genomic.fna.gz"
+
+  neogale_vison:
+    host_name: "neogale_vison"
+    common_name: "mink"
+    host: "ftp.ncbi.nlm.nih.gov"
+    path: "genomes/refseq/vertebrate_mammalian/Neogale_vison/latest_assembly_versions/GCF_020171115.1_ASM_NN_V1/"
+    file: "GCF_020171115.1_ASM_NN_V1_genomic.fna.gz"
+
+# =============================================================================
+# INFRASTRUCTURE
+# =============================================================================
+
+infrastructure:
+  conda:
+    miniconda:
+      url: "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+      description: "Miniconda installer for conda package manager"
+      file: "Miniconda3-latest-Linux-x86_64.sh"
+
+  tools:
+    kallisto:
+      url: "https://github.com/pachterlab/kallisto/releases/download/v0.43.1/kallisto_linux-v0.43.1.tar.gz"
+      description: "Kallisto RNA-seq quantifier"
+      file: "kallisto_linux-v0.43.1.tar.gz"
+      version: "0.43.1"
+
+  ncbi_eutils:
+    esearch:
+      url: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+      description: "NCBI E-utilities ESearch endpoint"
+
+    efetch:
+      url: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+      description: "NCBI E-utilities EFetch endpoint"
+
+    elink:
+      url: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi"
+      description: "NCBI E-utilities ELink endpoint"
+
+    esummary:
+      url: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
+      description: "NCBI E-utilities ESummary endpoint"
+
+# =============================================================================
+# TELE-VIR REPOSITORY
+# =============================================================================
+
+televir:
+  repo:
+    url: "https://github.com/SantosJGND/TELEVIR.git"
+    branch: "install-stdl"
+    description: "TELE-Vir main repository"

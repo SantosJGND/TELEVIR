@@ -22,8 +22,10 @@ For the main TELE-Vir analysis pipeline, see the INSaFLU project.
 |----------|-------|
 | Quality Control | FastQC, Trimmomatic, RabbitQC |
 | Host Depletion | BWA, Minimap2, Bowtie2 |
-| Classification | Centrifuge, Kraken2, KrakenUniq, Kaiju, FastViromeExplorer |
+| Classification | Centrifuge, Kraken2, KrakenUniq, Kaiju, FastViromeExplorer, CLARK, deSAMBA, Voyager |
 | Remapping | Bowtie2, Minimap2 |
+| RNA Quantification | Kallisto |
+| Microbiome Profiling | MetaPhlAn |
 
 ### Databases
 
@@ -31,9 +33,15 @@ For the main TELE-Vir analysis pipeline, see the INSaFLU project.
 |----------|-------------|
 | RefSeq Genomes | NCBI viral/bacterial genome sequences |
 | RefSeq Proteins | Protein sequences |
-| Host Genomes | 15 host species for depletion |
-| Kraken2 Indexes | Pre-built Kraken2 databases |
-| Centrifuge Indexes | Centrifuge classification indexes |
+| 16S rRNA | RefSeq, SILVA, NCBI RDP databases |
+| Protein | UniRef90, UniRef100, SwissProt, RVDB, Virosaurus |
+| Host Genomes | 15 species: human (hg38), cat, dog, pig, cow, chicken, duck, salmon, rainbow trout, mink, marmot, bat, mosquito (Culex, Aedes), sandfly, carp |
+| Kraken2 | viral, standard, bacteria_16gb, RDP 16S, eupathdb48 |
+| Centrifuge | viral, bacteria |
+| MetaPhlAn | CHOCOPhlAn SGB (default, vJan25) |
+| Kaiju | viruses_2024, fungi_2024, refseq_2024 |
+| Voyager | viral, bacteria |
+| Taxonomy | NCBI taxdump, accession2taxid |
 
 ---
 
@@ -167,15 +175,49 @@ docker run -v /data:/opt/televir televir check
 
 ---
 
-### `register` - Re-register Databases
+### `sources` - Query Source Configuration
 
 ```bash
-docker run -v /data:/opt/televir televir register
+# List all sources
+docker run televir sources list all
+
+# List databases
+docker run televir sources list databases
+docker run televir sources list databases -u    # with URLs
+
+# List host genomes
+docker run televir sources list hosts
+docker run televir sources list hosts -u       # with URLs
+
+# List software
+docker run televir sources list software
+docker run televir sources list software -u   # with URLs
+
+# Get specific source
+docker run televir sources get database kraken2 viral
+docker run televir sources get host homo_sapiens
+docker run televir sources get software trimmomatic
+
+# Get URL format only
+docker run televir sources get host homo_sapiens -f url
+
+# Validate configuration
+docker run televir sources validate
+
+# Query with volume mounted (post-install)
+docker run -v /data:/opt/televir televir sources list databases
 ```
 
-**Purpose:** Re-register databases without rebuilding.
+**Purpose:** Query and validate the source configuration (databases, software, host genomes).
 
-**Use case:** After manually adding or modifying database files.
+**Use case:** Inspect available sources, verify URLs, or validate configuration before installation.
+
+**Available after installation:** Tools are copied to `$INSTALL_HOME/tools/`:
+```bash
+# From mounted volume
+docker run -v /data:/opt/televir --entrypoint python televir \
+    /opt/televir/tools/sources_cli.py list databases
+```
 
 ---
 
@@ -227,31 +269,42 @@ docker run \
   -v /data:/opt/televir \
   -v /path/to/sequences.fa.gz:/data/request_sequences.fa.gz \
   televir move
+
+# Query source configuration
+docker run televir sources list all
+docker run televir sources list databases -u
+docker run televir sources get database kraken2 viral
+docker run televir sources validate
+
+# Query from installed environment
+docker run -v /data:/opt/televir televir sources list databases
 ```
 
 ---
 
 ## Request Sequences
 
-You can provide custom request sequences in three ways:
+You can provide custom request sequences in three ways, checked in this priority order:
 
-### 1. Build-Time (via `--build-arg`)
+### 1. Environment Variable (highest priority)
+
+```bash
+docker run -e REQUEST_SEQ_FILE=/data/request_sequences.fa.gz -v /data:/opt/televir televir move
+```
+
+### 2. Build-Time (via `--build-arg`)
 
 ```bash
 docker build --build-arg REQUEST_SEQ_FILE=/path/to/sequences.fa.gz -t televir .
 ```
 
-### 2. Runtime Volume Mount
+### 3. Runtime Volume Mount
 
 ```bash
 docker run -v /path/to/sequences.fa.gz:/data/request_sequences.fa.gz -v /data:/opt/televir televir move
 ```
 
-### 3. Environment Variable
-
-```bash
-docker run -e REQUEST_SEQ_FILE=/data/request_sequences.fa.gz -v /data:/opt/televir televir move
-```
+**Priority order:** Environment variable → `/opt/request_sequences.fa.gz` (built-in) → `/data/request_sequences.fa.gz` (mounted)
 
 ---
 
@@ -270,10 +323,12 @@ After installation, the following structure is created in `/opt/televir` (the da
 │   └── ...
 ├── metadata/            # NCBI metadata
 ├── environments/        # Conda environments
+├── tools/              # CLI tools (sources_cli.py, load_sources.py)
 ├── utility_local.db     # Registration database
 ├── software.tsv        # Software registry
 ├── database.tsv        # Database registry
 ├── config.py           # Runtime configuration
+├── install_scripts_config.py  # Installation scripts configuration
 └── televir.env         # Environment config
 ```
 

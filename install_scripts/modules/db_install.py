@@ -13,6 +13,7 @@ from threading import Thread
 
 import pandas as pd
 from install_scripts.host_library import Host
+from install_scripts.load_sources import get_db_url, get_db_version
 
 from fastq_filter import file_to_fastq_records
 
@@ -578,7 +579,7 @@ class setup_dl:
 
             return ftp_download
         except Exception as e:
-            logging.info(f"failed to download {host_name} from ftp.")
+            logging.warning(f"failed to download {host_name} from ftp.")
             return False
 
     def get_latest_assembly(
@@ -1451,11 +1452,10 @@ class setup_install(setup_dl):
         index_file_prefix = f"{odir}{dbname}/{dbname}_index"
         
 
-        if dbname == "viral":
-            href="https://genome-idx.s3.amazonaws.com/centrifuge/p_compressed_2018_4_15.tar.gz"
-        
-        elif dbname == "bacteria":
-            href="https://genome-idx.s3.amazonaws.com/centrifuge/p_compressed_2018_4_15.tar.gz"
+        href = get_db_url('centrifuge', dbname)
+        if not href:
+            logging.error(f"No source URL found for centrifuge/{dbname}")
+            return False
 
         if self.update:
             logging.info(f"Updating centrifuge db {dbname}.")
@@ -1694,7 +1694,7 @@ class setup_install(setup_dl):
             return True
 
         except subprocess.CalledProcessError:
-            logging.info(f"failed to download centrifuge db {dbname}")
+            logging.warning(f"failed to download centrifuge db {dbname}")
             return False
 
     def voyager_install_viruses_copy(
@@ -1890,7 +1890,7 @@ class setup_install(setup_dl):
             return True
 
         except subprocess.CalledProcessError:
-            logging.info(f"failed to download metaphlan db {dbname}")
+            logging.warning(f"failed to download metaphlan db {dbname}")
             return False
 
     def install_metaphlan_dl(
@@ -1929,9 +1929,16 @@ class setup_install(setup_dl):
         subprocess.run(["mkdir", "-p", odir])
         subprocess.run(["mkdir", "-p", odir + dbname])
 
+        source = get_db_url('metaphlan', dbname)
+        if not source:
+            source = get_db_url('metaphlan', 'default')
+        
+        if not source:
+            logging.error(f"No source URL found for metaphlan/{dbname}")
+            return False
+
         try:
 
-            source = "http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/mpa_vFeb24_CDIFF_CHOCOPhlAnSGB_20240910.tar"
             source_file = source.split("/")[-1]
             subprocess.run(["wget", "-P", odir + dbname, source], check=True)
             subprocess.run(
@@ -1947,7 +1954,7 @@ class setup_install(setup_dl):
             return True
 
         except subprocess.CalledProcessError:
-            logging.info(f"failed to download metaphlan db {dbname}")
+            logging.warning(f"failed to download metaphlan db {dbname}")
             return False
 
     def clark_install(
@@ -2019,7 +2026,7 @@ class setup_install(setup_dl):
             }
             return True
         except subprocess.CalledProcessError:
-            logging.info(f"failed to download CLARK db {dbname}")
+            logging.warning(f"failed to download CLARK db {dbname}")
             return False
 
     def kraken2_download_install(
@@ -2030,30 +2037,12 @@ class setup_install(setup_dl):
     ):
         odir = self.dbdir + dbdir + "/"
 
-        if dbname == "viral":
-            source = (
-                "https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20250402.tar.gz"
-            )
-            kraken_version = "20250402"
-        elif dbname == "standard":
-            source = (
-                "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20250402.tar.gz"
-            )
-            kraken_version = "20250402"
-        elif dbname == "bacteria":
-            source = "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_16gb_20230314.tar.gz"
-            kraken_version = "20230314"
-        elif dbname == "ribo16s":
-            source = (
-                "https://genome-idx.s3.amazonaws.com/kraken/16S_RDP11.5_20200326.tgz"
-            )
-            kraken_version = "20200326"
-        elif dbname == "eupathdb46":
-            source = "https://genome-idx.s3.amazonaws.com/kraken/k2_eupathdb48_20201113.tar.gz"
-            kraken_version = "20201113"
-        else:
-            source = ""
-            kraken_version = ""
+        source = get_db_url('kraken2', dbname)
+        kraken_version = get_db_version('kraken2', dbname)
+
+        if not source:
+            logging.error(f"No source URL found for kraken2/{dbname}")
+            return False
 
         source_file = source.split("/")[-1]
 
@@ -2104,7 +2093,7 @@ class setup_install(setup_dl):
             logging.info(f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
             return True
         else:
-            logging.info(f"failed to download Kraken2 db {dbname}")
+            logging.warning(f"failed to download Kraken2 db {dbname}")
             return False
 
     def kraken2_install(
@@ -2225,7 +2214,7 @@ class setup_install(setup_dl):
                 }
                 return True
             else:
-                logging.info(f"failed to download Kraken2 db {dbname}")
+                logging.warning(f"failed to download Kraken2 db {dbname}")
                 self.dbs[id] = {
                     "dir": odir,
                     "dbname": dbname,
@@ -2235,7 +2224,7 @@ class setup_install(setup_dl):
                 return False
 
         except subprocess.CalledProcessError:
-            logging.info(f"failed to download Kraken2 db {dbname}")
+            logging.warning(f"failed to download Kraken2 db {dbname}")
             self.dbs[id] = {
                 "dir": odir,
                 "dbname": dbname,
@@ -2323,7 +2312,7 @@ class setup_install(setup_dl):
             return True
 
         except subprocess.CalledProcessError:
-            logging.info(f"failed to download Diamond db {dbname}")
+            logging.warning(f"failed to download Diamond db {dbname}")
             return False
 
     def process_kuniq_files(self, dbname, odir):
@@ -2509,7 +2498,7 @@ class setup_install(setup_dl):
 
             return True
         except subprocess.CalledProcessError:
-            logging.info(f"failed to download Krakenuniq db {dbname}")
+            logging.warning(f"failed to download Krakenuniq db {dbname}")
             return False
 
     def kaiju_dl_install(
@@ -2518,13 +2507,11 @@ class setup_install(setup_dl):
         dbdir="kaiju",
         dbname="viral",
     ):
-        if dbname == "viral":
-            db_online = "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_viruses_2024-08-15.tgz"
-        elif dbname == "fungi":
-            db_online = "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_fungi_2024-08-16.tgz"
-
-        elif dbname == "bacteria":
-            db_online = "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_refseq_ref_2024-08-14.tgz"
+        db_online = get_db_url('kaiju', dbname)
+        
+        if not db_online:
+            logging.error(f"No source URL found for kaiju/{dbname}")
+            return False
 
         odir = self.dbdir + dbdir + "/"
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
@@ -2565,7 +2552,7 @@ class setup_install(setup_dl):
             }
             return True
         except subprocess.CalledProcessError:
-            logging.info(f"failed to download Kaiju db {dbname}")
+            logging.warning(f"failed to download Kaiju db {dbname}")
             return False
 
     def kaiju_viral_install(self, id="kaiju", dbdir="kaiju", dbname="viral"):
@@ -2612,7 +2599,7 @@ class setup_install(setup_dl):
             }
             return True
         except subprocess.CalledProcessError:
-            logging.info(f"failed to download Kaiju db {dbname}")
+            logging.warning(f"failed to download Kaiju db {dbname}")
             return False
 
     def blast_install(
@@ -2696,7 +2683,7 @@ class setup_install(setup_dl):
             return True
 
         except subprocess.CalledProcessError:
-            logging.info(f"failed to download blast db {dbname}")
+            logging.warning(f"failed to download blast db {dbname}")
             return False
 
     def bowtie2_index(
@@ -2749,7 +2736,7 @@ class setup_install(setup_dl):
             return True
 
         except subprocess.CalledProcessError:
-            logging.info(f"failed to download bowtie2 index {dbname}")
+            logging.warning(f"failed to download bowtie2 index {dbname}")
             return False
 
     def bwa_install(

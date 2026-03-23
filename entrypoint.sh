@@ -63,6 +63,13 @@ setup_config() {
     if [ -f "/opt/televir-repo/televir.env" ]; then
         cp /opt/televir-repo/televir.env "$INSTALL_HOME/televir.env"
     fi
+    
+    # Copy sources CLI tools for post-install use
+    if [ -f "/opt/televir-repo/install_scripts/sources_cli.py" ]; then
+        mkdir -p "$INSTALL_HOME/tools"
+        cp /opt/televir-repo/install_scripts/sources_cli.py "$INSTALL_HOME/tools/"
+        cp /opt/televir-repo/install_scripts/load_sources.py "$INSTALL_HOME/tools/"
+    fi
 }
 
 # Function to set permissions
@@ -213,6 +220,19 @@ run_register() {
     echo "---> Registration complete!"
 }
 
+# Function to query source configuration
+run_sources() {
+    cd /opt/televir-repo/install_scripts
+    python sources_cli.py "${@:2}"
+}
+
+# Function to display GUI status
+run_status() {
+    echo "---> Starting TELE-Vir Status GUI..."
+    cd /opt/televir-repo
+    /opt/venv/bin/python install_scripts/televir_status.py
+}
+
 # Main command handler
 case "$1" in
     move)
@@ -242,8 +262,17 @@ case "$1" in
         echo "     This will re-register databases (useful after manual DB updates)"
         run_register
     ;;
+    sources)
+        echo "---> Command: sources (query source configuration)"
+        run_sources "$@"
+    ;;
+    status)
+        echo "---> Command: status (GUI status display)"
+        echo "     This will display GUI with databases and software status"
+        run_status
+    ;;
     *)
-        echo "Usage: $0 {move|install|update|check|register} [options]"
+        echo "Usage: $0 {move|install|update|check|register|sources|status} [options]"
         echo ""
         echo "Commands:"
         echo "  move     - Install TELE-Vir (repo in image, data to volume)"
@@ -251,10 +280,13 @@ case "$1" in
         echo "  update   - Update existing installation (rebuild all databases)"
         echo "  check    - Verify installation status"
         echo "  register - Re-register databases (after manual changes)"
+        echo "  sources  - Query source configuration (list databases, hosts, software)"
+        echo "  status   - Display GUI status (databases and software)"
         echo ""
         echo "Directory Structure:"
         echo "  /opt/televir-repo  - Repository code (in image, not persisted)"
         echo "  /opt/televir       - Data directory (environments, databases)"
+        echo "  /opt/televir/tools - CLI tools (sources_cli.py, load_sources.py)"
         echo ""
         echo "Environment variables:"
         echo "  INSTALL_HOME      - Data directory (default: /opt/televir)"
@@ -270,6 +302,15 @@ case "$1" in
         echo ""
         echo "  # Check installation status"
         echo "  docker run -v /data:/opt/televir televir check"
+        echo ""
+        echo "  # Query source configuration"
+        echo "  docker run televir sources list all"
+        echo "  docker run televir sources list databases -u"
+        echo "  docker run televir sources get database kraken2 viral"
+        echo "  docker run televir sources validate"
+        echo ""
+        echo "  # Display GUI status"
+        echo "  docker run -v /data:/opt/televir televir status"
         exit 1
     ;;
 esac
