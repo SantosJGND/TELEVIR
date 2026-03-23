@@ -153,8 +153,9 @@ class Utility_Repository:
     def clear_table(self, table_name):
         self.engine_execute(f"DELETE FROM {table_name}")
 
-    def print_table_schema(self, table_name):
-        print(self.engine_execute(f"PRAGMA table_info({table_name})").fetchall())
+    def print_table_schema(self, table_name: str):
+        result = self.engine_execute(f"PRAGMA table_info({table_name})")
+        print(result)
 
     def reset_tables(self):
         """
@@ -169,9 +170,9 @@ class Utility_Repository:
 
         with self.engine.connect() as conn:
             result = conn.execute(sql)
-            #conn.commit()
+            rows = result.fetchall()
 
-        return result
+        return rows
 
     def create_tables(self):
         """
@@ -220,14 +221,14 @@ class Utility_Repository:
 
         return self.engine_execute(f"SELECT * FROM {table_name} WHERE name='{id}'")
 
-    def check_exists(self, table_name, id):
+    def check_exists(self, table_name: str, id: str):
         """
         Check if a record exists in a table
         """
 
         find = self.engine_execute(
             f"SELECT * FROM {table_name} WHERE name='{id}'"
-        ).fetchall()
+        )
         find = len(find) > 0
         if find:
             return True
