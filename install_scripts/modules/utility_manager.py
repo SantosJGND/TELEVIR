@@ -170,6 +170,7 @@ class Utility_Repository:
 
         with self.engine.connect() as conn:
             result = conn.execute(sql)
+            conn.commit()
 
         return result
 
@@ -180,6 +181,7 @@ class Utility_Repository:
 
         with self.engine.connect() as conn:
             result = conn.execute(sql)
+            conn.commit()
             rows = result.fetchall()
 
         return rows
@@ -257,6 +259,13 @@ class Utility_Repository:
             _ = self.engine_execute(
                 f"INSERT OR REPLACE INTO software (name, path, database, installed, tag, env_path, date, db_version, needs_update) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.tag}', '{item.env_path}', '{item.date}', {db_version}, {needs_update})"
             )
+            print(f"[DEBUG] Software added: {item.name}")
+            
+            verify = self.engine_execute_return_table(f"SELECT name FROM software WHERE name='{item.name}'")
+            if verify:
+                print(f"[DEBUG] Verified software exists in DB: {item.name}")
+            else:
+                print(f"[DEBUG] WARNING: Software not found after insert: {item.name}")
 
         except Exception as e:
             print(e)
@@ -277,6 +286,14 @@ class Utility_Repository:
             _ = self.engine_execute(
                 f"INSERT OR REPLACE INTO database (name, path, installed, software, date, version, source_url, file_mod_date) VALUES ('{item.name}', '{item.path}', '{item.installed}', '{item.software}', '{item.date}', {version}, {source_url}, {file_mod_date})"
             )
+            print(f"[DEBUG] Database added: {item.name}")
+            
+            verify = self.engine_execute_return_table(f"SELECT name FROM database WHERE name='{item.name}'")
+            if verify:
+                print(f"[DEBUG] Verified database exists in DB: {item.name}")
+            else:
+                print(f"[DEBUG] WARNING: Database not found after insert: {item.name}")
+                
         except Exception as e:
             print(e)
             print(

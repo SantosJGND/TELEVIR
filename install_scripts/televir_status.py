@@ -25,7 +25,7 @@ class TelevirStatusApp:
         self.root.geometry("1000x700")
         
         self.install_home = os.environ.get('INSTALL_HOME', '/opt/televir')
-        self.db_path = os.path.join(self.install_home, 'utility_local.db')
+        self.db_path = os.path.join(self.install_home, 'utility_docker.safe.db')
         
         self._create_widgets()
     
