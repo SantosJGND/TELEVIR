@@ -61,6 +61,13 @@ def get_args():
             help="Install software databases",
         )
 
+        parser.add_argument(
+            "--update",
+            action="store_true",
+            default=False,
+            help="Update software databases",
+        )
+
         args = parser.parse_args()
 
     except TypeError as e:
@@ -140,13 +147,13 @@ def main():
 
     env_manager = env_install(ENVS_PARAMS)
 
-    dl_manager = setup_dl(INSTALL_PARAMS, update=UPDATE)
+    dl_manager = setup_dl(INSTALL_PARAMS, update=args.update)
 
     install_manager = setup_install(
         INSTALL_PARAMS,
         taxdump=TAXDUMP,
         test=args.test,
-        update=UPDATE,
+        update=args.update,
     )
 
     metagen_prep = main_setup(

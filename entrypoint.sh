@@ -125,7 +125,8 @@ run_update() {
     --setup_conda \
     --seqdl \
     --soft \
-    --partial
+    --partial \
+    --update
     
     echo "---> Update complete!"
 }
@@ -215,7 +216,8 @@ run_register() {
     --docker \
     --seqdl \
     --soft \
-    --partial
+    --partial \
+    --test
     
     echo "---> Registration complete!"
 }

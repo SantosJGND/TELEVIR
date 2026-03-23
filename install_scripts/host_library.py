@@ -17,7 +17,7 @@ Usage:
 """
 
 from typing import Optional, Dict
-from install_scripts.load_sources import get_loader, get_host_config
+from install_scripts.load_sources import get_host_config
 
 
 class Host:
