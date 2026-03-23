@@ -263,6 +263,7 @@ class Utility_Repository:
             
             verify = self.engine_execute_return_table(f"SELECT name FROM software WHERE name='{item.name}'")
             if verify:
+                print(verify)
                 print(f"[DEBUG] Verified software exists in DB: {item.name}")
             else:
                 print(f"[DEBUG] WARNING: Software not found after insert: {item.name}")
@@ -281,6 +282,8 @@ class Utility_Repository:
         version = f"'{item.version}'" if item.version else "NULL"
         source_url = f"'{item.source_url}'" if item.source_url else "NULL"
         file_mod_date = f"'{item.file_mod_date}'" if item.file_mod_date else "NULL"
+
+        print(item)
 
         try:
             _ = self.engine_execute(

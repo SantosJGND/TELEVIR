@@ -115,8 +115,11 @@ class TelevirStatusApp:
             self.db_tree.delete(item)
         
         dbs = list_databases()
+
+        all_dbs = self._get_all_databases()
+        print(all_dbs)
         installed_dbs = self._get_installed_databases()
-        
+        print(installed_dbs)
         for category, entries in dbs.items():
             if isinstance(entries, dict):
                 for name, info in entries.items():
@@ -182,7 +185,25 @@ class TelevirStatusApp:
             print(f"Error reading database: {e}")
         
         return installed
-    
+
+    def _get_all_databases(self):
+        installed = {}
+
+        if not os.path.exists(self.db_path):
+            return {}
+
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM database")
+            for row in cursor.fetchall():
+                installed[row[0]] = row
+            conn.close()
+        except Exception as e:
+            print(f"Error reading database: {e}")
+
+        return installed
+
     def _get_installed_hosts(self):
         """Query installed host genomes with filename."""
         installed = {}

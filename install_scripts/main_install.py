@@ -279,13 +279,13 @@ class main_setup:
                 self.installed_databases.append(
                     self.database_install_string("requests")
                 )
-                self.utilities.add_database(
-                    self.utilities.database_item(
-                        "requests",
-                        self.wdir.fastas["nuc"]["requests"][0],
-                        True,
-                    )
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    "requests",
+                    self.wdir.fastas["nuc"]["requests"][0],
+                    request_success,
                 )
+            )
 
         if self.layout.install_refseq_prot:
             success_refprot = self.wdir.refseq_prot_dl()
