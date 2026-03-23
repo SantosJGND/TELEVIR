@@ -5,6 +5,7 @@
 This repository contains the installation pipeline for **TELE-Vir** - a tool for the identification of viral sequences in metagenomic data.
 
 **Purpose:** This is an **installation-only** repository. It handles the installation of:
+
 - Conda environments for bioinformatics tools
 - Reference databases (NCBI RefSeq, Kraken2, Centrifuge, etc.)
 - Host genome sequences
@@ -18,30 +19,30 @@ For the main TELE-Vir analysis pipeline, see the INSaFLU project.
 
 ### Bioinformatics Tools
 
-| Category | Tools |
-|----------|-------|
-| Quality Control | FastQC, Trimmomatic, RabbitQC |
-| Host Depletion | BWA, Minimap2, Bowtie2 |
-| Classification | Centrifuge, Kraken2, KrakenUniq, Kaiju, FastViromeExplorer, CLARK, deSAMBA, Voyager |
-| Remapping | Bowtie2, Minimap2 |
-| RNA Quantification | Kallisto |
-| Microbiome Profiling | MetaPhlAn |
+| Category             | Tools                                                                               |
+| -------------------- | ----------------------------------------------------------------------------------- |
+| Quality Control      | FastQC, Trimmomatic, RabbitQC                                                       |
+| Host Depletion       | BWA, Minimap2, Bowtie2                                                              |
+| Classification       | Centrifuge, Kraken2, KrakenUniq, Kaiju, FastViromeExplorer, CLARK, deSAMBA, Voyager |
+| Remapping            | Bowtie2, Minimap2                                                                   |
+| RNA Quantification   | Kallisto                                                                            |
+| Microbiome Profiling | MetaPhlAn                                                                           |
 
 ### Databases
 
-| Database | Description |
-|----------|-------------|
-| RefSeq Genomes | NCBI viral/bacterial genome sequences |
-| RefSeq Proteins | Protein sequences |
-| 16S rRNA | RefSeq, SILVA, NCBI RDP databases |
-| Protein | UniRef90, UniRef100, SwissProt, RVDB, Virosaurus |
-| Host Genomes | 15 species: human (hg38), cat, dog, pig, cow, chicken, duck, salmon, rainbow trout, mink, marmot, bat, mosquito (Culex, Aedes), sandfly, carp |
-| Kraken2 | viral, standard, bacteria_16gb, RDP 16S, eupathdb48 |
-| Centrifuge | viral, bacteria |
-| MetaPhlAn | CHOCOPhlAn SGB (default, vJan25) |
-| Kaiju | viruses_2024, fungi_2024, refseq_2024 |
-| Voyager | viral, bacteria |
-| Taxonomy | NCBI taxdump, accession2taxid |
+| Database        | Description                                                                                                                                   |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| RefSeq Genomes  | NCBI viral/bacterial genome sequences                                                                                                         |
+| RefSeq Proteins | Protein sequences                                                                                                                             |
+| 16S rRNA        | RefSeq, SILVA, NCBI RDP databases                                                                                                             |
+| Protein         | UniRef90, UniRef100, SwissProt, RVDB, Virosaurus                                                                                              |
+| Host Genomes    | 15 species: human (hg38), cat, dog, pig, cow, chicken, duck, salmon, rainbow trout, mink, marmot, bat, mosquito (Culex, Aedes), sandfly, carp |
+| Kraken2         | viral, standard, bacteria_16gb, RDP 16S, eupathdb48                                                                                           |
+| Centrifuge      | viral, bacteria                                                                                                                               |
+| MetaPhlAn       | CHOCOPhlAn SGB (default, vJan25)                                                                                                              |
+| Kaiju           | viruses_2024, fungi_2024, refseq_2024                                                                                                         |
+| Voyager         | viral, bacteria                                                                                                                               |
+| Taxonomy        | NCBI taxdump, accession2taxid                                                                                                                 |
 
 ---
 
@@ -66,10 +67,10 @@ docker run -v /data:/opt/televir televir move
 
 The container has two separate locations:
 
-| Path | Purpose | Persisted |
-|------|---------|-----------|
-| `/opt/televir-repo` | Repository code (read-only) | No |
-| `/opt/televir` | Data directory (environments, databases) | Yes |
+| Path                | Purpose                                  | Persisted |
+| ------------------- | ---------------------------------------- | --------- |
+| `/opt/televir-repo` | Repository code (read-only)              | No        |
+| `/opt/televir`      | Data directory (environments, databases) | Yes       |
 
 ### Inside the Container (Image)
 
@@ -99,7 +100,7 @@ This allows you to mount `/opt/televir` to a host directory without polluting it
 
 ## Entrypoint Commands
 
-This container provides five commands for installation management:
+This container provides the following commands for installation management:
 
 ### `move` - Install with Persistence
 
@@ -112,6 +113,7 @@ docker run -v /data:/opt/televir televir move
 **Use case:** First-time installation where you want databases and environments persisted outside the container.
 
 **What it does:**
+
 1. Creates directories in the mounted volume (`/opt/televir`)
 2. Installs conda environments
 3. Downloads and builds databases
@@ -147,6 +149,7 @@ docker run -v /data:/opt/televir -e UPDATE=true televir update
 **Use case:** Periodic database updates to get latest RefSeq versions.
 
 **What it does:**
+
 1. Removes existing database directories
 2. Re-downloads all databases from NCBI
 3. Re-builds all software indexes
@@ -165,6 +168,7 @@ docker run -v /data:/opt/televir televir check
 **Use case:** Verify installation completed correctly or check what's installed.
 
 **Output includes:**
+
 - Repository information
 - List of installed databases
 - List of installed environments
@@ -213,11 +217,35 @@ docker run -v /data:/opt/televir televir sources list databases
 **Use case:** Inspect available sources, verify URLs, or validate configuration before installation.
 
 **Available after installation:** Tools are copied to `$INSTALL_HOME/tools/`:
+
 ```bash
 # From mounted volume
 docker run -v /data:/opt/televir --entrypoint python televir \
     /opt/televir/tools/sources_cli.py list databases
 ```
+
+### `status` - GUI Status Display
+
+```bash
+# install x-11
+sudo apt-get install x11-xserver-utils
+
+# Allow connections to the X server
+xhost +local:docker
+
+# Display GUI status
+docker run -v /data:/opt/televir -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY televir status
+```
+
+**Purpose:** Display GUI showing all databases and software with installation status.
+
+**Features:**
+
+- Two panels showing Databases and Software tables
+- Columns: Name, Category/Type, Available, Installed
+- "Check Status" button refreshes installation status from utility_local.db
+
+**Note:** Requires graphical display environment or X11 forwarding.
 
 ---
 
@@ -234,14 +262,14 @@ docker run -v /my/custom/path:/opt/televir televir move
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `INSTALL_HOME` | `/opt/televir` | Main installation directory |
-| `ENVDIR` | `/opt/televir/environments` | Conda environments location |
-| `SOURCE` | `/opt/conda/etc/profile.d/conda.sh` | Conda activation script |
-| `TAXDUMP` | `/opt/taxdump.tar.gz` | NCBI taxonomy dump |
-| `UPDATE` | `false` | Set to `true` for rebuild |
-| `REQUEST_SEQ_FILE` | - | Custom request sequences |
+| Variable           | Default                             | Description                 |
+| ------------------ | ----------------------------------- | --------------------------- |
+| `INSTALL_HOME`     | `/opt/televir`                      | Main installation directory |
+| `ENVDIR`           | `/opt/televir/environments`         | Conda environments location |
+| `SOURCE`           | `/opt/conda/etc/profile.d/conda.sh` | Conda activation script     |
+| `TAXDUMP`          | `/opt/taxdump.tar.gz`               | NCBI taxonomy dump          |
+| `UPDATE`           | `false`                             | Set to `true` for rebuild   |
+| `REQUEST_SEQ_FILE` | -                                   | Custom request sequences    |
 
 ### Examples
 
@@ -278,6 +306,9 @@ docker run televir sources validate
 
 # Query from installed environment
 docker run -v /data:/opt/televir televir sources list databases
+
+# Display GUI status
+docker run -v /data:/opt/televir televir status
 ```
 
 ---
@@ -344,6 +375,7 @@ TELE-Vir tracks database versions in the registration system:
 - **Software table:** Stores name, path, associated database version, environment path
 
 Version information is captured:
+
 - **RefSeq:** File modification date
 - **Hosts:** GCF assembly version
 - **Kraken2:** Version from URL (e.g., `20250402`)
@@ -380,10 +412,12 @@ docker run -it -v /data:/opt/televir televir move
 ### Common Issues
 
 **Database download failures:**
+
 - Check internet connectivity
 - Verify TAXDUMP is accessible
 
 **Permission errors:**
+
 - Ensure the volume mount is writable
 - Try running without the `move` command first
 
