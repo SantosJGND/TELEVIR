@@ -974,7 +974,7 @@ class main_setup:
             if self.wdir.update:
                 self._reregister_on_update()
             
-            if self.wdir.test:
+            if self.setup_install_class.test:
                 self._reregister_on_update()
 
     def _reregister_on_update(self):
