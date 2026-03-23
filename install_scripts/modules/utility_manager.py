@@ -154,7 +154,7 @@ class Utility_Repository:
         self.engine_execute(f"DELETE FROM {table_name}")
 
     def print_table_schema(self, table_name: str):
-        result = self.engine_execute(f"PRAGMA table_info({table_name})")
+        result = self.engine_execute_return_table(f"PRAGMA table_info({table_name})")
         print(result)
 
     def reset_tables(self):
@@ -164,9 +164,19 @@ class Utility_Repository:
         self.clear_tables()
 
         self.metadata.create_all(self.engine)
-
+    
     def engine_execute(self, string: str):
         sql = text(string)
+
+        with self.engine.connect() as conn:
+            result = conn.execute(sql)
+
+        return result
+
+    def engine_execute_return_table(self, string: str):
+        sql = text(string)
+
+        rows = None
 
         with self.engine.connect() as conn:
             result = conn.execute(sql)
@@ -208,7 +218,7 @@ class Utility_Repository:
         if not os.path.exists(directory):
             os.makedirs(directory, exist_ok=True)
 
-        table_rows = self.engine_execute(f"SELECT * FROM {table_name}")
+        table_rows = self.engine_execute_return_table(f"SELECT * FROM {table_name}")
 
         with open(os.path.join(directory, f"{table_name}.tsv"), "w") as f:
             for row in table_rows:
@@ -219,14 +229,14 @@ class Utility_Repository:
         Get a record by id from a table
         """
 
-        return self.engine_execute(f"SELECT * FROM {table_name} WHERE name='{id}'")
+        return self.engine_execute_return_table(f"SELECT * FROM {table_name} WHERE name='{id}'")
 
     def check_exists(self, table_name: str, id: str):
         """
         Check if a record exists in a table
         """
 
-        find = self.engine_execute(
+        find = self.engine_execute_return_table(
             f"SELECT * FROM {table_name} WHERE name='{id}'"
         )
         find = len(find) > 0
