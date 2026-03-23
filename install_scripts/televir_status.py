@@ -115,6 +115,7 @@ class TelevirStatusApp:
             self.db_tree.delete(item)
         
         dbs = list_databases()
+        print
 
         all_dbs = self._get_all_databases()
         print(all_dbs)
@@ -126,7 +127,7 @@ class TelevirStatusApp:
                     name_full = f"{category}/{name}"
                     available = "✓" if info else "✗"
                     version = installed_dbs.get(name_full, "N/A")
-                    installed = "✓" if version != "N/A" else "✗"
+                    installed = info.get("installed", "✗")
                     self.db_tree.insert("", "end", values=(name_full, category, available, installed, version))
     
     def _populate_hosts(self):
@@ -176,10 +177,14 @@ class TelevirStatusApp:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT name, version FROM database WHERE installed = 'True' AND software != 'host'"
+                "SELECT name, version, date, installed FROM database WHERE installed = 'True' AND software != 'host'"
             )
             for row in cursor.fetchall():
-                installed[row[0]] = row[1] if row[1] else "N/A"
+                installed[row[0]] = {
+                    "version": row[1] if row[1] else "N/A",
+                    "date": row[2] if row[2] else "N/A",
+                    "installed": row[3] if row[3] else "N/A"
+                }
             conn.close()
         except Exception as e:
             print(f"Error reading database: {e}")
