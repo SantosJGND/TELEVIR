@@ -481,6 +481,10 @@ class setup_dl:
                 logging.info(f"{filename} found and verified.")
                 return True
             logging.warning(f"{filename} exists but is corrupted. Re-downloading...")
+        else:
+            if self.test:
+                logging.info(f"{filename} not found.")
+                return False
 
         try:
             ftp = FTP(host)
