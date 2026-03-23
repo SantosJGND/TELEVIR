@@ -973,6 +973,9 @@ class main_setup:
 
             if self.wdir.update:
                 self._reregister_on_update()
+            
+            if self.wdir.test:
+                self._reregister_on_update()
 
     def _reregister_on_update(self):
         """
