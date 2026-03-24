@@ -375,10 +375,16 @@ class setup_dl:
         source = "refseq/TargetedLoci/Bacteria/bacteria.16SrRNA.fna.gz"
         filename = "bacteria.16SrRNA.fna.gz"
         filepath = self.seqdir + filename
+        source_url = f"https://{host}/{source}"
 
         if os.path.isfile(filepath):
             if self.verify_file_integrity(filepath, filename):
                 self.fastas["filter"][fname] = filepath
+                self.db_versions[fname] = {
+                    "version": self.get_file_mod_date(filepath),
+                    "source_url": source_url,
+                    "file_mod_date": self.get_file_mod_date(filepath)
+                }
                 logging.info(f"{filename} found and verified.")
                 return True
             logging.warning(f"{filename} exists but is corrupted. Re-downloading...")
@@ -394,6 +400,11 @@ class setup_dl:
 
         if self.verify_file_integrity(filepath, filename):
             self.fastas["filter"][fname] = filepath
+            self.db_versions[fname] = {
+                "version": self.get_file_mod_date(filepath),
+                "source_url": source_url,
+                "file_mod_date": self.get_file_mod_date(filepath)
+            }
             return True
         else:
             logging.error(f"Downloaded {filename} is corrupted.")
@@ -408,10 +419,16 @@ class setup_dl:
         source = "fileadmin/silva_databases/release_138_1/Exports/"
         filename = "SILVA_138.1_LSURef_NR99_tax_silva.fasta.gz"
         filepath = self.seqdir + filename
+        source_url = f"https://{host}/{source}{filename}"
 
         if os.path.isfile(filepath):
             if self.verify_file_integrity(filepath, filename):
                 self.fastas["filter"][fname] = filepath
+                self.db_versions[fname] = {
+                    "version": self.get_file_mod_date(filepath),
+                    "source_url": source_url,
+                    "file_mod_date": self.get_file_mod_date(filepath)
+                }
                 logging.info(f"{filename} found and verified.")
                 return True
             logging.warning(f"{filename} exists but is corrupted. Re-downloading...")
@@ -427,6 +444,11 @@ class setup_dl:
 
         if self.verify_file_integrity(filepath, filename):
             self.fastas["filter"][fname] = filepath
+            self.db_versions[fname] = {
+                "version": self.get_file_mod_date(filepath),
+                "source_url": source_url,
+                "file_mod_date": self.get_file_mod_date(filepath)
+            }
             return True
         else:
             logging.error(f"Downloaded {filename} is corrupted.")
@@ -941,6 +963,11 @@ class setup_dl:
 
         if self.verify_file_integrity(filepath, basename_fl):
             self.fastas["prot"]["swissprot"] = filepath
+            self.db_versions["swissprot"] = {
+                "version": self.get_file_mod_date(filepath),
+                "source_url": fl,
+                "file_mod_date": self.get_file_mod_date(filepath)
+            }
             return True
         else:
             logging.error("Downloaded swissprot.gz is corrupted.")
@@ -984,6 +1011,11 @@ class setup_dl:
 
         if self.verify_file_integrity(filepath, basename_fl):
             self.fastas["prot"]["rvdb"] = filepath
+            self.db_versions["rvdb"] = {
+                "version": vs,
+                "source_url": fl,
+                "file_mod_date": self.get_file_mod_date(filepath)
+            }
             return True
         else:
             logging.error("Downloaded U-RVDBv{}.fasta is corrupted.".format(vs))
@@ -1031,6 +1063,11 @@ class setup_dl:
 
         if self.verify_file_integrity(filepath, basename_fl):
             self.fastas["nuc"]["virosaurus"] = [filepath]
+            self.db_versions["virosaurus"] = {
+                "version": self.get_file_mod_date(filepath),
+                "source_url": fl,
+                "file_mod_date": self.get_file_mod_date(filepath)
+            }
             return True
         else:
             logging.error("Downloaded virosaurus90_vertebrate_20200330.fas is corrupted.")

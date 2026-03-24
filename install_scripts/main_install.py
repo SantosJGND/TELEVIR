@@ -336,11 +336,15 @@ class main_setup:
                 )
 
             swissprot_path = self.wdir.fastas.get("prot", {}).get("swissprot", "")
+            db_ver = self.wdir.db_versions.get("swissprot", {})
             self.utilities.add_database(
                 self.utilities.database_item(
                     "swissprot",
                     swissprot_path,
                     swissprot_dl,
+                    version=db_ver.get("version"),
+                    source_url=db_ver.get("source_url"),
+                    file_mod_date=db_ver.get("file_mod_date"),
                 )
             )
 
@@ -352,11 +356,15 @@ class main_setup:
                 )
 
             refseq_16s_path = self.wdir.fastas.get("filter", {}).get("refseq_16s", "")
+            db_ver = self.wdir.db_versions.get("refseq_16s", {})
             self.utilities.add_database(
                 self.utilities.database_item(
                     "refseq_16s",
                     refseq_16s_path,
                     success_16s,
+                    version=db_ver.get("version"),
+                    source_url=db_ver.get("source_url"),
+                    file_mod_date=db_ver.get("file_mod_date"),
                 )
             )
 
@@ -368,11 +376,15 @@ class main_setup:
                 )
 
             ribo16s_path = self.wdir.fastas.get("filter", {}).get("arb-silva_ribo16s", "")
+            db_ver = self.wdir.db_versions.get("arb-silva_ribo16s", {})
             self.utilities.add_database(
                 self.utilities.database_item(
                     "arb-silva_ribo16s",
                     ribo16s_path,
                     success_16s,
+                    version=db_ver.get("version"),
+                    source_url=db_ver.get("source_url"),
+                    file_mod_date=db_ver.get("file_mod_date"),
                 )
             )
 
@@ -403,11 +415,15 @@ class main_setup:
                 )
 
             virosaurus_path = self.wdir.fastas.get("nuc", {}).get("virosaurus", [""])[0]
+            db_ver = self.wdir.db_versions.get("virosaurus", {})
             self.utilities.add_database(
                 self.utilities.database_item(
                     "virosaurus",
                     virosaurus_path,
                     success_virosaurus,
+                    version=db_ver.get("version"),
+                    source_url=db_ver.get("source_url"),
+                    file_mod_date=db_ver.get("file_mod_date"),
                 )
             )
 
@@ -419,11 +435,15 @@ class main_setup:
                 )
 
             rvdb_path = self.wdir.fastas.get("prot", {}).get("rvdb", "")
+            db_ver = self.wdir.db_versions.get("rvdb", {})
             self.utilities.add_database(
                 self.utilities.database_item(
                     "rvdb",
                     rvdb_path,
                     success_rvdb,
+                    version=db_ver.get("version"),
+                    source_url=db_ver.get("source_url"),
+                    file_mod_date=db_ver.get("file_mod_date"),
                 )
             )
 
@@ -937,10 +957,9 @@ class main_setup:
     def setup_soft(self):
         if self.seqdl or self.soft:
             self.utilities.reset_tables()
-
+            logging.info("Downloading databases and software")
             # repdl = self.setup_dir(self.INSTALL_PARAMS)
             self.prep_dl()
-            logging.info("Downloading databases and software")
             self.dl_metadata_prot()
 
             if self.soft:
