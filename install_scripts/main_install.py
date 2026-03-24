@@ -771,12 +771,13 @@ class main_setup:
                         )
                     )
 
+            minimap2_install = sofprep.minimap2_install(dbname=fname, reference=fpath)
             self.utilities.add_software(
                 self.utilities.software_item(
                     "minimap2",
                     fpath,
                     fname,
-                    True,
+                    minimap2_install,
                     sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                     tag="host",
                 )
@@ -843,7 +844,6 @@ class main_setup:
                         sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                     )
                 )
-
                 # if self.layout.install_bowtie2_depletion:
                 #    bowtie2_install = sofprep.bowtie2_index(
                 #        dbname=fname, reference=fpath
