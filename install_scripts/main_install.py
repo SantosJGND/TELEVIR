@@ -771,18 +771,16 @@ class main_setup:
                         )
                     )
 
-            minimap2_install = sofprep.minimap2_install(dbname=fname, reference=fpath)
             self.utilities.add_software(
                 self.utilities.software_item(
                     "minimap2",
                     fpath,
                     fname,
-                    minimap2_install,
+                    True,
                     sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                     tag="host",
                 )
             )
-
         # install prot databases using local files.
         for fname, fpath in prepdl.fastas["prot"].items():
             if self.layout.install_diamond:
