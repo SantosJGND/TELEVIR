@@ -10,7 +10,7 @@ from install_scripts.modules.utility_manager import Utility_Repository
 from install_scripts.utils.parse_utils import (
     process_nuc_fasta_dict,
 )
-from install_scripts.config import TelevirLayout
+from install_scripts.install_config import TelevirLayout
 
 
 class LayoutWithReport(TelevirLayout):
@@ -280,9 +280,10 @@ class main_setup:
                     self.database_install_string("requests")
                 )
             request_path = self.wdir.fastas.get("nuc", {}).get("requests", [""])[0]
+            req_category, req_name = self.layout.DATABASE_NAMES.get("install_request_sequences", ("nucleotide", "requests"))
             self.utilities.add_database(
                 self.utilities.database_item(
-                    "requests",
+                    f"{req_category}/{req_name}",
                     request_path,
                     request_success,
                 )
@@ -297,9 +298,10 @@ class main_setup:
 
             db_ver = self.wdir.db_versions.get("refseq_prot", {})
             refseq_prot_path = self.wdir.fastas.get("prot", {}).get("refseq_prot", "")
+            db_category, db_name = self.layout.DATABASE_NAMES.get("install_refseq_prot", ("refseq", "protein"))
             self.utilities.add_database(
                 self.utilities.database_item(
-                    "refseq_prot",
+                    f"{db_category}/{db_name}",
                     refseq_prot_path,
                     success_refprot,
                     version=db_ver.get("version"),
@@ -317,9 +319,10 @@ class main_setup:
 
             db_ver = self.wdir.db_versions.get("refseq", {})
             refseq_gen_path = self.wdir.fastas.get("nuc", {}).get("refseq", [""])[0]
+            db_category, db_name = self.layout.DATABASE_NAMES.get("install_refseq_gen", ("refseq", "genome"))
             self.utilities.add_database(
                 self.utilities.database_item(
-                    "refseq_gen",
+                    f"{db_category}/{db_name}",
                     refseq_gen_path,
                     success_refnuc,
                     version=db_ver.get("version"),
@@ -337,9 +340,10 @@ class main_setup:
 
             swissprot_path = self.wdir.fastas.get("prot", {}).get("swissprot", "")
             db_ver = self.wdir.db_versions.get("swissprot", {})
+            db_category, db_name = self.layout.DATABASE_NAMES.get("install_swissprot", ("protein", "swissprot"))
             self.utilities.add_database(
                 self.utilities.database_item(
-                    "swissprot",
+                    f"{db_category}/{db_name}",
                     swissprot_path,
                     swissprot_dl,
                     version=db_ver.get("version"),
@@ -357,9 +361,10 @@ class main_setup:
 
             refseq_16s_path = self.wdir.fastas.get("filter", {}).get("refseq_16s", "")
             db_ver = self.wdir.db_versions.get("refseq_16s", {})
+            db_category, db_name = self.layout.DATABASE_NAMES.get("install_refseq_16s", ("ribosomal_rna", "refseq_16s"))
             self.utilities.add_database(
                 self.utilities.database_item(
-                    "refseq_16s",
+                    f"{db_category}/{db_name}",
                     refseq_16s_path,
                     success_16s,
                     version=db_ver.get("version"),
@@ -369,17 +374,18 @@ class main_setup:
             )
 
         if self.layout.install_ribo16s:
-            success_16s = self.wdir.silva_16s_dl(fname="arb-silva_ribo16s")
+            success_16s = self.wdir.silva_16s_dl(fname="silva_16s")
             if success_16s:
                 self.installed_databases.append(
-                    self.database_install_string("arb-silva_ribo16s")
+                    self.database_install_string("silva_16s")
                 )
 
-            ribo16s_path = self.wdir.fastas.get("filter", {}).get("arb-silva_ribo16s", "")
-            db_ver = self.wdir.db_versions.get("arb-silva_ribo16s", {})
+            ribo16s_path = self.wdir.fastas.get("filter", {}).get("silva_16s", "")
+            db_ver = self.wdir.db_versions.get("silva_16s", {})
+            db_category, db_name = self.layout.DATABASE_NAMES.get("install_ribo16s", ("ribosomal_rna", "silva_16s"))
             self.utilities.add_database(
                 self.utilities.database_item(
-                    "arb-silva_ribo16s",
+                    f"{db_category}/{db_name}",
                     ribo16s_path,
                     success_16s,
                     version=db_ver.get("version"),
@@ -391,7 +397,7 @@ class main_setup:
         for host_name in self.layout.HOSTS_TO_INSTALL:
             success_install = self.wdir.download_host(host_name)
             if success_install:
-                self.installed_databases.append(self.database_install_string(host_name))
+                self.installed_databases.append(self.database_install_string( host_name))
 
             db_ver = self.wdir.db_versions.get(host_name, {})
             host_path = self.wdir.fastas.get("host", {}).get(host_name, "")
@@ -416,9 +422,10 @@ class main_setup:
 
             virosaurus_path = self.wdir.fastas.get("nuc", {}).get("virosaurus", [""])[0]
             db_ver = self.wdir.db_versions.get("virosaurus", {})
+            db_category, db_name = self.layout.DATABASE_NAMES.get("install_virosaurus", ("protein", "virosaurus"))
             self.utilities.add_database(
                 self.utilities.database_item(
-                    "virosaurus",
+                    f"{db_category}/{db_name}",
                     virosaurus_path,
                     success_virosaurus,
                     version=db_ver.get("version"),
@@ -436,9 +443,10 @@ class main_setup:
 
             rvdb_path = self.wdir.fastas.get("prot", {}).get("rvdb", "")
             db_ver = self.wdir.db_versions.get("rvdb", {})
+            db_category, db_name = self.layout.DATABASE_NAMES.get("install_rvdb", ("protein", "rvdb"))
             self.utilities.add_database(
                 self.utilities.database_item(
-                    "rvdb",
+                    f"{db_category}/{db_name}",
                     rvdb_path,
                     success_rvdb,
                     version=db_ver.get("version"),
@@ -511,11 +519,12 @@ class main_setup:
                     self.software_install_string("centrifuge")
                 )
 
+            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_centrifuge", ("centrifuge", "viral"))
             self.utilities.add_software(
                 self.utilities.software_item(
-                    "centrifuge",
+                    sw_name,
                     sofprep.dbs["centrifuge"]["db"],
-                    "default",
+                    sw_tag,
                     install_success,
                     sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
                 )
@@ -544,11 +553,12 @@ class main_setup:
                     self.software_install_string("centrifuge")
                 )
 
+            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_centrifuge_bacteria", ("centrifuge", "bacteria"))
             self.utilities.add_software(
                 self.utilities.software_item(
-                    "centrifuge",
+                    sw_name,
                     sofprep.dbs["centrifuge"]["db"],
-                    "bacteria",
+                    sw_tag,
                     install_success,
                     sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
                 )
@@ -579,11 +589,12 @@ class main_setup:
             if success_install:
                 self.installed_software.append(self.software_install_string("voyager"))
 
+            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_voyager_viral", ("voyager", "viral"))
             self.utilities.add_software(
                 self.utilities.software_item(
-                    "voyager",
+                    sw_name,
                     sofprep.dbs["voyager"]["db"],
-                    "viral",
+                    sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["voyager"],
                 )
@@ -598,11 +609,12 @@ class main_setup:
                     self.software_install_string("metaphlan")
                 )
 
+            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_metaphlan", ("metaphlan", "default"))
             self.utilities.add_software(
                 self.utilities.software_item(
-                    "metaphlan",
+                    sw_name,
                     sofprep.dbs["metaphlan"]["db"],
-                    "default",
+                    sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["metaphlan"],
                 )
@@ -628,11 +640,12 @@ class main_setup:
                 self.installed_software.append(self.software_install_string("kraken2"))
 
             kraken_ver = sofprep.dbs.get("kraken2", {}).get("version", "")
+            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_kraken2", ("kraken2", "viral"))
             self.utilities.add_software(
                 self.utilities.software_item(
-                    "kraken2",
+                    sw_name,
                     sofprep.dbs["kraken2"]["db"],
-                    "default",
+                    sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
                     db_version=kraken_ver,
@@ -644,11 +657,12 @@ class main_setup:
             if success_install:
                 self.installed_software.append(self.software_install_string("kraken2"))
 
+            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_kraken2_eupathdb46", ("kraken2", "eupathdb46"))
             self.utilities.add_software(
                 self.utilities.software_item(
-                    "kraken2",
+                    sw_name,
                     sofprep.dbs["kraken2"]["db"],
-                    "eupathdb46",
+                    sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
                 )
@@ -671,11 +685,12 @@ class main_setup:
             if success_install:
                 self.installed_software.append(self.software_install_string("kraken2"))
 
+            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_kraken2_bacteria", ("kraken2", "bacteria"))
             self.utilities.add_software(
                 self.utilities.software_item(
-                    "kraken2",
+                    sw_name,
                     sofprep.dbs["kraken2"]["db"],
-                    "bacteria",
+                    sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
                 )
@@ -688,11 +703,12 @@ class main_setup:
                 self.installed_software.append(
                     self.software_install_string("krakenuniq")
                 )
+            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_krakenuniq", ("krakenuniq", "default"))
             self.utilities.add_software(
                 self.utilities.software_item(
-                    "krakenuniq",
+                    sw_name,
                     sofprep.dbs["krakenuniq"]["db"],
-                    "default",
+                    sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["krakenuniq"],
                 )
@@ -720,11 +736,12 @@ class main_setup:
             if success_install:
                 self.installed_software.append(self.software_install_string("kaiju"))
 
+            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_kaiju", ("kaiju", "viral"))
             self.utilities.add_software(
                 self.utilities.software_item(
-                    "kaiju",
+                    sw_name,
                     sofprep.dbs["kaiju"]["db"],
-                    "default",
+                    sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["kaiju"],
                 )
@@ -812,11 +829,12 @@ class main_setup:
                         self.software_install_string("diamond")
                     )
 
+                sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_diamond", ("diamond", fname))
                 self.utilities.add_software(
                     self.utilities.software_item(
-                        "diamond",
+                        sw_name,
                         sofprep.dbs["diamond"]["db"],
-                        fname,
+                        sw_tag,
                         install_success,
                         sofprep.envs["ROOT"] + sofprep.envs["diamond"],
                     )
@@ -838,11 +856,12 @@ class main_setup:
                             self.software_install_string("blastp")
                         )
 
+                    sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_blast", ("blast", "genome"))
                     self.utilities.add_software(
                         self.utilities.software_item(
-                            "blastp",
+                            sw_name,
                             sofprep.dbs["blast"]["db"],
-                            f"refseq_{self.organism}_prot",
+                            sw_tag,
                             success_install,
                             sofprep.envs["ROOT"] + sofprep.envs["blast"],
                         )
@@ -894,11 +913,12 @@ class main_setup:
                             self.software_install_string("fastviromeexplorer")
                         )
 
+                    sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_fastviromeexplorer", ("fastviromeexplorer", fname))
                     self.utilities.add_software(
                         self.utilities.software_item(
-                            "fastviromeexplorer",
+                            sw_name,
                             sofprep.dbs["fastviromeexplorer"]["db"],
-                            fname,
+                            sw_tag,
                             install_success,
                             sofprep.envs["ROOT"]
                             + sofprep.envs["fastviromeexplorer"],
@@ -921,11 +941,12 @@ class main_setup:
                                 self.software_install_string("blastn")
                             )
 
+                        sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_blast", ("blast", "genome"))
                         self.utilities.add_software(
                             self.utilities.software_item(
-                                "blastn",
+                                sw_name,
                                 sofprep.dbs["blast"]["db"],
-                                f"refseq_{self.organism}_genome",
+                                sw_tag,
                                 install_success,
                                 sofprep.envs["ROOT"] + sofprep.envs["blast"],
                             )

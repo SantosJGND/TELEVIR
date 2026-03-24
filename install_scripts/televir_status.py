@@ -15,7 +15,8 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from load_sources import list_databases, list_software, list_hosts
+from install_scripts.load_sources import list_databases, list_software, list_hosts
+from install_scripts.config import DATABASE_FILENAME
 
 
 class TelevirStatusApp:
@@ -25,7 +26,7 @@ class TelevirStatusApp:
         self.root.geometry("1000x700")
         
         self.install_home = os.environ.get('INSTALL_HOME', '/opt/televir')
-        self.db_path = os.path.join(self.install_home, 'utility_docker.db')
+        self.db_path = os.path.join(self.install_home, DATABASE_FILENAME)
         
         self._create_widgets()
     

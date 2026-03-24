@@ -4,6 +4,10 @@ import datetime
 import os
 from abc import abstractmethod
 from typing import Optional
+import sys 
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+from install_scripts.config import DATABASE_FILENAME
 
 from sqlalchemy import (
     Boolean,
@@ -64,7 +68,7 @@ class Utility_Repository:
         print(f"Initializing Utility Repository: {db_path}, {install_type}, {file_prefix}")
         self.db_path = db_path
         self.metadata = MetaData()
-        self.engine_name = "utility_local.db"
+        self.engine_name = DATABASE_FILENAME
         self.engine_filepath = os.path.join(*self.db_path.split("/"), self.engine_name)
 
         self.setup_engine(install_type)
