@@ -55,19 +55,29 @@ class TelevirLayout:
 
     # Database name mapping: install flag -> (category, yaml_name)
     # Used to register databases with names matching sources.yaml
+    # Note: refseq_prot and refseq_gen are dynamically generated, not in sources.yaml
     DATABASE_NAMES = {
-        "install_refseq_prot": ("refseq", "protein"),
-        "install_refseq_gen": ("refseq", "genome"),
+        # Reference databases
+        "install_refseq_prot": ("protein", "refseq_prot"),
+        "install_refseq_gen": ("refseq", "refseq_gen"),
         "install_swissprot": ("protein", "swissprot"),
         "install_rvdb": ("protein", "rvdb"),
         "install_virosaurus": ("protein", "virosaurus"),
         "install_refseq_16s": ("ribosomal_rna", "refseq_16s"),
         "install_ribo16s": ("ribosomal_rna", "silva_16s"),
-        "install_request_sequences": ("nucleotide", "requests"),
+        "install_request_sequences": ("taxonomy", "requests"),
+        
+        # Classification indices as databases (also saved as software)
+        "install_kraken2": ("kraken2", "viral"),
+        "install_kraken2_bacteria": ("kraken2", "bacteria"),
+        "install_kraken2_eupathdb46": ("kraken2", "eupathdb46"),
+        "install_centrifuge": ("centrifuge", "viral"),
+        "install_centrifuge_bacteria": ("centrifuge", "bacteria"),
+        "install_kaiju": ("kaiju", "viral"),
     }
 
-    # Software name mapping: install flag -> (category, software_name, tag)
-    # category: software category in sources.yaml (e.g., kraken2, centrifuge)
+    # Software name mapping: install flag -> (software_name, tag)
+    # software_name: the tool name (e.g., kraken2, centrifuge)
     # tag: specific database variant (e.g., viral, bacteria, default)
     SOFTWARE_NAMES = {
         "install_kraken2": ("kraken2", "viral"),

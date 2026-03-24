@@ -519,7 +519,7 @@ class main_setup:
                     self.software_install_string("centrifuge")
                 )
 
-            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_centrifuge", ("centrifuge", "viral"))
+            sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_centrifuge", ("centrifuge", "viral"))
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
@@ -527,6 +527,17 @@ class main_setup:
                     sw_tag,
                     install_success,
                     sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
+                )
+            )
+
+            # Also register as database
+            db_cat, db_name = self.layout.DATABASE_NAMES.get("install_centrifuge", ("centrifuge", "viral"))
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    f"{db_cat}/{db_name}",
+                    sofprep.dbs["centrifuge"]["db"],
+                    install_success,
+                    software=db_cat,
                 )
             )
 
@@ -553,7 +564,7 @@ class main_setup:
                     self.software_install_string("centrifuge")
                 )
 
-            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_centrifuge_bacteria", ("centrifuge", "bacteria"))
+            sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_centrifuge_bacteria", ("centrifuge", "bacteria"))
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
@@ -561,6 +572,17 @@ class main_setup:
                     sw_tag,
                     install_success,
                     sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
+                )
+            )
+
+            # Also register as database
+            db_cat, db_name = self.layout.DATABASE_NAMES.get("install_centrifuge_bacteria", ("centrifuge", "bacteria"))
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    f"{db_cat}/{db_name}",
+                    sofprep.dbs["centrifuge"]["db"],
+                    install_success,
+                    software=db_cat,
                 )
             )
 
@@ -589,7 +611,7 @@ class main_setup:
             if success_install:
                 self.installed_software.append(self.software_install_string("voyager"))
 
-            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_voyager_viral", ("voyager", "viral"))
+            sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_voyager_viral", ("voyager", "viral"))
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
@@ -609,7 +631,7 @@ class main_setup:
                     self.software_install_string("metaphlan")
                 )
 
-            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_metaphlan", ("metaphlan", "default"))
+            sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_metaphlan", ("metaphlan", "default"))
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
@@ -640,7 +662,7 @@ class main_setup:
                 self.installed_software.append(self.software_install_string("kraken2"))
 
             kraken_ver = sofprep.dbs.get("kraken2", {}).get("version", "")
-            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_kraken2", ("kraken2", "viral"))
+            sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_kraken2", ("kraken2", "viral"))
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
@@ -652,12 +674,24 @@ class main_setup:
                 )
             )
 
+            # Also register as database
+            db_cat, db_name = self.layout.DATABASE_NAMES.get("install_kraken2", ("kraken2", "viral"))
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    f"{db_cat}/{db_name}",
+                    sofprep.dbs["kraken2"]["db"],
+                    success_install,
+                    software=db_cat,
+                    version=kraken_ver,
+                )
+            )
+
         if self.layout.install_kraken2_eupathdb46:
             success_install = sofprep.kraken2_download_install(dbname="eupathdb46")
             if success_install:
                 self.installed_software.append(self.software_install_string("kraken2"))
 
-            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_kraken2_eupathdb46", ("kraken2", "eupathdb46"))
+            sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_kraken2_eupathdb46", ("kraken2", "eupathdb46"))
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
@@ -665,6 +699,17 @@ class main_setup:
                     sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
+                )
+            )
+
+            # Also register as database
+            db_cat, db_name = self.layout.DATABASE_NAMES.get("install_kraken2_eupathdb46", ("kraken2", "eupathdb46"))
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    f"{db_cat}/{db_name}",
+                    sofprep.dbs["kraken2"]["db"],
+                    success_install,
+                    software=db_cat,
                 )
             )
 
@@ -685,7 +730,7 @@ class main_setup:
             if success_install:
                 self.installed_software.append(self.software_install_string("kraken2"))
 
-            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_kraken2_bacteria", ("kraken2", "bacteria"))
+            sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_kraken2_bacteria", ("kraken2", "bacteria"))
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
@@ -696,6 +741,17 @@ class main_setup:
                 )
             )
 
+            # Also register as database
+            db_cat, db_name = self.layout.DATABASE_NAMES.get("install_kraken2_bacteria", ("kraken2", "bacteria"))
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    f"{db_cat}/{db_name}",
+                    sofprep.dbs["kraken2"]["db"],
+                    success_install,
+                    software=db_cat,
+                )
+            )
+
         ########################## krakenuniq ###############################
         if self.layout.install_krakenuniq:
             success_install = sofprep.kuniq_install(dbname=self.organism)
@@ -703,7 +759,7 @@ class main_setup:
                 self.installed_software.append(
                     self.software_install_string("krakenuniq")
                 )
-            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_krakenuniq", ("krakenuniq", "default"))
+            sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_krakenuniq", ("krakenuniq", "default"))
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
@@ -736,7 +792,7 @@ class main_setup:
             if success_install:
                 self.installed_software.append(self.software_install_string("kaiju"))
 
-            sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_kaiju", ("kaiju", "viral"))
+            sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_kaiju", ("kaiju", "viral"))
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
@@ -744,6 +800,17 @@ class main_setup:
                     sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["kaiju"],
+                )
+            )
+
+            # Also register as database
+            db_cat, db_name = self.layout.DATABASE_NAMES.get("install_kaiju", ("kaiju", "viral"))
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    f"{db_cat}/{db_name}",
+                    sofprep.dbs["kaiju"]["db"],
+                    success_install,
+                    software=db_cat,
                 )
             )
 
@@ -829,7 +896,7 @@ class main_setup:
                         self.software_install_string("diamond")
                     )
 
-                sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_diamond", ("diamond", fname))
+                sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_diamond", ("diamond", fname))
                 self.utilities.add_software(
                     self.utilities.software_item(
                         sw_name,
@@ -856,7 +923,7 @@ class main_setup:
                             self.software_install_string("blastp")
                         )
 
-                    sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_blast", ("blast", "genome"))
+                    sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_blast", ("blast", "genome"))
                     self.utilities.add_software(
                         self.utilities.software_item(
                             sw_name,
@@ -913,7 +980,7 @@ class main_setup:
                             self.software_install_string("fastviromeexplorer")
                         )
 
-                    sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_fastviromeexplorer", ("fastviromeexplorer", fname))
+                    sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_fastviromeexplorer", ("fastviromeexplorer", fname))
                     self.utilities.add_software(
                         self.utilities.software_item(
                             sw_name,
@@ -941,7 +1008,7 @@ class main_setup:
                                 self.software_install_string("blastn")
                             )
 
-                        sw_category, sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_blast", ("blast", "genome"))
+                        sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_blast", ("blast", "genome"))
                         self.utilities.add_software(
                             self.utilities.software_item(
                                 sw_name,

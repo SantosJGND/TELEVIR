@@ -15,8 +15,8 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from install_scripts.load_sources import list_databases, list_software, list_hosts
-from install_scripts.config import DATABASE_FILENAME
+from load_sources import list_databases, list_software, list_hosts
+from config import DATABASE_FILENAME
 
 
 class TelevirStatusApp:
@@ -129,8 +129,8 @@ class TelevirStatusApp:
                 for name, info in entries.items():
                     name_full = f"{category}/{name}"
                     available = "✓" if info else "✗"
-                    version = installed_dbs.get(name, {}).get("version", "N/A")
-                    installed = installed_dbs.get(name, {}).get("installed", "N/A")
+                    version = installed_dbs.get(name_full, {}).get("version", "N/A")
+                    installed = installed_dbs.get(name_full, {}).get("installed", "N/A")
                     self.db_tree.insert("", "end", values=(name_full, category, available, installed, version))
     
     def _populate_hosts(self):
