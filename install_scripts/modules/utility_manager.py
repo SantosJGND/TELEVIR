@@ -43,7 +43,7 @@ class SoftwareItem:
 class DatabaseItem:
     def __init__(self, name, path, installed, software: str = "none",
                  version: Optional[str] = None, source_url: Optional[str] = None, 
-                 file_mod_date: Optional[str] = None) -> None:
+                 file_mod_date: Optional[str] = None, description: Optional[str] = None) -> None:
         self.name = name
         self.path = path
         self.installed = installed
@@ -52,6 +52,7 @@ class DatabaseItem:
         self.version = version
         self.source_url = source_url
         self.file_mod_date = file_mod_date
+        self.description = description
 
     def __repr__(self) -> str:
         return f"({self.name}, {self.path}, {self.installed})"
@@ -137,10 +138,11 @@ class Utility_Repository:
             Column("version", String),
             Column("source_url", String),
             Column("file_mod_date", String),
+            Column("description", String),
         )
 
         self.engine_execute(
-            "CREATE TABLE IF NOT EXISTS database (name TEXT, path TEXT, installed BOOLEAN, software TEXT, date TEXT, version TEXT, source_url TEXT, file_mod_date TEXT)"
+            "CREATE TABLE IF NOT EXISTS database (name TEXT, path TEXT, installed BOOLEAN, software TEXT, date TEXT, version TEXT, source_url TEXT, file_mod_date TEXT, description TEXT)"
         )
 
     def delete_tables(self):
@@ -285,20 +287,14 @@ class Utility_Repository:
         version = f"'{item.version}'" if item.version else "NULL"
         source_url = f"'{item.source_url}'" if item.source_url else "NULL"
         file_mod_date = f"'{item.file_mod_date}'" if item.file_mod_date else "NULL"
-
-        print(item)
+        description = f"'{item.description}'" if item.description else "NULL"
 
         try:
             _ = self.engine_execute(
-                f"INSERT OR REPLACE INTO database (name, path, installed, software, date, version, source_url, file_mod_date) VALUES ('{item.name}', '{item.path}', '{item.installed}', '{item.software}', '{item.date}', {version}, {source_url}, {file_mod_date})"
+                f"INSERT OR REPLACE INTO database (name, path, installed, software, date, version, source_url, file_mod_date, description) VALUES ('{item.name}', '{item.path}', '{item.installed}', '{item.software}', '{item.date}', {version}, {source_url}, {file_mod_date}, {description})"
             )
-            print(f"[DEBUG] Database added: {item.name}")
             
             verify = self.engine_execute_return_table(f"SELECT name FROM database WHERE name='{item.name}'")
-            if verify:
-                print(f"[DEBUG] Verified database exists in DB: {item.name}")
-            else:
-                print(f"[DEBUG] WARNING: Database not found after insert: {item.name}")
                 
         except Exception as e:
             print(e)

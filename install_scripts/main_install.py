@@ -11,6 +11,7 @@ from install_scripts.utils.parse_utils import (
     process_nuc_fasta_dict,
 )
 from install_scripts.install_config import TelevirLayout
+from install_scripts.load_sources import get_db_entry
 
 
 class LayoutWithReport(TelevirLayout):
@@ -280,12 +281,15 @@ class main_setup:
                     self.database_install_string("requests")
                 )
             request_path = self.wdir.fastas.get("nuc", {}).get("requests", [""])[0]
-            req_category, req_name = self.layout.DATABASE_NAMES.get("install_request_sequences", ("nucleotide", "requests"))
+            req_category, req_name = self.layout.DATABASE_NAMES.get("install_request_sequences", ("taxonomy", "requests"))
+            req_entry = get_db_entry(req_category, req_name)
+            req_desc = req_entry.get("description") if req_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{req_category}/{req_name}",
                     request_path,
                     request_success,
+                    description=req_desc,
                 )
             )
 
@@ -298,7 +302,9 @@ class main_setup:
 
             db_ver = self.wdir.db_versions.get("refseq_prot", {})
             refseq_prot_path = self.wdir.fastas.get("prot", {}).get("refseq_prot", "")
-            db_category, db_name = self.layout.DATABASE_NAMES.get("install_refseq_prot", ("refseq", "protein"))
+            db_category, db_name = self.layout.DATABASE_NAMES.get("install_refseq_prot", ("protein", "refseq_prot"))
+            db_entry = get_db_entry(db_category, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{db_category}/{db_name}",
@@ -307,6 +313,7 @@ class main_setup:
                     version=db_ver.get("version"),
                     source_url=db_ver.get("source_url"),
                     file_mod_date=db_ver.get("file_mod_date"),
+                    description=db_desc,
                 )
             )
 
@@ -319,7 +326,9 @@ class main_setup:
 
             db_ver = self.wdir.db_versions.get("refseq", {})
             refseq_gen_path = self.wdir.fastas.get("nuc", {}).get("refseq", [""])[0]
-            db_category, db_name = self.layout.DATABASE_NAMES.get("install_refseq_gen", ("refseq", "genome"))
+            db_category, db_name = self.layout.DATABASE_NAMES.get("install_refseq_gen", ("refseq", "refseq_gen"))
+            db_entry = get_db_entry(db_category, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{db_category}/{db_name}",
@@ -328,6 +337,7 @@ class main_setup:
                     version=db_ver.get("version"),
                     source_url=db_ver.get("source_url"),
                     file_mod_date=db_ver.get("file_mod_date"),
+                    description=db_desc,
                 )
             )
 
@@ -341,6 +351,8 @@ class main_setup:
             swissprot_path = self.wdir.fastas.get("prot", {}).get("swissprot", "")
             db_ver = self.wdir.db_versions.get("swissprot", {})
             db_category, db_name = self.layout.DATABASE_NAMES.get("install_swissprot", ("protein", "swissprot"))
+            db_entry = get_db_entry(db_category, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{db_category}/{db_name}",
@@ -349,6 +361,7 @@ class main_setup:
                     version=db_ver.get("version"),
                     source_url=db_ver.get("source_url"),
                     file_mod_date=db_ver.get("file_mod_date"),
+                    description=db_desc,
                 )
             )
 
@@ -362,6 +375,8 @@ class main_setup:
             refseq_16s_path = self.wdir.fastas.get("filter", {}).get("refseq_16s", "")
             db_ver = self.wdir.db_versions.get("refseq_16s", {})
             db_category, db_name = self.layout.DATABASE_NAMES.get("install_refseq_16s", ("ribosomal_rna", "refseq_16s"))
+            db_entry = get_db_entry(db_category, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{db_category}/{db_name}",
@@ -370,6 +385,7 @@ class main_setup:
                     version=db_ver.get("version"),
                     source_url=db_ver.get("source_url"),
                     file_mod_date=db_ver.get("file_mod_date"),
+                    description=db_desc,
                 )
             )
 
@@ -383,6 +399,8 @@ class main_setup:
             ribo16s_path = self.wdir.fastas.get("filter", {}).get("silva_16s", "")
             db_ver = self.wdir.db_versions.get("silva_16s", {})
             db_category, db_name = self.layout.DATABASE_NAMES.get("install_ribo16s", ("ribosomal_rna", "silva_16s"))
+            db_entry = get_db_entry(db_category, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{db_category}/{db_name}",
@@ -391,6 +409,7 @@ class main_setup:
                     version=db_ver.get("version"),
                     source_url=db_ver.get("source_url"),
                     file_mod_date=db_ver.get("file_mod_date"),
+                    description=db_desc,
                 )
             )
 
@@ -423,6 +442,8 @@ class main_setup:
             virosaurus_path = self.wdir.fastas.get("nuc", {}).get("virosaurus", [""])[0]
             db_ver = self.wdir.db_versions.get("virosaurus", {})
             db_category, db_name = self.layout.DATABASE_NAMES.get("install_virosaurus", ("protein", "virosaurus"))
+            db_entry = get_db_entry(db_category, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{db_category}/{db_name}",
@@ -431,6 +452,7 @@ class main_setup:
                     version=db_ver.get("version"),
                     source_url=db_ver.get("source_url"),
                     file_mod_date=db_ver.get("file_mod_date"),
+                    description=db_desc,
                 )
             )
 
@@ -444,6 +466,8 @@ class main_setup:
             rvdb_path = self.wdir.fastas.get("prot", {}).get("rvdb", "")
             db_ver = self.wdir.db_versions.get("rvdb", {})
             db_category, db_name = self.layout.DATABASE_NAMES.get("install_rvdb", ("protein", "rvdb"))
+            db_entry = get_db_entry(db_category, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{db_category}/{db_name}",
@@ -452,6 +476,7 @@ class main_setup:
                     version=db_ver.get("version"),
                     source_url=db_ver.get("source_url"),
                     file_mod_date=db_ver.get("file_mod_date"),
+                    description=db_desc,
                 )
             )
 
@@ -532,12 +557,15 @@ class main_setup:
 
             # Also register as database
             db_cat, db_name = self.layout.DATABASE_NAMES.get("install_centrifuge", ("centrifuge", "viral"))
+            db_entry = get_db_entry(db_cat, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{db_cat}/{db_name}",
                     sofprep.dbs["centrifuge"]["db"],
                     install_success,
                     software=db_cat,
+                    description=db_desc,
                 )
             )
 
@@ -577,12 +605,15 @@ class main_setup:
 
             # Also register as database
             db_cat, db_name = self.layout.DATABASE_NAMES.get("install_centrifuge_bacteria", ("centrifuge", "bacteria"))
+            db_entry = get_db_entry(db_cat, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{db_cat}/{db_name}",
                     sofprep.dbs["centrifuge"]["db"],
                     install_success,
                     software=db_cat,
+                    description=db_desc,
                 )
             )
 
@@ -676,6 +707,8 @@ class main_setup:
 
             # Also register as database
             db_cat, db_name = self.layout.DATABASE_NAMES.get("install_kraken2", ("kraken2", "viral"))
+            db_entry = get_db_entry(db_cat, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{db_cat}/{db_name}",
@@ -683,6 +716,7 @@ class main_setup:
                     success_install,
                     software=db_cat,
                     version=kraken_ver,
+                    description=db_desc,
                 )
             )
 
@@ -704,12 +738,15 @@ class main_setup:
 
             # Also register as database
             db_cat, db_name = self.layout.DATABASE_NAMES.get("install_kraken2_eupathdb46", ("kraken2", "eupathdb46"))
+            db_entry = get_db_entry(db_cat, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{db_cat}/{db_name}",
                     sofprep.dbs["kraken2"]["db"],
                     success_install,
                     software=db_cat,
+                    description=db_desc,
                 )
             )
 
@@ -743,12 +780,15 @@ class main_setup:
 
             # Also register as database
             db_cat, db_name = self.layout.DATABASE_NAMES.get("install_kraken2_bacteria", ("kraken2", "bacteria"))
+            db_entry = get_db_entry(db_cat, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{db_cat}/{db_name}",
                     sofprep.dbs["kraken2"]["db"],
                     success_install,
                     software=db_cat,
+                    description=db_desc,
                 )
             )
 
@@ -805,12 +845,15 @@ class main_setup:
 
             # Also register as database
             db_cat, db_name = self.layout.DATABASE_NAMES.get("install_kaiju", ("kaiju", "viral"))
+            db_entry = get_db_entry(db_cat, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{db_cat}/{db_name}",
                     sofprep.dbs["kaiju"]["db"],
                     success_install,
                     software=db_cat,
+                    description=db_desc,
                 )
             )
 

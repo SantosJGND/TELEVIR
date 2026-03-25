@@ -39,19 +39,25 @@ class TelevirStatusApp:
         
         self.db_tree = ttk.Treeview(
             db_frame, 
-            columns=("name", "category", "available", "installed", "version"), 
+            columns=("name", "category", "description", "file", "available", "installed", "version", "date"), 
             show="headings"
         )
         self.db_tree.heading("name", text="Name")
         self.db_tree.heading("category", text="Category")
+        self.db_tree.heading("description", text="Description")
+        self.db_tree.heading("file", text="File")
         self.db_tree.heading("available", text="Available")
         self.db_tree.heading("installed", text="Installed")
         self.db_tree.heading("version", text="Version")
-        self.db_tree.column("name", width=200)
-        self.db_tree.column("category", width=120)
-        self.db_tree.column("available", width=80)
-        self.db_tree.column("installed", width=80)
-        self.db_tree.column("version", width=100)
+        self.db_tree.heading("date", text="Date")
+        self.db_tree.column("name", width=150)
+        self.db_tree.column("category", width=100)
+        self.db_tree.column("description", width=200)
+        self.db_tree.column("file", width=150)
+        self.db_tree.column("available", width=70)
+        self.db_tree.column("installed", width=70)
+        self.db_tree.column("version", width=80)
+        self.db_tree.column("date", width=90)
         self.db_tree.pack(fill="both", expand=True, padx=5, pady=5)
         
         hosts_frame = tk.LabelFrame(self.root, text="Host Genomes", font=("Arial", 12, "bold"))
@@ -116,22 +122,20 @@ class TelevirStatusApp:
             self.db_tree.delete(item)
         
         dbs = list_databases()
-        print(dbs)
 
-        all_dbs = self._get_all_databases()
-        print(all_dbs)
         installed_dbs = self._get_installed_databases()
 
-        print(installed_dbs)
-        print("####")
         for category, entries in dbs.items():
             if isinstance(entries, dict):
                 for name, info in entries.items():
                     name_full = f"{category}/{name}"
                     available = "✓" if info else "✗"
+                    description = installed_dbs.get(name_full, {}).get("description", "N/A")
+                    file_info = installed_dbs.get(name_full, {}).get("path", "N/A")
                     version = installed_dbs.get(name_full, {}).get("version", "N/A")
                     installed = installed_dbs.get(name_full, {}).get("installed", "N/A")
-                    self.db_tree.insert("", "end", values=(name_full, category, available, installed, version))
+                    date = installed_dbs.get(name_full, {}).get("date", "N/A")
+                    self.db_tree.insert("", "end", values=(name_full, category, description, file_info, available, installed, version, date))
     
     def _populate_hosts(self):
         for item in self.hosts_tree.get_children():
@@ -180,13 +184,14 @@ class TelevirStatusApp:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT name, version, date, installed FROM database WHERE installed = 'True' AND software != 'host'"
+                "SELECT name, version, date, installed, path FROM database WHERE installed = 'True' AND software != 'host'"
             )
             for row in cursor.fetchall():
                 installed[row[0]] = {
                     "version": row[1] if row[1] else "N/A",
                     "date": row[2] if row[2] else "N/A",
-                    "installed": row[3] if row[3] else "N/A"
+                    "installed": row[3] if row[3] else "N/A",
+                    "path": row[4] if row[4] else "N/A"
                 }
             conn.close()
         except Exception as e:
