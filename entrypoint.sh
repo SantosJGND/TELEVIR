@@ -232,7 +232,7 @@ run_sources() {
 run_status() {
     echo "---> Starting TELE-Vir Status GUI..."
     cd /opt/televir-repo
-    /opt/venv/bin/python install_scripts/televir_status.py
+    /opt/venv/bin/python main.py status
 }
 
 # Main command handler

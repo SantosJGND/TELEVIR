@@ -10,6 +10,10 @@ def get_args():
         import argparse
 
         parser = argparse.ArgumentParser(description="parse arguments")
+        subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+        subparsers.add_parser("status", help="Launch GUI status display")
+
         parser.add_argument(
             "--docker", action="store_true", default=False, help="docker installation"
         )
@@ -82,6 +86,11 @@ def main():
 
     CWD = os.getcwd()
     args = get_args()
+
+    if args.command == "status":
+        from install_scripts.televir_status import main as gui_main
+        gui_main()
+        return
     ###
     if not args.partial:
         args.setup_conda = True
