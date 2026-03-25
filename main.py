@@ -148,7 +148,7 @@ def main():
 
     env_manager = env_install(ENVS_PARAMS)
 
-    dl_manager = setup_dl(INSTALL_PARAMS, update=args.update)
+    dl_manager = setup_dl(INSTALL_PARAMS, update=args.update, test=args.test)
 
     install_manager = setup_install(
         INSTALL_PARAMS,

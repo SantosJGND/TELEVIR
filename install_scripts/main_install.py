@@ -1136,7 +1136,6 @@ class main_setup:
                                 sw_tag,
                                 install_success,
                                 sofprep.envs["ROOT"] + sofprep.envs["blast"],
-                                binary_name="blastn",
                             )
                         )
 

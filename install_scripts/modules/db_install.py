@@ -753,6 +753,11 @@ class setup_dl:
                 return True
             logging.warning(f"{fprot_suf} exists but is corrupted. Re-downloading...")
 
+        else:
+            if self.test:
+                logging.info(f"{fprot_suf} not found.")
+                return False
+
         try:
             ftp = FTP(host)
         except:
@@ -772,23 +777,20 @@ class setup_dl:
 
         protf = [g for x, g in ext_dict.items() if "protein.faa" in x][0]
 
-        if self.test:
-            logging.info(f"{fprot_suf} not found.")
-            return False
+
+        logging.info(f"{fprot_suf} not found. downloading...")
+        self.get_concat(protf, fprot_suf, host, source)
+        if self.verify_file_integrity(fprot_path, fprot):
+            self.fastas["prot"][db_key] = fprot_path
+            self.db_versions[db_key] = {
+                "version": self.get_file_mod_date(fprot_path),
+                "source_url": source_url,
+                "file_mod_date": self.get_file_mod_date(fprot_path)
+            }
+            return True
         else:
-            logging.info(f"{fprot_suf} not found. downloading...")
-            self.get_concat(protf, fprot_suf, host, source)
-            if self.verify_file_integrity(fprot_path, fprot):
-                self.fastas["prot"][db_key] = fprot_path
-                self.db_versions[db_key] = {
-                    "version": self.get_file_mod_date(fprot_path),
-                    "source_url": source_url,
-                    "file_mod_date": self.get_file_mod_date(fprot_path)
-                }
-                return True
-            else:
-                logging.error(f"Downloaded {fprot_suf} is corrupted.")
-                return False
+            logging.error(f"Downloaded {fprot_suf} is corrupted.")
+            return False
 
     def refseq_gen_dl(self, url: str, filename: str, db_key: str = "refseq"):
         """
@@ -822,7 +824,10 @@ class setup_dl:
                 logging.info(f"{fnuc} found and verified.")
                 return True
             logging.warning(f"{fnuc_suf} exists but is corrupted. Re-downloading...")
-
+        else:
+            if self.test:
+                logging.info(f"{fnuc_suf} not found.")
+                return False
         try:
             ftp = FTP(host)
         except:
@@ -846,23 +851,19 @@ class setup_dl:
         fnuc_suf = os.path.splitext(fnuc)[0]
         fnuc_path = self.seqdir + fnuc
 
-        if self.test:
-            logging.info(f"{fnuc_suf} not found.")
-            return False
+        logging.info(f"{fnuc_suf} not found. downloading...")
+        self.get_concat(nucf, fnuc_suf, host, source)
+        if self.verify_file_integrity(fnuc_path, fnuc):
+            self.fastas["nuc"][db_key] = [fnuc_path]
+            self.db_versions[db_key] = {
+                "version": self.get_file_mod_date(fnuc_path),
+                "source_url": source_url,
+                "file_mod_date": self.get_file_mod_date(fnuc_path)
+            }
+            return True
         else:
-            logging.info(f"{fnuc_suf} not found. downloading...")
-            self.get_concat(nucf, fnuc_suf, host, source)
-            if self.verify_file_integrity(fnuc_path, fnuc):
-                self.fastas["nuc"][db_key] = [fnuc_path]
-                self.db_versions[db_key] = {
-                    "version": self.get_file_mod_date(fnuc_path),
-                    "source_url": source_url,
-                    "file_mod_date": self.get_file_mod_date(fnuc_path)
-                }
-                return True
-            else:
-                logging.error(f"Downloaded {fnuc_suf} is corrupted.")
-                return False
+            logging.error(f"Downloaded {fnuc_suf} is corrupted.")
+            return False
 
     def get_concat(self, flist, outf, host, source):
         """
