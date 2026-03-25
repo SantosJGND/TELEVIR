@@ -62,8 +62,10 @@ class Utility_Repository:
     database_item = DatabaseItem
     software_item = SoftwareItem
     dbtype_local: str = "sqlite"
+    SOFTWARE_TABLE_NAME: str = "software"
+    DATABASE_TABLE_NAME: str = "database"
 
-    tables: list = ["software", "database"]
+    tables: list = [SOFTWARE_TABLE_NAME, DATABASE_TABLE_NAME]
 
     def __init__(self, db_path="", install_type="local", file_prefix="utility") -> None:
         print(f"Initializing Utility Repository: {db_path}, {install_type}, {file_prefix}")
@@ -81,10 +83,8 @@ class Utility_Repository:
         Delete the database
         """
 
-        for table in self.tables:
-            self.engine_execute(f"DROP TABLE {table}")
-        # self.metadata.drop_all(self.engine)
-        self.create_tables()
+        self.metadata.drop_all(self.engine)
+        self.metadata.create_all(self.engine)
 
     def setup_engine(self, install_type):
         """
@@ -109,7 +109,7 @@ class Utility_Repository:
 
     def create_software_table(self):
         self.software = Table(
-            "software",
+            self.SOFTWARE_TABLE_NAME,
             self.metadata,
             Column("name", String),
             Column("path", String),
@@ -128,7 +128,7 @@ class Utility_Repository:
 
     def create_database_table(self):
         self.database = Table(
-            "database",
+            self.DATABASE_TABLE_NAME,
             self.metadata,
             Column("name", String),
             Column("path", String),
@@ -146,15 +146,15 @@ class Utility_Repository:
         )
 
     def delete_tables(self):
-        self.delete_table("software")
-        self.delete_table("database")
+        for table in self.tables:
+            self.engine_execute(f"DROP TABLE {table}")
 
     def delete_table(self, table_name):
         self.engine_execute(f"DROP TABLE {table_name}")
 
     def clear_tables(self):
-        self.clear_table("software")
-        self.clear_table("database")
+        self.clear_table(self.SOFTWARE_TABLE_NAME)
+        self.clear_table(self.DATABASE_TABLE_NAME)
 
     def clear_table(self, table_name):
         self.engine_execute(f"DELETE FROM {table_name}")

@@ -144,6 +144,7 @@ def main():
     utility_repository = Utility_Repository(
         db_path=HOME, install_type=INSTALL_TYPE, file_prefix="utility"
     )
+    utility_repository.clear_existing_repo()
 
     env_manager = env_install(ENVS_PARAMS)
 
