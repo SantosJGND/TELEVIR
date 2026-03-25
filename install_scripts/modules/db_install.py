@@ -725,24 +725,26 @@ class setup_dl:
         else:
             return False
 
-    def refseq_prot_dl(self):
+    def refseq_prot_dl(self, url: str, filename: str, db_key: str = "refseq_prot"):
         """
-        parse and download latest refseq dbs from ncbi ftp.
-        :param org:
+        parse and download latest refseq protein db from ncbi ftp.
+        :param url: Source URL (e.g., https://ftp.ncbi.nlm.nih.gov/refseq/release/viral/)
+        :param filename: File pattern to match (e.g., viral.protein.faa.gz)
+        :param db_key: Key to use in fastas/db_versions dicts
         :return:
         """
         host = "ftp.ncbi.nlm.nih.gov"
-        source = "refseq/release/{}/".format(self.organism)
-        source_url = f"https://{host}/{source}"
+        source = url.replace(f"https://{host}/", "")
+        source_url = url
 
-        fprot = f"refseq_{self.organism}.protein.faa.gz"
+        fprot = filename
         fprot_suf = os.path.splitext(fprot)[0]
         fprot_path = self.seqdir + fprot
 
         if os.path.isfile(fprot_path):
             if self.verify_file_integrity(fprot_path, fprot):
-                self.fastas["prot"]["refseq_prot"] = fprot_path
-                self.db_versions["refseq_prot"] = {
+                self.fastas["prot"][db_key] = fprot_path
+                self.db_versions[db_key] = {
                     "version": self.get_file_mod_date(fprot_path),
                     "source_url": source_url,
                     "file_mod_date": self.get_file_mod_date(fprot_path)
@@ -777,8 +779,8 @@ class setup_dl:
             logging.info(f"{fprot_suf} not found. downloading...")
             self.get_concat(protf, fprot_suf, host, source)
             if self.verify_file_integrity(fprot_path, fprot):
-                self.fastas["prot"]["refseq_prot"] = fprot_path
-                self.db_versions["refseq_prot"] = {
+                self.fastas["prot"][db_key] = fprot_path
+                self.db_versions[db_key] = {
                     "version": self.get_file_mod_date(fprot_path),
                     "source_url": source_url,
                     "file_mod_date": self.get_file_mod_date(fprot_path)
@@ -788,17 +790,19 @@ class setup_dl:
                 logging.error(f"Downloaded {fprot_suf} is corrupted.")
                 return False
 
-    def refseq_gen_dl(self):
+    def refseq_gen_dl(self, url: str, filename: str, db_key: str = "refseq"):
         """
-        parse and download latest refseq dbs from ncbi ftp.
-        :param org:
+        parse and download latest refseq genome db from ncbi ftp.
+        :param url: Source URL (e.g., https://ftp.ncbi.nlm.nih.gov/refseq/release/viral/)
+        :param filename: File pattern to match (e.g., viral.genome.fna.gz)
+        :param db_key: Key to use in fastas/db_versions dicts
         :return:
         """
         host = "ftp.ncbi.nlm.nih.gov"
-        source = "refseq/release/{}/".format(self.organism)
-        source_url = f"https://{host}/{source}"
+        source = url.replace(f"https://{host}/", "")
+        source_url = url
 
-        fnuc = f"refseq_{self.organism}.genome.fna.gz"
+        fnuc = filename
         fnuc_suf = os.path.splitext(fnuc)[0]
         fnuc_path = self.seqdir + fnuc
 
@@ -809,8 +813,8 @@ class setup_dl:
 
         if os.path.isfile(fnuc_path):
             if self.verify_file_integrity(fnuc_path, fnuc):
-                self.fastas["nuc"]["refseq"] = [fnuc_path]
-                self.db_versions["refseq"] = {
+                self.fastas["nuc"][db_key] = [fnuc_path]
+                self.db_versions[db_key] = {
                     "version": self.get_file_mod_date(fnuc_path),
                     "source_url": source_url,
                     "file_mod_date": self.get_file_mod_date(fnuc_path)
@@ -838,7 +842,7 @@ class setup_dl:
 
         nucf = [g for x, g in ext_dict.items() if "genomic.fna" in x][0]
 
-        fnuc = f"refseq_{self.organism}.genome.fna.gz"
+        fnuc = filename
         fnuc_suf = os.path.splitext(fnuc)[0]
         fnuc_path = self.seqdir + fnuc
 
@@ -849,8 +853,8 @@ class setup_dl:
             logging.info(f"{fnuc_suf} not found. downloading...")
             self.get_concat(nucf, fnuc_suf, host, source)
             if self.verify_file_integrity(fnuc_path, fnuc):
-                self.fastas["nuc"]["refseq"] = [fnuc_path]
-                self.db_versions["refseq"] = {
+                self.fastas["nuc"][db_key] = [fnuc_path]
+                self.db_versions[db_key] = {
                     "version": self.get_file_mod_date(fnuc_path),
                     "source_url": source_url,
                     "file_mod_date": self.get_file_mod_date(fnuc_path)

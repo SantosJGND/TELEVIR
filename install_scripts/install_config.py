@@ -1,7 +1,12 @@
 class TelevirLayout:
     # databases. chose at least one.
-    install_refseq_prot = True
-    install_refseq_gen = True
+    # RefSeq viral (default)
+    install_refseq_viral_prot = True
+    install_refseq_viral_gen = True
+    # RefSeq bacterial (optional)
+    install_refseq_bacterial_prot = False
+    install_refseq_bacterial_gen = False
+    # Other protein databases
     install_swissprot = False
     install_rvdb = False
     install_virosaurus = True
@@ -58,8 +63,13 @@ class TelevirLayout:
     # Note: refseq_prot and refseq_gen are dynamically generated, not in sources.yaml
     DATABASE_NAMES = {
         # Reference databases
-        "install_refseq_prot": ("protein", "refseq_prot"),
-        "install_refseq_gen": ("refseq", "refseq_gen"),
+        # RefSeq viral
+        "install_refseq_viral_prot": ("refseq", "viral_protein"),
+        "install_refseq_viral_gen": ("refseq", "viral_genome"),
+        # RefSeq bacterial
+        "install_refseq_bacterial_prot": ("refseq", "bacterial_protein"),
+        "install_refseq_bacterial_gen": ("refseq", "bacterial_genome"),
+        # Other protein databases
         "install_swissprot": ("protein", "swissprot"),
         "install_rvdb": ("protein", "rvdb"),
         "install_virosaurus": ("protein", "virosaurus"),

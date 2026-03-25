@@ -11,7 +11,7 @@ from install_scripts.utils.parse_utils import (
     process_nuc_fasta_dict,
 )
 from install_scripts.install_config import TelevirLayout
-from install_scripts.load_sources import get_db_entry
+from install_scripts.load_sources import get_db_entry, get_refseq_entry
 
 
 class LayoutWithReport(TelevirLayout):
@@ -293,18 +293,21 @@ class main_setup:
                 )
             )
 
-        if self.layout.install_refseq_prot:
-            success_refprot = self.wdir.refseq_prot_dl()
+        if self.layout.install_refseq_viral_prot:
+            refseq_entry = get_refseq_entry("viral", "protein")
+            url = refseq_entry.get("url", "") if refseq_entry else ""
+            filename = refseq_entry.get("file_pattern", "") if refseq_entry else ""
+            db_key = "viral_protein"
+            success_refprot = self.wdir.refseq_prot_dl(url, filename, db_key)
             if success_refprot:
                 self.installed_databases.append(
-                    self.database_install_string("refseq_prot")
+                    self.database_install_string("refseq_viral_prot")
                 )
 
-            db_ver = self.wdir.db_versions.get("refseq_prot", {})
-            refseq_prot_path = self.wdir.fastas.get("prot", {}).get("refseq_prot", "")
-            db_category, db_name = self.layout.DATABASE_NAMES.get("install_refseq_prot", ("protein", "refseq_prot"))
-            db_entry = get_db_entry(db_category, db_name)
-            db_desc = db_entry.get("description") if db_entry else None
+            db_ver = self.wdir.db_versions.get(db_key, {})
+            refseq_prot_path = self.wdir.fastas.get("prot", {}).get(db_key, "")
+            db_category, db_name = self.layout.DATABASE_NAMES.get("install_refseq_viral_prot", ("refseq", "viral_protein"))
+            db_desc = refseq_entry.get("description") if refseq_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{db_category}/{db_name}",
@@ -317,18 +320,75 @@ class main_setup:
                 )
             )
 
-        if self.layout.install_refseq_gen:
-            success_refnuc = self.wdir.refseq_gen_dl()
+        if self.layout.install_refseq_viral_gen:
+            refseq_entry = get_refseq_entry("viral", "genome")
+            url = refseq_entry.get("url", "") if refseq_entry else ""
+            filename = refseq_entry.get("file_pattern", "") if refseq_entry else ""
+            db_key = "viral_genome"
+            success_refnuc = self.wdir.refseq_gen_dl(url, filename, db_key)
             if success_refnuc:
                 self.installed_databases.append(
-                    self.database_install_string("refseq_gen")
+                    self.database_install_string("refseq_viral_gen")
                 )
 
-            db_ver = self.wdir.db_versions.get("refseq", {})
-            refseq_gen_path = self.wdir.fastas.get("nuc", {}).get("refseq", [""])[0]
-            db_category, db_name = self.layout.DATABASE_NAMES.get("install_refseq_gen", ("refseq", "refseq_gen"))
-            db_entry = get_db_entry(db_category, db_name)
-            db_desc = db_entry.get("description") if db_entry else None
+            db_ver = self.wdir.db_versions.get(db_key, {})
+            refseq_gen_path = self.wdir.fastas.get("nuc", {}).get(db_key, [""])[0]
+            db_category, db_name = self.layout.DATABASE_NAMES.get("install_refseq_viral_gen", ("refseq", "viral_genome"))
+            db_desc = refseq_entry.get("description") if refseq_entry else None
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    f"{db_category}/{db_name}",
+                    refseq_gen_path,
+                    success_refnuc,
+                    version=db_ver.get("version"),
+                    source_url=db_ver.get("source_url"),
+                    file_mod_date=db_ver.get("file_mod_date"),
+                    description=db_desc,
+                )
+            )
+
+        if self.layout.install_refseq_bacterial_prot:
+            refseq_entry = get_refseq_entry("bacterial", "protein")
+            url = refseq_entry.get("url", "") if refseq_entry else ""
+            filename = refseq_entry.get("file_pattern", "") if refseq_entry else ""
+            db_key = "bacterial_protein"
+            success_refprot = self.wdir.refseq_prot_dl(url, filename, db_key)
+            if success_refprot:
+                self.installed_databases.append(
+                    self.database_install_string("refseq_bacterial_prot")
+                )
+
+            db_ver = self.wdir.db_versions.get(db_key, {})
+            refseq_prot_path = self.wdir.fastas.get("prot", {}).get(db_key, "")
+            db_category, db_name = self.layout.DATABASE_NAMES.get("install_refseq_bacterial_prot", ("refseq", "bacterial_protein"))
+            db_desc = refseq_entry.get("description") if refseq_entry else None
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    f"{db_category}/{db_name}",
+                    refseq_prot_path,
+                    success_refprot,
+                    version=db_ver.get("version"),
+                    source_url=db_ver.get("source_url"),
+                    file_mod_date=db_ver.get("file_mod_date"),
+                    description=db_desc,
+                )
+            )
+
+        if self.layout.install_refseq_bacterial_gen:
+            refseq_entry = get_refseq_entry("bacterial", "genome")
+            url = refseq_entry.get("url", "") if refseq_entry else ""
+            filename = refseq_entry.get("file_pattern", "") if refseq_entry else ""
+            db_key = "bacterial_genome"
+            success_refnuc = self.wdir.refseq_gen_dl(url, filename, db_key)
+            if success_refnuc:
+                self.installed_databases.append(
+                    self.database_install_string("refseq_bacterial_gen")
+                )
+
+            db_ver = self.wdir.db_versions.get(db_key, {})
+            refseq_gen_path = self.wdir.fastas.get("nuc", {}).get(db_key, [""])[0]
+            db_category, db_name = self.layout.DATABASE_NAMES.get("install_refseq_bacterial_gen", ("refseq", "bacterial_genome"))
+            db_desc = refseq_entry.get("description") if refseq_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
                     f"{db_category}/{db_name}",
@@ -552,6 +612,7 @@ class main_setup:
                     sw_tag,
                     install_success,
                     sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
+                    binary_name="centrifuge",
                 )
             )
 
@@ -600,6 +661,7 @@ class main_setup:
                     sw_tag,
                     install_success,
                     sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
+                    binary_name="centrifuge",
                 )
             )
 
@@ -650,6 +712,7 @@ class main_setup:
                     sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["voyager"],
+                    binary_name="voyager",
                 )
             )
 
@@ -670,6 +733,7 @@ class main_setup:
                     sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["metaphlan"],
+                    binary_name="metaphlan",
                 )
             )
 
@@ -702,6 +766,7 @@ class main_setup:
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
                     db_version=kraken_ver,
+                    binary_name="kraken2",
                 )
             )
 
@@ -733,6 +798,7 @@ class main_setup:
                     sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
+                    binary_name="kraken2",
                 )
             )
 
@@ -775,6 +841,7 @@ class main_setup:
                     sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
+                    binary_name="kraken2",
                 )
             )
 
@@ -807,6 +874,7 @@ class main_setup:
                     sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["krakenuniq"],
+                    binary_name="krakenuniq",
                 )
             )
 
@@ -840,6 +908,7 @@ class main_setup:
                     sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["kaiju"],
+                    binary_name="kaiju",
                 )
             )
 
@@ -883,6 +952,7 @@ class main_setup:
                         bwa_install,
                         sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                         tag="filter",
+                        binary_name="bwa",
                     )
                 )
         for fname, fpath in prepdl.fastas["host"].items():
@@ -898,6 +968,7 @@ class main_setup:
                         bwa_install,
                         sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                         tag="host",
+                        binary_name="bwa",
                     )
                 )
 
@@ -915,6 +986,7 @@ class main_setup:
                             bowtie2_install,
                             sofprep.envs["ROOT"] + sofprep.envs["bowtie2"],
                             tag="host",
+                            binary_name="bowtie2",
                         )
                     )
 
@@ -927,6 +999,7 @@ class main_setup:
                     minimap2_install,
                     sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                     tag="host",
+                    binary_name="minimap2",
                 )
             )
         # install prot databases using local files.
@@ -947,6 +1020,7 @@ class main_setup:
                         sw_tag,
                         install_success,
                         sofprep.envs["ROOT"] + sofprep.envs["diamond"],
+                        binary_name="diamond",
                     )
                 )
 
@@ -974,6 +1048,7 @@ class main_setup:
                             sw_tag,
                             success_install,
                             sofprep.envs["ROOT"] + sofprep.envs["blast"],
+                            binary_name="blastn",
                         )
                     )
 
@@ -991,6 +1066,7 @@ class main_setup:
                         fpath,
                         minimap2_install,
                         sofprep.envs["ROOT"] + sofprep.envs["bwa"],
+                        binary_name="minimap2",
                     )
                 )
                 # if self.layout.install_bowtie2_depletion:
@@ -1032,6 +1108,7 @@ class main_setup:
                             install_success,
                             sofprep.envs["ROOT"]
                             + sofprep.envs["fastviromeexplorer"],
+                            binary_name="fve",
                         )
                     )
 
@@ -1059,6 +1136,7 @@ class main_setup:
                                 sw_tag,
                                 install_success,
                                 sofprep.envs["ROOT"] + sofprep.envs["blast"],
+                                binary_name="blastn",
                             )
                         )
 

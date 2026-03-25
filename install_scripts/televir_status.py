@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from load_sources import list_databases, list_software, list_hosts
 from config import DATABASE_FILENAME
+from install_source import ENVS_PARAMS
 
 
 class TelevirStatusApp:
@@ -27,6 +28,23 @@ class TelevirStatusApp:
         
         self.install_home = os.environ.get('INSTALL_HOME', '/opt/televir')
         self.db_path = os.path.join(self.install_home, DATABASE_FILENAME)
+        self.env_root = os.path.join(self.install_home, "envs")
+        
+        # Mapping from archive/git names to their install directories
+        self.ARCHIVE_INSTALL_PATHS = {
+            "clark": "classification/Clark",
+            "voyager": "classification/Voyager/voyager-cli",
+            "trimmomatic": "trimmomatic",
+            "fastqc": "fastqc",
+            "rabbitqc": "RabbitQC",
+        }
+        
+        self.GIT_INSTALL_PATHS = {
+            "fastviromeexplorer": "FastViromeExplorer",
+            "desamba": "classm_lc/deSAMBA",
+            "rabbitqc_git": "RabbitQC",
+            "trimmomatic_git": "trimmomatic",
+        }
         
         self._create_widgets()
     
@@ -162,17 +180,26 @@ class TelevirStatusApp:
         
         for name, info in soft.get('archives', {}).items():
             if info and isinstance(info, dict):
-                available = "✓"
+                available = "✓" if self._check_archive_installed(name, info) else "✗"
                 tag = installed_soft.get(name, "N/A")
                 installed = "✓" if tag != "N/A" else "✗"
                 self.soft_tree.insert("", "end", values=(name, "archive", available, installed, tag))
         
         for name, info in soft.get('git_repos', {}).items():
             if info and isinstance(info, dict):
-                available = "✓"
+                available = "✓" if self._check_git_installed(name, info) else "✗"
                 tag = installed_soft.get(name, "N/A")
                 installed = "✓" if tag != "N/A" else "✗"
                 self.soft_tree.insert("", "end", values=(name, "git", available, installed, tag))
+        
+        for name, info in soft.get('conda_tools', {}).items():
+            if info and isinstance(info, dict):
+                yaml_file = info.get('yaml', '')
+                binary_name = info.get('binary', name)
+                available = "✓" if self._check_conda_binary(yaml_file, binary_name) else "✗"
+                tag = installed_soft.get(name, "N/A")
+                installed = "✓" if tag != "N/A" else "✗"
+                self.soft_tree.insert("", "end", values=(name, "conda", available, installed, tag))
     
     def _get_installed_databases(self):
         """Query installed databases (non-host) with version."""
@@ -184,14 +211,15 @@ class TelevirStatusApp:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT name, version, date, installed, path FROM database WHERE installed = 'True' AND software != 'host'"
+                "SELECT name, version, date, installed, description, path FROM database WHERE installed = 'True' AND software != 'host'"
             )
             for row in cursor.fetchall():
                 installed[row[0]] = {
                     "version": row[1] if row[1] else "N/A",
                     "date": row[2] if row[2] else "N/A",
                     "installed": row[3] if row[3] else "N/A",
-                    "path": row[4] if row[4] else "N/A"
+                    "description": row[4] if row[4] else "N/A",
+                    "path": row[5] if row[5] else "N/A"
                 }
             conn.close()
         except Exception as e:
@@ -255,6 +283,39 @@ class TelevirStatusApp:
             print(f"Error reading database: {e}")
         
         return installed
+
+    def _get_env_path_from_yaml(self, yaml_file: str) -> str:
+        """Get environment path from yaml file using ENVS_PARAMS mapping."""
+        # ENVS maps env_path -> yaml_file, so we need to reverse lookup
+        envs_map = ENVS_PARAMS.get("ENVS", {})
+        for env_path, yml in envs_map.items():
+            if yml == yaml_file:
+                return env_path
+        return ""
+
+    def _check_conda_binary(self, yaml_file: str, binary_name: str) -> bool:
+        """Check if binary exists in conda environment."""
+        env_path = self._get_env_path_from_yaml(yaml_file)
+        if not env_path:
+            return False
+        binary_path = os.path.join(self.env_root, env_path, "bin", binary_name)
+        return os.path.isfile(binary_path)
+
+    def _check_archive_installed(self, name: str, soft_info: dict) -> bool:
+        """Check if archive-based software is installed."""
+        install_path = self.ARCHIVE_INSTALL_PATHS.get(name, "")
+        if not install_path:
+            return False
+        full_path = os.path.join(self.env_root, install_path)
+        return os.path.exists(full_path)
+
+    def _check_git_installed(self, name: str, soft_info: dict) -> bool:
+        """Check if git repo is cloned."""
+        install_path = self.GIT_INSTALL_PATHS.get(name, "")
+        if not install_path:
+            return False
+        full_path = os.path.join(self.env_root, install_path)
+        return os.path.exists(full_path)
 
 
 def main():

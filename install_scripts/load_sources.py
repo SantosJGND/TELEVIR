@@ -115,6 +115,18 @@ class SourceLoader:
                 return default
         return value
     
+    def get_refseq_entry(self, organism: str, db_type: str) -> Optional[Dict]:
+        """Get RefSeq entry for specific organism and type (protein/genome).
+        
+        Args:
+            organism: 'viral' or 'bacterial'
+            db_type: 'protein' or 'genome'
+            
+        Returns:
+            Dict with url, description, file_pattern or None
+        """
+        return self.get('databases', 'refseq', organism, db_type)
+    
     def get_db_url(self, category: str, name: str) -> Optional[str]:
         """Get database URL by category and name.
         
@@ -337,6 +349,18 @@ def get_db_version(category: str, name: str) -> Optional[str]:
 def get_db_entry(category: str, name: str) -> Optional[Dict]:
     """Get full database entry from sources.yaml."""
     return get_loader().get_db_entry(category, name)
+
+def get_refseq_entry(organism: str, db_type: str) -> Optional[Dict]:
+    """Get RefSeq entry for specific organism and type (protein/genome).
+    
+    Args:
+        organism: 'viral' or 'bacterial'
+        db_type: 'protein' or 'genome'
+        
+    Returns:
+        Dict with url, description, file_pattern or None
+    """
+    return get_loader().get_refseq_entry(organism, db_type)
 
 def extract_version_from_string(s: str) -> Optional[str]:
     """Extract version from filename or URL string (case-insensitive)."""

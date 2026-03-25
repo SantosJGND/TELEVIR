@@ -15,6 +15,8 @@ In the INSTALL_PARAMS dictionary, provide ROOT as the root directory for sequenc
 
 Verify that these values correspond to those in the ENVS_PARAMS dictionary for the corresponding keys. 
 
+The `INSTALL_PARAMS["ENVSDIR"]` dict maps software names (e.g., "kraken2", "centrifuge") to environment subdirectories. The `ENVS_PARAMS["ENVS"]` dict maps those subdirectories to yaml files (e.g., `HD.yml`, `Krk2.yml`). This dual mapping enables binary presence verification in `televir_status.py`. 
+
 #### Deployment
 
 The main_install.py script allows for four boolean tags:

@@ -1,6 +1,7 @@
 # from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey
 
 import datetime
+import logging
 import os
 from abc import abstractmethod
 from typing import Optional
@@ -24,7 +25,7 @@ class SoftwareItem:
     def __init__(
         self, name, path, database, installed, env_path, 
         tag: str = "undefined", db_version: Optional[str] = None, 
-        needs_update: bool = False
+        needs_update: bool = False, binary_name: Optional[str] = None
     ) -> None:
         self.name = name
         self.path = path
@@ -35,6 +36,7 @@ class SoftwareItem:
         self.tag = tag
         self.db_version = db_version
         self.needs_update = needs_update
+        self.binary_name = binary_name
 
     def __repr__(self) -> str:
         return f"({self.name}, {self.path}, {self.database}, {self.installed}, {self.env_path})"
@@ -261,9 +263,16 @@ class Utility_Repository:
         db_version = item.db_version if item.db_version else "NULL"
         needs_update = 1 if item.needs_update else 0
 
+        actual_installed = item.installed
+        if item.binary_name:
+            binary_path = os.path.join(item.env_path, "bin", item.binary_name)
+            if not os.path.isfile(binary_path):
+                logging.warning(f"Binary not found at {binary_path}, marking as not installed")
+                actual_installed = False
+
         try:
             _ = self.engine_execute(
-                f"INSERT OR REPLACE INTO software (name, path, database, installed, tag, env_path, date, db_version, needs_update) VALUES ('{item.name}', '{item.path}', '{item.database}', '{item.installed}', '{item.tag}', '{item.env_path}', '{item.date}', {db_version}, {needs_update})"
+                f"INSERT OR REPLACE INTO software (name, path, database, installed, tag, env_path, date, db_version, needs_update) VALUES ('{item.name}', '{item.path}', '{item.database}', '{actual_installed}', '{item.tag}', '{item.env_path}', '{item.date}', {db_version}, {needs_update})"
             )
 
             verify = self.engine_execute_return_table(f"SELECT name FROM software WHERE name='{item.name}'")
@@ -288,7 +297,7 @@ class Utility_Repository:
         source_url = f"'{item.source_url}'" if item.source_url else "NULL"
         file_mod_date = f"'{item.file_mod_date}'" if item.file_mod_date else "NULL"
         description = f"'{item.description}'" if item.description else "NULL"
-
+        print(f"Adding database: {item.name}, description: {item.description}")
         try:
             _ = self.engine_execute(
                 f"INSERT OR REPLACE INTO database (name, path, installed, software, date, version, source_url, file_mod_date, description) VALUES ('{item.name}', '{item.path}', '{item.installed}', '{item.software}', '{item.date}', {version}, {source_url}, {file_mod_date}, {description})"

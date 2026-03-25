@@ -175,9 +175,24 @@ databases:
   # RefSeq (dynamic - organism specific)
   # ---------------------------------------------------------------------------
   refseq:
-    base_url: "https://ftp.ncbi.nlm.nih.gov/refseq/release/{organism}/"
-    protein_suffix: ".protein.faa.gz"
-    genome_suffix: ".genome.fna.gz"
+    viral:
+      protein:
+        url: "https://ftp.ncbi.nlm.nih.gov/refseq/release/viral/"
+        description: "RefSeq viral protein database"
+        file_pattern: "viral.protein.faa.gz"
+      genome:
+        url: "https://ftp.ncbi.nlm.nih.gov/refseq/release/viral/"
+        description: "RefSeq viral genome database"
+        file_pattern: "viral.genome.fna.gz"
+    bacterial:
+      protein:
+        url: "https://ftp.ncbi.nlm.nih.gov/refseq/release/bacteria/"
+        description: "RefSeq bacterial protein database"
+        file_pattern: "bacteria.protein.faa.gz"
+      genome:
+        url: "https://ftp.ncbi.nlm.nih.gov/refseq/release/bacteria/"
+        description: "RefSeq bacterial genome database"
+        file_pattern: "bacteria.genome.fna.gz"
 
   # ---------------------------------------------------------------------------
   # Voyager Databases
@@ -248,6 +263,75 @@ software:
       url: "https://github.com/usadellab/Trimmomatic.git"
       description: "Trimmomatic Git repository"
       branch: "develop"
+
+  # ---------------------------------------------------------------------------
+  # Conda Tools (binary-based software)
+  # ---------------------------------------------------------------------------
+  conda_tools:
+    kraken2:
+      description: "Kraken2 taxonomic classifier"
+      binary: "kraken2"
+      yaml: "Krk2.yml"
+
+    kraken2_bacteria:
+      description: "Kraken2 bacterial database"
+      binary: "kraken2"
+      yaml: "Krk2.yml"
+
+    kraken2_eupathdb46:
+      description: "Kraken2 eukaryotic pathogen database"
+      binary: "kraken2"
+      yaml: "Krk2.yml"
+
+    centrifuge:
+      description: "Centrifuge taxonomic classifier"
+      binary: "centrifuge"
+      yaml: "HD.yml"
+
+    centrifuge_bacteria:
+      description: "Centrifuge bacterial database"
+      binary: "centrifuge"
+      yaml: "HD.yml"
+
+    kaiju:
+      description: "Kaiju protein-based classifier"
+      binary: "kaiju"
+      yaml: "HD.yml"
+
+    krakenuniq:
+      description: "KrakenUniq classifier"
+      binary: "krakenuniq"
+      yaml: "HD.yml"
+
+    diamond:
+      description: "Diamond protein aligner"
+      binary: "diamond"
+      yaml: "HD.yml"
+
+    bwa:
+      description: "BWA read aligner"
+      binary: "bwa"
+      yaml: "remap.yml"
+
+    bowtie2:
+      description: "Bowtie2 aligner"
+      binary: "bowtie2"
+      yaml: "remap.yml"
+
+    minimap2:
+      description: "Minimap2 aligner"
+      binary: "minimap2"
+      yaml: "HD.yml"
+
+    blast:
+      description: "BLAST sequence aligner"
+      binary: "blastn"
+      yaml: "HD.yml"
+
+    metaphlan:
+      description: "MetaPhlAn taxonomic profiler"
+      binary: "metaphlan"
+      yaml: "metaphlan.yml"
 
 # =============================================================================
 # HOST GENOMES
