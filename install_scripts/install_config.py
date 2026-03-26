@@ -91,10 +91,8 @@ class TelevirLayout:
     # tag: specific database variant (e.g., viral, bacteria, default)
     SOFTWARE_NAMES = {
         "install_kraken2": ("kraken2", "viral"),
-        "install_kraken2_bacteria": ("kraken2", "bacteria"),
         "install_kraken2_eupathdb46": ("kraken2", "eupathdb46"),
         "install_centrifuge": ("centrifuge", "viral"),
-        "install_centrifuge_bacteria": ("centrifuge", "bacteria"),
         "install_metaphlan": ("metaphlan", "default"),
         "install_kaiju": ("kaiju", "viral"),
         "install_krakenuniq": ("krakenuniq", "default"),

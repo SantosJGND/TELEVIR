@@ -47,6 +47,10 @@ class TelevirStatusApp:
         }
         
         self._create_widgets()
+        
+        self.db_tree.tag_configure("installed", background="#3EBE0B")
+        self.hosts_tree.tag_configure("installed", background="#3EBE0B")
+        self.soft_tree.tag_configure("installed", background="#3EBE0B")
     
     def _create_widgets(self):
         title = tk.Label(self.root, text="TELE-Vir Status", font=("Arial", 18, "bold"))
@@ -128,7 +132,19 @@ class TelevirStatusApp:
             padx=20,
             pady=5
         )
-        check_btn.pack(pady=10)
+        check_btn.pack(side="left", padx=5, pady=10)
+        
+        export_btn = tk.Button(
+            self.root, 
+            text="Export to TSV", 
+            command=self.export_tsv, 
+            bg="#2196F3", 
+            fg="white", 
+            font=("Arial", 12, "bold"),
+            padx=20,
+            pady=5
+        )
+        export_btn.pack(side="left", padx=5, pady=10)
     
     def check_status(self):
         self._populate_databases()
@@ -153,7 +169,8 @@ class TelevirStatusApp:
                     version = installed_dbs.get(name_full, {}).get("version", "N/A")
                     installed = installed_dbs.get(name_full, {}).get("installed", "N/A")
                     date = installed_dbs.get(name_full, {}).get("date", "N/A")
-                    self.db_tree.insert("", "end", values=(name_full, category, description, file_info, available, installed, version, date))
+                    tag = "installed" if installed == "True" else "not_installed"
+                    self.db_tree.insert("", "end", values=(name_full, category, description, file_info, available, installed, version, date), tags=(tag,))
     
     def _populate_hosts(self):
         for item in self.hosts_tree.get_children():
@@ -169,7 +186,8 @@ class TelevirStatusApp:
                 available = "✓" if info else "✗"
                 filename = installed_hosts.get(name, "N/A")
                 installed = "✓" if filename != "N/A" else "✗"
-                self.hosts_tree.insert("", "end", values=(name, common, available, installed, filename))
+                tag = "installed" if installed == "✓" else "not_installed"
+                self.hosts_tree.insert("", "end", values=(name, common, available, installed, filename), tags=(tag,))
     
     def _populate_software(self):
         for item in self.soft_tree.get_children():
@@ -183,14 +201,14 @@ class TelevirStatusApp:
                 available = "✓" if self._check_archive_installed(name, info) else "✗"
                 tag = installed_soft.get(name, "N/A")
                 installed = "✓" if tag != "N/A" else "✗"
-                self.soft_tree.insert("", "end", values=(name, "archive", available, installed, tag))
+                self.soft_tree.insert("", "end", values=(name, "archive", available, installed, tag), tags=("installed" if installed == "✓" else "not_installed",))
         
         for name, info in soft.get('git_repos', {}).items():
             if info and isinstance(info, dict):
                 available = "✓" if self._check_git_installed(name, info) else "✗"
                 tag = installed_soft.get(name, "N/A")
                 installed = "✓" if tag != "N/A" else "✗"
-                self.soft_tree.insert("", "end", values=(name, "git", available, installed, tag))
+                self.soft_tree.insert("", "end", values=(name, "git", available, installed, tag), tags=("installed" if installed == "✓" else "not_installed",))
         
         for name, info in soft.get('conda_tools', {}).items():
             if info and isinstance(info, dict):
@@ -199,7 +217,7 @@ class TelevirStatusApp:
                 available = "✓" if self._check_conda_binary(yaml_file, binary_name) else "✗"
                 tag = installed_soft.get(name, "N/A")
                 installed = "✓" if tag != "N/A" else "✗"
-                self.soft_tree.insert("", "end", values=(name, "conda", available, installed, tag))
+                self.soft_tree.insert("", "end", values=(name, "conda", available, installed, tag), tags=("installed" if installed == "✓" else "not_installed",))
     
     def _get_installed_databases(self):
         """Query installed databases (non-host) with version."""
@@ -316,6 +334,35 @@ class TelevirStatusApp:
             return False
         full_path = os.path.join(self.env_root, install_path)
         return os.path.exists(full_path)
+
+    def export_tsv(self):
+        from tkinter import filedialog
+        
+        filepath = filedialog.asksaveasfilename(
+            defaultextension=".tsv",
+            filetypes=[("TSV files", "*.tsv"), ("All files", "*.*")],
+            initialfile="televir_status.tsv"
+        )
+        if not filepath:
+            return
+        
+        with open(filepath, 'w') as f:
+            f.write("# TELE-Vir Status Export\n\n")
+            
+            f.write("# Databases\n")
+            f.write("Name\tCategory\tDescription\tFile\tAvailable\tInstalled\tVersion\tDate\n")
+            for row in self.db_tree.get():
+                f.write("\t".join(str(v) for v in row) + "\n")
+            
+            f.write("\n# Host Genomes\n")
+            f.write("Name\tCommon Name\tAvailable\tInstalled\tFilename\n")
+            for row in self.hosts_tree.get():
+                f.write("\t".join(str(v) for v in row) + "\n")
+            
+            f.write("\n# Software\n")
+            f.write("Name\tType\tAvailable\tInstalled\tTag\n")
+            for row in self.soft_tree.get():
+                f.write("\t".join(str(v) for v in row) + "\n")
 
 
 def main():

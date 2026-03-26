@@ -653,18 +653,6 @@ class main_setup:
                     self.software_install_string("centrifuge")
                 )
 
-            sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_centrifuge_bacteria", ("centrifuge", "bacteria"))
-            self.utilities.add_software(
-                self.utilities.software_item(
-                    sw_name,
-                    sofprep.dbs["centrifuge"]["db"],
-                    sw_tag,
-                    install_success,
-                    sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
-                    binary_name="centrifuge",
-                )
-            )
-
             # Also register as database
             db_cat, db_name = self.layout.DATABASE_NAMES.get("install_centrifuge_bacteria", ("centrifuge", "bacteria"))
             db_entry = get_db_entry(db_cat, db_name)
@@ -832,18 +820,6 @@ class main_setup:
 
             if success_install:
                 self.installed_software.append(self.software_install_string("kraken2"))
-
-            sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_kraken2_bacteria", ("kraken2", "bacteria"))
-            self.utilities.add_software(
-                self.utilities.software_item(
-                    sw_name,
-                    sofprep.dbs["kraken2"]["db"],
-                    sw_tag,
-                    success_install,
-                    sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
-                    binary_name="kraken2",
-                )
-            )
 
             # Also register as database
             db_cat, db_name = self.layout.DATABASE_NAMES.get("install_kraken2_bacteria", ("kraken2", "bacteria"))
