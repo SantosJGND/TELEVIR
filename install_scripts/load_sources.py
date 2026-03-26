@@ -125,7 +125,7 @@ class SourceLoader:
         Returns:
             Dict with url, description, file_pattern or None
         """
-        return self.get('databases', 'refseq', organism, db_type)
+        return self.get('databases', 'refseq_dynamic', organism, db_type)
     
     def get_db_url(self, category: str, name: str) -> Optional[str]:
         """Get database URL by category and name.
@@ -183,6 +183,18 @@ class SourceLoader:
             if entry and isinstance(entry, dict):
                 return entry
         return None
+    
+    def get_prebuilt_index_path(self, tool: str, dbname: str) -> Optional[str]:
+        """Get prebuilt index path from sources.yaml.
+        
+        Args:
+            tool: 'centrifuge' or 'kraken2'
+            dbname: Database name (e.g., 'viral', 'bacteria', 'eupathdb46')
+            
+        Returns:
+            Path string or None if not configured
+        """
+        return self.get('databases', 'prebuilt_indices', tool, dbname, 'path')
     
     def extract_version_from_string(self, s: str) -> Optional[str]:
         """Extract version from filename or URL string (case-insensitive).
@@ -361,6 +373,18 @@ def get_refseq_entry(organism: str, db_type: str) -> Optional[Dict]:
         Dict with url, description, file_pattern or None
     """
     return get_loader().get_refseq_entry(organism, db_type)
+
+def get_prebuilt_index_path(tool: str, dbname: str) -> Optional[str]:
+    """Get prebuilt index path from sources.yaml.
+    
+    Args:
+        tool: 'centrifuge' or 'kraken2'
+        dbname: Database name (e.g., 'viral', 'bacteria', 'eupathdb46')
+        
+    Returns:
+        Path string or None if not configured
+    """
+    return get_loader().get_prebuilt_index_path(tool, dbname)
 
 def extract_version_from_string(s: str) -> Optional[str]:
     """Extract version from filename or URL string (case-insensitive)."""

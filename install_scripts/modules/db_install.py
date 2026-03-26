@@ -1582,6 +1582,83 @@ class setup_install(setup_dl):
             }
             return False
 
+    def centrifuge_register_prebuilt(self, dbname="viral"):
+        """Register a pre-built Centrifuge index.
+
+        Args:
+            dbname: Name of the database (e.g., 'viral', 'bacteria')
+
+        Returns:
+            True if prebuilt index found and registered, False otherwise
+        """
+        import sys
+        sys.path.insert(0, os.path.dirname(__file__))
+        from load_sources import get_prebuilt_index_path
+
+        prebuilt_path = get_prebuilt_index_path("centrifuge", dbname)
+        if not prebuilt_path:
+            logging.info(f"No prebuilt path configured for centrifuge/{dbname}")
+            return False
+
+        if not os.path.exists(prebuilt_path):
+            logging.info(f"Prebuilt centrifuge/{dbname} not found at {prebuilt_path}")
+            return False
+
+        index_file_prefix = f"{prebuilt_path}/{dbname}_index"
+        if not os.path.isfile(index_file_prefix + ".1.cf"):
+            logging.info(f"Prebuilt centrifuge/{dbname} index files not found at {prebuilt_path}")
+            return False
+
+        logging.info(f"Found prebuilt centrifuge/{dbname} at {prebuilt_path}")
+
+        self.dbs["centrifuge"] = {
+            "dir": prebuilt_path + "/",
+            "dbname": dbname,
+            "fasta": "",
+            "db": index_file_prefix,
+            "status": "success",
+        }
+        return True
+
+    def kraken2_register_prebuilt(self, dbname="viral"):
+        """Register a pre-built Kraken2 index.
+
+        Args:
+            dbname: Name of the database (e.g., 'viral', 'bacteria', 'eupathdb46')
+
+        Returns:
+            True if prebuilt index found and registered, False otherwise
+        """
+        import sys
+        sys.path.insert(0, os.path.dirname(__file__))
+        from load_sources import get_prebuilt_index_path
+
+        prebuilt_path = get_prebuilt_index_path("kraken2", dbname)
+        if not prebuilt_path:
+            logging.info(f"No prebuilt path configured for kraken2/{dbname}")
+            return False
+
+        if not os.path.exists(prebuilt_path):
+            logging.info(f"Prebuilt kraken2/{dbname} not found at {prebuilt_path}")
+            return False
+
+        if not os.path.isfile(prebuilt_path + "/taxo.k2d"):
+            logging.info(f"Prebuilt kraken2/{dbname} index file (taxo.k2d) not found at {prebuilt_path}")
+            return False
+
+        logging.info(f"Found prebuilt kraken2/{dbname} at {prebuilt_path}")
+
+        self.dbs["kraken2"] = {
+            "dir": prebuilt_path + "/",
+            "dbname": dbname,
+            "fasta": prebuilt_path + "/library/" + dbname + "/library.fna.gz",
+            "db": prebuilt_path,
+            "version": "prebuilt",
+            "source_url": "user-provided",
+            "status": "success",
+        }
+        return True
+
     def centrifuge_install(
         self,
         dbname="viral",

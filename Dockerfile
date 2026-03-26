@@ -71,6 +71,7 @@ RUN if [ -n "$REQUEST_SEQ_FILE" ] && [ -f "$REQUEST_SEQ_FILE" ]; then \
     fi
 
 COPY televir.env /opt/televir/televir.env
+COPY prebuilt/ /opt/televir/prebuilt/
 
 WORKDIR /
 COPY entrypoint.sh entrypoint_original.sh

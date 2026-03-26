@@ -51,7 +51,7 @@ class TelevirStatusApp:
         self.db_tree.tag_configure("installed", background="#3EBE0B")
         self.hosts_tree.tag_configure("installed", background="#3EBE0B")
         self.soft_tree.tag_configure("installed", background="#3EBE0B")
-    
+
     def _create_widgets(self):
         title = tk.Label(self.root, text="TELE-Vir Status", font=("Arial", 18, "bold"))
         title.pack(pady=10)

@@ -111,6 +111,28 @@ databases:
       version: "2018_4_15"
 
   # ---------------------------------------------------------------------------
+  # Pre-built Indices (user-provided)
+  # ---------------------------------------------------------------------------
+  # To use custom pre-built indices, uncomment and configure below.
+  # Format: <tool>:
+  #   <dbname>:
+  #     path: "/path/to/index"
+  #     description: "Description"
+  #
+  # Example:
+  # prebuilt_indices:
+  #   centrifuge:
+  #     my_custom:
+  #       path: "/opt/televir/prebuilt/centrifuge/my_custom"
+  #       description: "Custom Centrifuge index"
+  #   kraken2:
+  #     my_custom:
+  #       path: "/opt/televir/prebuilt/kraken2/my_custom"
+  #       description: "Custom Kraken2 index"
+  # ---------------------------------------------------------------------------
+  prebuilt_indices: {}
+
+  # ---------------------------------------------------------------------------
   # MetaPhlAn Databases
   # ---------------------------------------------------------------------------
   metaphlan:
@@ -172,9 +194,33 @@ databases:
       file: "taxdump.tar.gz"
 
   # ---------------------------------------------------------------------------
-  # RefSeq (dynamic - organism specific)
+  # RefSeq Databases (flat structure - shown in TELE-Vir Status)
   # ---------------------------------------------------------------------------
-  refseq:
+  refseq_db:
+    viral_protein:
+      url: "https://ftp.ncbi.nlm.nih.gov/refseq/release/viral/"
+      description: "RefSeq viral protein database"
+      file_pattern: "viral.protein.faa.gz"
+
+    viral_genome:
+      url: "https://ftp.ncbi.nlm.nih.gov/refseq/release/viral/"
+      description: "RefSeq viral genome database"
+      file_pattern: "viral.genome.fna.gz"
+
+    bacterial_protein:
+      url: "https://ftp.ncbi.nlm.nih.gov/refseq/release/bacteria/"
+      description: "RefSeq bacterial protein database"
+      file_pattern: "bacteria.protein.faa.gz"
+
+    bacterial_genome:
+      url: "https://ftp.ncbi.nlm.nih.gov/refseq/release/bacteria/"
+      description: "RefSeq bacterial genome database"
+      file_pattern: "bacteria.genome.fna.gz"
+
+  # ---------------------------------------------------------------------------
+  # RefSeq Dynamic Downloader (organism-specific - used by downloader)
+  # ---------------------------------------------------------------------------
+  refseq_dynamic:
     viral:
       protein:
         url: "https://ftp.ncbi.nlm.nih.gov/refseq/release/viral/"
