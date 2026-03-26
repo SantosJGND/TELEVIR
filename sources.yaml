@@ -55,9 +55,13 @@ databases:
       file: "U-RVDBv{version}-prot.fasta.xz"
       version_default: "22.0"
 
+  # ---------------------------------------------------------------------------
+  # Nucleotide Databases
+  # ---------------------------------------------------------------------------
+  nucleotide:
     virosaurus:
       url: "https://ftp.expasy.org/databases/viralzone/2020%5F4/virosaurus90%5Fvertebrate-20200330.fas.gz"
-      description: "Virosaurus viral protein database"
+      description: "Virosaurus curated viral genome database"
       file: "virosaurus90%5Fvertebrate-20200330.fas.gz"
 
   # ---------------------------------------------------------------------------

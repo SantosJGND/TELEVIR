@@ -81,7 +81,7 @@ class TelevirLayout:
         # Other protein databases
         "install_swissprot": ("protein", "swissprot"),
         "install_rvdb": ("protein", "rvdb"),
-        "install_virosaurus": ("protein", "virosaurus"),
+        "install_virosaurus": ("nucleotide", "virosaurus"),
         "install_refseq_16s": ("ribosomal_rna", "refseq_16s"),
         "install_ribo16s": ("ribosomal_rna", "silva_16s"),
         "install_request_sequences": ("taxonomy", "requests"),
