@@ -323,23 +323,8 @@ software:
       binary: "kraken2"
       yaml: "Krk2.yml"
 
-    kraken2_bacteria:
-      description: "Kraken2 bacterial database"
-      binary: "kraken2"
-      yaml: "Krk2.yml"
-
-    kraken2_eupathdb46:
-      description: "Kraken2 eukaryotic pathogen database"
-      binary: "kraken2"
-      yaml: "Krk2.yml"
-
     centrifuge:
       description: "Centrifuge taxonomic classifier"
-      binary: "centrifuge"
-      yaml: "HD.yml"
-
-    centrifuge_bacteria:
-      description: "Centrifuge bacterial database"
       binary: "centrifuge"
       yaml: "HD.yml"
 
