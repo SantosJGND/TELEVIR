@@ -581,8 +581,94 @@ class main_setup:
 
         logging.info("install prepped")
 
-        ######################### centrifuge (pre-built only) ###############################
-        # Only install pre-built indices from PREBUILT_CENTRIFUGE_INDICES list
+        ######################### centrifuge (download) ###############################
+
+        if self.layout.install_centrifuge:
+            install_success = sofprep.centrifuge_install(dbname=self.organism)
+            centlib = f"refseq-{self.organism}.dust.fna.gz"
+            if os.path.isfile(sofprep.dbs["centrifuge"]["fasta"]):
+                os.system(
+                    f"mv {sofprep.dbs['centrifuge']['fasta']} {prepdl.seqdir}{centlib}"
+                )
+
+            else:
+                if not os.path.isfile(f"{prepdl.seqdir}{centlib}"):
+                    logging.info("centrifuge database not found.")
+            if os.path.isfile(f"{prepdl.seqdir}{centlib}"):
+                prepdl.fastas["nuc"]["centrifuge"] = [
+                    f"{prepdl.seqdir}{centlib}"
+                ]
+
+            if install_success:
+                self.installed_software.append(
+                    self.software_install_string("centrifuge")
+                )
+
+            sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_centrifuge", ("centrifuge", "viral"))
+            self.utilities.add_software(
+                self.utilities.software_item(
+                    sw_name,
+                    sofprep.dbs["centrifuge"]["db"],
+                    sw_tag,
+                    install_success,
+                    sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
+                    binary_name="centrifuge",
+                )
+            )
+
+            # Also register as database
+            db_cat, db_name = self.layout.DATABASE_NAMES.get("install_centrifuge", ("centrifuge", "viral"))
+            db_entry = get_db_entry(db_cat, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    f"{db_cat}/{db_name}",
+                    sofprep.dbs["centrifuge"]["db"],
+                    install_success,
+                    software=db_cat,
+                    description=db_desc,
+                )
+            )
+
+        if self.layout.install_centrifuge_bacteria:
+            install_success = sofprep.centrifuge_download_install(
+                dbname="bacteria", threads="16"
+            )
+            centlib = "refseq-bacteria.dust.fna.gz"
+            if os.path.isfile(sofprep.dbs["centrifuge"]["fasta"]):
+                os.system(
+                    f"mv {sofprep.dbs['centrifuge']['fasta']} {prepdl.seqdir}{centlib}"
+                )
+
+            else:
+                if not os.path.isfile(f"{prepdl.seqdir}{centlib}"):
+                    logging.info("centrifuge database not found.")
+            if os.path.isfile(f"{prepdl.seqdir}{centlib}"):
+                prepdl.fastas["nuc"]["centrifuge_bacteria"] = [
+                    f"{prepdl.seqdir}{centlib}"
+                ]
+
+            if install_success:
+                self.installed_software.append(
+                    self.software_install_string("centrifuge")
+                )
+
+            # Also register as database
+            db_cat, db_name = self.layout.DATABASE_NAMES.get("install_centrifuge_bacteria", ("centrifuge", "bacteria"))
+            db_entry = get_db_entry(db_cat, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    f"{db_cat}/{db_name}",
+                    sofprep.dbs["centrifuge"]["db"],
+                    install_success,
+                    software=db_cat,
+                    description=db_desc,
+                )
+            )
+
+        ######################### centrifuge (pre-built custom) ###############################
+        # Install custom pre-built indices from PREBUILT_CENTRIFUGE_INDICES list
         for dbname in self.layout.PREBUILT_CENTRIFUGE_INDICES:
             prebuilt_path = get_prebuilt_index_path("centrifuge", dbname)
             if prebuilt_path:
@@ -688,8 +774,118 @@ class main_setup:
                 )
             )
 
-        ########################## kraken2 (pre-built only) ###############################
-        # Only install pre-built indices from PREBUILT_KRAKEN2_INDICES list
+        ########################## kraken2 (download) ###############################
+
+        if self.layout.install_kraken2:
+            success_install = sofprep.kraken2_download_install(dbname=self.organism)
+            krlib = f"kraken2-{self.organism}-library.fna.gz"
+            if os.path.isfile(sofprep.dbs["kraken2"]["fasta"]):
+                os.system(
+                    f"mv {sofprep.dbs['kraken2']['fasta']} {prepdl.seqdir}{krlib}"
+                )
+            else:
+                if not os.path.isfile(f"{prepdl.seqdir}{krlib}"):
+                    logging.info("kraken2 database fasta not found.")
+
+            if os.path.isfile(f"{prepdl.seqdir}{krlib}"):
+                prepdl.fastas["nuc"]["kraken2"] = [f"{prepdl.seqdir}{krlib}"]
+
+            if success_install:
+                self.installed_software.append(self.software_install_string("kraken2"))
+
+            kraken_ver = sofprep.dbs.get("kraken2", {}).get("version", "")
+            sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_kraken2", ("kraken2", "viral"))
+            self.utilities.add_software(
+                self.utilities.software_item(
+                    sw_name,
+                    sofprep.dbs["kraken2"]["db"],
+                    sw_tag,
+                    success_install,
+                    sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
+                    db_version=kraken_ver,
+                    binary_name="kraken2",
+                )
+            )
+
+            # Also register as database
+            db_cat, db_name = self.layout.DATABASE_NAMES.get("install_kraken2", ("kraken2", "viral"))
+            db_entry = get_db_entry(db_cat, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    f"{db_cat}/{db_name}",
+                    sofprep.dbs["kraken2"]["db"],
+                    success_install,
+                    software=db_cat,
+                    version=kraken_ver,
+                    description=db_desc,
+                )
+            )
+
+        if self.layout.install_kraken2_eupathdb46:
+            success_install = sofprep.kraken2_download_install(dbname="eupathdb46")
+            if success_install:
+                self.installed_software.append(self.software_install_string("kraken2"))
+
+            sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_kraken2_eupathdb46", ("kraken2", "eupathdb46"))
+            self.utilities.add_software(
+                self.utilities.software_item(
+                    sw_name,
+                    sofprep.dbs["kraken2"]["db"],
+                    sw_tag,
+                    success_install,
+                    sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
+                    binary_name="kraken2",
+                )
+            )
+
+            # Also register as database
+            db_cat, db_name = self.layout.DATABASE_NAMES.get("install_kraken2_eupathdb46", ("kraken2", "eupathdb46"))
+            db_entry = get_db_entry(db_cat, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    f"{db_cat}/{db_name}",
+                    sofprep.dbs["kraken2"]["db"],
+                    success_install,
+                    software=db_cat,
+                    description=db_desc,
+                )
+            )
+
+        if self.layout.install_kraken2_bacteria:
+            success_install = sofprep.kraken2_download_install(dbname="bacteria")
+            krlib = f"kraken2-bacteria-library.fna.gz"
+            if os.path.isfile(sofprep.dbs["kraken2"]["fasta"]):
+                os.system(
+                    f"mv {sofprep.dbs['kraken2']['fasta']} {prepdl.seqdir}{krlib}"
+                )
+            else:
+                if not os.path.isfile(f"{prepdl.seqdir}{krlib}"):
+                    logging.info("kraken2 database fasta not found.")
+
+            if os.path.isfile(f"{prepdl.seqdir}{krlib}"):
+                prepdl.fastas["nuc"]["kraken2-bacteria"] = [f"{prepdl.seqdir}{krlib}"]
+
+            if success_install:
+                self.installed_software.append(self.software_install_string("kraken2"))
+
+            # Also register as database
+            db_cat, db_name = self.layout.DATABASE_NAMES.get("install_kraken2_bacteria", ("kraken2", "bacteria"))
+            db_entry = get_db_entry(db_cat, db_name)
+            db_desc = db_entry.get("description") if db_entry else None
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    f"{db_cat}/{db_name}",
+                    sofprep.dbs["kraken2"]["db"],
+                    success_install,
+                    software=db_cat,
+                    description=db_desc,
+                )
+            )
+
+        ########################## kraken2 (pre-built custom) ###############################
+        # Install custom pre-built indices from PREBUILT_KRAKEN2_INDICES list
         for dbname in self.layout.PREBUILT_KRAKEN2_INDICES:
             prebuilt_path = get_prebuilt_index_path("kraken2", dbname)
             if prebuilt_path:

@@ -394,6 +394,60 @@ The file will be copied to `/opt/request_sequences.fa.gz` in the image.
 
 ---
 
+## Using Custom Pre-built Indices
+
+TELE-Vir supports user-provided pre-built Centrifuge and Kraken2 indices in addition to the default downloaded indices.
+
+### Directory Structure
+
+Place your pre-built indices in the `prebuilt/` directory:
+
+```
+prebuilt/
+├── centrifuge/
+│   └── <dbname>/       # Place Centrifuge index files here
+└── kraken2/
+    └── <dbname>/       # Place Kraken2 index files here
+```
+
+### Configuration
+
+1. **Configure sources.yaml**: Add your index configuration under `prebuilt_indices`:
+
+```yaml
+databases:
+  prebuilt_indices:
+    centrifuge:
+      my_custom:
+        path: "/opt/televir/prebuilt/centrifuge/my_custom"
+        description: "Custom Centrifuge index"
+    kraken2:
+      my_custom:
+        path: "/opt/televir/prebuilt/kraken2/my_custom"
+        description: "Custom Kraken2 index"
+```
+
+2. **Configure install_config.py**: Add the index names to the lists:
+
+```python
+PREBUILT_CENTRIFUGE_INDICES = ["my_custom"]
+PREBUILT_KRAKEN2_INDICES = ["my_custom"]
+```
+
+### Expected Index Files
+
+- **Centrifuge**: Looks for `.1.cf`, `.2.cf`, etc. index files
+- **Kraken2**: Looks for `taxo.k2d` file in the database directory
+
+### Notes
+
+- The path in `sources.yaml` is flexible - you can use any path, not just the default
+- If the prebuilt index is not found at the configured path, it will be marked as "not installed"
+- Multiple custom indices can be added to the lists
+- Default indices (viral, bacteria, eupathdb46) continue to be installed automatically via download
+
+---
+
 ## Troubleshooting
 
 ### Check Installation Status
