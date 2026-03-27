@@ -4,7 +4,7 @@ import datetime
 import logging
 import os
 from abc import abstractmethod
-from typing import Optional
+from typing import List, Optional
 import sys 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -13,6 +13,7 @@ from install_scripts.config import DATABASE_FILENAME
 from sqlalchemy import (
     Boolean,
     Column,
+    Integer,
     MetaData,
     String,
     Table,
@@ -45,7 +46,9 @@ class SoftwareItem:
 class DatabaseItem:
     def __init__(self, name, path, installed, software: str = "none",
                  version: Optional[str] = None, source_url: Optional[str] = None, 
-                 file_mod_date: Optional[str] = None, description: Optional[str] = None) -> None:
+                 file_mod_date: Optional[str] = None, description: Optional[str] = None,
+                 db_category: Optional[str] = None, db_name: Optional[str] = None,
+                 db_type: Optional[str] = None) -> None:
         self.name = name
         self.path = path
         self.installed = installed
@@ -55,6 +58,18 @@ class DatabaseItem:
         self.source_url = source_url
         self.file_mod_date = file_mod_date
         self.description = description
+        self._parse_name_fields(name, db_category, db_name, db_type)
+
+    def _parse_name_fields(self, name: str, db_category: Optional[str], 
+                           db_name: Optional[str], db_type: Optional[str]):
+        if '/' in name and db_category is None:
+            parts = name.split('/', 1)
+            self.db_category = parts[0]
+            self.db_name = parts[1]
+        else:
+            self.db_name = db_name if db_name else name
+            self.db_category = db_category if db_category else self.software
+        self.db_type = db_type if db_type else self.software
 
     def __repr__(self) -> str:
         return f"({self.name}, {self.path}, {self.installed})"
@@ -113,7 +128,7 @@ class Utility_Repository:
         self.software = Table(
             self.SOFTWARE_TABLE_NAME,
             self.metadata,
-            Column("name", String),
+            Column("name", String, primary_key=True),
             Column("path", String),
             Column("database", String),
             Column("installed", Boolean),
@@ -125,14 +140,18 @@ class Utility_Repository:
         )
 
         self.engine_execute(
-            "CREATE TABLE IF NOT EXISTS software (name TEXT, path TEXT, database TEXT, installed BOOLEAN, tag TEXT, env_path TEXT, date TEXT, db_version TEXT, needs_update BOOLEAN)"
+            "CREATE TABLE IF NOT EXISTS software (name TEXT PRIMARY KEY, path TEXT, database TEXT, installed BOOLEAN, tag TEXT, env_path TEXT, date TEXT, db_version TEXT, needs_update BOOLEAN)"
         )
 
     def create_database_table(self):
         self.database = Table(
             self.DATABASE_TABLE_NAME,
             self.metadata,
+            Column("id", Integer, primary_key=True, autoincrement=True),
             Column("name", String),
+            Column("db_category", String),
+            Column("db_name", String),
+            Column("db_type", String),
             Column("path", String),
             Column("installed", Boolean),
             Column("software", String),
@@ -144,8 +163,33 @@ class Utility_Repository:
         )
 
         self.engine_execute(
-            "CREATE TABLE IF NOT EXISTS database (name TEXT, path TEXT, installed BOOLEAN, software TEXT, date TEXT, version TEXT, source_url TEXT, file_mod_date TEXT, description TEXT)"
+            "CREATE TABLE IF NOT EXISTS database (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, db_category TEXT, db_name TEXT, db_type TEXT, path TEXT, installed BOOLEAN, software TEXT, date TEXT, version TEXT, source_url TEXT, file_mod_date TEXT, description TEXT)"
         )
+
+    def migrate_database_table(self):
+        self.engine_execute(
+            "ALTER TABLE database ADD COLUMN db_category TEXT"
+        )
+        self.engine_execute(
+            "ALTER TABLE database ADD COLUMN db_name TEXT"
+        )
+        self.engine_execute(
+            "ALTER TABLE database ADD COLUMN db_type TEXT"
+        )
+        rows = self.engine_execute_return_table("SELECT name, software FROM database")
+        for row in rows:
+            name, software = row
+            if '/' in name:
+                parts = name.split('/', 1)
+                db_category, db_name = parts[0], parts[1]
+            else:
+                db_category = software if software else name
+                db_name = name
+            db_type = software if software else name
+            self.engine_execute(
+                f"UPDATE database SET db_category='{db_category}', db_name='{db_name}', db_type='{db_type}' WHERE name='{name}'"
+            )
+        print("[DEBUG] Database migration completed: added db_category, db_name, db_type columns")
 
     def delete_tables(self):
         for table in self.tables:
@@ -203,6 +247,30 @@ class Utility_Repository:
 
         self.metadata.create_all(self.engine)
 
+
+    def check_table_exists(self, table_name):
+        """
+        Check if a table exists in the database
+        """
+        find = self.engine.execute(
+            f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'"
+        ).fetchall()
+
+        if len(find) > 0:
+            return True
+        else:
+            return False
+
+    def check_tables_exists(self):
+        """
+        Check if the tables exist in the database
+        """
+        for table_name in self.tables:
+            if not self.check_table_exists(table_name):
+                return False
+        return True
+
+
     def dump_software(self, directory: str):
         """
         Dump the software table to a tsv file
@@ -234,17 +302,79 @@ class Utility_Repository:
             for row in table_rows:
                 f.write("\t".join([str(x) for x in row]) + "\n")
 
-    def get(self, table_name, id):
+
+    def get_by_name(self, table_name, id):
         """
         Get a record by id from a table
         """
 
-        return self.engine_execute_return_table(f"SELECT * FROM {table_name} WHERE name='{id}'")
+        return self.engine.execute(f"SELECT * FROM {table_name} WHERE name='{id}'")
+
+
+    def get_list_tables(self):
+        """
+        Get a list of tables
+        """
+
+        find = self.engine.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        find = [i[0] for i in find]
+        return find
+
+    def get_list_unique_field(self, table_name, id):
+        """
+        Get a list of unique values in a field
+        """
+
+        find = self.engine.execute(f"SELECT DISTINCT {id} FROM {table_name}")
+
+        find = [i[0] for i in find]
+        return find
+
+    def select_explicit_statement(
+        self, table_name, field, id, filters: List[tuple] = []
+    ):
+        """
+        select from table.
+        """
+        sql_statement = f"SELECT * FROM {table_name} WHERE {field}='{id}'"
+        for filter in filters:
+            column_name, value = filter
+
+            if self.check_column_exists(table_name, column_name) is False:
+                continue
+            if value is None:
+                continue
+
+            sql_statement += f" AND {column_name}='{value}'"
+
+        return sql_statement
+
+    def check_column_exists(self, table_name, column_name):
+        """
+        Check if a column exists in a table
+        """
+
+        from sqlalchemy import inspect
+
+        inspector = inspect(self.engine)
+        columns = inspector.get_columns(table_name)
+        find = any([i["name"] == column_name for i in columns])
+
+        if find:
+            return True
+        else:
+            return False
 
     def check_exists(self, table_name: str, id: str):
         """
         Check if a record exists in a table
         """
+
+        check_list = [id]
+        if "_" in id:
+            check_list.append(id.split("_")[0])
+        check_list = [f"'{i}'" for i in check_list]
+        check_list = ",".join(check_list)
 
         find = self.engine_execute_return_table(
             f"SELECT * FROM {table_name} WHERE name='{id}'"
@@ -292,15 +422,19 @@ class Utility_Repository:
     def add_database(self, item: DatabaseItem):
         """
         Add a record to a table (uses INSERT OR REPLACE for upsert behavior)
+        New schema includes db_category, db_name, db_type columns
         """
         version = f"'{item.version}'" if item.version else "NULL"
         source_url = f"'{item.source_url}'" if item.source_url else "NULL"
         file_mod_date = f"'{item.file_mod_date}'" if item.file_mod_date else "NULL"
         description = f"'{item.description}'" if item.description else "NULL"
-        print(f"Adding database: {item.name}, description: {item.description}")
+        db_category = f"'{item.db_category}'" if item.db_category else f"'{item.name}'"
+        db_name = f"'{item.db_name}'" if item.db_name else f"'{item.name}'"
+        db_type = f"'{item.db_type}'" if item.db_type else f"'{item.software}'"
+        print(f"Adding database: {item.name}, db_category: {item.db_category}, db_type: {item.db_type}")
         try:
             _ = self.engine_execute(
-                f"INSERT OR REPLACE INTO database (name, path, installed, software, date, version, source_url, file_mod_date, description) VALUES ('{item.name}', '{item.path}', '{item.installed}', '{item.software}', '{item.date}', {version}, {source_url}, {file_mod_date}, {description})"
+                f"INSERT OR REPLACE INTO database (name, db_category, db_name, db_type, path, installed, software, date, version, source_url, file_mod_date, description) VALUES ('{item.name}', {db_category}, {db_name}, {db_type}, '{item.path}', '{item.installed}', '{item.software}', '{item.date}', {version}, {source_url}, {file_mod_date}, {description})"
             )
             
             verify = self.engine_execute_return_table(f"SELECT name FROM database WHERE name='{item.name}'")

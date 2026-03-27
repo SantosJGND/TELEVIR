@@ -286,9 +286,11 @@ class main_setup:
             req_desc = req_entry.get("description") if req_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
-                    f"{req_category}/{req_name}",
-                    request_path,
-                    request_success,
+                    name=req_name,
+                    path=request_path,
+                    installed=request_success,
+                    software=req_category,
+                    db_type=req_category,
                     description=req_desc,
                 )
             )
@@ -310,9 +312,11 @@ class main_setup:
             db_desc = refseq_entry.get("description") if refseq_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
-                    f"{db_category}/{db_name}",
-                    refseq_prot_path,
-                    success_refprot,
+                    name=db_name,
+                    path=refseq_prot_path,
+                    installed=success_refprot,
+                    software=db_category,
+                    db_type=db_category,
                     version=db_ver.get("version"),
                     source_url=db_ver.get("source_url"),
                     file_mod_date=db_ver.get("file_mod_date"),
@@ -337,9 +341,11 @@ class main_setup:
             db_desc = refseq_entry.get("description") if refseq_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
-                    f"{db_category}/{db_name}",
-                    refseq_gen_path,
-                    success_refnuc,
+                    name=db_name,
+                    path=refseq_gen_path,
+                    installed=success_refnuc,
+                    software=db_category,
+                    db_type=db_category,
                     version=db_ver.get("version"),
                     source_url=db_ver.get("source_url"),
                     file_mod_date=db_ver.get("file_mod_date"),
@@ -364,9 +370,11 @@ class main_setup:
             db_desc = refseq_entry.get("description") if refseq_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
-                    f"{db_category}/{db_name}",
-                    refseq_prot_path,
-                    success_refprot,
+                    name=db_name,
+                    path=refseq_prot_path,
+                    installed=success_refprot,
+                    software=db_category,
+                    db_type=db_category,
                     version=db_ver.get("version"),
                     source_url=db_ver.get("source_url"),
                     file_mod_date=db_ver.get("file_mod_date"),
@@ -391,104 +399,15 @@ class main_setup:
             db_desc = refseq_entry.get("description") if refseq_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
-                    f"{db_category}/{db_name}",
-                    refseq_gen_path,
-                    success_refnuc,
+                    name=db_name,
+                    path=refseq_gen_path,
+                    installed=success_refnuc,
+                    software=db_category,
+                    db_type=db_category,
                     version=db_ver.get("version"),
                     source_url=db_ver.get("source_url"),
                     file_mod_date=db_ver.get("file_mod_date"),
                     description=db_desc,
-                )
-            )
-
-        if self.layout.install_swissprot:
-            swissprot_dl = self.wdir.swissprot_dl()
-            if swissprot_dl:
-                self.installed_databases.append(
-                    self.database_install_string("swissprot")
-                )
-
-            swissprot_path = self.wdir.fastas.get("prot", {}).get("swissprot", "")
-            db_ver = self.wdir.db_versions.get("swissprot", {})
-            db_category, db_name = self.layout.DATABASE_NAMES.get("install_swissprot", ("protein", "swissprot"))
-            db_entry = get_db_entry(db_category, db_name)
-            db_desc = db_entry.get("description") if db_entry else None
-            self.utilities.add_database(
-                self.utilities.database_item(
-                    f"{db_category}/{db_name}",
-                    swissprot_path,
-                    swissprot_dl,
-                    version=db_ver.get("version"),
-                    source_url=db_ver.get("source_url"),
-                    file_mod_date=db_ver.get("file_mod_date"),
-                    description=db_desc,
-                )
-            )
-
-        if self.layout.install_refseq_16s:
-            success_16s = self.wdir.refseq_16s_dl()
-            if success_16s:
-                self.installed_databases.append(
-                    self.database_install_string("refseq_16s")
-                )
-
-            refseq_16s_path = self.wdir.fastas.get("filter", {}).get("refseq_16s", "")
-            db_ver = self.wdir.db_versions.get("refseq_16s", {})
-            db_category, db_name = self.layout.DATABASE_NAMES.get("install_refseq_16s", ("ribosomal_rna", "refseq_16s"))
-            db_entry = get_db_entry(db_category, db_name)
-            db_desc = db_entry.get("description") if db_entry else None
-            self.utilities.add_database(
-                self.utilities.database_item(
-                    f"{db_category}/{db_name}",
-                    refseq_16s_path,
-                    success_16s,
-                    version=db_ver.get("version"),
-                    source_url=db_ver.get("source_url"),
-                    file_mod_date=db_ver.get("file_mod_date"),
-                    description=db_desc,
-                )
-            )
-
-        if self.layout.install_ribo16s:
-            success_16s = self.wdir.silva_16s_dl(fname="silva_16s")
-            if success_16s:
-                self.installed_databases.append(
-                    self.database_install_string("silva_16s")
-                )
-
-            ribo16s_path = self.wdir.fastas.get("filter", {}).get("silva_16s", "")
-            db_ver = self.wdir.db_versions.get("silva_16s", {})
-            db_category, db_name = self.layout.DATABASE_NAMES.get("install_ribo16s", ("ribosomal_rna", "silva_16s"))
-            db_entry = get_db_entry(db_category, db_name)
-            db_desc = db_entry.get("description") if db_entry else None
-            self.utilities.add_database(
-                self.utilities.database_item(
-                    f"{db_category}/{db_name}",
-                    ribo16s_path,
-                    success_16s,
-                    version=db_ver.get("version"),
-                    source_url=db_ver.get("source_url"),
-                    file_mod_date=db_ver.get("file_mod_date"),
-                    description=db_desc,
-                )
-            )
-
-        for host_name in self.layout.HOSTS_TO_INSTALL:
-            success_install = self.wdir.download_host(host_name)
-            if success_install:
-                self.installed_databases.append(self.database_install_string( host_name))
-
-            db_ver = self.wdir.db_versions.get(host_name, {})
-            host_path = self.wdir.fastas.get("host", {}).get(host_name, "")
-            self.utilities.add_database(
-                self.utilities.database_item(
-                    name=host_name,
-                    path=host_path,
-                    installed=success_install,
-                    software='host',
-                    version=db_ver.get("version"),
-                    source_url=db_ver.get("source_url"),
-                    file_mod_date=db_ver.get("file_mod_date"),
                 )
             )
 
@@ -506,9 +425,11 @@ class main_setup:
             db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
-                    f"{db_category}/{db_name}",
-                    virosaurus_path,
-                    success_virosaurus,
+                    name=db_name,
+                    path=virosaurus_path,
+                    installed=success_virosaurus,
+                    software=db_category,
+                    db_type=db_category,
                     version=db_ver.get("version"),
                     source_url=db_ver.get("source_url"),
                     file_mod_date=db_ver.get("file_mod_date"),
@@ -530,9 +451,11 @@ class main_setup:
             db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
-                    f"{db_category}/{db_name}",
-                    rvdb_path,
-                    success_rvdb,
+                    name=db_name,
+                    path=rvdb_path,
+                    installed=success_rvdb,
+                    software=db_category,
+                    db_type=db_category,
                     version=db_ver.get("version"),
                     source_url=db_ver.get("source_url"),
                     file_mod_date=db_ver.get("file_mod_date"),
@@ -622,10 +545,11 @@ class main_setup:
             db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
-                    f"{db_cat}/{db_name}",
-                    sofprep.dbs["centrifuge"]["db"],
-                    install_success,
+                    name=db_name,
+                    path=sofprep.dbs["centrifuge"]["db"],
+                    installed=install_success,
                     software=db_cat,
+                    db_type="viral",
                     description=db_desc,
                 )
             )
@@ -659,10 +583,11 @@ class main_setup:
             db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
-                    f"{db_cat}/{db_name}",
-                    sofprep.dbs["centrifuge"]["db"],
-                    install_success,
+                    name=db_name,
+                    path=sofprep.dbs["centrifuge"]["db"],
+                    installed=install_success,
                     software=db_cat,
+                    db_type="filter",
                     description=db_desc,
                 )
             )
@@ -708,10 +633,11 @@ class main_setup:
             db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
-                    f"{db_cat}/{db_name}",
-                    sofprep.dbs.get("centrifuge", {}).get("db", ""),
-                    install_success,
+                    name=dbname,
+                    path=sofprep.dbs.get("centrifuge", {}).get("db", ""),
+                    installed=install_success,
                     software=db_cat,
+                    db_type="filter",
                     description=db_desc,
                 )
             )
@@ -813,10 +739,11 @@ class main_setup:
             db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
-                    f"{db_cat}/{db_name}",
-                    sofprep.dbs["kraken2"]["db"],
-                    success_install,
+                    name=db_name,
+                    path=sofprep.dbs["kraken2"]["db"],
+                    installed=success_install,
                     software=db_cat,
+                    db_type="filter",
                     version=kraken_ver,
                     description=db_desc,
                 )
@@ -845,10 +772,11 @@ class main_setup:
             db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
-                    f"{db_cat}/{db_name}",
-                    sofprep.dbs["kraken2"]["db"],
-                    success_install,
+                    name=db_name,
+                    path=sofprep.dbs["kraken2"]["db"],
+                    installed=success_install,
                     software=db_cat,
+                    db_type="filter",
                     description=db_desc,
                 )
             )
@@ -876,10 +804,11 @@ class main_setup:
             db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
-                    f"{db_cat}/{db_name}",
-                    sofprep.dbs["kraken2"]["db"],
-                    success_install,
+                    name=db_name,
+                    path=sofprep.dbs["kraken2"]["db"],
+                    installed=success_install,
                     software=db_cat,
+                    db_type="filter",
                     description=db_desc,
                 )
             )
@@ -936,10 +865,11 @@ class main_setup:
             db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
-                    f"{db_cat}/{db_name}",
-                    sofprep.dbs.get("kraken2", {}).get("db", ""),
-                    success_install,
+                    name=dbname,
+                    path=sofprep.dbs.get("kraken2", {}).get("db", ""),
+                    installed=success_install,
                     software=db_cat,
+                    db_type="filter",
                     version=kraken_ver,
                     description=db_desc,
                 )
@@ -1004,10 +934,11 @@ class main_setup:
             db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_database(
                 self.utilities.database_item(
-                    f"{db_cat}/{db_name}",
-                    sofprep.dbs["kaiju"]["db"],
-                    success_install,
+                    name=db_name,
+                    path=sofprep.dbs["kaiju"]["db"],
+                    installed=success_install,
                     software=db_cat,
+                    db_type="viral",
                     description=db_desc,
                 )
             )
@@ -1041,6 +972,18 @@ class main_setup:
                         binary_name="bwa",
                     )
                 )
+                db_cat, db_name = self.layout.DATABASE_NAMES.get("install_bwa_filter", ("bwa", fname))
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        name=fname,
+                        path=sofprep.dbs["bwa"]["fasta"],
+                        installed=bwa_install,
+                        software=db_cat,
+                        db_type="filter",
+                        description=db_desc,
+                    )
+                )
+
         for fname, fpath in prepdl.fastas["host"].items():
 
             if self.layout.install_bwa_host:
@@ -1055,6 +998,15 @@ class main_setup:
                         sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                         tag="host",
                         binary_name="bwa",
+                    )
+                )
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        name=fname,
+                        path=sofprep.dbs["bwa"]["fasta"],
+                        installed=bwa_install,
+                        software="bwa",
+                        db_type="host",
                     )
                 )
 
@@ -1075,6 +1027,15 @@ class main_setup:
                             binary_name="bowtie2",
                         )
                     )
+                    self.utilities.add_database(
+                        self.utilities.database_item(
+                            name=fname,
+                            path=sofprep.dbs["bowtie2"]["db"],
+                            installed=bowtie2_install,
+                            software="bowtie2",
+                            db_type="host",
+                        )
+                    )
 
             minimap2_install = sofprep.minimap2_install(dbname=fname, reference=fpath)
             self.utilities.add_software(
@@ -1086,6 +1047,15 @@ class main_setup:
                     sofprep.envs["ROOT"] + sofprep.envs["bwa"],
                     tag="host",
                     binary_name="minimap2",
+                )
+            )
+            self.utilities.add_database(
+                self.utilities.database_item(
+                    name=fname,
+                    path=fpath,
+                    installed=minimap2_install,
+                    software="minimap2",
+                    db_type="host",
                 )
             )
         # install prot databases using local files.
@@ -1107,6 +1077,15 @@ class main_setup:
                         install_success,
                         sofprep.envs["ROOT"] + sofprep.envs["diamond"],
                         binary_name="diamond",
+                    )
+                )
+                self.utilities.add_database(
+                    self.utilities.database_item(
+                        name=sw_tag,
+                        path=sofprep.dbs["diamond"]["db"],
+                        installed=install_success,
+                        software="diamond",
+                        db_type="filter",
                     )
                 )
 
@@ -1316,9 +1295,9 @@ class main_setup:
                     try:
                         self.utilities.add_database(
                             self.utilities.database_item(
-                                db_name,
-                                path,
-                                True,
+                                name=db_name,
+                                path=path,
+                                installed=True,
                                 version=db_ver.get("version"),
                                 source_url=db_ver.get("source_url"),
                                 file_mod_date=db_ver.get("file_mod_date"),

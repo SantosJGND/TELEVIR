@@ -181,13 +181,18 @@ class TelevirStatusApp:
         
         for key, info in hosts.items():
             if isinstance(info, dict):
-                name = info.get('host_name', key)
+                host_name = info.get('host_name', key)
                 common = info.get('common_name', 'N/A')
                 available = "✓" if info else "✗"
-                filename = installed_hosts.get(name, "N/A")
-                installed = "✓" if filename != "N/A" else "✗"
+                filename = "N/A"
+                installed = "✗"
+                for display_name, fn in installed_hosts.items():
+                    if host_name.lower() in display_name.lower():
+                        filename = fn
+                        installed = "✓"
+                        break
                 tag = "installed" if installed == "✓" else "not_installed"
-                self.hosts_tree.insert("", "end", values=(name, common, available, installed, filename), tags=(tag,))
+                self.hosts_tree.insert("", "end", values=(host_name, common, available, installed, filename), tags=(tag,))
     
     def _populate_software(self):
         for item in self.soft_tree.get_children():
@@ -228,6 +233,21 @@ class TelevirStatusApp:
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
+            cursor.execute(
+                "SELECT name, db_category, db_name, version, date, installed, description, path FROM database WHERE installed = 'True' AND db_type != 'host'"
+            )
+            for row in cursor.fetchall():
+                name, db_category, db_name = row[0], row[1], row[2]
+                display_name = f"{db_category}/{db_name}" if db_category and db_name else name
+                installed[display_name] = {
+                    "version": row[3] if row[3] else "N/A",
+                    "date": row[4] if row[4] else "N/A",
+                    "installed": row[5] if row[5] else "N/A",
+                    "description": row[6] if row[6] else "N/A",
+                    "path": row[7] if row[7] else "N/A"
+                }
+            conn.close()
+        except sqlite3.OperationalError:
             cursor.execute(
                 "SELECT name, version, date, installed, description, path FROM database WHERE installed = 'True' AND software != 'host'"
             )
@@ -272,6 +292,16 @@ class TelevirStatusApp:
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
+            cursor.execute(
+                "SELECT name, db_category, db_name, path FROM database WHERE installed = 'True' AND db_type = 'host'"
+            )
+            for row in cursor.fetchall():
+                name, db_category, db_name = row[0], row[1], row[2]
+                display_name = f"{db_category}/{db_name}" if db_category and db_name else name
+                filename = os.path.basename(row[3]) if row[3] else "N/A"
+                installed[display_name] = filename
+            conn.close()
+        except sqlite3.OperationalError:
             cursor.execute(
                 "SELECT name, path FROM database WHERE installed = 'True' AND software = 'host'"
             )
