@@ -12,7 +12,11 @@ cut_after_first_space_or_second_pipe() {
 export -f cut_after_first_space_or_second_pipe
 
 map_headers_to_taxid() {
-    grep '^>' | cut_after_first_space_or_second_pipe | sed -e "s/^>//" -e  "s/\$/    $1/"
+    if [[ $LOCK_FILE != "" ]]; then
+      grep '^>' | cut_after_first_space_or_second_pipe | sed -e "s/^>//" -e  "s/\$/    $1/" | flock -x $LOCK_FILE -c 'cat'
+    else # this handles the single-thread case
+      grep '^>' | cut_after_first_space_or_second_pipe | sed -e "s/^>//" -e  "s/\$/    $1/" 
+    fi
 }
 export -f map_headers_to_taxid
 
@@ -172,7 +176,6 @@ WHEN USING database refseq OR genbank:
  -u                     Filter unplaced sequences.
  -m                     Mask low-complexity regions using dustmasker. Default: off.
  -l                     Modify header to include taxonomy ID. Default: off.
- -g                     Download GI map.
  -v                     Verbose mode
 "
 
@@ -232,7 +235,7 @@ fi
 export DL_CMD DL_MODE VERBOSE
 
 #### TAXONOMY DOWNLOAD
-FTP="ftp://ftp.ncbi.nih.gov"
+FTP="https://ftp.ncbi.nih.gov"
 if [[ "$DATABASE" == "taxonomy" ]]; then 
   echo "Downloading NCBI taxonomy ... " >&2
   if check_or_mkdir_no_fail "$BASE_DIR"; then
@@ -255,6 +258,7 @@ dat_to_fna() {
 }
 
 #### CONTAMINANT SEQ DOWNLOAD
+export LOCK_FILE=""
 if [[ "$DATABASE" == "contaminants" ]]; then 
   echo "Downloading contaminant databases ... " >&2
   CONTAMINANT_TAXID=32630
@@ -267,8 +271,8 @@ if [[ "$DATABASE" == "contaminants" ]]; then
         $DL_CMD rsync://ftp.ncbi.nlm.nih.gov/pub/UniVec/UniVec UniVec.fna
         $DL_CMD rsync://ftp.ebi.ac.uk/pub/databases/emvec/emvec.dat.gz emvec.dat.gz
     else
-        $DL_CMD UniVec.fna ftp://ftp.ncbi.nlm.nih.gov/pub/UniVec/UniVec
-        $DL_CMD emvec.dat.gz ftp://ftp.ebi.ac.uk/pub/databases/emvec/emvec.dat.gz
+        $DL_CMD UniVec.fna https://ftp.ncbi.nlm.nih.gov/pub/UniVec/UniVec
+        $DL_CMD emvec.dat.gz https://ftp.ebi.ac.uk/pub/databases/emvec/emvec.dat.gz
     fi
     gunzip -c emvec.dat.gz | dat_to_fna > EmVec.fna
  
@@ -296,6 +300,18 @@ export LIBDIR="$BASE_DIR"
 export DO_DUST="$DO_DUST"
 export CHANGE_HEADER="$CHANGE_HEADER"
 
+#### Handle multithreading
+export LOCK_FILE=""
+
+if [ $N_PROC -gt 1 ]; then
+  if ! command -v flock >/dev/null 2>&1; then
+    echo "WARNING: flock is not installed, will change the number of thread to 1." 1>&2
+    N_PROC=1
+  else
+    export LOCK_FILE="./lockfile.lock"
+  fi
+fi
+
 ## Fields in the assembly_summary.txt file
 REFSEQ_CAT_FIELD=5
 TAXID_FIELD=6
@@ -316,9 +332,9 @@ TAXID=${TAXID//,/|}
 
 #echo "Downloading genomes for $DOMAINS at assembly level $ASSEMBLY_LEVEL" >&2
 if exists wget; then
-    wget -qO- --no-remove-listing ftp://ftp.ncbi.nlm.nih.gov/genomes/$DATABASE/ > /dev/null
+    wget -qO- --no-remove-listing https://ftp.ncbi.nlm.nih.gov/genomes/$DATABASE/ > /dev/null
 else
-    curl --disable-epsv -s ftp://ftp.ncbi.nlm.nih.gov/genomes/$DATABASE/ > .listing
+    curl --disable-epsv -s https://ftp.ncbi.nlm.nih.gov/genomes/$DATABASE/ > .listing
 fi
 
 if [[ "$CHANGE_HEADER" == "1" ]]; then
@@ -328,7 +344,8 @@ fi
 
 for DOMAIN in $DOMAINS; do
     if [[ -s .listing ]]; then
-        if [[ ! `grep "^d.* $DOMAIN" .listing` ]]; then
+        #if [[ ! `grep "^d.* $DOMAIN" .listing` ]]; then
+        if [[ ! `grep "$DOMAIN" .listing` ]]; then
             c_echo "$DOMAIN is not a valid domain - use one of the following:" >&2
             grep '^d' .listing  | sed 's/.* //' | sed 's/^/  /' 1>&2
             exit 1
@@ -353,7 +370,7 @@ for DOMAIN in $DOMAINS; do
             exit 1;
         }
     else
-        $DL_CMD "$FULL_ASSEMBLY_SUMMARY_FILE" ftp://ftp.ncbi.nlm.nih.gov/genomes/$DATABASE/$DOMAIN/assembly_summary.txt > "$FULL_ASSEMBLY_SUMMARY_FILE" || {
+        $DL_CMD "$FULL_ASSEMBLY_SUMMARY_FILE" https://ftp.ncbi.nlm.nih.gov/genomes/$DATABASE/$DOMAIN/assembly_summary.txt > "$FULL_ASSEMBLY_SUMMARY_FILE" || {
             c_echo "Download failed! Have a look at valid domains at ftp://ftp.ncbi.nlm.nih.gov/genomes/$DATABASE ." >&2
             exit 1;
         }
@@ -363,19 +380,25 @@ for DOMAIN in $DOMAINS; do
 
     N_EXPECTED=`cat "$ASSEMBLY_SUMMARY_FILE" | wc -l`
     [[ $N_EXPECTED -gt 0 ]] || { echo "Domain $DOMAIN has no genomes with specified filter." >&2; exit 1; }
+    echo "Downloading $N_EXPECTED $DOMAIN genomes at assembly level $ASSEMBLY_LEVEL ... (will take a while)" >&2
 
-    if [[ "$DOMAIN" == "viral" ]]; then
+    if [[ "$DOMAIN" != "" ]]; then
       ## Wrong columns in viral assembly summary files - the path is sometimes in field 20, sometimes 21
-      cut -f "$TAXID_FIELD,$FTP_PATH_FIELD" "$ASSEMBLY_SUMMARY_FILE" | \
-       sed 's/^\(.*\)\t\(ftp:.*\)\t.*/\1\t\2/;s/^\(.*\)\t.*\t\(ftp:.*\)/\1\t\2/' | \
-      sed 's#\([^/]*\)$#\1/\1_genomic.fna.gz#' |\
-         tr '\n' '\0' | xargs -0 -n1 -P $N_PROC bash -c 'download_n_process_nofail "$@"' _ | count $N_EXPECTED
+      #cut -f "$TAXID_FIELD,$FTP_PATH_FIELD,$FTP_PATH_FIELD2" "$ASSEMBLY_SUMMARY_FILE" | \
+      # sed 's/^\(.*\)\t\(ftp:.*\)\t.*/\1\t\2/;s/^\(.*\)\t.*\t\(ftp:.*\)/\1\t\2/' | \
+      #sed 's#\([^/]*\)$#\1/\1_genomic.fna.gz#' |\
+      #   tr '\n' '\0' | xargs -0 -n1 -P $N_PROC bash -c 'download_n_process_nofail "$@"' _ | count $N_EXPECTED
+      cut -f "$TAXID_FIELD,$FTP_PATH_FIELD,$FTP_PATH_FIELD2" "$ASSEMBLY_SUMMARY_FILE" | \
+        awk -F "\t" '{if ($2~/ftp/) print $1"\t"$2; if ($3~/ftp/) print $1"\t"$3}' | \
+        sed 's#\([^/]*\)$#\1/\1_genomic.fna.gz#' |\
+        tr '\n' '\0' | xargs -0 -n1 -P $N_PROC bash -c 'download_n_process_nofail "$@"' _ | count $N_EXPECTED
+
     else
-      echo "Downloading $N_EXPECTED $DOMAIN genomes at assembly level $ASSEMBLY_LEVEL ... (will take a while)" >&2
-      cut -f "$TAXID_FIELD,$FTP_PATH_FIELD" "$ASSEMBLY_SUMMARY_FILE" | sed 's#\([^/]*\)$#\1/\1_genomic.fna.gz#' |\
+      cut -f "$TAXID_FIELD,$FTP_PATH_FIELD" "$ASSEMBLY_SUMMARY_FILE" | sed 's#\([^/]*\)/\?$#\1/\1_genomic.fna.gz#' |\
          tr '\n' '\0' | xargs -0 -n1 -P $N_PROC bash -c 'download_n_process_nofail "$@"' _ | count $N_EXPECTED
     fi
     echo >&2
+
 
 
     if [[ "$DOWNLOAD_RNA" == "1" && ! `echo $DOMAIN | egrep 'bacteria|viral|archaea'` ]]; then
@@ -385,3 +408,7 @@ for DOMAIN in $DOMAINS; do
         echo >&2
     fi
 done
+
+if [[ $LOCK_FILE != "" && -f $LOCK_FILE ]]; then
+  rm $LOCK_FILE 
+fi

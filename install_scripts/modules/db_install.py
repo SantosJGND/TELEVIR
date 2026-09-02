@@ -4,9 +4,10 @@ import datetime
 import gzip
 import logging
 import os
+import re
 import shutil
 import subprocess
-from ftplib import FTP
+import urllib.request
 from pathlib import Path
 from random import randint
 from threading import Thread
@@ -27,6 +28,21 @@ try:
 except:
     pass
 
+def listdir(url):
+    """
+    List the entries of an NCBI https directory index.
+    Replaces the ftplib nlst calls this module used before NCBI retired ftp.
+    """
+    with urllib.request.urlopen(url, timeout=60) as response:
+        html = response.read().decode("utf-8", "replace")
+    return [
+        href
+        for href in re.findall(r'href="([^"]+)"', html)
+        if "://" not in href
+        and not href.startswith("?")
+        and not href.startswith("/")
+        and href != "../"
+    ]
 
 def grep_sequence_identifiers(str_input, output, ignore=""):
     """
@@ -313,7 +329,7 @@ class setup_dl:
 
         try:
             subprocess.run(
-                ["wget", f"ftp://{host}/{source}", "-P", self.seqdir],
+                ["wget", f"https://{host}/{source}", "-P", self.seqdir],
                 check=False,
             )
         except subprocess.CalledProcessError:
@@ -340,21 +356,6 @@ class setup_dl:
             logging.info(f"{filename} found.")
             return True
 
-        try:
-            ftp = FTP(host)
-        except Exception as e:
-            logging.info(f"{fname} ftp attempt failed. Check internet connection.")
-            return False
-
-        ftp.login()
-        ftp.cwd(source)
-        files = ftp.nlst()
-        ftp.quit()
-
-        if filename not in files:
-            logging.info(f"{filename} not found.")
-            return False
-
         if not os.path.isfile(self.seqdir + filename):
             if self.test:
                 logging.info(f"{filename} not found.")
@@ -367,7 +368,7 @@ class setup_dl:
                     subprocess.run(
                         [
                             "wget",
-                            f"ftp://{host}{sep}{source}{filename}",
+                            f"https://{host}{sep}{source}{filename}",
                             "-P",
                             self.seqdir,
                         ],
@@ -451,43 +452,34 @@ class setup_dl:
         """
         Identify the latest assembly file in the latest_assembly_versions directory.
 
-        :param host: FTP host address.
-        :param base_path: Base path to the organism directory on the FTP server.
+        :param host: NCBI host address.
+        :param base_path: Base path to the organism directory on the server.
         :param latest_assembly_dir: Directory containing the latest assembly versions.
         :return: Full path to the latest assembly file ending with '_genomic.fna.gz'.
         """
+        base_url = f"https://{host}/{base_path.strip('/')}"
+        latest_assembly_url = f"{base_url}/{latest_assembly_dir}/"
+
         try:
-            ftp = FTP(host)
-            ftp.login()
+            subdirectories = [e.rstrip("/") for e in listdir(latest_assembly_url)]
 
-            # Navigate to the latest_assembly_versions directory
-            latest_assembly_path = os.path.join(base_path, latest_assembly_dir)
-            ftp.cwd(latest_assembly_path)
-
-            # Get the single subdirectory
-            subdirectories = ftp.nlst()
             if len(subdirectories) != 1:
                 raise ValueError(
                     "Expected a single subdirectory in latest_assembly_versions."
                 )
 
-            # Navigate to the subdirectory
-            ftp.cwd(subdirectories[0])
-
-            # Find the file ending with '_genomic.fna.gz'
-            files = ftp.nlst()
-            for file in files:
+            assembly_url = f"{latest_assembly_url}{subdirectories[0]}/"
+            for file in listdir(assembly_url):
                 if file.endswith("_genomic.fna.gz"):
-                    ftp.quit()
-                    return os.path.join(latest_assembly_path, subdirectories[0], file)
+                    return os.path.join(
+                        base_path, latest_assembly_dir, subdirectories[0], file
+                    )
 
-            ftp.quit()
             raise FileNotFoundError("No file ending with '_genomic.fna.gz' found.")
 
         except Exception as e:
             print(f"Error: {e}")
             return None
-
 
     def install_requests(self):
         references_file = os.path.join(self.seqdir, "request_references.fa.gz")
@@ -586,15 +578,10 @@ class setup_dl:
             return False
 
         try:
-            ftp = FTP(host)
-        except:
-            logging.info("refseq ftp attempt failed. Check internet connection.")
+            files = listdir(source_url)
+        except Exception:
+            logging.info("refseq listing failed. Check internet connection.")
             return False
-
-        ftp.login()
-        ftp.cwd(source)
-        files = ftp.nlst()
-        ftp.quit()
 
         ext_dict = [x.split(".") for x in files]
         ext_dict = [[".".join(x), ".".join(x[-3:])] for x in ext_dict]
@@ -657,15 +644,10 @@ class setup_dl:
             return True
 
         try:
-            ftp = FTP(host)
-        except:
-            logging.info("refseq ftp failed. Check internet connection.")
+            files = listdir(source_url)
+        except Exception:
+            logging.info("refseq listing failed. Check internet connection.")
             return False
-
-        ftp.login()
-        ftp.cwd(source)
-        files = ftp.nlst()
-        ftp.quit()
 
         ext_dict = [x.split(".") for x in files]
         ext_dict = [[".".join(x), ".".join(x[-3:])] for x in ext_dict]
