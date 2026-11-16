@@ -7,6 +7,7 @@ channels:
 
 dependencies:
   - entrez-direct
+  - ncbi-datasets-cli
   - pip
   - pip:
-    - pandas
+      - pandas
