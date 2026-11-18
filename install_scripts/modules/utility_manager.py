@@ -395,7 +395,9 @@ class Utility_Repository:
 
         actual_installed = item.installed
         if item.binary_name:
-            binary_path = os.path.join(item.env_path, "bin", item.binary_name)
+            binary_path_bin = os.path.join(item.env_path, "bin", item.binary_name)
+            binary_path_nobin= os.path.join(item.env_path, item.binary_name)
+            binary_path = binary_path_bin if os.path.isfile(binary_path_bin) else binary_path_nobin
             if not os.path.isfile(binary_path):
                 logging.warning(f"Binary not found at {binary_path}, marking as not installed")
                 actual_installed = False

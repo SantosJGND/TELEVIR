@@ -1858,6 +1858,7 @@ class setup_dl:
         Downloads nucl_gb.accession2taxid.gz and nucl_wgs.accession2taxid.gz
         :return:
         """
+        import time
         acc2tax_dir = self.nucl_acc2tax_dir
 
         if not os.path.isdir(acc2tax_dir):
@@ -1869,34 +1870,67 @@ class setup_dl:
         ]
 
         for filename in files_to_download:
-            file_url = f"https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/{filename}"
+            file_url = (
+                f"https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/"
+                f"accession2taxid/{filename}"
+            )
+
             destination_file = os.path.join(acc2tax_dir, filename)
-            fexist = os.path.exists(destination_file)
-            print(f"file {filename} exists: {fexist}")
-            if fexist:
+
+            if os.path.exists(destination_file) and os.path.getsize(destination_file) > 0:
+                print(f"{filename} already exists. Skipping.")
                 continue
-            tries = 0
-            while not fexist:
+
+            print(f"Downloading {filename}")
+
+            max_tries = 10
+            success = False
+
+            for attempt in range(1, max_tries + 1):
                 try:
-                    subprocess.run(
+                    result = subprocess.run(
                         [
                             "wget",
+                            "--continue",
+                            "--tries=2",
+                            "--timeout=60",
+                            "--dns-timeout=30",
                             "-P",
                             acc2tax_dir,
                             file_url,
                         ],
                         check=False,
+                        capture_output=True,
+                        text=True,
                     )
-                except subprocess.CalledProcessError as e:
-                    print(f"failed download nucleotide taxonomy {filename}")
-                    tries += 1
-                    if tries == 10:
-                        logging.info(
-                            f"tried downloading {filename} 10 times. check connection. exiting."
-                        )
-                        raise SystemExit()
-                else:
-                    fexist = os.path.exists(destination_file)
+
+                    if (
+                        result.returncode == 0
+                        and os.path.exists(destination_file)
+                        and os.path.getsize(destination_file) > 0
+                    ):
+                        success = True
+                        print(f"Successfully downloaded {filename}")
+                        break
+
+                    logging.warning(
+                        f"Attempt {attempt}/{max_tries} failed for {filename}: "
+                        f"{result.stderr[-1000:]}"
+                    )
+
+                except Exception as e:
+                    logging.warning(f"Download error: {e}")
+
+                if attempt < max_tries:
+                    wait_time = min(30 * attempt, 300)
+                    print(f"Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+
+            if not success:
+                logging.error(
+                    f"Failed to download {filename} after {max_tries} attempts."
+                )
+                raise SystemExit(1)
 
         return acc2tax_dir
 
