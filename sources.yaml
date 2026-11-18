@@ -146,18 +146,18 @@ databases:
       install: false
 
     standard-compressed:
-      url: "https://genome-idx.s3.amazonaws.com/centrifuge/p_compressed_2018_4_15.tar.gz"
+      url: "https://genome-idx.s3.amazonaws.com/centrifuge/p_compressed%2Bh%2Bv.tar.gz"
       description: "Centrifuge pre-built bacteria database - compressed"
       file: "p_compressed_2018_4_15.tar.gz"
       version: "2018_4_15"
       install: false
 
     standard:
-      url: "https://genome-idx.s3.amazonaws.com/centrifuge/p_compressed%2Bh%2Bv.tar.gz"
+      url: "https://genome-idx.s3.amazonaws.com/centrifuge/p%2Bh%2Bv.tar.gz"
       description: "Centrifuge pre-built standard Refseq database"
       file: "p_compressed+h+v.tar.gz"
       version: "2016_12"
-      install: true
+      install: false
 
   # ---------------------------------------------------------------------------
   # Pre-built Indices (user-provided)
