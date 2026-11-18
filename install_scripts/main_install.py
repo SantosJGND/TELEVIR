@@ -26,6 +26,11 @@ from install_scripts.load_sources import (
 )
 
 
+# dbs key used by setup_install.install_metaphlan() when called with no dbname.
+# Must match that method's default.
+METAPHLAN_DEFAULT_DB = "mpa_vJan25_CHOCOPhlAnSGB_202503"
+
+
 class LayoutWithReport(TelevirLayout):
     """
     Layout with report.
@@ -497,20 +502,32 @@ class main_setup:
         ######################### centrifuge (download) ###############################
 
         for db_name, entry in list_enabled_databases('centrifuge'):
+            # key under which setup_install registered this db
+            cent_key = self.organism if db_name == "viral" else db_name
             if db_name in ["viral"]:
                 install_success = sofprep.centrifuge_install(dbname=self.organism)
-                centlib = f"refseq-{self.organism}.dust.fna.gz"
-                fasta_key = "centrifuge"
+                fasta_key = f"centrifuge_{db_name}"
             else:
                 install_success = sofprep.centrifuge_download_install(
                     dbname=db_name, threads="16"
                 )
-                centlib = f"refseq-{db_name}.dust.fna.gz"
+                
                 fasta_key = f"centrifuge_{db_name}"
+            
+            if install_success:
+                self.installed_software.append(
+                    self.software_install_string("centrifuge")
+                )
+            else:
+                continue
+            
 
-            if os.path.isfile(sofprep.dbs["centrifuge"]["fasta"]):
+            cent_entry = sofprep.get_dbs_entry("centrifuge", cent_key)
+            centlib = f"refseq-{self.organism}.dust.fna.gz"
+
+            if os.path.isfile(cent_entry.get("fasta", "")):
                 os.system(
-                    f"mv {sofprep.dbs['centrifuge']['fasta']} {prepdl.seqdir}{centlib}"
+                    f"mv {cent_entry['fasta']} {prepdl.seqdir}{centlib}"
                 )
             else:
                 if not os.path.isfile(f"{prepdl.seqdir}{centlib}"):
@@ -521,16 +538,13 @@ class main_setup:
                     f"{prepdl.seqdir}{centlib}"
                 ]
 
-            if install_success:
-                self.installed_software.append(
-                    self.software_install_string("centrifuge")
-                )
+
 
             sw_name, sw_tag = ("centrifuge", db_name)
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
-                    sofprep.dbs["centrifuge"]["db"],
+                    cent_entry.get("db", ""),
                     sw_tag,
                     install_success,
                     sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
@@ -545,7 +559,7 @@ class main_setup:
             self.utilities.add_database(
                 self.utilities.database_item(
                     name=db_name,
-                    path=sofprep.dbs["centrifuge"]["db"],
+                    path=cent_entry.get("db", ""),
                     installed=install_success,
                     software=db_cat,
                     db_type="filter",
@@ -562,11 +576,10 @@ class main_setup:
 
             if not install_success:
                 logging.info(f"Centrifuge/{dbname} not installed (prebuilt not found)")
-                if "centrifuge" in sofprep.dbs:
-                    sofprep.dbs["centrifuge"]["status"] = "not_installed"
-                else:
-                    sofprep.dbs["centrifuge"] = {"status": "not_installed"}
-                sofprep.dbs["centrifuge"]["db"] = ""
+                sofprep.dbs.setdefault("centrifuge", {})[dbname] = {
+                    "status": "not_installed",
+                    "db": "",
+                }
 
             if install_success:
                 self.installed_software.append(
@@ -577,7 +590,7 @@ class main_setup:
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
-                    sofprep.dbs.get("centrifuge", {}).get("db", ""),
+                    sofprep.get_dbs_entry("centrifuge", dbname).get("db", ""),
                     sw_tag,
                     install_success,
                     sofprep.envs["ROOT"] + sofprep.envs["centrifuge"],
@@ -592,7 +605,7 @@ class main_setup:
             self.utilities.add_database(
                 self.utilities.database_item(
                     name=dbname,
-                    path=sofprep.dbs.get("centrifuge", {}).get("db", ""),
+                    path=sofprep.get_dbs_entry("centrifuge", dbname).get("db", ""),
                     installed=install_success,
                     software=db_cat,
                     db_type="filter",
@@ -612,7 +625,7 @@ class main_setup:
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
-                    sofprep.dbs["clark"]["db"],
+                    sofprep.get_dbs_entry("clark", self.organism).get("db", ""),
                     sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["clark"],
@@ -627,7 +640,7 @@ class main_setup:
             self.utilities.add_database(
                 self.utilities.database_item(
                     name=dbname,
-                    path=sofprep.dbs.get("clark", {}).get("db", ""),
+                    path=sofprep.get_dbs_entry("clark", self.organism).get("db", ""),
                     installed=install_success,
                     software=db_cat,
                     db_type="filter",
@@ -648,7 +661,7 @@ class main_setup:
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
-                    sofprep.dbs["voyager"]["db"],
+                    sofprep.get_dbs_entry("voyager", self.organism).get("db", ""),
                     sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["voyager"],
@@ -669,7 +682,7 @@ class main_setup:
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
-                    sofprep.dbs["metaphlan"]["db"],
+                    sofprep.get_dbs_entry("metaphlan", METAPHLAN_DEFAULT_DB).get("db", ""),
                     sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["metaphlan"],
@@ -681,6 +694,7 @@ class main_setup:
 
         for db_name, entry in list_enabled_databases('kraken2'):
             # Map db_name to install params
+            kr_key = self.organism if db_name == "viral" else db_name
             if db_name == "viral":
                 success_install = sofprep.kraken2_download_install(dbname=self.organism)
                 krlib = f"kraken2-{self.organism}-library.fna.gz"
@@ -694,9 +708,10 @@ class main_setup:
                 krlib = f"kraken2-{db_name}-library.fna.gz"
                 fasta_key = f"kraken2-{db_name}"
 
-            if os.path.isfile(sofprep.dbs["kraken2"]["fasta"]):
+            kr_entry = sofprep.get_dbs_entry("kraken2", kr_key)
+            if os.path.isfile(kr_entry.get("fasta", "")):
                 os.system(
-                    f"mv {sofprep.dbs['kraken2']['fasta']} {prepdl.seqdir}{krlib}"
+                    f"mv {kr_entry['fasta']} {prepdl.seqdir}{krlib}"
                 )
             else:
                 if not os.path.isfile(f"{prepdl.seqdir}{krlib}"):
@@ -708,12 +723,12 @@ class main_setup:
             if success_install:
                 self.installed_software.append(self.software_install_string("kraken2"))
 
-            kraken_ver = sofprep.dbs.get("kraken2", {}).get("version", "")
+            kraken_ver = kr_entry.get("version", "")
             sw_name, sw_tag = ("kraken2", db_name)
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
-                    sofprep.dbs["kraken2"]["db"],
+                    kr_entry.get("db", ""),
                     sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
@@ -729,7 +744,7 @@ class main_setup:
             self.utilities.add_database(
                 self.utilities.database_item(
                     name=db_name,
-                    path=sofprep.dbs["kraken2"]["db"],
+                    path=kr_entry.get("db", ""),
                     installed=success_install,
                     software=db_cat,
                     db_type="filter",
@@ -745,16 +760,16 @@ class main_setup:
 
             if not success_install:
                 logging.info(f"Kraken2/{dbname} not installed (prebuilt not found)")
-                if "kraken2" in sofprep.dbs:
-                    sofprep.dbs["kraken2"]["status"] = "not_installed"
-                else:
-                    sofprep.dbs["kraken2"] = {"status": "not_installed"}
-                sofprep.dbs["kraken2"]["db"] = ""
+                sofprep.dbs.setdefault("kraken2", {})[dbname] = {
+                    "status": "not_installed",
+                    "db": "",
+                }
             else:
                 krlib = f"kraken2-{dbname}-library.fna.gz"
-                if os.path.isfile(sofprep.dbs["kraken2"]["fasta"]):
+                pb_fasta = sofprep.get_dbs_entry("kraken2", dbname).get("fasta", "")
+                if os.path.isfile(pb_fasta):
                     os.system(
-                        f"mv {sofprep.dbs['kraken2']['fasta']} {prepdl.seqdir}{krlib}"
+                        f"mv {pb_fasta} {prepdl.seqdir}{krlib}"
                     )
                 else:
                     if not os.path.isfile(f"{prepdl.seqdir}{krlib}"):
@@ -765,12 +780,13 @@ class main_setup:
 
                 self.installed_software.append(self.software_install_string("kraken2"))
 
-            kraken_ver = sofprep.dbs.get("kraken2", {}).get("version", "")
+            pb_entry = sofprep.get_dbs_entry("kraken2", dbname)
+            kraken_ver = pb_entry.get("version", "")
             sw_name, sw_tag = ("kraken2", dbname)
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
-                    sofprep.dbs.get("kraken2", {}).get("db", ""),
+                    pb_entry.get("db", ""),
                     sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["kraken2"],
@@ -786,7 +802,7 @@ class main_setup:
             self.utilities.add_database(
                 self.utilities.database_item(
                     name=dbname,
-                    path=sofprep.dbs.get("kraken2", {}).get("db", ""),
+                    path=pb_entry.get("db", ""),
                     installed=success_install,
                     software=db_cat,
                     db_type="filter",
@@ -803,12 +819,12 @@ class main_setup:
                     self.software_install_string("krakenuniq")
                 )
             sw_name, sw_tag = self.layout.SOFTWARE_NAMES.get("install_krakenuniq", ("krakenuniq", "default"))
-            db_entry = get_db_entry(db_cat, db_name)
+            db_entry = get_db_entry("krakenuniq", self.organism)
             db_desc = db_entry.get("description") if db_entry else None
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
-                    sofprep.dbs["krakenuniq"]["db"],
+                    sofprep.get_dbs_entry("krakenuniq", self.organism).get("db", ""),
                     sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["krakenuniq"],
@@ -819,7 +835,7 @@ class main_setup:
             self.utilities.add_database(
                 self.utilities.database_item(
                     name=sw_name,
-                    path=sofprep.dbs["krakenuniq"]["db"],
+                    path=sofprep.get_dbs_entry("krakenuniq", self.organism).get("db", ""),
                     installed=success_install,
                     software=sw_name,
                     db_type=self.organism,
@@ -836,12 +852,13 @@ class main_setup:
             if success_install:
                 self.installed_software.append(self.software_install_string("kaiju"))
 
-            kaiju_ver = sofprep.dbs.get("kaiju", {}).get("version", "")
+            kaiju_entry = sofprep.get_dbs_entry("kaiju", db_name)
+            kaiju_ver = kaiju_entry.get("version", "")
             sw_name, sw_tag = ("kaiju", db_name)
             self.utilities.add_software(
                 self.utilities.software_item(
                     sw_name,
-                    sofprep.dbs["kaiju"]["db"],
+                    kaiju_entry.get("db", ""),
                     sw_tag,
                     success_install,
                     sofprep.envs["ROOT"] + sofprep.envs["kaiju"],
@@ -857,7 +874,7 @@ class main_setup:
             self.utilities.add_database(
                 self.utilities.database_item(
                     name=db_name,
-                    path=sofprep.dbs["kaiju"]["db"],
+                    path=kaiju_entry.get("db", ""),
                     installed=success_install,
                     software=db_cat,
                     db_type="filter",
@@ -894,7 +911,7 @@ class main_setup:
                     self.utilities.add_software(
                         self.utilities.software_item(
                             "bwa-filter",
-                            sofprep.dbs["bwa"]["fasta"],
+                            sofprep.get_dbs_entry("bwa", fname).get("fasta", ""),
                             fname,
                             bwa_install,
                             sofprep.envs["ROOT"] + sofprep.envs["bwa"],
@@ -908,7 +925,7 @@ class main_setup:
                     self.utilities.add_database(
                         self.utilities.database_item(
                             name=fname,
-                            path=sofprep.dbs["bwa"]["fasta"],
+                            path=sofprep.get_dbs_entry("bwa", fname).get("fasta", ""),
                             installed=bwa_install,
                             software=db_cat,
                             db_type="filter",
@@ -925,7 +942,7 @@ class main_setup:
                     self.utilities.add_software(
                         self.utilities.software_item(
                             "bwa",
-                            sofprep.dbs["bwa"]["fasta"],
+                            sofprep.get_dbs_entry("bwa", fname).get("fasta", ""),
                             fname,
                             bwa_install,
                             sofprep.envs["ROOT"] + sofprep.envs["bwa"],
@@ -936,7 +953,7 @@ class main_setup:
                     self.utilities.add_database(
                         self.utilities.database_item(
                             name=fname,
-                            path=sofprep.dbs["bwa"]["fasta"],
+                            path=sofprep.get_dbs_entry("bwa", fname).get("fasta", ""),
                             installed=bwa_install,
                             software="bwa",
                             db_type="host",
@@ -952,7 +969,7 @@ class main_setup:
                         self.utilities.add_software(
                             self.utilities.software_item(
                                 "bowtie2",
-                                sofprep.dbs["bowtie2"]["db"],
+                                sofprep.get_dbs_entry("bowtie2", fname).get("db", ""),
                                 fname,
                                 bowtie2_install,
                                 sofprep.envs["ROOT"] + sofprep.envs["bowtie2"],
@@ -963,7 +980,7 @@ class main_setup:
                         self.utilities.add_database(
                             self.utilities.database_item(
                                 name=fname,
-                                path=sofprep.dbs["bowtie2"]["db"],
+                                path=sofprep.get_dbs_entry("bowtie2", fname).get("db", ""),
                                 installed=bowtie2_install,
                                 software="bowtie2",
                                 db_type="host",
@@ -1006,7 +1023,7 @@ class main_setup:
                     self.utilities.add_software(
                         self.utilities.software_item(
                             sw_name,
-                            sofprep.dbs["diamond"]["db"],
+                            sofprep.get_dbs_entry("diamond", fname).get("db", ""),
                             sw_tag,
                             install_success,
                             sofprep.envs["ROOT"] + sofprep.envs["diamond"],
@@ -1016,7 +1033,7 @@ class main_setup:
                     self.utilities.add_database(
                         self.utilities.database_item(
                             name=sw_tag,
-                            path=sofprep.dbs["diamond"]["db"],
+                            path=sofprep.get_dbs_entry("diamond", fname).get("db", ""),
                             installed=install_success,
                             software="diamond",
                             db_type="filter",
@@ -1043,7 +1060,7 @@ class main_setup:
                     self.utilities.add_software(
                         self.utilities.software_item(
                             sw_name,
-                            sofprep.dbs["blast"]["db"],
+                            sofprep.get_dbs_entry("blast", f"refseq_{self.organism}_prot").get("db", ""),
                             sw_tag,
                             success_install,
                             sofprep.envs["ROOT"] + sofprep.envs["blast"],
@@ -1081,7 +1098,7 @@ class main_setup:
                 #        self.utilities.add_software(
                 #            self.utilities.software_item(
                 #                "bowtie2",
-                #                sofprep.dbs["bowtie2"]["db"],
+                #                sofprep.get_dbs_entry("bowtie2", fname).get("db", ""),
                 #                fname,
                 #                True,
                 #                sofprep.envs["ROOT"] + sofprep.envs["bowtie2"],
@@ -1104,7 +1121,7 @@ class main_setup:
                     self.utilities.add_software(
                         self.utilities.software_item(
                             sw_name,
-                            sofprep.dbs["fastviromeexplorer"]["db"],
+                            sofprep.get_dbs_entry("fastviromeexplorer", fname).get("db", ""),
                             sw_tag,
                             install_success,
                             sofprep.envs["ROOT"]
@@ -1116,7 +1133,7 @@ class main_setup:
                     self.utilities.add_database(
                         self.utilities.database_item(
                             name=sw_tag,
-                            path=sofprep.dbs["fastviromeexplorer"]["db"],
+                            path=sofprep.get_dbs_entry("fastviromeexplorer", fname).get("db", ""),
                             installed=install_success,
                             software="fastviromeexplorer",
                             db_type="viral",
@@ -1142,7 +1159,7 @@ class main_setup:
                     self.utilities.add_software(
                         self.utilities.software_item(
                             sw_name,
-                            sofprep.dbs["blast"]["db"],
+                            sofprep.get_dbs_entry("blast", fname).get("db", ""),
                             sw_tag,
                             install_success,
                             sofprep.envs["ROOT"] + sofprep.envs["blast"],
@@ -1152,7 +1169,7 @@ class main_setup:
                     self.utilities.add_database(
                         self.utilities.database_item(
                             name=sw_tag,
-                            path=sofprep.dbs["blast"]["db"],
+                            path=sofprep.get_dbs_entry("blast", fname).get("db", ""),
                             installed=install_success,
                             software="blastn",
                             db_type="viral",
@@ -1263,23 +1280,24 @@ class main_setup:
                     except Exception as e:
                         logging.info(f"Failed to re-register database {db_name}: {e}")
 
-        for db_name, db_info in self.setup_install_class.dbs.items():
-            if isinstance(db_info, dict) and "db" in db_info:
-                try:
-                    db_version = db_info.get("version", "")
-                    self.utilities.add_software(
-                        self.utilities.software_item(
-                            db_name,
-                            db_info["db"],
-                            db_info.get("dbname", "default"),
-                            True,
-                            self.setup_install_class.envs["ROOT"] + self.setup_install_class.envs.get(db_name, ""),
-                            db_version=db_version,
+        for tool, entries in self.setup_install_class.dbs.items():
+            for db_name, db_info in entries.items():
+                if isinstance(db_info, dict) and "db" in db_info:
+                    try:
+                        db_version = db_info.get("version", "")
+                        self.utilities.add_software(
+                            self.utilities.software_item(
+                                tool,
+                                db_info["db"],
+                                db_name,
+                                True,
+                                self.setup_install_class.envs["ROOT"] + self.setup_install_class.envs.get(tool, ""),
+                                db_version=db_version,
+                            )
                         )
-                    )
-                    logging.info(f"Re-registered software: {db_name}")
-                except Exception as e:
-                    logging.info(f"Failed to re-register software {db_name}: {e}")
+                        logging.info(f"Re-registered software: {tool}/{db_name}")
+                    except Exception as e:
+                        logging.info(f"Failed to re-register software {tool}/{db_name}: {e}")
 
         self.utilities.dump_database(self.wdir.home)
         self.utilities.dump_software(self.wdir.home)

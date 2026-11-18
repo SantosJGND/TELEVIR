@@ -104,14 +104,14 @@ databases:
       description: "Kraken2 pre-built standard database"
       file: "k2_standard_20260226.tar.gz"
       version: "20260226"
-      install: true
+      install: false
 
     standard16:
       url: "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_16_GB_20260226.tar.gz"
       description: "Kraken2 pre-built standard 16GB database"
       file: "k2_standard_16_GB_20260226.tar.gz"
       version: "20260226"
-      install: false
+      install: true
 
     ribo16s:
       url: "https://genome-idx.s3.amazonaws.com/kraken/16S_RDP11.5_20200326.tgz"
@@ -143,14 +143,14 @@ databases:
       description: "Centrifuge built viral database"
       file: refseq-viral.dust.fna.gz
       version: "current"
-      install: true
+      install: false
 
     standard-compressed:
       url: "https://genome-idx.s3.amazonaws.com/centrifuge/p_compressed_2018_4_15.tar.gz"
       description: "Centrifuge pre-built bacteria database - compressed"
       file: "p_compressed_2018_4_15.tar.gz"
       version: "2018_4_15"
-      install: true
+      install: false
 
     standard:
       url: "https://genome-idx.s3.amazonaws.com/centrifuge/p_compressed%2Bh%2Bv.tar.gz"

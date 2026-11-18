@@ -2253,6 +2253,9 @@ class setup_install(setup_dl):
 
         self.dbs = {}
 
+    def get_dbs_entry(self, tool: str, dbname: str) -> dict:
+        """Return the dbs entry for (tool, dbname), or {} if not registered."""
+        return self.dbs.get(tool, {}).get(dbname, {})
 
     def centrifuge_download_install(
             self,
@@ -2287,7 +2290,7 @@ class setup_install(setup_dl):
             if os.path.isfile(os.path.splitext(centrifuge_fasta)[0]):
                 os.system(f"bgzip {sdir}/complete.fna")
 
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": "",
@@ -2306,7 +2309,7 @@ class setup_install(setup_dl):
 
         if os.path.isfile(index_file_prefix + ".1.cf"):
             logging.info(f"Centrifuge db {dbname} index is installed.")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": "",
@@ -2330,7 +2333,7 @@ class setup_install(setup_dl):
 
             if os.path.isfile(index_file_prefix + ".1.cf"):
                 logging.info(f"Centrifuge db {dbname} index is installed.")
-                self.dbs[id] = {
+                self.dbs.setdefault(id, {})[dbname] = {
                     "dir": odir,
                     "dbname": dbname,
                     "fasta": "",
@@ -2385,7 +2388,7 @@ class setup_install(setup_dl):
                 shutil.rmtree(f"{odir}{dbname}", ignore_errors=True)
             else:
 
-                self.dbs[id] = {
+                self.dbs.setdefault(id, {})[dbname] = {
                     "dir": odir,
                     "dbname": dbname,
                     "db": index_file_prefix,
@@ -2402,7 +2405,7 @@ class setup_install(setup_dl):
             if not os.path.isfile(dst):
                 shutil.move(src, dst)
 
-        self.dbs["centrifuge"] = {
+        self.dbs.setdefault("centrifuge", {})[dbname] = {
             "dir": prebuilt_path + "/",
             "dbname": dbname,
             "fasta": "",
@@ -2443,7 +2446,7 @@ class setup_install(setup_dl):
                 logging.info(f"Updating kraken2/{dbname} index from {prebuilt_path}")
                 shutil.rmtree(os.path.join(odir, dbname), ignore_errors=True)
             else:
-                self.dbs[id] = {
+                self.dbs.setdefault(id, {})[dbname] = {
                     "dir": prebuilt_path + "/",
                     "dbname": dbname,
                     "db": prebuilt_path,
@@ -2456,7 +2459,7 @@ class setup_install(setup_dl):
         logging.info(f"Found prebuilt kraken2/{dbname} at {prebuilt_path}")
         shutil.copytree(prebuilt_path, os.path.join(odir, dbname), dirs_exist_ok=True)
 
-        self.dbs["kraken2"] = {
+        self.dbs.setdefault("kraken2", {})[dbname] = {
             "dir": prebuilt_path + "/",
             "dbname": dbname,
             "db": prebuilt_path,
@@ -2502,7 +2505,7 @@ class setup_install(setup_dl):
                 os.system(f"bgzip {sdir}/complete.fna")
                 # compress_using_xopen(f"{sdir}/complete.fna", f"{sdir}/complete.fna.gz")
 
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": f"{sdir}/complete.fna.gz",
@@ -2528,7 +2531,7 @@ class setup_install(setup_dl):
                     old_file_path = os.path.join(odir + dbname, file)
                     os.symlink(old_file_path, new_filepath)
 
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": f"{sdir}/complete.fna.gz",
@@ -2634,7 +2637,7 @@ class setup_install(setup_dl):
             os.system(f"bgzip {sdir}/complete.fna")
             # compress_using_xopen(f"{sdir}/complete.fna", f"{sdir}/complete.fna.gz")
 
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": f"{sdir}/complete.fna.gz",
@@ -2652,6 +2655,7 @@ class setup_install(setup_dl):
         id="voyager",
         dbdir="voyager",
     ):
+        db_key = dbname  # caller's name; dbname is translated/mutated below
 
         dbname_translate = {
             "viral": "viruses",
@@ -2672,7 +2676,7 @@ class setup_install(setup_dl):
         print(os.path.isfile(os.path.join(odir, dbname, f"{dbname}.idx")))
         if os.path.isfile(os.path.join(odir, dbname, f"{dbname}.idx")):
             logging.info(f"Voyager db {dbname} is installed.")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[db_key] = {
                 "dir": odir,
                 "dbname": dbname,
                 "db": os.path.join(odir, dbname, f"{dbname}.idx"),
@@ -2691,7 +2695,7 @@ class setup_install(setup_dl):
         subprocess.run(["tar", "-xvf", odir + f"/viruses.tar.gz", "-C", odir])
         subprocess.run(["rm", odir + f"/viruses.tar.gz"])
 
-        self.dbs[id] = {
+        self.dbs.setdefault(id, {})[db_key] = {
             "dir": odir,
             "dbname": dbname,
             "db": os.path.join(odir, dbname, f"{dbname}.idx"),
@@ -2710,6 +2714,7 @@ class setup_install(setup_dl):
         id="voyager",
         dbdir="voyager",
     ):
+        db_key = dbname  # caller's name; dbname is translated/mutated below
 
         dbname_translate = {
             "viral": "viruses",
@@ -2734,7 +2739,7 @@ class setup_install(setup_dl):
 
         if os.path.isfile(os.path.join(odir, dbname, f"{dbname}.idx")):
             logging.info(f"Voyager db {dbname} is installed.")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[db_key] = {
                 "dir": odir,
                 "dbname": dbname,
                 "db": os.path.join(odir, dbname, f"{dbname}.idx"),
@@ -2754,7 +2759,7 @@ class setup_install(setup_dl):
         )
         subprocess.run(["rm", odir + dbname + f"/{dbname}.tar.gz"])
 
-        self.dbs[id] = {
+        self.dbs.setdefault(id, {})[db_key] = {
             "dir": odir,
             "dbname": dbname,
             "db": os.path.join(odir, dbname, f"{dbname}.idx"),
@@ -2789,7 +2794,7 @@ class setup_install(setup_dl):
             odir + dbname + "/{}.pkl".format(os.path.splitext(dbname)[0])
         ):
             logging.info(f"Metaphlan db {dbname} is installed.")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "db": f"{odir}{dbname}/{dbname}.pkl",
@@ -2800,7 +2805,7 @@ class setup_install(setup_dl):
         else:
             if self.test:
                 logging.info(f"Metaphlan db {dbname} is not installed.")
-                self.dbs[id] = {
+                self.dbs.setdefault(id, {})[dbname] = {
                     "dir": odir,
                     "dbname": dbname,
                     "db": f"{odir}{dbname}/{dbname}.pkl",
@@ -2838,7 +2843,7 @@ class setup_install(setup_dl):
             subprocess.run([metaphlan_install_script], check=True)
             subprocess.run(["rm", metaphlan_install_script], check=True)
 
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "db": f"{odir}{dbname}/{dbname}",
@@ -2848,7 +2853,7 @@ class setup_install(setup_dl):
 
         except subprocess.CalledProcessError:
             logging.warning(f"failed to download metaphlan db {dbname}")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "db": f"{odir}{dbname}/{dbname}",
@@ -2862,6 +2867,7 @@ class setup_install(setup_dl):
         id="metaphlan",
         dbdir="metaphlan",
     ):
+        db_key = dbname  # caller's name; dbname is translated/mutated below
 
         odir = self.dbdir + dbdir + "/"
         dbname = dbname + ".mpa"
@@ -2876,7 +2882,7 @@ class setup_install(setup_dl):
             odir + dbname + "/{}.pkl".format(os.path.splitext(dbname)[0])
         ):
             logging.info(f"Metaphlan db {dbname} is installed.")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[db_key] = {
                 "dir": odir,
                 "dbname": dbname,
                 "db": f"{odir}{dbname}/{dbname}.pkl",
@@ -2909,7 +2915,7 @@ class setup_install(setup_dl):
                 check=True,
             )
             subprocess.run(["rm", odir + dbname + "/" + source_file], check=True)
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[db_key] = {
                 "dir": odir,
                 "dbname": dbname,
                 "db": f"{odir}{dbname}/{dbname}.pkl",
@@ -2926,6 +2932,7 @@ class setup_install(setup_dl):
         id="clark",
         dbdir="clark",
     ):
+        db_key = dbname  # caller's name; dbname is translated/mutated below
         dbname_translate = {
             "viral": "viruses",
             "bacteria": "bacteria",
@@ -2941,7 +2948,7 @@ class setup_install(setup_dl):
         if os.path.isfile(odir + dbname + f"/.{dbname}"):
             logging.info(f"{id} db {dbname} is installed.")
 
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[db_key] = {
                 "dir": odir,
                 "dbname": dbname,
                 "db": f"{odir}{dbname}",
@@ -2981,7 +2988,7 @@ class setup_install(setup_dl):
                 logging.error(f"CLARK db spaced DB failed to build. {e}")
                 return
 
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[db_key] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
@@ -3019,7 +3026,7 @@ class setup_install(setup_dl):
         if os.path.isfile(odir + dbname + "/taxo.k2d"):
             logging.info(f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
 
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
@@ -3032,7 +3039,7 @@ class setup_install(setup_dl):
         else:
             if self.test:
                 logging.info(f"Kraken2 db {dbname} is not installed.")
-                self.dbs[id] = {
+                self.dbs.setdefault(id, {})[dbname] = {
                     "dir": odir,
                     "dbname": dbname,
                     "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
@@ -3055,7 +3062,7 @@ class setup_install(setup_dl):
 
         if os.path.isfile(odir + dbname + "/taxo.k2d"):
             logging.info(f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed.")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
@@ -3067,7 +3074,7 @@ class setup_install(setup_dl):
             return True
         else:
             logging.warning(f"failed to download Kraken2 db {dbname}")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
@@ -3103,7 +3110,7 @@ class setup_install(setup_dl):
             if os.path.isfile(os.path.splitext(krk2_fasta)[0]):
                 os.system(f"{BGZIP_BIN} " + os.path.splitext(krk2_fasta)[0])
 
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
@@ -3188,7 +3195,7 @@ class setup_install(setup_dl):
                 logging.info(
                     f"Kraken2 db {dbname} k2d file exists. Kraken2 is installed."
                 )
-                self.dbs[id] = {
+                self.dbs.setdefault(id, {})[dbname] = {
                     "dir": odir,
                     "dbname": dbname,
                     "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
@@ -3197,7 +3204,7 @@ class setup_install(setup_dl):
                 return True
             else:
                 logging.warning(f"failed to download Kraken2 db {dbname}")
-                self.dbs[id] = {
+                self.dbs.setdefault(id, {})[dbname] = {
                     "dir": odir,
                     "dbname": dbname,
                     "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
@@ -3207,7 +3214,7 @@ class setup_install(setup_dl):
 
         except subprocess.CalledProcessError:
             logging.warning(f"failed to download Kraken2 db {dbname}")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": odir + dbname + "/library/" + dbname + "/library.fna.gz",
@@ -3266,7 +3273,7 @@ class setup_install(setup_dl):
 
         if os.path.isfile(odir + dbname + ".dmnd"):
             logging.info(f"Diamond db {dbname}.dmnd present. Diamond prepped.")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "db": odir + dbname,
@@ -3277,7 +3284,7 @@ class setup_install(setup_dl):
         else:
             if self.test:
                 logging.info(f"Diamond db {dbname} not installed.")
-                self.dbs[id] = {
+                self.dbs.setdefault(id, {})[dbname] = {
                     "dir": odir,
                     "dbname": dbname,
                     "db": odir + dbname,
@@ -3293,7 +3300,7 @@ class setup_install(setup_dl):
 
             subprocess.call(" ".join(command), shell=True)
 
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "db": odir + dbname,
@@ -3303,7 +3310,7 @@ class setup_install(setup_dl):
 
         except subprocess.CalledProcessError:
             logging.warning(f"failed to download Diamond db {dbname}")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "db": odir + dbname,
@@ -3417,7 +3424,7 @@ class setup_install(setup_dl):
         if os.path.isfile(odir + dbname + "/taxDB"):
             logging.info(f"Krakenuniq {dbname} taxDB present. prepped.")
             self.process_kuniq_files(dbname, odir)
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "db": odir + dbname,
@@ -3490,7 +3497,7 @@ class setup_install(setup_dl):
 
             self.process_kuniq_files(dbname, odir)
 
-            self.dbs[id] = {"dir": odir, "dbname": dbname, "db": odir + dbname}
+            self.dbs.setdefault(id, {})[dbname] = {"dir": odir, "dbname": dbname, "db": odir + dbname}
 
             return True
         except subprocess.CalledProcessError:
@@ -3513,22 +3520,23 @@ class setup_install(setup_dl):
         bin = self.envs["ROOT"] + self.envs[id] + "/bin/"
         subdb = odir + dbname + "/"
 
-        if os.path.isfile(subdb + "kaiju_db_viruses.fmi"):
+        fmi = self._find_kaiju_fmi(subdb)
+        if fmi:
             logging.info(f"Kaiju {dbname}  is installed.")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
-                "db": subdb + "kaiju_db_viruses.fmi",
+                "db": fmi,
                 "status": "success",
             }
             return True
         else:
             if self.test:
                 logging.info(f"Kaiju {dbname} db is not installed.")
-                self.dbs[id] = {
+                self.dbs.setdefault(id, {})[dbname] = {
                     "dir": subdb,
                     "dbname": dbname,
-                    "db": subdb + "kaiju_db_viruses.fmi",
+                    "db": "",
                     "status": "test",
                 }
                 return False
@@ -3547,22 +3555,41 @@ class setup_install(setup_dl):
             subprocess.run(["rm", os.path.basename(db_online)], check=True)
             os.chdir(CWD)
 
-            self.dbs[id] = {
+            fmi = self._find_kaiju_fmi(subdb)
+            if not fmi:
+                logging.error(f"No .fmi index found in Kaiju db {dbname} at {subdb}")
+                self.dbs.setdefault(id, {})[dbname] = {
+                    "dir": subdb,
+                    "dbname": dbname,
+                    "db": "",
+                    "status": "failed",
+                }
+                return False
+
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": subdb,
                 "dbname": dbname,
-                "db": subdb + "kaiju_db_viruses.fmi",
+                "db": fmi,
                 "status": "success",
             }
             return True
         except subprocess.CalledProcessError:
             logging.warning(f"failed to download Kaiju db {dbname}")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": subdb,
                 "dbname": dbname,
-                "db": subdb + "kaiju_db_viruses.fmi",
+                "db": "",
                 "status": "failed",
             }
             return False
+
+    @staticmethod
+    def _find_kaiju_fmi(subdb: str) -> str:
+        """Return the path of the first *.fmi file in subdb, or '' if none."""
+        if not os.path.isdir(subdb):
+            return ""
+        fmis = sorted(f for f in os.listdir(subdb) if f.endswith(".fmi"))
+        return os.path.join(subdb, fmis[0]) if fmis else ""
 
     def kaiju_viral_install(self, id="kaiju", dbdir="kaiju", dbname="viral"):
         odir = self.dbdir + dbdir + "/"
@@ -3575,12 +3602,13 @@ class setup_install(setup_dl):
         elif dbname == "fungi":
             db_online = "https://kaiju-idx.s3.eu-central-1.amazonaws.com/2023/kaiju_db_fungi_2023-05-26.tgz"
         file = os.path.basename(db_online)
-        if os.path.isfile(subdb + "kaiju_db_viruses.fmi"):
+        fmi = self._find_kaiju_fmi(subdb)
+        if fmi:
             logging.info(f"Kaiju {dbname}  is installed.")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
-                "db": subdb + "kaiju_db_viruses.fmi",
+                "db": fmi,
             }
             return True
         else:
@@ -3601,10 +3629,21 @@ class setup_install(setup_dl):
             subprocess.run(["rm", file])
             os.chdir(CWD)
 
-            self.dbs[id] = {
+            fmi = self._find_kaiju_fmi(subdb)
+            if not fmi:
+                logging.error(f"No .fmi index found in Kaiju db {dbname} at {subdb}")
+                self.dbs.setdefault(id, {})[dbname] = {
+                    "dir": subdb,
+                    "dbname": dbname,
+                    "db": "",
+                    "status": "failed",
+                }
+                return False
+
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": subdb,
                 "dbname": dbname,
-                "db": subdb + "kaiju_db_viruses.fmi",
+                "db": fmi,
             }
             return True
         except subprocess.CalledProcessError:
@@ -3640,12 +3679,12 @@ class setup_install(setup_dl):
 
         if os.path.isfile(db + f".{dbtype[0]}db"):
             logging.info(f"blast index for {dbname} is installed.")
-            self.dbs[id] = {"dir": odir, "dbname": dbname, "db": db, "status": "success"}
+            self.dbs.setdefault(id, {})[dbname] = {"dir": odir, "dbname": dbname, "db": db, "status": "success"}
             return True
         else:
             if self.test:
                 logging.info(f"blast index for {dbname} is not installed.")
-                self.dbs[id] = {"dir": odir, "dbname": dbname, "db": db, "status": "test"}
+                self.dbs.setdefault(id, {})[dbname] = {"dir": odir, "dbname": dbname, "db": db, "status": "test"}
                 return False
             else:
                 logging.info(
@@ -3688,13 +3727,13 @@ class setup_install(setup_dl):
                     subprocess.run([BGZIP_BIN, reference])
                     reference = reference + ".gz"
 
-            self.dbs[id] = {"dir": sdir, "dbname": dbname, "db": db, "status": "success"}
+            self.dbs.setdefault(id, {})[dbname] = {"dir": sdir, "dbname": dbname, "db": db, "status": "success"}
 
             return True
 
         except subprocess.CalledProcessError:
             logging.warning(f"failed to download blast db {dbname}")
-            self.dbs[id] = {"dir": sdir, "dbname": dbname, "db": db, "status": "failed"}
+            self.dbs.setdefault(id, {})[dbname] = {"dir": sdir, "dbname": dbname, "db": db, "status": "failed"}
             return False
 
     def bowtie2_index(
@@ -3709,12 +3748,12 @@ class setup_install(setup_dl):
         db = odir + dbname
         if os.path.isfile(db + ".1.bt2"):
             logging.info(f"bowtie2 index for {dbname} is installed.")
-            self.dbs[id] = {"dir": odir, "dbname": dbname, "db": db, "status": "success"}
+            self.dbs.setdefault(id, {})[dbname] = {"dir": odir, "dbname": dbname, "db": db, "status": "success"}
             return True
         else:
             if self.test:
                 logging.info(f"bowtie2 index for {dbname} is not installed.")
-                self.dbs[id] = {"dir": odir, "dbname": dbname, "db": db, "status": "test"}
+                self.dbs.setdefault(id, {})[dbname] = {"dir": odir, "dbname": dbname, "db": db, "status": "test"}
 
                 return False
             else:
@@ -3744,13 +3783,13 @@ class setup_install(setup_dl):
                     subprocess.run([BGZIP_BIN, reference])
                     reference = reference + ".gz"
 
-            self.dbs[id] = {"dir": odir, "dbname": dbname, "db": db, "status": "success"}
+            self.dbs.setdefault(id, {})[dbname] = {"dir": odir, "dbname": dbname, "db": db, "status": "success"}
 
             return True
 
         except subprocess.CalledProcessError:
             logging.warning(f"failed to download bowtie2 index {dbname}")
-            self.dbs[id] = {"dir": odir, "dbname": dbname, "db": db, "status": "failed"}
+            self.dbs.setdefault(id, {})[dbname] = {"dir": odir, "dbname": dbname, "db": db, "status": "failed"}
             return False
 
     def bwa_install(
@@ -3781,7 +3820,7 @@ class setup_install(setup_dl):
 
         if os.path.isfile(f"{odir}{dbname}/{dbname}.bwt"):
             logging.info(f"BWA db {dbname} is installed.")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": f"{sdir}.fa",
@@ -3793,7 +3832,7 @@ class setup_install(setup_dl):
         else:
             if self.test:
                 logging.info(f"BWA db {dbname} is not installed.")
-                self.dbs[id] = {
+                self.dbs.setdefault(id, {})[dbname] = {
                     "dir": odir,
                     "dbname": dbname,
                     "fasta": f"{sdir}.fa",
@@ -3806,7 +3845,7 @@ class setup_install(setup_dl):
 
         if not verify_file_accessible(reference):
             logging.error(f"BWA install failed: reference file is inaccessible: {reference}")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": f"{sdir}.fa",
@@ -3825,7 +3864,7 @@ class setup_install(setup_dl):
                 logging.error(
                     f"BWA install failed: gzipped reference file is corrupted or incomplete: {reference}"
                 )
-                self.dbs[id] = {
+                self.dbs.setdefault(id, {})[dbname] = {
                     "dir": odir,
                     "dbname": dbname,
                     "fasta": f"{sdir}.fa",
@@ -3841,7 +3880,7 @@ class setup_install(setup_dl):
                 )
                 if gzipped:
                     subprocess.run([BGZIP_BIN, reference], capture_output=True)
-                self.dbs[id] = {
+                self.dbs.setdefault(id, {})[dbname] = {
                     "dir": odir,
                     "dbname": dbname,
                     "fasta": f"{sdir}.fa",
@@ -3857,7 +3896,7 @@ class setup_install(setup_dl):
         try:
             subprocess.run(command)
             shutil.copy(reference, f"{odir}{dbname}/{dbname}.fa")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": f"{sdir}.fa",
@@ -3870,7 +3909,7 @@ class setup_install(setup_dl):
             logging.error(f"Reference file: {reference}")
             import traceback
             traceback.print_exc()
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": f"{sdir}.fa",
@@ -3880,7 +3919,7 @@ class setup_install(setup_dl):
             return False
         except FileNotFoundError as e:
             logging.error(f"BWA install failed: required tool not found: {e}")
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "fasta": f"{sdir}.fa",
@@ -3900,7 +3939,7 @@ class setup_install(setup_dl):
         odir = self.dbdir + id + "/"
         
         if os.path.isfile(reference):
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "db": reference,
@@ -3909,7 +3948,7 @@ class setup_install(setup_dl):
             }
             return True
         elif self.test:
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "db": reference,
@@ -3918,7 +3957,7 @@ class setup_install(setup_dl):
             }
             return False
         else:
-            self.dbs[id] = {
+            self.dbs.setdefault(id, {})[dbname] = {
                 "dir": odir,
                 "dbname": dbname,
                 "db": reference,
@@ -3982,7 +4021,7 @@ class setup_install(setup_dl):
 
             os.system("rm " + tmpsh)
 
-            self.dbs[id] = {"dir": odir, "dbname": dbname}
+            self.dbs.setdefault(id, {})[dbname] = {"dir": odir, "dbname": dbname}
             return True
 
         except subprocess.CalledProcessError:
@@ -4018,12 +4057,12 @@ class setup_install(setup_dl):
         if os.path.isfile(fidx):
 
             logging.info(f"FastViromeExplorer index for {reference} is installed.")
-            self.dbs[id] = {"dir": odir, "dbname": dbname, "db": fidx}
+            self.dbs.setdefault(id, {})[dbname] = {"dir": odir, "dbname": dbname, "db": fidx}
             return True
         else:
             if self.test:
                 logging.info(f"FastViromeExplorer {reference} index is not installed.")
-                self.dbs[id] = {"dir": odir, "dbname": dbname, "db": fidx}
+                self.dbs.setdefault(id, {})[dbname] = {"dir": odir, "dbname": dbname, "db": fidx}
                 return False
             else:
                 logging.info(
@@ -4074,7 +4113,7 @@ class setup_install(setup_dl):
                     subprocess.run([BGZIP_BIN, reference])
                     reference = reference + ".gz"
 
-            self.dbs[id] = {"dir": subdir, "dbname": dbname, "db": fidx}
+            self.dbs.setdefault(id, {})[dbname] = {"dir": subdir, "dbname": dbname, "db": fidx}
             return True
 
         except subprocess.CalledProcessError:
@@ -4098,12 +4137,12 @@ class setup_install(setup_dl):
 
         if os.path.isfile(sdir + "/deSAMBA.bwt"):
             logging.info(f"deSAMBA db {dbname} is installed.")
-            self.dbs[id] = {"dir": sdir, "dbname": dbname, "db": sdir}
+            self.dbs.setdefault(id, {})[dbname] = {"dir": sdir, "dbname": dbname, "db": sdir}
             return True
         else:
             if self.test:
                 logging.info(f"deSAMBA db {dbname} is not installed.")
-                self.dbs[id] = {"dir": odir, "dbname": dbname, "db": sdir}
+                self.dbs.setdefault(id, {})[dbname] = {"dir": odir, "dbname": dbname, "db": sdir}
                 return False
             else:
                 logging.info(f"deSAMBA db {dbname} is not installed. Installing...")
@@ -4129,7 +4168,7 @@ class setup_install(setup_dl):
                     subprocess.run([BGZIP_BIN, reference])
                     reference = reference + ".gz"
 
-            self.dbs[id] = {"dir": odir, "dbname": dbname, "db": sdir}
+            self.dbs.setdefault(id, {})[dbname] = {"dir": odir, "dbname": dbname, "db": sdir}
             return True
 
         except subprocess.CalledProcessError:
