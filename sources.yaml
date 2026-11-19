@@ -526,8 +526,8 @@ host_genomes:
     host_name: "sus_scrofa"
     common_name: "pig"
     host: "ftp.ncbi.nlm.nih.gov"
-    path: "/genomes/refseq/vertebrate_mammalian/Sus_scrofa/latest_assembly_versions/GCF_000003025.6_Sscrofa11.1/"
-    file: "GCF_000003025.6_Sscrofa11.1_genomic.fna.gz"
+    path: "/genomes/refseq/vertebrate_mammalian/Sus_scrofa/latest_assembly_versions/GCF_054392235.1_Sscrofa_HxYL_maternal_Yorkshire_Landrace_v2.0/"
+    file: "GCF_054392235.1_Sscrofa_HxYL_maternal_Yorkshire_Landrace_v2.0_genomic.fna.gz"
 
   aedes_albopictus:
     host_name: "aedes_albopictus"

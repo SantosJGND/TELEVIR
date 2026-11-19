@@ -435,7 +435,7 @@ class setup_dl:
             logging.warning(f"{filename} exists but is corrupted. Re-downloading...")
         try:
             subprocess.run(
-                ["wget", url, "-O", filepath],
+                ["wget", "--quiet", url, "-O", filepath],
                 check=False,
             )
         except subprocess.CalledProcessError:
@@ -2092,14 +2092,22 @@ class setup_dl:
             "nucl_wgs.accession2taxid.gz"
         ]
         
+        worker_errors = []
         threads = [
-            Thread(target=self._parse_nucleotide_taxids_thread, args=(filename, db_path, acc2tax_dir, other_dbs))
+            Thread(
+                target=self._parse_nucleotide_taxids_thread,
+                args=(filename, db_path, acc2tax_dir, other_dbs),
+                kwargs={"errors": worker_errors},
+            )
             for filename in files
         ]
         for th in threads:
             th.start()
         for th in threads:
             th.join()
+
+        for filename, err in worker_errors:
+            logging.error(f"nucleotide taxid worker failed for {filename}: {err}")
         
         for dbs in other_dbs:
             matched = conn.execute(
@@ -2114,21 +2122,52 @@ class setup_dl:
         
         conn.close()
 
-    def _parse_nucleotide_taxids_thread(self, filename: str, db_path: str, acc2tax_dir: str, dbs_list: list, chunksize=int(2e6)):
+    @staticmethod
+    def _scratch_has_matches(match_db: str) -> bool:
+        """
+        True only if match_db is a readable SQLite file with a 'matches' table holding rows.
+        Missing, empty (0-byte), corrupt, or table-less scratch files return False,
+        so the caller rebuilds them.
+        """
+        if not os.path.exists(match_db):
+            return False
+        try:
+            conn = sqlite3.connect(match_db)
+            try:
+                has_table = conn.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='matches'"
+                ).fetchone()
+                if not has_table:
+                    return False
+                return conn.execute("SELECT COUNT(*) FROM matches").fetchone()[0] > 0
+            finally:
+                conn.close()
+        except sqlite3.DatabaseError:
+            return False
+
+    def _parse_nucleotide_taxids_thread(self, filename: str, db_path: str, acc2tax_dir: str, dbs_list: list, chunksize=int(2e6), errors=None):
         """
         Thread worker to process NCBI nucl accession2taxid files.
+        Any exception is recorded in `errors` as (filename, message) and the
+        scratch match db is removed so the next run rebuilds it.
         :param filename: nucl_gb.accession2taxid.gz or nucl_wgs.accession2taxid.gz
         """
         match_db = self.metadir + f"nuc_matches_{filename.replace('.gz','').replace('.','_')}.db"
+        try:
+            self._parse_nucleotide_taxids_impl(filename, db_path, acc2tax_dir, dbs_list, chunksize)
+        except Exception as e:
+            logging.error(f"nucleotide taxid worker {filename} raised: {e}")
+            if errors is not None:
+                errors.append((filename, str(e)))
+            if os.path.exists(match_db):
+                os.remove(match_db)
 
-        if os.path.exists(match_db):
-            conn = sqlite3.connect(match_db)
-            cursor = conn.execute("SELECT COUNT(*) FROM matches")
-            count = cursor.fetchone()[0]
-            conn.close()
-            if count > 0:
-                return
-        
+    def _parse_nucleotide_taxids_impl(self, filename: str, db_path: str, acc2tax_dir: str, dbs_list: list, chunksize=int(2e6)):
+        match_db = self.metadir + f"nuc_matches_{filename.replace('.gz','').replace('.','_')}.db"
+
+        if self._scratch_has_matches(match_db):
+            return
+
         match_conn = sqlite3.connect(match_db)
 
         # delete if exists

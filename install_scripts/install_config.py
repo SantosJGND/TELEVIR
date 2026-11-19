@@ -33,14 +33,14 @@ class TelevirLayout:
     # by the 'install' field in sources.yaml under databases.centrifuge
     # and databases.kraken2 sections.
     install_metaphlan = False
-    install_voyager_viral = False
-    install_krakenuniq = True
+    install_voyager_viral = True
+    install_krakenuniq = False
     # NOTE: kaiju installation is now controlled
     # by the 'install' field in sources.yaml under databases.kaiju section.
     install_diamond = True
     install_minimap2 = True
     install_fastviromeexplorer = True
-    install_clark = True
+    install_clark = False
     install_blast = True
 
     # Pre-built index configuration (list-based)
