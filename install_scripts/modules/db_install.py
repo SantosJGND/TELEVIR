@@ -1277,7 +1277,9 @@ class setup_dl:
                     taxid = parts[1]
                     acc = parts[2]
                     acc_in_file = f"{suffix}|{taxid}|{acc}"
-                    records.append((dbs, acc, acc_in_file, filename))
+                    records.append(
+                        (dbs, acc, acc_in_file, int(taxid) if taxid.isdigit() else None, filename)
+                    )
         return records
 
     def _parse_virosaurus_fasta(self, fl, dbs, filename):
@@ -1297,7 +1299,7 @@ class setup_dl:
                 acc_full = parts[0]
                 acc = acc_full.split(".")[0]
                 acc_in_file = f"{acc}:{acc};"
-                records.append((dbs, acc, acc_in_file, filename))
+                records.append((dbs, acc, acc_in_file, None, filename))
         return records
 
     def _parse_standard_fasta(self, fl, dbs, filename):
@@ -1316,7 +1318,7 @@ class setup_dl:
                     continue
                 acc = parts[0]
                 acc_in_file = acc
-                records.append((dbs, acc, acc_in_file, filename))
+                records.append((dbs, acc, acc_in_file, None, filename))
         return records
 
     def populate_nucleotide_taxids(self, dbs_list):
