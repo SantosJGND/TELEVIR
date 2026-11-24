@@ -51,6 +51,7 @@ setup_config() {
     if [ -f "/opt/televir-repo/install_scripts/accession_db_cli.py" ]; then
         mkdir -p "$INSTALL_HOME/tools"
         cp /opt/televir-repo/install_scripts/accession_db_cli.py "$INSTALL_HOME/tools/"
+        cp /opt/televir-repo/install_scripts/modules/accession_store.py "$INSTALL_HOME/tools/"
     fi
     
     # Copy install_config.py for user modification

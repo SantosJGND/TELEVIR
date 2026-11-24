@@ -355,45 +355,31 @@ class TelevirStatusApp(ctk.CTk):
             return
         
         cli = AccessionDBCLI(install_home=self.install_home)
-        
-        total_protein = 0
-        total_nuc = 0
-        protein_with_taxid = 0
-        nuc_with_taxid = 0
-        protein_size = 0
-        nuc_size = 0
-        
+
         try:
-            if os.path.exists(cli.protein_db):
-                conn = sqlite3.connect(cli.protein_db)
-                cursor = conn.cursor()
-                cursor.execute("SELECT COUNT(*) FROM protein_accessions")
-                total_protein = cursor.fetchone()[0]
-                cursor.execute("SELECT COUNT(*) FROM protein_accessions WHERE taxid IS NOT NULL")
-                protein_with_taxid = cursor.fetchone()[0]
-                protein_size = os.path.getsize(cli.protein_db) / (1024 * 1024)
-                conn.close()
-            
-            if os.path.exists(cli.nucleotide_db):
-                conn = sqlite3.connect(cli.nucleotide_db)
-                cursor = conn.cursor()
-                cursor.execute("SELECT COUNT(*) FROM nucleotide_accessions")
-                total_nuc = cursor.fetchone()[0]
-                cursor.execute("SELECT COUNT(*) FROM nucleotide_accessions WHERE taxid IS NOT NULL")
-                nuc_with_taxid = cursor.fetchone()[0]
-                nuc_size = os.path.getsize(cli.nucleotide_db) / (1024 * 1024)
-                conn.close()
+            data = cli.summary()
         except Exception as e:
             self.acc_summary_label.configure(text=f"Error loading data: {e}")
             return
-        
+
+        total_protein = data["protein_total"]
+        total_nuc = data["nuc_total"]
+        protein_with_taxid = data["protein_with_taxid"]
+        nuc_with_taxid = data["nuc_with_taxid"]
+        protein_size = data["protein_size_mb"]
+        nuc_size = data["nuc_size_mb"]
+
         protein_pct = (protein_with_taxid / total_protein * 100) if total_protein > 0 else 0
         nuc_pct = (nuc_with_taxid / total_nuc * 100) if total_nuc > 0 else 0
-        
+
+        states = ", ".join(
+            f"{entry['db_key']}={entry['state']}" for entry in data["metadata"]
+        )
         summary_text = (
             f"Protein: {total_protein:,} records ({protein_with_taxid:,} with taxid, {protein_pct:.1f}%) | {protein_size:.1f} MB\n"
             f"Nucleotide: {total_nuc:,} records ({nuc_with_taxid:,} with taxid, {nuc_pct:.1f}%) | {nuc_size:.1f} MB\n"
-            f"Total: {total_protein + total_nuc:,} accessions | {protein_with_taxid + nuc_with_taxid:,} with taxid"
+            f"Total: {total_protein + total_nuc:,} accessions | {protein_with_taxid + nuc_with_taxid:,} with taxid\n"
+            f"States: {states or 'not initialized'}"
         )
         self.acc_summary_label.configure(text=summary_text)
         
@@ -403,38 +389,11 @@ class TelevirStatusApp(ctk.CTk):
         for widget in self.coverage_rows_frame.winfo_children():
             widget.destroy()
         
-        results = []
-        
         try:
-            if os.path.exists(cli.protein_db):
-                conn = sqlite3.connect(cli.protein_db)
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT dbs, COUNT(*) as total,
-                           SUM(CASE WHEN taxid IS NOT NULL THEN 1 ELSE 0 END) as with_taxid
-                    FROM protein_accessions
-                    GROUP BY dbs
-                """)
-                for row in cursor.fetchall():
-                    pct = (row[2] / row[1] * 100) if row[1] > 0 else 0
-                    results.append(['protein', row[0], row[1], row[2], f'{pct:.1f}%'])
-                conn.close()
-            
-            if os.path.exists(cli.nucleotide_db):
-                conn = sqlite3.connect(cli.nucleotide_db)
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT dbs, COUNT(*) as total,
-                           SUM(CASE WHEN taxid IS NOT NULL THEN 1 ELSE 0 END) as with_taxid
-                    FROM nucleotide_accessions
-                    GROUP BY dbs
-                """)
-                for row in cursor.fetchall():
-                    pct = (row[2] / row[1] * 100) if row[1] > 0 else 0
-                    results.append(['nuc', row[0], row[1], row[2], f'{pct:.1f}%'])
-                conn.close()
+            results = cli.coverage()
         except Exception as e:
             print(f"Error loading coverage: {e}")
+            results = []
         
         if not results:
             frame = ctk.CTkFrame(self.coverage_rows_frame, fg_color="#252525", corner_radius=4)

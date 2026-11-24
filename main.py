@@ -126,7 +126,7 @@ def main():
         sys.exit(1)
 
     ENVDIR = mainconf.ENVDIR
-    HOME = mainconf.HOME
+    HOME = os.environ.get("INSTALL_HOME", mainconf.HOME)
     SOURCE = mainconf.SOURCE
     TAXDUMP = mainconf.TAXDUMP
     UPDATE = mainconf.UPDATE

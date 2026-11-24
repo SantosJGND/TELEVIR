@@ -463,7 +463,6 @@ class main_setup:
         generate metadata files for prot databases.
         """
         self.wdir.prot_metadata()
-        #self.wdir.generate_main_protacc_to_taxid()
 
     def dl_metadata_nuc(self):
         """
